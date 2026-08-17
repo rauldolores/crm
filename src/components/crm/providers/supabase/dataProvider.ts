@@ -225,20 +225,48 @@ const getDataProviderWithCustomMethods = () => {
 
       return data;
     },
+    // La configuración es una fila por organización, y el RLS ya limita la tabla
+    // a la organización activa. Por eso no se pide por id (antes era el
+    // singleton `id: 1`): se pide la única fila visible, y así el frontend no
+    // necesita conocer el identificador de la organización.
     async getConfiguration(): Promise<ConfigurationContextValue> {
-      const { data } = await baseDataProvider.getOne("configuration", {
-        id: 1,
-      });
+      const { data, error } = await getSupabaseClient()
+        .from("configuration")
+        .select("config")
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
       return (data?.config as ConfigurationContextValue) ?? {};
     },
     async updateConfiguration(
       config: ConfigurationContextValue,
     ): Promise<ConfigurationContextValue> {
-      const { data } = await baseDataProvider.update("configuration", {
-        id: 1,
-        data: { config },
-        previousData: { id: 1 },
-      });
+      // Los logos se procesan aquí y no en un callback de ciclo de vida del
+      // data provider: al escribir con el cliente de Supabase directamente,
+      // esos callbacks no se ejecutan.
+      const configConLogos: ConfigurationContextValue = {
+        ...config,
+        lightModeLogo: await processConfigLogo(config.lightModeLogo),
+        darkModeLogo: await processConfigLogo(config.darkModeLogo),
+      };
+
+      // Se usa upsert sin indicar organization_id: lo rellena el valor por
+      // defecto de la columna a partir del token, de modo que un cliente no
+      // puede escribir en la configuración de otra organización.
+      const { data, error } = await getSupabaseClient()
+        .from("configuration")
+        .upsert({ config: configConLogos }, { onConflict: "organization_id" })
+        .select("config")
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
       return data.config as ConfigurationContextValue;
     },
   } satisfies DataProvider;
@@ -258,17 +286,6 @@ const processConfigLogo = async (logo: any): Promise<string> => {
 };
 
 const lifeCycleCallbacks: ResourceCallbacks[] = [
-  {
-    resource: "configuration",
-    beforeUpdate: async (params) => {
-      const config = params.data.config;
-      if (config) {
-        config.lightModeLogo = await processConfigLogo(config.lightModeLogo);
-        config.darkModeLogo = await processConfigLogo(config.darkModeLogo);
-      }
-      return params;
-    },
-  },
   {
     resource: "contact_notes",
     beforeSave: async (data: ContactNote, _, __) => {

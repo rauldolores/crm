@@ -67,6 +67,21 @@ const getSale = async () => {
     return undefined;
   }
 
+  // Da de alta al usuario como comercial de su organización activa, y crea la
+  // configuración de esa organización si aún no existe. Es idempotente y solo
+  // se llega aquí cuando la caché está vacía, o sea una vez por sesión.
+  //
+  // Sustituye a los triggers que había sobre auth.users: esa tabla es compartida
+  // con el resto del ecosistema KontrolIA, y en el momento del alta todavía no
+  // hay sesión, así que un trigger no puede saber a qué organización asignarlo.
+  const { error: errorProvision } = await getSupabaseClient().rpc(
+    "provision_crm_access",
+  );
+
+  if (errorProvision) {
+    console.error("provision_crm_access.error", errorProvision);
+  }
+
   const { data: dataSale, error: errorSale } = await getSupabaseClient()
     .from("sales")
     .select("id, first_name, last_name, avatar, administrator")
