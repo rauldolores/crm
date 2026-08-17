@@ -898,7 +898,11 @@
           "type": "registry:lib"
         },
         {
-          "path": "src/lib/server/sesion-kontrolia.ts",
+          "path": "src/lib/server/requireKontroliaPermission.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/supabase-service.ts",
           "type": "registry:lib"
         },
         {
