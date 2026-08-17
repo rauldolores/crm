@@ -1,6 +1,11 @@
 import type { AuthProvider } from "ra-core";
 import { supabaseAuthProvider } from "ra-supabase-core";
 
+import {
+  getKontroliaAccessToken,
+  getKontroliaClient,
+} from "@/lib/kontrolia-auth/client";
+import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { canAccess } from "../commons/canAccess";
 import { getSupabaseClient } from "./supabase";
 
@@ -9,15 +14,30 @@ const getBaseAuthProvider = () =>
     getIdentity: async () => {
       const sale = await getSale();
 
-      if (sale == null) {
-        throw new Error();
+      if (sale != null) {
+        return {
+          id: sale.id,
+          fullName: `${sale.first_name} ${sale.last_name}`,
+          avatar: sale.avatar?.src,
+        };
       }
 
-      return {
-        id: sale.id,
-        fullName: `${sale.first_name} ${sale.last_name}`,
-        avatar: sale.avatar?.src,
-      };
+      // Con acceso centralizado, no encontrar ficha de comercial no significa
+      // que no haya sesion: puede ser que el usuario aun no este aprovisionado
+      // en esta organizacion, o que la consulta a la base fallara. Lanzar aqui
+      // hacia que ra-core lo tomara por sesion invalida y devolviera al login,
+      // reabriendo el ciclo con KontrolIA Auth.
+      if (isKontroliaAuthConfigured()) {
+        const usuario = await getKontroliaClient()?.getUser();
+        if (usuario) {
+          return {
+            id: usuario.id,
+            fullName: usuario.email ?? "",
+          };
+        }
+      }
+
+      throw new Error();
     },
   });
 
@@ -124,6 +144,16 @@ export const getAuthProvider = (): AuthProvider => {
       return baseAuthProvider.logout(params);
     },
     checkAuth: async (params) => {
+      // Con el acceso centralizado, la sesion vive en KontrolIA Auth y no en
+      // Supabase Auth. Comprobarla contra Supabase daba siempre "sin sesion",
+      // asi que tras un acceso correcto el CRM volvia a mandar al login y se
+      // producia un ciclo infinito entre el CRM y auth.kontrolia.io.
+      if (isKontroliaAuthConfigured()) {
+        const token = await getKontroliaAccessToken();
+        if (!token) throw new Error("Sin sesion");
+        return;
+      }
+
       // Users are on the set-password page, nothing to do
       if (
         window.location.pathname === "/set-password" ||
@@ -153,12 +183,23 @@ export const getAuthProvider = (): AuthProvider => {
       return baseAuthProvider.checkAuth(params);
     },
     canAccess: async (params) => {
-      const isInitialized = await getIsInitialized();
-      if (!isInitialized) return false;
+      // La puerta de "instalacion sin inicializar" consultaba init_state, que
+      // sin sesion de Supabase devuelve falso y denegaba toda la aplicacion.
+      // Con acceso centralizado esa comprobacion ya no aplica.
+      if (!isKontroliaAuthConfigured()) {
+        const isInitialized = await getIsInitialized();
+        if (!isInitialized) return false;
+      }
 
       // Get the current user
       const sale = await getSale();
-      if (sale == null) return false;
+
+      // Sin ficha de comercial se concede el rol basico en lugar de denegar
+      // todo: el aislamiento real lo aplica el RLS de la base de datos, no
+      // esta comprobacion de interfaz.
+      if (sale == null) {
+        return isKontroliaAuthConfigured() ? canAccess("user", params) : false;
+      }
 
       // Compute access rights from the sale role
       const role = sale.administrator ? "admin" : "user";
