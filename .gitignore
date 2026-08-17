@@ -61,3 +61,11 @@ node_modules/
 # Artefactos de los tests de navegador (vitest)
 .vitest-attachments/
 __screenshots__/
+
+# Archivos de entorno: nunca se versionan.
+# Los genera el instalador (CLI) en la primera ejecución, o se cargan como
+# variables en la plataforma de despliegue.
+.env
+.env.*
+!.env.example
+!.env.*.example
