@@ -3,6 +3,7 @@ import { CanAccess, useTranslate, useUserMenu } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { ThemeModeToggle } from "@/components/admin/theme-mode-toggle";
+import { SelectorDeOrganizacion } from "./SelectorDeOrganizacion";
 import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
@@ -81,6 +82,7 @@ const Header = () => {
                 </nav>
               </div>
               <div className="flex items-center">
+                <SelectorDeOrganizacion />
                 <ThemeModeToggle />
                 <RefreshButton />
                 <UserMenu>

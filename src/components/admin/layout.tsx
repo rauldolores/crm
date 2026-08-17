@@ -6,7 +6,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { UserMenu } from "@/components/admin/user-menu";
 import { ThemeModeToggle } from "@/components/admin/theme-mode-toggle";
-import { SelectorDeOrganizacion } from "@/components/crm/layout/SelectorDeOrganizacion";
 import { Notification } from "@/components/admin/notification";
 import { AppSidebar } from "@/components/admin/app-sidebar";
 import { RefreshButton } from "@/components/admin/refresh-button";
@@ -43,7 +42,6 @@ export const Layout = (props: CoreLayoutProps) => {
         <header className="flex h-16 md:h-12 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="scale-125 sm:scale-100" />
           <div className="flex-1 flex items-center" id="breadcrumb" />
-          <SelectorDeOrganizacion />
           <ThemeModeToggle />
           <RefreshButton />
           <UserMenu />
