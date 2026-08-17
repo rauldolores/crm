@@ -1,0 +1,31 @@
+# Normalización de finales de línea.
+#
+# El repositorio guarda SIEMPRE LF, y la copia de trabajo también, sin importar
+# el sistema operativo. Sin esta regla, un Windows con `core.autocrlf=true`
+# deja CRLF en disco mientras el repositorio guarda LF: Prettier (que exige LF)
+# marca entonces todos los archivos del proyecto y `make lint` falla siempre,
+# aunque no se haya tocado nada.
+#
+# `text=auto` deja que git detecte qué archivos son texto; `eol=lf` fuerza LF
+# tanto al guardar como al extraer.
+* text=auto eol=lf
+
+# Scripts de shell y hooks de git: CRLF los rompe al ejecutarlos.
+*.sh text eol=lf
+.husky/* text eol=lf
+
+# Binarios: git no debe tocarlos nunca.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# El lockfile se genera, no se revisa a mano: fuera de los diffs.
+package-lock.json linguist-generated=true diff=none

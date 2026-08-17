@@ -1,8 +1,8 @@
-import { CRM } from "@/components/atomic-crm/root/CRM";
+import { CRM } from "@/components/crm/root/CRM";
 import {
   authProvider,
   dataProvider,
-} from "@/components/atomic-crm/providers/fakerest";
+} from "@/components/crm/providers/fakerest";
 import { memoryStore } from "ra-core";
 
 const App = () => (

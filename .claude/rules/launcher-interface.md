@@ -4,7 +4,7 @@ A "managed launcher" is an external surface that drives the harness (CRM
 Builder's chat-service is the reference launcher). The harness core stays neutral:
 every launcher-specific fact is an extension point under `config.launcher` in
 `harness.config.json`, and each consuming hook is INERT when its point is unset.
-CRM Builder / chat-service specifics live in Atomic CRM's project layer (its
+CRM Builder / chat-service specifics live in Kontrolia CRM's project layer (its
 `harness.config.json`), never in a core hook.
 
 ## Extension points (`config.launcher`)

@@ -6,10 +6,17 @@ import path from "node:path";
 
 const registryPath = "registry.json";
 const basePath = "src";
-const atomicCrmComponentsPath = path.join(basePath, "components", "atomic-crm");
-const supabaseComponentsPath = path.join(basePath, "components", "supabase");
-const hooksPath = path.join(basePath, "hooks");
-const libPath = path.join(basePath, "lib");
+// Los patrones de glob deben usar barras normales en todas las plataformas: en
+// Windows `path.join` genera backslashes, que glob interpreta como escapes y no
+// como separadores, devolviendo cero resultados y vaciando el registry.
+const crmComponentsPath = path.posix.join(basePath, "components", "crm");
+const supabaseComponentsPath = path.posix.join(
+  basePath,
+  "components",
+  "supabase",
+);
+const hooksPath = path.posix.join(basePath, "hooks");
+const libPath = path.posix.join(basePath, "lib");
 
 const excludedHooks = [
   "filter-context.tsx",
@@ -29,26 +36,38 @@ const excludedLibFiles = [
 const testFilePattern = "**/*.{test,spec}.*";
 const storyFilePattern = "**/*.stories.*";
 
-const atomicCrmComponents = globSync(
-  path.join(atomicCrmComponentsPath, "**", "*.ts*"),
+// glob devuelve los resultados con el separador nativo, asi que en Windows
+// llegan con backslashes. El registry se publica y se versiona, por lo que sus
+// rutas deben ser identicas en cualquier plataforma: siempre con barras.
+const globPosix = (pattern, options) =>
+  globSync(pattern, options)
+    .map((match) => match.split(path.sep).join(path.posix.sep))
+    .sort();
+
+const crmComponents = globPosix(
+  path.posix.join(crmComponentsPath, "**", "*.ts*"),
   { ignore: [testFilePattern, storyFilePattern] },
 );
-const supabaseComponents = globSync(
-  path.join(supabaseComponentsPath, "**", "*.ts*"),
+const supabaseComponents = globPosix(
+  path.posix.join(supabaseComponentsPath, "**", "*.ts*"),
   { ignore: [testFilePattern, storyFilePattern] },
 );
-const hooks = globSync(path.join(hooksPath, "**", "*.ts*")).filter((hook) => {
-  return !excludedHooks.includes(path.basename(hook));
-});
-const libFiles = globSync(path.join(libPath, "**", "*.ts*")).filter((file) => {
-  return !excludedLibFiles.includes(path.basename(file));
-});
+const hooks = globPosix(path.posix.join(hooksPath, "**", "*.ts*")).filter(
+  (hook) => {
+    return !excludedHooks.includes(path.basename(hook));
+  },
+);
+const libFiles = globPosix(path.posix.join(libPath, "**", "*.ts*")).filter(
+  (file) => {
+    return !excludedLibFiles.includes(path.basename(file));
+  },
+);
 const changelogPath = "CHANGELOG.md";
 
 const registryContent = JSON.parse(fs.readFileSync(registryPath, "utf-8"));
 
 const files = [
-  ...atomicCrmComponents.map((path) => {
+  ...crmComponents.map((path) => {
     return {
       path,
       type: "registry:component",
@@ -82,7 +101,7 @@ const files = [
 const newRegistryContent = {
   ...registryContent,
   items: registryContent.items.map((item) => {
-    if (item.name === "atomic-crm") {
+    if (item.name === "kontrolia-crm") {
       return {
         ...item,
         files,
@@ -93,8 +112,10 @@ const newRegistryContent = {
   }),
 };
 
+// El salto de linea final es obligatorio: sin el, Prettier marca el archivo
+// cada vez que se regenera y `make lint` falla tras cada commit.
 fs.writeFileSync(
   registryPath,
-  JSON.stringify(newRegistryContent, null, 2),
+  `${JSON.stringify(newRegistryContent, null, 2)}\n`,
   "utf-8",
 );

@@ -224,41 +224,86 @@ begin
     return new;
 end;$$;
 
-CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
+-- Devuelve la organización activa del usuario, o null si el token no la trae.
+-- Es `stable` para que el planificador la evalúe una vez por consulta en lugar
+-- de una vez por fila, que es la diferencia entre un índice usable y un escaneo
+-- secuencial en tablas grandes.
+create or replace function public.current_organization_id()
+returns uuid
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select nullif(
+    current_setting('request.jwt.claims', true)::jsonb ->> 'organization_id',
+    ''
+  )::uuid;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."provision_crm_access"() RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
 declare
-  sales_count int;
+  org_id uuid;
+  uid uuid;
+  datos_usuario record;
+  es_el_primero boolean;
 begin
-  select count(id) into sales_count
-  from public.sales;
+  org_id := public.current_organization_id();
+  uid := auth.uid();
 
-  insert into public.sales (first_name, last_name, email, user_id, administrator)
+  -- Sin organizacion activa o sin sesion no hay nada que aprovisionar. Se sale
+  -- en silencio en lugar de fallar: la funcion se invoca en cada acceso.
+  if org_id is null or uid is null then
+    return;
+  end if;
+
+  -- Configuracion de la organizacion. Se crea vacia a proposito: los valores
+  -- por defecto viven en defaultConfiguration.ts y el frontend los aplica
+  -- cuando esta fila no trae claves. Duplicarlos aqui daria dos fuentes de
+  -- verdad que se desincronizarian.
+  insert into public.configuration (organization_id, config)
+  values (org_id, '{}'::jsonb)
+  on conflict (organization_id) do nothing;
+
+  if exists (
+    select 1 from public.sales
+    where organization_id = org_id and user_id = uid
+  ) then
+    return;
+  end if;
+
+  -- El primer usuario que entra en una organizacion es su administrador.
+  select not exists (
+    select 1 from public.sales where organization_id = org_id
+  ) into es_el_primero;
+
+  select email, raw_user_meta_data
+    into datos_usuario
+  from auth.users
+  where id = uid;
+
+  insert into public.sales
+    (organization_id, first_name, last_name, email, user_id, administrator)
   values (
-    coalesce(new.raw_user_meta_data ->> 'first_name', new.raw_user_meta_data -> 'custom_claims' ->> 'first_name', 'Pending'),
-    coalesce(new.raw_user_meta_data ->> 'last_name', new.raw_user_meta_data -> 'custom_claims' ->> 'last_name', 'Pending'),
-    new.email,
-    new.id,
-    case when sales_count > 0 then FALSE else TRUE end
-  );
-  return new;
-end;
-$$;
-
-CREATE OR REPLACE FUNCTION "public"."handle_update_user"() RETURNS "trigger"
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO ''
-    AS $$
-begin
-  update public.sales
-  set
-    first_name = coalesce(new.raw_user_meta_data ->> 'first_name', new.raw_user_meta_data -> 'custom_claims' ->> 'first_name', 'Pending'),
-    last_name = coalesce(new.raw_user_meta_data ->> 'last_name', new.raw_user_meta_data -> 'custom_claims' ->> 'last_name', 'Pending'),
-    email = new.email
-  where user_id = new.id;
-
-  return new;
+    org_id,
+    coalesce(
+      datos_usuario.raw_user_meta_data ->> 'first_name',
+      datos_usuario.raw_user_meta_data -> 'custom_claims' ->> 'first_name',
+      'Pending'
+    ),
+    coalesce(
+      datos_usuario.raw_user_meta_data ->> 'last_name',
+      datos_usuario.raw_user_meta_data -> 'custom_claims' ->> 'last_name',
+      'Pending'
+    ),
+    datos_usuario.email,
+    uid,
+    es_el_primero
+  )
+  on conflict (organization_id, user_id) do nothing;
 end;
 $$;
 
@@ -267,8 +312,14 @@ CREATE OR REPLACE FUNCTION "public"."is_admin"() RETURNS boolean
     SET "search_path" TO ''
     AS $$
 begin
+  -- El filtro por organización es obligatorio: la función es SECURITY DEFINER
+  -- y salta el RLS, así que sin él un administrador de una organización lo
+  -- sería en todas aquellas de las que es miembro.
   return exists (
-    select 1 from public.sales where user_id = auth.uid() and administrator = true
+    select 1 from public.sales
+    where user_id = auth.uid()
+      and administrator = true
+      and organization_id = public.current_organization_id()
   );
 end;
 $$;

@@ -51,9 +51,9 @@ cd <WORKTREE_PATH> && <your command>
 ## Violation examples
 
 ```
-Read("$REPO/src/components/atomic-crm/types.ts")
+Read("$REPO/src/components/crm/types.ts")
 ```
-❌ The worktree has this file at `<WORKTREE_PATH>/src/components/atomic-crm/types.ts`. Read there instead.
+❌ The worktree has this file at `<WORKTREE_PATH>/src/components/crm/types.ts`. Read there instead.
 
 ```
 Bash("npm run typecheck")

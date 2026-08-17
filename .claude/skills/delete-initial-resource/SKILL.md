@@ -7,7 +7,7 @@ description: Remove one or more of the initial CRM resources (contacts, companie
 
 ## Overview
 
-Removes one or more of the five initial Atomic CRM resources (`contacts`, `companies`, `deals`, `tags`, `tasks`) and every reference to them. **Irreversible confirm the target(s) with the user first; rely on git to recover.** Exit criterion: `make typecheck && make lint` is clean and no live reference to the deleted resource(s) survives in `src/` or `supabase/`.
+Removes one or more of the five initial Kontrolia CRM resources (`contacts`, `companies`, `deals`, `tags`, `tasks`) and every reference to them. **Irreversible confirm the target(s) with the user first; rely on git to recover.** Exit criterion: `make typecheck && make lint` is clean and no live reference to the deleted resource(s) survives in `src/` or `supabase/`.
 
 ## When to Use
 
@@ -24,7 +24,7 @@ For the backend migration mechanics, see `Skill({skill: "backend-dev"})` and `Sk
    - `deals` → [`deals.md`](deals.md)
    - `tags` → [`tags.md`](tags.md)
    - `tasks` → [`tasks.md`](tasks.md)
-2. **Run the script** (below) — deletes each `src/components/atomic-crm/<resource>/` folder and prints the dependent files to clean.
+2. **Run the script** (below) — deletes each `src/components/crm/<resource>/` folder and prints the dependent files to clean.
 3. **Clean each dependent file** using the "Shapes" patterns below + the per-resource file.
 4. **Verify** (below).
 

@@ -13,7 +13,6 @@ import { NotFound } from "@/components/admin/not-found";
 import { Ready } from "@/components/admin/ready";
 import { ThemeProvider } from "@/components/admin/theme-provider";
 import { AuthCallback } from "@/components/admin/authentication";
-import { useEffect } from "react";
 
 const defaultStore = localStorageStore();
 
@@ -30,43 +29,29 @@ const AdminContext = (props: CoreAdminContextProps) => (
 );
 
 /**
- * UI component for the Admin application.
+ * Componente de UI de la aplicación Admin.
  *
- * Wraps CoreAdminUI with theme provider and handles telemetry reporting.
- * Provides the main layout, login page, ready page, and authentication callback.
+ * Envuelve CoreAdminUI con el proveedor de tema y aporta el layout principal,
+ * la página de login, la página "ready" y el callback de autenticación.
+ *
+ * La telemetría queda siempre desactivada: Kontrolia CRM no envía datos de uso
+ * a terceros. `disableTelemetry` se aplica después de `{...props}` para que no
+ * pueda reactivarse desde fuera.
  *
  * @internal
  */
-const AdminUI = (props: CoreAdminUIProps) => {
-  const { disableTelemetry = false, ...rest } = props;
-
-  useEffect(() => {
-    if (
-      disableTelemetry ||
-      process.env.NODE_ENV !== "production" ||
-      typeof window === "undefined" ||
-      typeof window.location === "undefined" ||
-      typeof Image === "undefined"
-    ) {
-      return;
-    }
-    const img = new Image();
-    img.src = `https://shadcn-admin-kit-telemetry.marmelab.com/shadcn-admin-kit-telemetry?domain=${window.location.hostname}`;
-  }, [disableTelemetry]);
-
-  return (
-    <ThemeProvider>
-      <CoreAdminUI
-        layout={Layout}
-        loginPage={LoginPage}
-        ready={Ready}
-        authCallbackPage={AuthCallback}
-        disableTelemetry // Disable telemetry in CoreAdminUI to avoid double logging
-        {...rest}
-      />
-    </ThemeProvider>
-  );
-};
+const AdminUI = (props: CoreAdminUIProps) => (
+  <ThemeProvider>
+    <CoreAdminUI
+      layout={Layout}
+      loginPage={LoginPage}
+      ready={Ready}
+      authCallbackPage={AuthCallback}
+      {...props}
+      disableTelemetry
+    />
+  </ThemeProvider>
+);
 
 /**
  * Root component of a shadcn-admin-kit application.

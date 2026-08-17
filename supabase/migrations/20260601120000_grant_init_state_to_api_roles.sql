@@ -1,7 +1,7 @@
 -- The CRM's public views (activity_log, companies_summary, contacts_summary
 -- and init_state) are queried through the Supabase Data API by the anon and
 -- authenticated roles. `init_state` in particular is read by the anon role
--- *before* login (see src/components/atomic-crm/providers/supabase/authProvider.ts)
+-- *before* login (see src/components/crm/providers/supabase/authProvider.ts)
 -- to decide whether the CRM has already been initialized.
 --
 -- Unlike the tables -- whose grants were captured in earlier migrations -- these

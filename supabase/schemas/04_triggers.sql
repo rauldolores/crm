@@ -70,11 +70,14 @@ create or replace trigger on_deal_notes_deleted_delete_note_attachments
     after delete on public.deal_notes
     for each row execute function public.cleanup_note_attachments();
 
--- Auth triggers: sync auth.users to public.sales
-create or replace trigger on_auth_user_created
-    after insert on auth.users
-    for each row execute function public.handle_new_user();
-
-create or replace trigger on_auth_user_updated
-    after update on auth.users
-    for each row execute function public.handle_update_user();
+-- No hay triggers sobre auth.users.
+--
+-- Antes existían `on_auth_user_created` y `on_auth_user_updated`, que creaban un
+-- comercial por cada alta en auth.users. Con multi-tenencia eso es incorrecto por
+-- dos motivos: auth.users es compartida con el resto del ecosistema KontrolIA, de
+-- modo que quien se registrara en cualquier otra aplicación aparecería como
+-- comercial en el CRM; y un trigger no puede saber a qué organización asignarlo,
+-- porque en el momento del alta todavía no hay sesión ni claim `organization_id`.
+--
+-- El alta se hace ahora al primer acceso, mediante public.provision_crm_access(),
+-- que sí dispone de la organización activa en el token. Ver 02_functions.sql.

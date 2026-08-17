@@ -41,13 +41,14 @@ grant all on function public.handle_contact_saved() to anon;
 grant all on function public.handle_contact_saved() to authenticated;
 grant all on function public.handle_contact_saved() to service_role;
 
-grant all on function public.handle_new_user() to anon;
-grant all on function public.handle_new_user() to authenticated;
-grant all on function public.handle_new_user() to service_role;
 
-grant all on function public.handle_update_user() to anon;
-grant all on function public.handle_update_user() to authenticated;
-grant all on function public.handle_update_user() to service_role;
+
+grant all on function public.current_organization_id() to anon;
+grant all on function public.current_organization_id() to authenticated;
+grant all on function public.current_organization_id() to service_role;
+
+grant all on function public.provision_crm_access() to authenticated;
+grant all on function public.provision_crm_access() to service_role;
 
 grant all on function public.is_admin() to anon;
 grant all on function public.is_admin() to authenticated;
