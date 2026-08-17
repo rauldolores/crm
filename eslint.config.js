@@ -61,6 +61,14 @@ export default tseslint.config(
     },
   },
   {
+    // Scripts de linea de comandos: escribir en la salida estandar es su
+    // proposito, no un descuido de depuracion.
+    files: ["scripts/**/*.mjs"],
+    rules: {
+      "no-console": "off",
+    },
+  },
+  {
     files: [
       "src/components/admin/*.{ts,tsx}",
       "src/hooks/*.{ts,tsx}",
