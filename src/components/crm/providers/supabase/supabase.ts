@@ -38,12 +38,23 @@ const fetchConToken: typeof fetch = async (entrada, opciones) => {
  * Esto permite usar el Supabase que el cliente ya tenga —local o en la nube—
  * sin configurar nada en ese proyecto.
  */
+/**
+ * Direccion contra la que se piden los datos: el puente cuando el acceso es
+ * centralizado, o la base directamente en el modo antiguo. Se exporta porque
+ * ra-supabase necesita la misma en su `instanceUrl`; si las dos no coinciden,
+ * parte de las peticiones se saltan el puente.
+ */
+export const getUrlDeDatos = () =>
+  isKontroliaAuthConfigured()
+    ? `${window.location.origin}${PUENTE}`
+    : env.supabaseUrl;
+
 export const getSupabaseClient = () => {
   if (!supabaseClient) {
     const usarPuente = isKontroliaAuthConfigured();
 
     supabaseClient = createClient(
-      usarPuente ? `${window.location.origin}${PUENTE}` : env.supabaseUrl,
+      getUrlDeDatos(),
       env.supabasePublishableKey,
       usarPuente
         ? {

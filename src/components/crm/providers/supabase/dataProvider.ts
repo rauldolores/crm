@@ -19,11 +19,15 @@ import type {
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { getIsInitialized } from "./authProvider";
-import { getSupabaseClient } from "./supabase";
+import { getSupabaseClient, getUrlDeDatos } from "./supabase";
 
 const getBaseDataProvider = () =>
   supabaseDataProvider({
-    instanceUrl: env.supabaseUrl,
+    // Tiene que ser la misma direccion a la que apunta el cliente. ra-supabase
+    // construye parte de sus peticiones a partir de `instanceUrl`, asi que
+    // dejarlo en la URL real de la base hacia que esas fueran directas a
+    // Supabase, saltandose el puente y llegando como usuario anonimo.
+    instanceUrl: getUrlDeDatos(),
     apiKey: env.supabasePublishableKey,
     supabaseClient: getSupabaseClient(),
     sortOrder: "asc,desc.nullslast" as any,
