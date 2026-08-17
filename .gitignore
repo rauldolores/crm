@@ -58,3 +58,6 @@ node_modules/
 
 *.lock
  
+# Artefactos de los tests de navegador (vitest)
+.vitest-attachments/
+__screenshots__/
