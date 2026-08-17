@@ -1,12 +1,14 @@
 import { env } from "@/lib/env";
 import { supabaseDataProvider } from "ra-supabase-core";
 import {
+  fetchUtils,
   withLifecycleCallbacks,
   type DataProvider,
   type GetListParams,
   type Identifier,
   type ResourceCallbacks,
 } from "ra-core";
+import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import type {
   ContactNote,
   Deal,
@@ -21,8 +23,29 @@ import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient, getUrlDeDatos } from "./supabase";
 
+/**
+ * Cliente HTTP del data provider.
+ *
+ * ra-supabase trae uno por defecto que saca el token de la sesion de Supabase
+ * Auth, que ya no se usa: las peticiones salian sin cabecera Authorization y
+ * el puente las rechazaba con 401. Tampoco bastaba interceptar el `fetch` del
+ * cliente de Supabase, porque estas peticiones las hace ra-data-postgrest por
+ * su cuenta y no pasan por ahi.
+ */
+const clienteHttp = async (url: string, opciones: fetchUtils.Options = {}) => {
+  const token = await getKontroliaAccessToken();
+  const cabeceras = new Headers(
+    (opciones.headers as Headers | undefined) ?? { Accept: "application/json" },
+  );
+  cabeceras.set("apikey", env.supabasePublishableKey);
+  if (token) cabeceras.set("Authorization", `Bearer ${token}`);
+
+  return fetchUtils.fetchJson(url, { ...opciones, headers: cabeceras });
+};
+
 const getBaseDataProvider = () =>
   supabaseDataProvider({
+    httpClient: clienteHttp,
     // Tiene que ser la misma direccion a la que apunta el cliente. ra-supabase
     // construye parte de sus peticiones a partir de `instanceUrl`, asi que
     // dejarlo en la URL real de la base hacia que esas fueran directas a
