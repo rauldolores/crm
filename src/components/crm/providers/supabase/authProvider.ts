@@ -88,19 +88,33 @@ const getSale = async () => {
     return undefined;
   }
 
-  // Da de alta al usuario como comercial de su organización activa, y crea la
-  // configuración de esa organización si aún no existe. Es idempotente y solo
-  // se llega aquí cuando la caché está vacía, o sea una vez por sesión.
-  //
-  // Sustituye a los triggers que había sobre auth.users: esa tabla es compartida
-  // con el resto del ecosistema KontrolIA, y en el momento del alta todavía no
-  // hay sesión, así que un trigger no puede saber a qué organización asignarlo.
-  const { error: errorProvision } = await getSupabaseClient().rpc(
-    "provision_crm_access",
-  );
+  // Da de alta al usuario en el CRM la primera vez que entra, y con el la
+  // configuracion de su organizacion. Se hace en el servidor porque es quien
+  // conoce la organizacion del token: dentro de la base, consultando con la
+  // clave de servicio, ese dato no esta disponible.
+  const token = await getKontroliaAccessToken();
+  const respuesta = await fetch("/api/crm/aprovisionar", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    // KontrolIA Auth guarda el nombre completo en un solo campo; el CRM lo
+    // separa en dos. Se parte por el primer espacio, que es lo razonable sin
+    // inventar reglas por idioma.
+    body: JSON.stringify({
+      email: usuario.email ?? "",
+      first_name: (usuario.fullName ?? "").split(" ")[0] ?? "",
+      last_name: (usuario.fullName ?? "").split(" ").slice(1).join(" "),
+    }),
+  }).catch(() => null);
 
-  if (errorProvision) {
-    console.error("provision_crm_access.error", errorProvision);
+  if (respuesta?.ok) {
+    const { sale } = await respuesta.json();
+    if (sale) {
+      storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(sale));
+      return sale;
+    }
   }
 
   const { data: dataSale, error: errorSale } = await getSupabaseClient()
