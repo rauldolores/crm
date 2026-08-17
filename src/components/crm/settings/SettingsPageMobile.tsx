@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/components/admin/use-theme";
 import { ChevronRight, KeyRound } from "lucide-react";
@@ -334,9 +335,50 @@ const PreferencesSection = () => {
         {translate("crm.settings.preferences", { _: "Preferences" })}
       </SectionLabel>
       <ItemGroup className="rounded-lg border overflow-hidden">
+        <OrganizacionRow />
         <ThemeRow />
       </ItemGroup>
     </div>
+  );
+};
+
+/**
+ * Equivalente movil del selector de la cabecera. Comparte el mismo hook para
+ * que ambas vistas se comporten igual, y vive junto al tema porque es su
+ * vecino en el escritorio.
+ */
+const OrganizacionRow = () => {
+  const { organizaciones, activa, cambiando, cambiar } = useOrganizaciones();
+
+  if (organizaciones.length <= 1) return null;
+
+  return (
+    <Item size="sm">
+      <ItemContent>
+        <ItemTitle className="font-normal text-muted-foreground">
+          Organización
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
+        <ToggleGroup
+          type="single"
+          value={activa ?? undefined}
+          onValueChange={(valor) => valor && cambiar(valor)}
+          disabled={cambiando}
+          className="flex-wrap justify-end"
+        >
+          {organizaciones.map((organizacion) => (
+            <ToggleGroupItem
+              key={organizacion.id}
+              value={organizacion.id}
+              className="text-xs"
+            >
+              {organizacion.nombre}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </ItemActions>
+    </Item>
   );
 };
 

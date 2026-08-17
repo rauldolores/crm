@@ -32,7 +32,11 @@ interface Organizacion {
  * No se muestra si la persona pertenece a una sola organización, que es el caso
  * habitual.
  */
-export const SelectorDeOrganizacion = () => {
+/**
+ * Datos y cambio de organizacion, separados de la presentacion para que el
+ * escritorio y el movil compartan comportamiento y no se desincronicen.
+ */
+export const useOrganizaciones = () => {
   const [organizaciones, setOrganizaciones] = useState<Organizacion[]>([]);
   const [activa, setActiva] = useState<string | null>(null);
   const [cambiando, setCambiando] = useState(false);
@@ -62,11 +66,6 @@ export const SelectorDeOrganizacion = () => {
     };
   }, []);
 
-  if (organizaciones.length <= 1) return null;
-
-  const nombreActivo =
-    organizaciones.find((o) => o.id === activa)?.nombre ?? "Organización";
-
   const cambiar = async (id: string) => {
     if (id === activa || cambiando) return;
     setCambiando(true);
@@ -77,6 +76,18 @@ export const SelectorDeOrganizacion = () => {
       setCambiando(false);
     }
   };
+
+  const nombreActivo =
+    organizaciones.find((o) => o.id === activa)?.nombre ?? "Organización";
+
+  return { organizaciones, activa, cambiando, cambiar, nombreActivo };
+};
+
+export const SelectorDeOrganizacion = () => {
+  const { organizaciones, activa, cambiando, cambiar, nombreActivo } =
+    useOrganizaciones();
+
+  if (organizaciones.length <= 1) return null;
 
   return (
     <DropdownMenu>
