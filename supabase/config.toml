@@ -1,6 +1,6 @@
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
-project_id = "atomic-crm-demo"
+project_id = "kontrolia-crm"
 
 [api]
 enabled = true
@@ -99,11 +99,11 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [auth.email.template.invite]
-subject = "You've been invited to Atomic CRM"
+subject = "You've been invited to Kontrolia CRM"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.recovery]
-subject = "Reset your Atomic CRM Password"
+subject = "Reset your Kontrolia CRM Password"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.sms]

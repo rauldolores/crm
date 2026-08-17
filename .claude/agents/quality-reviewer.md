@@ -406,12 +406,12 @@ bug.
 ### C.2 Integration check (read-only, BLOCKING)
 
 Router / App registration:
-- New resource registered in `src/components/atomic-crm/root/CRM.tsx`?
+- New resource registered in `src/components/crm/root/CRM.tsx`?
 - New route in the router?
 - Nav menu entry in `Header.tsx`?
 
 Component exports:
-- `src/components/atomic-crm/[entity]/index.ts` exports the resource config?
+- `src/components/crm/[entity]/index.ts` exports the resource config?
 - All referenced components actually created?
 
 Renaming sanity:

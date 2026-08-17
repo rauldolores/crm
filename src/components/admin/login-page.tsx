@@ -5,7 +5,7 @@ import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { TextInput } from "@/components/admin/text-input";
 import { Notification } from "@/components/admin/notification";
-import { useConfigurationContext } from "@/components/atomic-crm/root/ConfigurationContext.tsx";
+import { useConfigurationContext } from "@/components/crm/root/ConfigurationContext.tsx";
 
 /**
  * Login page displayed when authentication is enabled and the user is not authenticated.

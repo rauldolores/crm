@@ -7,7 +7,7 @@
 // The sentinel directory is a launcher extension point: config.launcher
 // .turnSentinelDir (see .claude/rules/launcher-interface.md). When it is unset
 // (no managed launcher), this hook is INERT: no directory is created, no path is
-// hardcoded. Atomic CRM's config sets it to /tmp/pty-sentinels, preserving the
+// hardcoded. Kontrolia CRM's config sets it to /tmp/pty-sentinels, preserving the
 // current CRM Builder behavior.
 
 import { closeSync, mkdirSync, openSync, readFileSync } from "node:fs";
