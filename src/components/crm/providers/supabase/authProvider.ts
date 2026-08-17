@@ -4,7 +4,9 @@ import { supabaseAuthProvider } from "ra-supabase-core";
 import {
   getKontroliaAccessToken,
   getKontroliaClient,
+  logoutKontroliaAuth,
 } from "@/lib/kontrolia-auth/client";
+import { OAUTH_LOGIN_PATH } from "@/lib/kontrolia-auth/oauth";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { canAccess } from "../commons/canAccess";
 import { getSupabaseClient } from "./supabase";
@@ -79,11 +81,10 @@ const getSale = async () => {
     return JSON.parse(cachedValue);
   }
 
-  const { data: dataSession, error: errorSession } =
-    await getSupabaseClient().auth.getSession();
-
-  // Shouldn't happen after login but just in case
-  if (dataSession?.session?.user == null || errorSession) {
+  // La identidad viene de KontrolIA Auth. No se usa supabase.auth porque, al
+  // configurar el cliente con `accessToken`, supabase-js lo deshabilita.
+  const usuario = await getKontroliaClient()?.getUser();
+  if (usuario == null) {
     return undefined;
   }
 
@@ -105,7 +106,7 @@ const getSale = async () => {
   const { data: dataSale, error: errorSale } = await getSupabaseClient()
     .from("sales")
     .select("id, first_name, last_name, avatar, administrator")
-    .match({ user_id: dataSession?.session?.user.id })
+    .match({ user_id: usuario.id })
     .single();
 
   // Shouldn't happen either as all users are sales but just in case
@@ -128,6 +129,12 @@ export const getAuthProvider = (): AuthProvider => {
   return {
     ...baseAuthProvider,
     login: async (params) => {
+      // Con acceso centralizado el CRM no recibe credenciales: la pantalla de
+      // acceso redirige a KontrolIA Auth antes de llegar aqui.
+      if (isKontroliaAuthConfigured()) {
+        window.location.replace(OAUTH_LOGIN_PATH);
+        return;
+      }
       if (params.ssoDomain) {
         const { error } = await getSupabaseClient().auth.signInWithSSO({
           domain: params.ssoDomain,
@@ -141,6 +148,10 @@ export const getAuthProvider = (): AuthProvider => {
     },
     logout: async (params) => {
       clearCache();
+      if (isKontroliaAuthConfigured()) {
+        await logoutKontroliaAuth();
+        return;
+      }
       return baseAuthProvider.logout(params);
     },
     checkError: async (error) => {
