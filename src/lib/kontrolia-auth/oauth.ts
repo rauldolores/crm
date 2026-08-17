@@ -21,6 +21,9 @@ export const OAUTH_CLIENT_ID =
  */
 export const OAUTH_CODE_VERIFIER_STORAGE_KEY = "kontrolia_oauth_code_verifier";
 
+/** Ruta que inicia el acceso. */
+export const OAUTH_LOGIN_PATH = "/oauth/login";
+
 /** Ruta que recibe el código de autorización. */
 export const OAUTH_CALLBACK_PATH = "/oauth/callback";
 

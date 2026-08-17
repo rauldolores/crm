@@ -146,16 +146,10 @@ export const getAuthProvider = (): AuthProvider => {
         return;
       }
 
-      const isInitialized = await getIsInitialized();
-
-      if (!isInitialized) {
-        await getSupabaseClient().auth.signOut();
-        throw {
-          redirectTo: "/sign-up",
-          message: false,
-        };
-      }
-
+      // Ya no se comprueba si la instalación "está inicializada" para mandar
+      // a una pantalla de alta: crear cuentas es competencia de KontrolIA
+      // Auth. Sin sesión, ra-core lleva a la pantalla de acceso, que redirige
+      // allí.
       return baseAuthProvider.checkAuth(params);
     },
     canAccess: async (params) => {

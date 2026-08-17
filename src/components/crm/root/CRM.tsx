@@ -52,7 +52,7 @@ import {
   defaultTitle,
 } from "./defaultConfiguration";
 import { i18nProvider as defaulti18nProvider } from "../providers/commons/i18nProvider";
-import { StartPage } from "../login/StartPage.tsx";
+import { RedireccionAlAcceso } from "../login/RedireccionAlAcceso.tsx";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { MobileTasksList } from "../tasks/MobileTasksList.tsx";
 import { ContactListMobile } from "../contacts/ContactList.tsx";
@@ -206,7 +206,7 @@ export const CRM = ({
       authProvider={wrappedAuthProvider}
       i18nProvider={i18nProvider}
       store={store}
-      loginPage={StartPage}
+      loginPage={RedireccionAlAcceso}
       requireAuth
       disableTelemetry
       {...rest}

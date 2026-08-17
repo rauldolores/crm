@@ -386,6 +386,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/login/RedireccionAlAcceso.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/login/SSOAuthButton.tsx",
           "type": "registry:component"
         },
