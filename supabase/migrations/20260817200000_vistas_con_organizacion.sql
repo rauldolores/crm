@@ -1,7 +1,15 @@
+-- Las vistas exponen organization_id.
 --
--- Views
--- This file declares all views in the public schema.
+-- Al implantar la multi-tenencia se anadio la columna a las tablas pero no se
+-- propago a las vistas. Mientras el aislamiento lo aplicaba el RLS no se noto,
+-- porque el filtrado ocurria por debajo. Al pasar el acceso a datos por el
+-- servidor, que consulta con la clave de servicio y anade el filtro de forma
+-- explicita, PostgREST empezo a responder 42703 (columna inexistente) en toda
+-- consulta contra una vista.
 --
+-- En activity_log la columna se anade al final de las cinco ramas unidas: al
+-- reemplazar una vista, Postgres solo admite columnas nuevas al final y en la
+-- misma posicion en todas las ramas.
 
 create or replace view public.activity_log with (security_invoker = on) as
 select
@@ -133,9 +141,3 @@ from public.contacts co
     left join public.tasks t on co.id = t.contact_id
     left join public.companies c on co.company_id = c.id
 group by co.id, c.name;
-
-create or replace view public.init_state with (security_invoker = off) as
-select count(sub.id) as is_initialized
-from (
-    select sales.id from public.sales limit 1
-) sub;
