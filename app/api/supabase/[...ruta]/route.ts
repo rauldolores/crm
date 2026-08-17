@@ -41,14 +41,24 @@ const CON_DUENO = new Set([
   "activity_log",
 ]);
 
-/** Cabeceras que no deben viajar tal cual al reenviar. */
-const CABECERAS_OMITIDAS = new Set([
-  "host",
-  "connection",
-  "content-length",
-  "authorization",
-  "apikey",
-]);
+/**
+ * Cabeceras que se reenvian, por lista blanca y no por exclusion.
+ *
+ * Reenviar todo lo que manda el navegador enviaba tambien sus cookies de
+ * sesion a la base de datos —innecesario y poco deseable— y hacia la peticion
+ * lo bastante grande como para que Kong la rechazara con 400. Aqui solo viajan
+ * las que PostgREST necesita.
+ */
+const CABECERAS_REENVIADAS = [
+  "accept",
+  "accept-profile",
+  "content-profile",
+  "content-type",
+  "prefer",
+  "range",
+  "range-unit",
+  "x-client-info",
+];
 
 const esError = (estado: number, mensaje: string) =>
   Response.json({ message: mensaje }, { status: estado });
@@ -80,11 +90,10 @@ async function reenviar(peticion: Request, ruta: string[]) {
   }
 
   const cabeceras = new Headers();
-  peticion.headers.forEach((valor, nombre) => {
-    if (!CABECERAS_OMITIDAS.has(nombre.toLowerCase())) {
-      cabeceras.set(nombre, valor);
-    }
-  });
+  for (const nombre of CABECERAS_REENVIADAS) {
+    const valor = peticion.headers.get(nombre);
+    if (valor) cabeceras.set(nombre, valor);
+  }
   cabeceras.set("Authorization", `Bearer ${CLAVE_DE_SERVICIO}`);
   cabeceras.set("apikey", CLAVE_DE_SERVICIO);
 
