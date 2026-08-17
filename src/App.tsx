@@ -1,4 +1,6 @@
 import { CRM } from "@/components/crm/root/CRM";
+import { OAuthCallbackPage } from "@/components/crm/login/OAuthCallbackPage";
+import { OAuthLoginPage } from "@/components/crm/login/OAuthLoginPage";
 
 /**
  * Application entry point
@@ -31,6 +33,20 @@ import { CRM } from "@/components/crm/root/CRM";
  *    />
  * );
  */
-const App = () => <CRM />;
+/**
+ * El retorno de KontrolIA Auth llega a una ruta normal (`/oauth/callback`),
+ * mientras que el CRM enruta por hash: el router interno nunca la vería. Por
+ * eso se intercepta aquí, antes de montarlo.
+ */
+const RUTAS_OAUTH = [OAuthLoginPage, OAuthCallbackPage];
+
+const App = () => {
+  // Mayuscula inicial obligatoria: JSX trata las minusculas como etiquetas HTML.
+  const RutaOAuth = RUTAS_OAUTH.find(
+    (ruta) => window.location.pathname === ruta.path,
+  );
+
+  return RutaOAuth ? <RutaOAuth /> : <CRM />;
+};
 
 export default App;

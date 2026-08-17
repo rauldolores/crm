@@ -378,6 +378,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/login/OAuthCallbackPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/login/OAuthLoginPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/login/SSOAuthButton.tsx",
           "type": "registry:component"
         },
