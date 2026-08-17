@@ -866,6 +866,10 @@
           "type": "registry:hook"
         },
         {
+          "path": "src/lib/kontrolia-auth/permissions-catalog.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/toSlug.ts",
           "type": "registry:lib"
         },
