@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "next",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev:next"],
+      "port": 3001
+    },
+    {
       "name": "dev-demo",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev:demo"],

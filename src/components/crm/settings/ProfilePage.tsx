@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { useMutation } from "@tanstack/react-query";
 import { Check, CircleX, Copy, Pencil, Save } from "lucide-react";
 import {
@@ -220,7 +221,7 @@ const ProfileForm = ({
           </div>
         </CardContent>
       </Card>
-      {import.meta.env.VITE_INBOUND_EMAIL && (
+      {env.inboundEmail && (
         <Card>
           <CardContent>
             <div className="space-y-4 justify-between">
@@ -233,7 +234,7 @@ const ProfileForm = ({
                   field: "Cc:",
                 })}
               </p>
-              <CopyPaste value={import.meta.env.VITE_INBOUND_EMAIL} />
+              <CopyPaste value={env.inboundEmail} />
             </div>
           </CardContent>
         </Card>
@@ -251,9 +252,7 @@ const ProfileForm = ({
                 _: "Use this URL to connect your AI assistant to your CRM data via the Model Context Protocol (MCP).",
               })}
             </p>
-            <CopyPaste
-              value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp`}
-            />
+            <CopyPaste value={`${env.supabaseUrl}/functions/v1/mcp`} />
           </div>
         </CardContent>
       </Card>

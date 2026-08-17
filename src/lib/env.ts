@@ -26,6 +26,7 @@ export const env = {
     process.env.NEXT_PUBLIC_KONTROLIA_OAUTH_CLIENT_ID ?? "",
 
   /** Opcionales. */
+  googleWorkplaceDomain: process.env.NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN || undefined,
   isDemo: process.env.NEXT_PUBLIC_IS_DEMO === "true",
   inboundEmail: process.env.NEXT_PUBLIC_INBOUND_EMAIL ?? "",
   disableEmailPasswordAuthentication:

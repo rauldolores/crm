@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 /**
  * Configuración del SDK @kontrolia/auth. Apunta al proyecto Supabase de
  * KontrolIA Auth, que normalmente NO es el mismo donde viven los datos del
@@ -8,8 +9,8 @@
  * variables de entorno que el CLI de instalación rellena.
  */
 export const kontroliaAuthConfig = {
-  supabaseUrl: import.meta.env.VITE_KONTROLIA_AUTH_URL,
-  supabaseAnonKey: import.meta.env.VITE_KONTROLIA_AUTH_ANON_KEY,
+  supabaseUrl: env.kontroliaAuthUrl,
+  supabaseAnonKey: env.kontroliaAuthAnonKey,
 };
 
 /** true si la aplicación tiene configurado el login centralizado. */

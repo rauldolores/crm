@@ -18,7 +18,6 @@ import { FileField } from "@/components/admin/file-field";
 import { usePapaParse } from "../misc/usePapaParse";
 import type { ContactImportSchema } from "./useContactImport";
 import { useContactImport } from "./useContactImport";
-import * as sampleCsv from "./contacts_export.csv?raw";
 
 export const ContactImportButton = () => {
   const translate = useTranslate();
@@ -46,9 +45,10 @@ export const ContactImportButton = () => {
   );
 };
 
-const SAMPLE_URL = `data:text/csv;name=crm_contacts_sample.csv;charset=utf-8,${encodeURIComponent(
-  sampleCsv.default,
-)}`;
+// Se sirve como archivo estatico en lugar de empotrarlo como URL de datos:
+// el sufijo `?raw` de Vite no es estandar, y ademas el CSV completo viajaba
+// codificado dentro del paquete de JavaScript.
+const SAMPLE_URL = "/crm_contacts_sample.csv";
 
 type ContactImportModalProps = {
   open: boolean;

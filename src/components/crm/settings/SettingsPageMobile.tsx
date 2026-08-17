@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/components/admin/use-theme";
 import { ChevronRight, KeyRound } from "lucide-react";
@@ -410,7 +411,7 @@ const ThemeRow = () => {
 const InboundEmailSection = () => {
   const translate = useTranslate();
 
-  if (!import.meta.env.VITE_INBOUND_EMAIL) return null;
+  if (!env.inboundEmail) return null;
 
   return (
     <div>
@@ -422,7 +423,7 @@ const InboundEmailSection = () => {
         })}
       </p>
       <ItemGroup className="rounded-lg border overflow-hidden">
-        <CopyPasteRow value={import.meta.env.VITE_INBOUND_EMAIL} />
+        <CopyPasteRow value={env.inboundEmail} />
       </ItemGroup>
     </div>
   );
@@ -442,9 +443,7 @@ const McpServerSection = () => {
         })}
       </p>
       <ItemGroup className="rounded-lg border overflow-hidden">
-        <CopyPasteRow
-          value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp`}
-        />
+        <CopyPasteRow value={`${env.supabaseUrl}/functions/v1/mcp`} />
       </ItemGroup>
     </div>
   );

@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 /**
  * Constantes del flujo OAuth 2.1 (Authorization Code + PKCE) contra
  * KontrolIA Auth.
@@ -11,7 +12,7 @@
  * Ese registro es distinto del catálogo de permisos.
  */
 export const OAUTH_CLIENT_ID =
-  import.meta.env.VITE_KONTROLIA_OAUTH_CLIENT_ID || "";
+  env.kontroliaOAuthClientId || "";
 
 /**
  * sessionStorage y no localStorage: el verificador solo debe sobrevivir el

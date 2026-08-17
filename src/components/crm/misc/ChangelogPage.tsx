@@ -1,15 +1,43 @@
+import { useEffect, useState } from "react";
 import { useTranslate } from "ra-core";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileContent } from "../layout/MobileContent";
 import MobileHeader from "../layout/MobileHeader";
 import { Markdown } from "./Markdown";
-import changelogContent from "../../../../CHANGELOG.md?raw";
 import { MobileBackButton } from "./MobileBackButton";
+
+/**
+ * El registro de cambios se descarga en tiempo de ejecucion desde
+ * `public/CHANGELOG.md` en lugar de importarse como modulo. Vite lo resolvia
+ * con el sufijo `?raw`, pero eso no es estandar: obligaba a registrar un
+ * cargador propio para Markdown y ataba el contenido al empaquetado.
+ */
+const useChangelog = () => {
+  const [contenido, setContenido] = useState("");
+
+  useEffect(() => {
+    let vigente = true;
+    fetch("/CHANGELOG.md")
+      .then((r) => (r.ok ? r.text() : ""))
+      .then((texto) => {
+        if (vigente) setContenido(texto);
+      })
+      .catch(() => {
+        if (vigente) setContenido("");
+      });
+    return () => {
+      vigente = false;
+    };
+  }, []);
+
+  return contenido;
+};
 
 export const ChangelogPage = () => {
   const translate = useTranslate();
   const isMobile = useIsMobile();
+  const changelogContent = useChangelog();
 
   if (isMobile) {
     return (

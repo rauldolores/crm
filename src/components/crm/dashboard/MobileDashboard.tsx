@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { useGetList, useTimeout } from "ra-core";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -82,7 +83,7 @@ export const MobileDashboard = () => {
   return (
     <Wrapper>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-1">
-        {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
+        {env.isDemo ? <Welcome /> : null}
         <DashboardActivityLog />
       </div>
     </Wrapper>

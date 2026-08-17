@@ -24,7 +24,10 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "husky",
-    "update-changelog": "gh api 'repos/{owner}/{repo}/releases' --paginate -q '.[] | \"## \\(.tag_name) - \\(.published_at[:10])\\n\\n\\(.body)\\n\"' > CHANGELOG.md"
+    "update-changelog": "gh api 'repos/{owner}/{repo}/releases' --paginate -q '.[] | \"## \\(.tag_name) - \\(.published_at[:10])\\n\\n\\(.body)\\n\"' > CHANGELOG.md",
+    "dev:next": "next dev -p 3001",
+    "build:next": "next build",
+    "start:next": "next start -p 3001"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -101,6 +104,7 @@
     "@playwright/mcp": "^0.0.76",
     "@playwright/test": "^1.60.0",
     "@storybook/react-vite": "^9.1.19",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/dompurify": "^3.0.5",
     "@types/faker": "^5.5.9",
     "@types/jsonexport": "^3.0.5",

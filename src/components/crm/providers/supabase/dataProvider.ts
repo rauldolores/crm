@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { supabaseDataProvider } from "ra-supabase-core";
 import {
   withLifecycleCallbacks,
@@ -22,8 +23,8 @@ import { getSupabaseClient } from "./supabase";
 
 const getBaseDataProvider = () =>
   supabaseDataProvider({
-    instanceUrl: import.meta.env.VITE_SUPABASE_URL,
-    apiKey: import.meta.env.VITE_SB_PUBLISHABLE_KEY,
+    instanceUrl: env.supabaseUrl,
+    apiKey: env.supabasePublishableKey,
     supabaseClient: getSupabaseClient(),
     sortOrder: "asc,desc.nullslast" as any,
   });
@@ -373,12 +374,16 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
 ];
 
 export const getDataProvider = () => {
-  if (import.meta.env.VITE_SUPABASE_URL === undefined) {
-    throw new Error("Please set the VITE_SUPABASE_URL environment variable");
-  }
-  if (import.meta.env.VITE_SB_PUBLISHABLE_KEY === undefined) {
+  // Comprobación por valor vacío y no por `undefined`: la configuración
+  // devuelve cadena vacía cuando la variable no está definida.
+  if (!env.supabaseUrl) {
     throw new Error(
-      "Please set the VITE_SB_PUBLISHABLE_KEY environment variable",
+      "Falta la variable de entorno NEXT_PUBLIC_SUPABASE_URL. Ejecuta el instalador para configurar la base de datos.",
+    );
+  }
+  if (!env.supabasePublishableKey) {
+    throw new Error(
+      "Falta la variable de entorno NEXT_PUBLIC_SB_PUBLISHABLE_KEY. Ejecuta el instalador para configurar la base de datos.",
     );
   }
   return withLifecycleCallbacks(

@@ -1,2 +1,2 @@
-export const ATTACHMENTS_BUCKET =
-  import.meta.env.VITE_ATTACHMENTS_BUCKET || "attachments";
+import { env } from "@/lib/env";
+export const ATTACHMENTS_BUCKET = env.attachmentsBucket;
