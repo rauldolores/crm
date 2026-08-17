@@ -11,20 +11,32 @@ let supabaseClient: SupabaseClient | null = null;
 const PUENTE = "/api/supabase";
 
 /**
+ * Envía el token de KontrolIA Auth en cada petición.
+ *
+ * Se hace interceptando `fetch` y no con la opción `accessToken` de
+ * supabase-js: esa opción deshabilita `supabase.auth`, y `ra-supabase-core`
+ * llama a `supabase.auth.getSession()` dentro de su data provider, de modo que
+ * todas las consultas fallaban antes de salir del navegador.
+ */
+const fetchConToken: typeof fetch = async (entrada, opciones) => {
+  const token = await getKontroliaAccessToken();
+  const cabeceras = new Headers(opciones?.headers);
+  if (token) {
+    cabeceras.set("Authorization", `Bearer ${token}`);
+  }
+  return fetch(entrada, { ...opciones, headers: cabeceras });
+};
+
+/**
  * Cliente de la base de datos del CRM.
  *
  * Con acceso centralizado el navegador NO habla con la base directamente:
  * apunta al puente `/api/supabase`, que verifica el token de KontrolIA Auth en
  * el servidor y reenvía la petición firmando otro token que lleva la
- * organización activa. Las políticas RLS se aplican entonces dentro de la base,
- * tal y como se verificaron.
+ * organización activa. Las políticas RLS se aplican entonces dentro de la base.
  *
- * Esto es lo que permite usar el Supabase que el cliente ya tenga —local o en
- * la nube— sin configurar nada en ese proyecto. Hablar directo obligaría a que
- * su base confiara en el emisor de los tokens de KontrolIA Auth.
- *
- * `accessToken` hace que supabase-js envíe el token de KontrolIA en cada
- * petición en lugar de gestionar una sesión propia.
+ * Esto permite usar el Supabase que el cliente ya tenga —local o en la nube—
+ * sin configurar nada en ese proyecto.
  */
 export const getSupabaseClient = () => {
   if (!supabaseClient) {
@@ -34,7 +46,10 @@ export const getSupabaseClient = () => {
       usarPuente ? `${window.location.origin}${PUENTE}` : env.supabaseUrl,
       env.supabasePublishableKey,
       usarPuente
-        ? { accessToken: async () => (await getKontroliaAccessToken()) ?? "" }
+        ? {
+            global: { fetch: fetchConToken },
+            auth: { persistSession: false, autoRefreshToken: false },
+          }
         : undefined,
     );
   }
