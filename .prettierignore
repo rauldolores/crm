@@ -26,3 +26,6 @@ cypress/screenshots
 !.yarn/sdks
 !.yarn/versions
 .github
+
+.next/
+next-env.d.ts

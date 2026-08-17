@@ -1,6 +1,6 @@
 import { AuthProvider, useAuth } from "@kontrolia/react";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { kontroliaAuthConfig } from "@/lib/kontrolia-auth/config";
 import {
@@ -17,14 +17,23 @@ import {
  * ruta más, porque el CRM enruta por hash y el `redirect_uri` de OAuth es una
  * ruta normal: el router de ra-core nunca llegaría a verla.
  */
+/**
+ * Marca a nivel de modulo, no `useRef`.
+ *
+ * En desarrollo, el modo estricto de React monta, desmonta y vuelve a montar
+ * cada componente, y las referencias se reinician en ese remontaje. El codigo
+ * de autorizacion se canjeaba entonces dos veces, y como un codigo OAuth es de
+ * un solo uso, el segundo intento fallaba y el acceso no llegaba a completarse.
+ */
+let codigoYaCanjeado = false;
+
 const Contenido = () => {
   const auth = useAuth();
   const [error, setError] = useState<string | null>(null);
-  const yaSeProceso = useRef(false);
 
   useEffect(() => {
-    if (yaSeProceso.current) return;
-    yaSeProceso.current = true;
+    if (codigoYaCanjeado) return;
+    codigoYaCanjeado = true;
 
     const procesar = async () => {
       const params = new URLSearchParams(window.location.search);
@@ -67,6 +76,10 @@ const Contenido = () => {
           destino && destino.startsWith("/") ? `/#${destino}` : "/",
         );
       } catch (e) {
+        // Se permite reintentar: si el canje fallo, el codigo se consumio y
+        // hace falta empezar el flujo de nuevo, no repetir este paso.
+        codigoYaCanjeado = false;
+        console.error("oauth.callback.error", e);
         setError(
           e instanceof Error ? e.message : "No se pudo completar el acceso.",
         );

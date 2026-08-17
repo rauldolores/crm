@@ -166,9 +166,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.postmark]
 verify_jwt = false
-[functions.update_password]
-verify_jwt = false
-[functions.users]
-verify_jwt = false
 [functions.mcp]
 verify_jwt = false

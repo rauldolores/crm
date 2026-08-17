@@ -1,12 +1,22 @@
 import type { ConfigurationContextValue } from "./ConfigurationContext";
-// Import the logos as module assets so Vite resolves their URL relative to the
-// JS chunk (import.meta.url), not the current route. A plain "./logos/..." path
-// breaks on nested routes like /oauth/consent and under a deployment sub-path.
+// Los logos se importan como recurso del modulo y no con una ruta relativa,
+// que se rompe en rutas anidadas y bajo un subdirectorio de despliegue.
 import darkModeLogo from "./logos/logo_kontrolia_crm_dark.svg";
 import lightModeLogo from "./logos/logo_kontrolia_crm_light.svg";
 
-export const defaultDarkModeLogo = darkModeLogo;
-export const defaultLightModeLogo = lightModeLogo;
+/**
+ * Next devuelve un objeto al importar una imagen (`{ src, width, height }`),
+ * mientras que Vite devolvia directamente la URL. Como estos valores acaban en
+ * el atributo `src` de una etiqueta `img`, sin normalizar se convertian en la
+ * cadena "[object Object]" y el navegador pedia esa ruta inexistente.
+ */
+const urlDelRecurso = (recurso: unknown): string =>
+  typeof recurso === "string"
+    ? recurso
+    : ((recurso as { src?: string })?.src ?? "");
+
+export const defaultDarkModeLogo = urlDelRecurso(darkModeLogo);
+export const defaultLightModeLogo = urlDelRecurso(lightModeLogo);
 
 export const defaultCurrency = "USD";
 

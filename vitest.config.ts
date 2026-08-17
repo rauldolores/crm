@@ -17,6 +17,13 @@ export default defineConfig({
     projects: [
       {
         plugins: [react()],
+        // La configuracion se lee de `process.env.NEXT_PUBLIC_*`, que Next
+        // sustituye al compilar. Estas pruebas corren sobre Vite en un
+        // navegador real, donde `process` no existe, asi que se declara vacio:
+        // cada prueba monta sus propios datos y no depende del entorno.
+        define: {
+          "process.env": "{}",
+        },
         optimizeDeps: {
           exclude: ["playwright", "playwright-core"],
         },

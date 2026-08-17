@@ -1,4 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { env } from "@/lib/env";
+import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/components/admin/use-theme";
 import { ChevronRight, KeyRound } from "lucide-react";
 import { Link } from "react-router";
@@ -41,39 +43,19 @@ import type { SalesFormData } from "../types";
 
 const ChangePasswordButton = () => {
   const translate = useTranslate();
-  const notify = useNotify();
-  const { identity } = useGetIdentity();
-  const dataProvider = useDataProvider<CrmDataProvider>();
 
-  const { mutate: updatePassword } = useMutation({
-    mutationKey: ["updatePassword"],
-    mutationFn: async () => {
-      if (!identity) {
-        throw new Error(
-          translate("crm.profile.record_not_found", {
-            _: "Record not found",
-          }),
-        );
-      }
-      return dataProvider.updatePassword(identity.id);
-    },
-    onSuccess: () => {
-      notify("crm.profile.password_reset_sent", {
-        messageArgs: {
-          _: "A reset password email has been sent to your email address",
-        },
-      });
-    },
-    onError: (e) => {
-      notify(`${e}`, { type: "error" });
-    },
-  });
-
+  // Lleva a KontrolIA Auth: las credenciales no pasan por el CRM.
   return (
     <Button
       variant="outline"
       className="w-full text-base h-auto"
-      onClick={() => updatePassword()}
+      onClick={() =>
+        window.open(
+          `${env.kontroliaAuthServerUrl}/account`,
+          "_blank",
+          "noopener",
+        )
+      }
     >
       <KeyRound className="size-5 mr-3" />
       {translate("crm.profile.password.change")}
@@ -353,9 +335,50 @@ const PreferencesSection = () => {
         {translate("crm.settings.preferences", { _: "Preferences" })}
       </SectionLabel>
       <ItemGroup className="rounded-lg border overflow-hidden">
+        <OrganizacionRow />
         <ThemeRow />
       </ItemGroup>
     </div>
+  );
+};
+
+/**
+ * Equivalente movil del selector de la cabecera. Comparte el mismo hook para
+ * que ambas vistas se comporten igual, y vive junto al tema porque es su
+ * vecino en el escritorio.
+ */
+const OrganizacionRow = () => {
+  const { organizaciones, activa, cambiando, cambiar } = useOrganizaciones();
+
+  if (organizaciones.length <= 1) return null;
+
+  return (
+    <Item size="sm">
+      <ItemContent>
+        <ItemTitle className="font-normal text-muted-foreground">
+          Organización
+        </ItemTitle>
+      </ItemContent>
+      <ItemActions>
+        <ToggleGroup
+          type="single"
+          value={activa ?? undefined}
+          onValueChange={(valor) => valor && cambiar(valor)}
+          disabled={cambiando}
+          className="flex-wrap justify-end"
+        >
+          {organizaciones.map((organizacion) => (
+            <ToggleGroupItem
+              key={organizacion.id}
+              value={organizacion.id}
+              className="text-xs"
+            >
+              {organizacion.nombre}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </ItemActions>
+    </Item>
   );
 };
 
@@ -410,7 +433,7 @@ const ThemeRow = () => {
 const InboundEmailSection = () => {
   const translate = useTranslate();
 
-  if (!import.meta.env.VITE_INBOUND_EMAIL) return null;
+  if (!env.inboundEmail) return null;
 
   return (
     <div>
@@ -422,7 +445,7 @@ const InboundEmailSection = () => {
         })}
       </p>
       <ItemGroup className="rounded-lg border overflow-hidden">
-        <CopyPasteRow value={import.meta.env.VITE_INBOUND_EMAIL} />
+        <CopyPasteRow value={env.inboundEmail} />
       </ItemGroup>
     </div>
   );
@@ -442,9 +465,7 @@ const McpServerSection = () => {
         })}
       </p>
       <ItemGroup className="rounded-lg border overflow-hidden">
-        <CopyPasteRow
-          value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp`}
-        />
+        <CopyPasteRow value={`${env.supabaseUrl}/functions/v1/mcp`} />
       </ItemGroup>
     </div>
   );

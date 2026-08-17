@@ -231,16 +231,6 @@ export const createDataProvider = ({
         password,
       };
     },
-    salesCreate: async ({ ...data }: SalesFormData): Promise<Sale> => {
-      const response = await dataProvider.create("sales", {
-        data: {
-          ...data,
-          password: "new_password",
-        },
-      });
-
-      return response.data;
-    },
     salesUpdate: async (
       id: Identifier,
       data: Partial<Omit<SalesFormData, "password">>,
@@ -269,29 +259,6 @@ export const createDataProvider = ({
       if (sales.data.length === 0) {
         return false;
       }
-      return true;
-    },
-    updatePassword: async (id: Identifier): Promise<true> => {
-      const currentUser = await getIdentity();
-      if (!currentUser) {
-        throw new Error("User not found");
-      }
-      const { data: previousData } = await dataProvider.getOne<Sale>("sales", {
-        id: currentUser.id,
-      });
-
-      if (!previousData) {
-        throw new Error("User not found");
-      }
-
-      await dataProvider.update("sales", {
-        id,
-        data: {
-          password: "demo_newPassword",
-        },
-        previousData,
-      });
-
       return true;
     },
     mergeContacts: async (sourceId: Identifier, targetId: Identifier) => {

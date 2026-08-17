@@ -156,15 +156,13 @@ export const useImportFromJson = (): [
           return existingRecordResponse.data[0].id;
         }
 
-        const data = await dataProvider.salesCreate({
-          email: dataToImport.email.trim(),
-          first_name: dataToImport.first_name.trim(),
-          last_name: dataToImport.last_name.trim(),
-          administrator: false,
-          disabled: false,
-        });
-
-        idsMaps.sales[dataToImport.id] = data.id;
+        // La importacion ya no da de alta comerciales: las personas se crean
+        // en KontrolIA Auth y aparecen en el CRM al entrar por primera vez. Si
+        // el correo no corresponde a nadie conocido, se omite la referencia en
+        // lugar de inventar una ficha.
+        throw new Error(
+          `No existe ningun miembro del equipo con el correo ${dataToImport.email.trim()}. Dale acceso primero desde KontrolIA Auth.`,
+        );
         setState((old) => {
           if (old.status === "error") {
             return {
@@ -185,7 +183,6 @@ export const useImportFromJson = (): [
             error: null,
           };
         });
-        return data;
       } catch (err) {
         const duration = new Date().valueOf() - startedAt.valueOf();
         setState((old) => ({

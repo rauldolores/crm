@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { useMutation } from "@tanstack/react-query";
 import { Check, CircleX, Copy, Pencil, Save } from "lucide-react";
 import {
@@ -97,32 +98,6 @@ const ProfileForm = ({
   const { isDirty } = useFormState();
   const dataProvider = useDataProvider<CrmDataProvider>();
 
-  const { mutate: updatePassword } = useMutation({
-    mutationKey: ["updatePassword"],
-    mutationFn: async () => {
-      if (!identity) {
-        throw new Error(
-          translate("crm.profile.record_not_found", {
-            _: "Record not found",
-          }),
-        );
-      }
-      return dataProvider.updatePassword(identity.id);
-    },
-    onSuccess: () => {
-      notify("crm.profile.password_reset_sent", {
-        messageArgs: {
-          _: "A reset password email has been sent to your email address",
-        },
-      });
-    },
-    onError: (e) => {
-      notify(`${e}`, {
-        type: "error",
-      });
-    },
-  });
-
   const { mutate: mutateSale } = useMutation({
     mutationKey: ["signup"],
     mutationFn: async (data: SalesFormData) => {
@@ -154,8 +129,10 @@ const ProfileForm = ({
   });
   if (!identity) return null;
 
+  // La contrasena se cambia en KontrolIA Auth, que es donde viven las
+  // credenciales. El CRM nunca las recibe ni las gestiona.
   const handleClickOpenPasswordChange = () => {
-    updatePassword();
+    window.open(`${env.kontroliaAuthServerUrl}/account`, "_blank", "noopener");
   };
 
   const handleAvatarUpdate = async (values: any) => {
@@ -220,7 +197,7 @@ const ProfileForm = ({
           </div>
         </CardContent>
       </Card>
-      {import.meta.env.VITE_INBOUND_EMAIL && (
+      {env.inboundEmail && (
         <Card>
           <CardContent>
             <div className="space-y-4 justify-between">
@@ -233,7 +210,7 @@ const ProfileForm = ({
                   field: "Cc:",
                 })}
               </p>
-              <CopyPaste value={import.meta.env.VITE_INBOUND_EMAIL} />
+              <CopyPaste value={env.inboundEmail} />
             </div>
           </CardContent>
         </Card>
@@ -251,9 +228,7 @@ const ProfileForm = ({
                 _: "Use this URL to connect your AI assistant to your CRM data via the Model Context Protocol (MCP).",
               })}
             </p>
-            <CopyPaste
-              value={`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp`}
-            />
+            <CopyPaste value={`${env.supabaseUrl}/functions/v1/mcp`} />
           </div>
         </CardContent>
       </Card>

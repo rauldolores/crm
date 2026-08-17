@@ -8,11 +8,16 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: ["dist", ".next", "next-env.d.ts"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx,mjs}"],
-    ignores: ["**/node_modules/**", "**/dist/**", "**/.astro/**"],
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.astro/**",
+      "**/.next/**",
+    ],
     languageOptions: {
       ecmaVersion: 2020,
     },
@@ -53,6 +58,14 @@ export default tseslint.config(
     },
     rules: {
       "no-undef": "error",
+    },
+  },
+  {
+    // Scripts de linea de comandos: escribir en la salida estandar es su
+    // proposito, no un descuido de depuracion.
+    files: ["scripts/**/*.mjs"],
+    rules: {
+      "no-console": "off",
     },
   },
   {

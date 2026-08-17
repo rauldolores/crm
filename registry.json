@@ -362,6 +362,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/layout/SelectorDeOrganizacion.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/layout/TopToolbar.tsx",
           "type": "registry:component"
         },
@@ -383,6 +387,10 @@
         },
         {
           "path": "src/components/crm/login/OAuthLoginPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/login/RedireccionAlAcceso.tsx",
           "type": "registry:component"
         },
         {
@@ -702,14 +710,6 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/crm/sales/SalesCreate.tsx",
-          "type": "registry:component"
-        },
-        {
-          "path": "src/components/crm/sales/SalesEdit.tsx",
-          "type": "registry:component"
-        },
-        {
           "path": "src/components/crm/sales/SalesInputs.tsx",
           "type": "registry:component"
         },
@@ -874,6 +874,10 @@
           "type": "registry:hook"
         },
         {
+          "path": "src/lib/env.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/kontrolia-auth/client.ts",
           "type": "registry:lib"
         },
@@ -887,6 +891,14 @@
         },
         {
           "path": "src/lib/kontrolia-auth/permissions-catalog.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/requireKontroliaPermission.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/supabase-service.ts",
           "type": "registry:lib"
         },
         {

@@ -1,11 +1,14 @@
+import { env } from "@/lib/env";
 import { supabaseDataProvider } from "ra-supabase-core";
 import {
+  fetchUtils,
   withLifecycleCallbacks,
   type DataProvider,
   type GetListParams,
   type Identifier,
   type ResourceCallbacks,
 } from "ra-core";
+import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import type {
   ContactNote,
   Deal,
@@ -18,12 +21,37 @@ import type {
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { getIsInitialized } from "./authProvider";
-import { getSupabaseClient } from "./supabase";
+import { getSupabaseClient, getUrlDeDatos } from "./supabase";
+
+/**
+ * Cliente HTTP del data provider.
+ *
+ * ra-supabase trae uno por defecto que saca el token de la sesion de Supabase
+ * Auth, que ya no se usa: las peticiones salian sin cabecera Authorization y
+ * el puente las rechazaba con 401. Tampoco bastaba interceptar el `fetch` del
+ * cliente de Supabase, porque estas peticiones las hace ra-data-postgrest por
+ * su cuenta y no pasan por ahi.
+ */
+const clienteHttp = async (url: string, opciones: fetchUtils.Options = {}) => {
+  const token = await getKontroliaAccessToken();
+  const cabeceras = new Headers(
+    (opciones.headers as Headers | undefined) ?? { Accept: "application/json" },
+  );
+  cabeceras.set("apikey", env.supabasePublishableKey);
+  if (token) cabeceras.set("Authorization", `Bearer ${token}`);
+
+  return fetchUtils.fetchJson(url, { ...opciones, headers: cabeceras });
+};
 
 const getBaseDataProvider = () =>
   supabaseDataProvider({
-    instanceUrl: import.meta.env.VITE_SUPABASE_URL,
-    apiKey: import.meta.env.VITE_SB_PUBLISHABLE_KEY,
+    httpClient: clienteHttp,
+    // Tiene que ser la misma direccion a la que apunta el cliente. ra-supabase
+    // construye parte de sus peticiones a partir de `instanceUrl`, asi que
+    // dejarlo en la URL real de la base hacia que esas fueran directas a
+    // Supabase, saltandose el puente y llegando como usuario anonimo.
+    instanceUrl: getUrlDeDatos(),
+    apiKey: env.supabasePublishableKey,
     supabaseClient: getSupabaseClient(),
     sortOrder: "asc,desc.nullslast" as any,
   });
@@ -113,73 +141,34 @@ const getDataProviderWithCustomMethods = () => {
         password,
       };
     },
-    async salesCreate(body: SalesFormData) {
-      const { data, error } = await getSupabaseClient().functions.invoke<{
-        data: Sale;
-      }>("users", {
-        method: "POST",
-        body,
-      });
-
-      if (!data || error) {
-        console.error("salesCreate.error", error);
-        const errorDetails = await (async () => {
-          try {
-            return (await error?.context?.json()) ?? {};
-          } catch {
-            return {};
-          }
-        })();
-        throw new Error(errorDetails?.message || "Failed to create the user");
-      }
-
-      return data.data;
-    },
+    /**
+     * Actualiza la ficha del comercial.
+     *
+     * Antes pasaba por la edge function `users`, que ademas creaba y
+     * desactivaba cuentas. Eso es competencia de KontrolIA Auth, asi que la
+     * funcion desaparecio y aqui solo queda lo que si es del CRM: el avatar y
+     * los datos de la ficha. El puente impone la organizacion, de modo que no
+     * se puede tocar la ficha de otra empresa.
+     */
     async salesUpdate(
       id: Identifier,
       data: Partial<Omit<SalesFormData, "password">>,
     ) {
-      const { email, first_name, last_name, administrator, avatar, disabled } =
-        data;
+      const { first_name, last_name, avatar } = data;
 
-      const { data: updatedData, error } =
-        await getSupabaseClient().functions.invoke<{
-          data: Sale;
-        }>("users", {
-          method: "PATCH",
-          body: {
-            sales_id: id,
-            email,
-            first_name,
-            last_name,
-            administrator,
-            disabled,
-            avatar,
-          },
-        });
+      const { data: actualizado, error } = await getSupabaseClient()
+        .from("sales")
+        .update({ first_name, last_name, avatar })
+        .eq("id", id)
+        .select()
+        .single();
 
-      if (!updatedData || error) {
-        console.error("salesCreate.error", error);
-        throw new Error("Failed to update account manager");
+      if (error) {
+        console.error("salesUpdate.error", error);
+        throw new Error("No se pudo actualizar la ficha.");
       }
 
-      return updatedData.data;
-    },
-    async updatePassword(id: Identifier) {
-      const { data: passwordUpdated, error } =
-        await getSupabaseClient().functions.invoke<boolean>("update_password", {
-          method: "PATCH",
-          body: {
-            sales_id: id,
-          },
-        });
-
-      if (!passwordUpdated || error) {
-        console.error("update_password.error", error);
-        throw new Error("Failed to update password");
-      }
-
-      return passwordUpdated;
+      return actualizado as Sale;
     },
     async unarchiveDeal(deal: Deal) {
       // get all deals where stage is the same as the deal to unarchive
@@ -373,12 +362,16 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
 ];
 
 export const getDataProvider = () => {
-  if (import.meta.env.VITE_SUPABASE_URL === undefined) {
-    throw new Error("Please set the VITE_SUPABASE_URL environment variable");
-  }
-  if (import.meta.env.VITE_SB_PUBLISHABLE_KEY === undefined) {
+  // Comprobación por valor vacío y no por `undefined`: la configuración
+  // devuelve cadena vacía cuando la variable no está definida.
+  if (!env.supabaseUrl) {
     throw new Error(
-      "Please set the VITE_SB_PUBLISHABLE_KEY environment variable",
+      "Falta la variable de entorno NEXT_PUBLIC_SUPABASE_URL. Ejecuta el instalador para configurar la base de datos.",
+    );
+  }
+  if (!env.supabasePublishableKey) {
+    throw new Error(
+      "Falta la variable de entorno NEXT_PUBLIC_SB_PUBLISHABLE_KEY. Ejecuta el instalador para configurar la base de datos.",
     );
   }
   return withLifecycleCallbacks(

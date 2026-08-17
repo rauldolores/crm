@@ -1,6 +1,13 @@
 import type { AuthProvider } from "ra-core";
 import { supabaseAuthProvider } from "ra-supabase-core";
 
+import {
+  getKontroliaAccessToken,
+  getKontroliaClient,
+  logoutKontroliaAuth,
+} from "@/lib/kontrolia-auth/client";
+import { OAUTH_LOGIN_PATH } from "@/lib/kontrolia-auth/oauth";
+import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { canAccess } from "../commons/canAccess";
 import { getSupabaseClient } from "./supabase";
 
@@ -9,15 +16,30 @@ const getBaseAuthProvider = () =>
     getIdentity: async () => {
       const sale = await getSale();
 
-      if (sale == null) {
-        throw new Error();
+      if (sale != null) {
+        return {
+          id: sale.id,
+          fullName: `${sale.first_name} ${sale.last_name}`,
+          avatar: sale.avatar?.src,
+        };
       }
 
-      return {
-        id: sale.id,
-        fullName: `${sale.first_name} ${sale.last_name}`,
-        avatar: sale.avatar?.src,
-      };
+      // Con acceso centralizado, no encontrar ficha de comercial no significa
+      // que no haya sesion: puede ser que el usuario aun no este aprovisionado
+      // en esta organizacion, o que la consulta a la base fallara. Lanzar aqui
+      // hacia que ra-core lo tomara por sesion invalida y devolviera al login,
+      // reabriendo el ciclo con KontrolIA Auth.
+      if (isKontroliaAuthConfigured()) {
+        const usuario = await getKontroliaClient()?.getUser();
+        if (usuario) {
+          return {
+            id: usuario.id,
+            fullName: usuario.email ?? "",
+          };
+        }
+      }
+
+      throw new Error();
     },
   });
 
@@ -59,33 +81,46 @@ const getSale = async () => {
     return JSON.parse(cachedValue);
   }
 
-  const { data: dataSession, error: errorSession } =
-    await getSupabaseClient().auth.getSession();
-
-  // Shouldn't happen after login but just in case
-  if (dataSession?.session?.user == null || errorSession) {
+  // La identidad viene de KontrolIA Auth. No se usa supabase.auth porque, al
+  // configurar el cliente con `accessToken`, supabase-js lo deshabilita.
+  const usuario = await getKontroliaClient()?.getUser();
+  if (usuario == null) {
     return undefined;
   }
 
-  // Da de alta al usuario como comercial de su organización activa, y crea la
-  // configuración de esa organización si aún no existe. Es idempotente y solo
-  // se llega aquí cuando la caché está vacía, o sea una vez por sesión.
-  //
-  // Sustituye a los triggers que había sobre auth.users: esa tabla es compartida
-  // con el resto del ecosistema KontrolIA, y en el momento del alta todavía no
-  // hay sesión, así que un trigger no puede saber a qué organización asignarlo.
-  const { error: errorProvision } = await getSupabaseClient().rpc(
-    "provision_crm_access",
-  );
+  // Da de alta al usuario en el CRM la primera vez que entra, y con el la
+  // configuracion de su organizacion. Se hace en el servidor porque es quien
+  // conoce la organizacion del token: dentro de la base, consultando con la
+  // clave de servicio, ese dato no esta disponible.
+  const token = await getKontroliaAccessToken();
+  const respuesta = await fetch("/api/crm/aprovisionar", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    // KontrolIA Auth guarda el nombre completo en un solo campo; el CRM lo
+    // separa en dos. Se parte por el primer espacio, que es lo razonable sin
+    // inventar reglas por idioma.
+    body: JSON.stringify({
+      email: usuario.email ?? "",
+      first_name: (usuario.fullName ?? "").split(" ")[0] ?? "",
+      last_name: (usuario.fullName ?? "").split(" ").slice(1).join(" "),
+    }),
+  }).catch(() => null);
 
-  if (errorProvision) {
-    console.error("provision_crm_access.error", errorProvision);
+  if (respuesta?.ok) {
+    const { sale } = await respuesta.json();
+    if (sale) {
+      storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(sale));
+      return sale;
+    }
   }
 
   const { data: dataSale, error: errorSale } = await getSupabaseClient()
     .from("sales")
     .select("id, first_name, last_name, avatar, administrator")
-    .match({ user_id: dataSession?.session?.user.id })
+    .match({ user_id: usuario.id })
     .single();
 
   // Shouldn't happen either as all users are sales but just in case
@@ -108,6 +143,12 @@ export const getAuthProvider = (): AuthProvider => {
   return {
     ...baseAuthProvider,
     login: async (params) => {
+      // Con acceso centralizado el CRM no recibe credenciales: la pantalla de
+      // acceso redirige a KontrolIA Auth antes de llegar aqui.
+      if (isKontroliaAuthConfigured()) {
+        window.location.replace(OAUTH_LOGIN_PATH);
+        return;
+      }
       if (params.ssoDomain) {
         const { error } = await getSupabaseClient().auth.signInWithSSO({
           domain: params.ssoDomain,
@@ -121,9 +162,35 @@ export const getAuthProvider = (): AuthProvider => {
     },
     logout: async (params) => {
       clearCache();
+      if (isKontroliaAuthConfigured()) {
+        await logoutKontroliaAuth();
+        return;
+      }
       return baseAuthProvider.logout(params);
     },
+    checkError: async (error) => {
+      // Un fallo de permisos de la base de datos del CRM no es un fallo de
+      // sesion contra KontrolIA Auth, y confundirlos producia un ciclo: la
+      // consulta devolvia 401, ra-core cerraba sesion, la pantalla de acceso
+      // redirigia al proveedor, se volvia a entrar y la consulta fallaba otra
+      // vez. La sesion la valida checkAuth; aqui solo se deja pasar el error
+      // para que la interfaz lo muestre.
+      if (isKontroliaAuthConfigured()) {
+        return;
+      }
+      return baseAuthProvider.checkError?.(error);
+    },
     checkAuth: async (params) => {
+      // Con el acceso centralizado, la sesion vive en KontrolIA Auth y no en
+      // Supabase Auth. Comprobarla contra Supabase daba siempre "sin sesion",
+      // asi que tras un acceso correcto el CRM volvia a mandar al login y se
+      // producia un ciclo infinito entre el CRM y auth.kontrolia.io.
+      if (isKontroliaAuthConfigured()) {
+        const token = await getKontroliaAccessToken();
+        if (!token) throw new Error("Sin sesion");
+        return;
+      }
+
       // Users are on the set-password page, nothing to do
       if (
         window.location.pathname === "/set-password" ||
@@ -146,25 +213,30 @@ export const getAuthProvider = (): AuthProvider => {
         return;
       }
 
-      const isInitialized = await getIsInitialized();
-
-      if (!isInitialized) {
-        await getSupabaseClient().auth.signOut();
-        throw {
-          redirectTo: "/sign-up",
-          message: false,
-        };
-      }
-
+      // Ya no se comprueba si la instalación "está inicializada" para mandar
+      // a una pantalla de alta: crear cuentas es competencia de KontrolIA
+      // Auth. Sin sesión, ra-core lleva a la pantalla de acceso, que redirige
+      // allí.
       return baseAuthProvider.checkAuth(params);
     },
     canAccess: async (params) => {
-      const isInitialized = await getIsInitialized();
-      if (!isInitialized) return false;
+      // La puerta de "instalacion sin inicializar" consultaba init_state, que
+      // sin sesion de Supabase devuelve falso y denegaba toda la aplicacion.
+      // Con acceso centralizado esa comprobacion ya no aplica.
+      if (!isKontroliaAuthConfigured()) {
+        const isInitialized = await getIsInitialized();
+        if (!isInitialized) return false;
+      }
 
       // Get the current user
       const sale = await getSale();
-      if (sale == null) return false;
+
+      // Sin ficha de comercial se concede el rol basico en lugar de denegar
+      // todo: el aislamiento real lo aplica el RLS de la base de datos, no
+      // esta comprobacion de interfaz.
+      if (sale == null) {
+        return isKontroliaAuthConfigured() ? canAccess("user", params) : false;
+      }
 
       // Compute access rights from the sale role
       const role = sale.administrator ? "admin" : "user";
