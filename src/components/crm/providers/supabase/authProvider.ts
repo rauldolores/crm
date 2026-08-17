@@ -143,6 +143,18 @@ export const getAuthProvider = (): AuthProvider => {
       clearCache();
       return baseAuthProvider.logout(params);
     },
+    checkError: async (error) => {
+      // Un fallo de permisos de la base de datos del CRM no es un fallo de
+      // sesion contra KontrolIA Auth, y confundirlos producia un ciclo: la
+      // consulta devolvia 401, ra-core cerraba sesion, la pantalla de acceso
+      // redirigia al proveedor, se volvia a entrar y la consulta fallaba otra
+      // vez. La sesion la valida checkAuth; aqui solo se deja pasar el error
+      // para que la interfaz lo muestre.
+      if (isKontroliaAuthConfigured()) {
+        return;
+      }
+      return baseAuthProvider.checkError?.(error);
+    },
     checkAuth: async (params) => {
       // Con el acceso centralizado, la sesion vive en KontrolIA Auth y no en
       // Supabase Auth. Comprobarla contra Supabase daba siempre "sin sesion",
