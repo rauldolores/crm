@@ -118,7 +118,7 @@ export async function requireKontroliaPermission(
       ok: false,
       response: respuestaDeError(
         403,
-        "Tu cuenta no tiene una organización activa con acceso a Kontrolia CRM. Pídele acceso a quien la administre.",
+        "Tu cuenta no tiene una organización activa con acceso a Vinqulia. Pídele acceso a quien la administre.",
       ),
     };
   }

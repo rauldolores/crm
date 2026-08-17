@@ -80,7 +80,7 @@ moving to the next. Never ask multiple domains in one turn.
 ### Domain 2 — Entities
 - What objects are managed? Relationships between them?
 - ⚠️ If an entity resembles `contact`, `company`, `deal`, `tag`, `task`, or
-  `note` (already in Kontrolia CRM) → propose extending it (`"type": "extend"`)
+  `note` (already in Vinqulia) → propose extending it (`"type": "extend"`)
   rather than recreating it.
 
 ### Domain 3 — Custom fields
@@ -113,10 +113,10 @@ moving to the next. Never ask multiple domains in one turn.
 
 ## Cleanup derivation (run after all domains, before consistency checks)
 
-Kontrolia CRM ships with default entities and features the user may not need.
+Vinqulia ships with default entities and features the user may not need.
 Before final validation, derive what should be removed to keep the CRM clean.
 
-**Default Kontrolia CRM elements** (candidates for removal):
+**Default Vinqulia elements** (candidates for removal):
 
 | Element | Remove when… |
 |---|---|
@@ -179,7 +179,7 @@ Store the result in the JSON under `"cleanup"` before writing:
 - No duplicate field names within the same entity.
 - Every entity referenced in `pipeline_stages` exists in `entities`.
 - Every role in `user_roles` has at least one permission defined.
-- Existing Kontrolia CRM entities marked `"type": "extend"`, not `"type": "create"`.
+- Existing Vinqulia entities marked `"type": "extend"`, not `"type": "create"`.
 - No service-role key or secret in client-side variables.
 
 If a check fails: output one targeted `INTERVIEW:` question to fix it before

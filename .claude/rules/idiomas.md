@@ -1,6 +1,6 @@
 # Idiomas en el repositorio
 
-Kontrolia CRM es un producto **en español**. Esta regla define qué se
+Vinqulia es un producto **en español**. Esta regla define qué se
 escribe en español y qué se mantiene en inglés.
 
 ## En español

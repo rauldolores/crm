@@ -1,8 +1,8 @@
 import type { ConfigurationContextValue } from "./ConfigurationContext";
 // Los logos se importan como recurso del modulo y no con una ruta relativa,
 // que se rompe en rutas anidadas y bajo un subdirectorio de despliegue.
-import darkModeLogo from "./logos/logo_kontrolia_crm_dark.svg";
-import lightModeLogo from "./logos/logo_kontrolia_crm_light.svg";
+import darkModeLogo from "./logos/logo_vinqulia_dark.svg";
+import lightModeLogo from "./logos/logo_vinqulia_light.svg";
 
 /**
  * Next devuelve un objeto al importar una imagen (`{ src, width, height }`),
@@ -20,7 +20,7 @@ export const defaultLightModeLogo = urlDelRecurso(lightModeLogo);
 
 export const defaultCurrency = "USD";
 
-export const defaultTitle = "Kontrolia CRM";
+export const defaultTitle = "Vinqulia";
 
 // En todas estas listas `value` es la clave que se guarda en la base de datos y
 // `label` es lo único que ve el usuario. Al traducir se cambian solo las

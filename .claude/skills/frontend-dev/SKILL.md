@@ -1,6 +1,6 @@
 ---
 name: frontend-dev
-description: Coding practices for frontend development in Kontrolia CRM. Use when creating or modifying React components, forms, list pages, detail views, filters, data fetching, or responsive layouts.
+description: Coding practices for frontend development in Vinqulia. Use when creating or modifying React components, forms, list pages, detail views, filters, data fetching, or responsive layouts.
 ---
 
 # Frontend Development

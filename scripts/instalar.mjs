@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Instalador de Kontrolia CRM.
+ * Instalador de Vinqulia.
  *
  * Lleva una instalación de principio a fin: comprueba requisitos, conecta o
  * crea la base de datos, aplica el esquema, registra la aplicación en
@@ -87,7 +87,7 @@ function comprobarRequisitos() {
   if (!fs.existsSync("package.json") || !fs.existsSync("supabase/migrations")) {
     console.log(
       c.error(
-        "Ejecuta el instalador desde la raíz del repositorio de Kontrolia CRM.",
+        "Ejecuta el instalador desde la raíz del repositorio de Vinqulia.",
       ),
     );
     process.exit(1);
@@ -107,7 +107,7 @@ async function configurarBaseDeDatos() {
   console.log(c.titulo("Paso 2/6 · Base de datos"));
   console.log(
     c.tenue(
-      "Kontrolia CRM guarda sus datos en Supabase. Puede ser el proyecto que\n" +
+      "Vinqulia guarda sus datos en Supabase. Puede ser el proyecto que\n" +
         "ya tengas, en la nube o en tu máquina, o uno nuevo.",
     ),
   );
@@ -195,7 +195,7 @@ async function configurarAuth() {
   console.log(
     c.tenue(
       "El acceso, los usuarios, los roles y las organizaciones viven en\n" +
-        "KontrolIA Auth. Kontrolia CRM nunca pide credenciales.",
+        "KontrolIA Auth. Vinqulia nunca pide credenciales.",
     ),
   );
 
@@ -216,8 +216,8 @@ async function configurarAuth() {
   let clienteOAuth = "";
   if (registrar) {
     const dominio = await preguntar(
-      "Dominio donde vivirá el CRM (para la URL de retorno)",
-      "http://localhost:3001",
+      "Dominio donde vivirá Vinqulia (para la URL de retorno)",
+      "https://vinqulia.com",
     );
     console.log(
       c.tenue(
@@ -252,7 +252,7 @@ async function configurarAuth() {
 function escribirEntorno(bd, auth) {
   console.log(c.titulo("Paso 5/6 · Configuración"));
 
-  const contenido = `# Generado por el instalador de Kontrolia CRM.
+  const contenido = `# Generado por el instalador de Vinqulia.
 # No se versiona: contiene la configuracion de esta instalacion concreta.
 
 # Base de datos del CRM
@@ -316,9 +316,9 @@ async function prepararDespliegue() {
   if (destino === "docker" || destino === "vps") {
     console.log(c.ok("Compila con: npm run build"));
     if (destino === "docker") {
-      console.log("Construye la imagen con: docker build -t kontrolia-crm .");
+      console.log("Construye la imagen con: docker build -t vinqulia .");
       console.log(
-        "Y arráncala con: docker run --env-file .env.local -p 3001:3001 kontrolia-crm",
+        "Y arráncala con: docker run --env-file .env.local -p 3001:3001 vinqulia",
       );
     } else {
       console.log("Arranca con: npm run start");
@@ -335,7 +335,7 @@ async function prepararDespliegue() {
 // ── Orquestación ─────────────────────────────────────────────────────────
 
 async function main() {
-  console.log(c.titulo("Instalador de Kontrolia CRM"));
+  console.log(c.titulo("Instalador de Vinqulia"));
   console.log(
     c.tenue(
       "Seis pasos. Puedes interrumpir y volver a empezar cuando quieras.\n",

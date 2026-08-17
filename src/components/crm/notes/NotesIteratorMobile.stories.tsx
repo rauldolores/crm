@@ -15,7 +15,7 @@ const singleNote = {
 };
 
 const meta = {
-  title: "Kontrolia CRM/Notes/NotesIteratorMobile",
+  title: "Vinqulia/Notes/NotesIteratorMobile",
   parameters: {
     layout: "fullscreen",
   },

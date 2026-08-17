@@ -1,6 +1,6 @@
 # MEMORY
 
-Durable Kontrolia CRM knowledge. One sentence per bullet, freshest first. Maintained by the `documentator` agent — see [.claude/agents/documentator.md](.claude/agents/documentator.md).
+Durable Vinqulia knowledge. One sentence per bullet, freshest first. Maintained by the `documentator` agent — see [.claude/agents/documentator.md](.claude/agents/documentator.md).
 
 ## Business Knowledge
 

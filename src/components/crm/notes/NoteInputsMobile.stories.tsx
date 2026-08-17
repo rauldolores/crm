@@ -22,7 +22,7 @@ export const NoteInputsMobileStory = ({
 );
 
 const meta = {
-  title: "Kontrolia CRM/Notes/Note Inputs Mobile",
+  title: "Vinqulia/Notes/Note Inputs Mobile",
   includeStories: [
     "Default",
     "WithSaveButton",

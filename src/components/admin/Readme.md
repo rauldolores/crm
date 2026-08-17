@@ -28,11 +28,11 @@ You can find the documentation for these components on the [Shadcn Admin Kit web
 
 ## Customization
 
-In Kontrolia CRM, these components are sometimes slightly modified to fit the look and feel of the application. You can customize them further by editing the source files in this directory.
+In Vinqulia, these components are sometimes slightly modified to fit the look and feel of the application. You can customize them further by editing the source files in this directory.
 
 ## Updates
 
-Shadcn Admin Kit components are actively maintained and updated. To update the components in Kontrolia CRM, type the following command:
+Shadcn Admin Kit components are actively maintained and updated. To update the components in Vinqulia, type the following command:
 
 ```
 npx shadcn@latest add -o https://marmelab.com/shadcn-admin-kit/r/admin.json

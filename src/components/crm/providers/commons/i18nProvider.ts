@@ -7,7 +7,7 @@ import {
 import { spanishCrmMessages } from "./spanishCrmMessages";
 
 /**
- * Kontrolia CRM es una aplicación en español y solo en español: no hay
+ * Vinqulia es una aplicación en español y solo en español: no hay
  * selector de idioma ni catálogos alternativos. El proveedor de i18n se
  * conserva porque ra-core lo exige para resolver las claves de traducción,
  * pero siempre devuelve el mismo catálogo.

@@ -51,7 +51,7 @@ Colors use OKLCH: `--primary: oklch(0.205 0 0)` where values are lightness (0–
 
 ## Dark Mode
 
-Class-based toggle via `.dark` on the root element. Kontrolia CRM wires this
+Class-based toggle via `.dark` on the root element. Vinqulia wires this
 through its own `ThemeProvider` at `src/components/admin/theme-provider.tsx`,
 which is already mounted from `src/components/admin/admin.tsx`. To customize
 the palette, pass `lightTheme` / `darkTheme` props to the `<CRM>` component

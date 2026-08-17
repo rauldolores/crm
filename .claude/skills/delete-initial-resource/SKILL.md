@@ -7,7 +7,7 @@ description: Remove one or more of the initial CRM resources (contacts, companie
 
 ## Overview
 
-Removes one or more of the five initial Kontrolia CRM resources (`contacts`, `companies`, `deals`, `tags`, `tasks`) and every reference to them. **Irreversible confirm the target(s) with the user first; rely on git to recover.** Exit criterion: `make typecheck && make lint` is clean and no live reference to the deleted resource(s) survives in `src/` or `supabase/`.
+Removes one or more of the five initial Vinqulia resources (`contacts`, `companies`, `deals`, `tags`, `tasks`) and every reference to them. **Irreversible confirm the target(s) with the user first; rely on git to recover.** Exit criterion: `make typecheck && make lint` is clean and no live reference to the deleted resource(s) survives in `src/` or `supabase/`.
 
 ## When to Use
 

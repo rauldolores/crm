@@ -24,7 +24,7 @@ export const NoteInputsStory = ({
 );
 
 const meta = {
-  title: "Kontrolia CRM/Notes/Note Inputs",
+  title: "Vinqulia/Notes/Note Inputs",
   includeStories: ["Default", "WithSaveButton", "WithAttachmentDefault"],
   render: (args) => <NoteInputsStory {...args} />,
 } satisfies Meta<typeof NoteInputsStory>;

@@ -171,7 +171,7 @@ When `SETUP_MODE=true`:
   - One ticket per integration the user requested.
   - One ticket for theme / language / dashboard preferences if non-default.
 - Use sensible `dependencies` — extend-tickets often depend on the base
-  entity already shipping with Kontrolia CRM (no dep needed); create-tickets
+  entity already shipping with Vinqulia (no dep needed); create-tickets
   have no migration ticket to depend on, so wire UI deps directly between
   feature tickets.
 - **Cleanup tickets** — read the `cleanup` section of `project-context.json`.

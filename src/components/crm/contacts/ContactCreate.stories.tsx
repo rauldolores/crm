@@ -5,7 +5,7 @@ import { buildContact, StoryWrapper } from "@/test/StoryWrapper";
 import type { DataProvider } from "ra-core";
 
 const meta = {
-  title: "Kontrolia CRM/Contacts/Contact Create",
+  title: "Vinqulia/Contacts/Contact Create",
   parameters: {
     layout: "fullscreen",
   },

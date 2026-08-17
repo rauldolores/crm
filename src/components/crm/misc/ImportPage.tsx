@@ -227,7 +227,7 @@ const DownloadErrorFileButton = ({
         const url = window.URL.createObjectURL(blob);
         event.currentTarget.href = url;
       }}
-      download="kontrolia-crm-reporte-importacion.json"
+      download="vinqulia-reporte-importacion.json"
     >
       {translate("crm.import.action.download_error_report", {
         _: "Download the error report",

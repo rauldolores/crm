@@ -1,17 +1,17 @@
-# Kontrolia CRM
+# Vinqulia
 
 A full-featured CRM built with React, shadcn-admin-kit, and Supabase.
 
 <https://github.com/user-attachments/assets/0d7554b5-49ef-41c6-bcc9-a76214fc5c99>
 
-Kontrolia CRM is free and open-source. You can test it online at <https://marmelab.com/atomic-crm-demo>.
+Vinqulia is free and open-source. You can test it online at <https://marmelab.com/atomic-crm-demo>.
 
 ## Features
 
 - 📇 **Organize Contacts**: Keep all your contacts in one easily accessible place.
 - ⏰ **Create Tasks & Set Reminders**: Never miss a follow-up or deadline.
 - 📝 **Take Notes**: Capture important details and insights effortlessly.
-- ✉️ **Capture Emails**: CC Kontrolia CRM to automatically save communications as notes.
+- ✉️ **Capture Emails**: CC Vinqulia to automatically save communications as notes.
 - 📊 **Manage Deals**: Visualize and track your sales pipeline in a Kanban board.
 - 🔄 **Import & Export Data**: Easily transfer contacts in and out of the system.
 - 🔐 **Control Access**: Log in with Google, Azure, Keycloak, and Auth0.
@@ -91,7 +91,7 @@ And you can also add your own e2e test. The e2e test files should be placed insi
 
 ## Getting Updates
 
-Kontrolia CRM components are published as a Shadcn Registry file. This means you can update your installation by calling the following command:
+Vinqulia components are published as a Shadcn Registry file. This means you can update your installation by calling the following command:
 
 ```sh
 npx shadcn add https://marmelab.com/atomic-crm/r/atomic-crm.json -o

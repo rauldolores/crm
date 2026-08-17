@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 /**
- * Kontrolia CRM se ejecuta como aplicación de cliente dentro de Next.
+ * Vinqulia se ejecuta como aplicación de cliente dentro de Next.
  *
  * El CRM está construido sobre ra-core y shadcn-admin-kit, que son de
  * navegador: gestionan su propio enrutado, su caché y su sesión. Next aporta

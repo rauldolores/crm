@@ -101,7 +101,7 @@ const files = [
 const newRegistryContent = {
   ...registryContent,
   items: registryContent.items.map((item) => {
-    if (item.name === "kontrolia-crm") {
+    if (item.name === "vinqulia") {
       return {
         ...item,
         files,

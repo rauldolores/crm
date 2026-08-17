@@ -34,7 +34,7 @@ const AdminContext = (props: CoreAdminContextProps) => (
  * Envuelve CoreAdminUI con el proveedor de tema y aporta el layout principal,
  * la página de login, la página "ready" y el callback de autenticación.
  *
- * La telemetría queda siempre desactivada: Kontrolia CRM no envía datos de uso
+ * La telemetría queda siempre desactivada: Vinqulia no envía datos de uso
  * a terceros. `disableTelemetry` se aplica después de `{...props}` para que no
  * pueda reactivarse desde fuera.
  *

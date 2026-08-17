@@ -3,7 +3,7 @@ import { env } from "@/lib/env";
  * Constantes del flujo OAuth 2.1 (Authorization Code + PKCE) contra
  * KontrolIA Auth.
  *
- * Kontrolia CRM no pide credenciales nunca: solo inicia el flujo y redirige a
+ * Vinqulia no pide credenciales nunca: solo inicia el flujo y redirige a
  * la pantalla de login del ecosistema, que es la única que las recibe. El
  * código de vuelta se canjea por sesión en la ruta de callback.
  *

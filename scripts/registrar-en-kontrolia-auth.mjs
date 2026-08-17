@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Registra Kontrolia CRM en una instalación de KontrolIA Auth.
+ * Registra Vinqulia en una instalación de KontrolIA Auth.
  *
  * Hace tres cosas, y todas son idempotentes: se puede volver a ejecutar sin
  * duplicar nada.
@@ -29,7 +29,7 @@ import path from "node:path";
 import readline from "node:readline";
 
 const SLUG = "crm";
-const NOMBRE = "Kontrolia CRM";
+const NOMBRE = "Vinqulia";
 const CATALOGO = "src/lib/kontrolia-auth/permissions-catalog.ts";
 
 function leerArgumentos() {

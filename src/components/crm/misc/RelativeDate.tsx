@@ -21,7 +21,7 @@ import { es } from "date-fns/locale";
  *
  * Eso devuelve "hace 3 días 15:00", y lo que queremos es "hace 3 días a las 15:00".
  *
- * Kontrolia CRM es una aplicación en español, así que el idioma está fijado:
+ * Vinqulia es una aplicación en español, así que el idioma está fijado:
  * no se recibe como parámetro ni se lee del estado de i18n.
  */
 export const LOCALE = "es-ES";

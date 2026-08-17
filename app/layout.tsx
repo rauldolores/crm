@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "../src/index.css";
 
 export const metadata: Metadata = {
-  title: "Kontrolia CRM",
-  applicationName: "Kontrolia CRM",
+  title: "Vinqulia",
+  applicationName: "Vinqulia",
 };
 
 export const viewport: Viewport = {

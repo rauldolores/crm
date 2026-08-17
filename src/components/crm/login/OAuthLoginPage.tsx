@@ -12,7 +12,7 @@ import {
 /**
  * Inicio del flujo OAuth 2.1 (Authorization Code + PKCE).
  *
- * Kontrolia CRM no pide credenciales nunca: solo construye la URL de
+ * Vinqulia no pide credenciales nunca: solo construye la URL de
  * autorización y redirige a KontrolIA Auth, que es la única pantalla de acceso
  * del ecosistema. El registro, los usuarios, los roles y las organizaciones
  * viven allí, no aquí.

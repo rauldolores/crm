@@ -5,7 +5,7 @@ import { ContactShow } from "./ContactShow";
 import { StoryWrapper, buildContact } from "@/test/StoryWrapper";
 
 const meta = {
-  title: "Kontrolia CRM/Contacts/Contact Show",
+  title: "Vinqulia/Contacts/Contact Show",
   parameters: {
     layout: "fullscreen",
   },

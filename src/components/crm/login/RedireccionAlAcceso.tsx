@@ -6,7 +6,7 @@ import { OAUTH_LOGIN_PATH } from "@/lib/kontrolia-auth/oauth";
 /**
  * Pantalla de acceso del CRM: no muestra ningún formulario, redirige.
  *
- * Kontrolia CRM no pide credenciales ni registra usuarios. Todo eso vive en
+ * Vinqulia no pide credenciales ni registra usuarios. Todo eso vive en
  * KontrolIA Auth, así que quien llega sin sesión sale hacia allí.
  *
  * Se usa `window.location` y no el enrutador porque `/oauth/login` es una ruta

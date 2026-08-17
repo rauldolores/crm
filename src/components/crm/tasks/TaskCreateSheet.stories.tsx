@@ -4,7 +4,7 @@ import { useState } from "react";
 import { TaskCreateSheet } from "./TaskCreateSheet";
 import { StoryWrapper, buildContact } from "@/test/StoryWrapper";
 const meta = {
-  title: "Kontrolia CRM/Tasks/TaskCreateSheet",
+  title: "Vinqulia/Tasks/TaskCreateSheet",
   parameters: {
     layout: "fullscreen",
   },

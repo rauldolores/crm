@@ -5,7 +5,7 @@ import { OAuthLoginPage } from "@/components/crm/login/OAuthLoginPage";
 /**
  * Application entry point
  *
- * Customize Kontrolia CRM by passing props to the CRM component:
+ * Customize Vinqulia by passing props to the CRM component:
  *  - companySectors
  *  - darkTheme
  *  - dealCategories

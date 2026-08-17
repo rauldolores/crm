@@ -36,7 +36,7 @@ test("user adds a tag to several contacts", async ({
   await page.getByLabel("Password").fill("password");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page).toHaveTitle(/Kontrolia CRM/);
+  await expect(page).toHaveTitle(/Vinqulia/);
   await expect(page.getByRole("link", { name: "Contacts" })).toBeVisible();
 
   await menu.goToContacts();

@@ -1,5 +1,5 @@
 /**
- * Catálogo de mensajes propios de Kontrolia CRM.
+ * Catálogo de mensajes propios de Vinqulia.
  *
  * Es la única fuente de verdad de los textos de la aplicación y también del
  * tipo `CrmMessages`, así que añadir una clave aquí la vuelve obligatoria en
@@ -401,7 +401,7 @@ export const spanishCrmMessages = {
         creating: "Creando...",
         initial_user_created: "Usuario inicial creado correctamente",
       },
-      welcome_title: "Te damos la bienvenida a Kontrolia CRM",
+      welcome_title: "Te damos la bienvenida a Vinqulia",
     },
     common: {
       activity: "Actividad",
@@ -446,7 +446,7 @@ export const spanishCrmMessages = {
       latest_notes: "Mis últimas notas",
       latest_notes_added_ago: "añadida %{timeAgo}",
       stepper: {
-        install: "Instalar Kontrolia CRM",
+        install: "Instalar Vinqulia",
         progress: "%{step}/3 completado",
         whats_next: "¿Qué sigue?",
       },
@@ -544,7 +544,7 @@ export const spanishCrmMessages = {
     profile: {
       inbound: {
         description:
-          "Puedes empezar a enviar correos a la dirección de entrada de tu servidor, por ejemplo añadiéndola al campo %{field}. Kontrolia CRM los procesará y añadirá notas a los contactos correspondientes.",
+          "Puedes empezar a enviar correos a la dirección de entrada de tu servidor, por ejemplo añadiéndola al campo %{field}. Vinqulia los procesará y añadirá notas a los contactos correspondientes.",
         title: "Correo de entrada",
       },
       mcp: {

@@ -1,7 +1,7 @@
 # Separate Supabase instance for e2e testing.
 # Uses a different project_id (separate Docker containers) and a shifted port
 # range (+20) so it can run in parallel with the regular dev instance.
-project_id = "kontrolia-crm-e2e"
+project_id = "vinqulia-e2e"
 
 [api]
 enabled = true
@@ -95,11 +95,11 @@ double_confirm_changes = true
 enable_confirmations = false
 
 [auth.email.template.invite]
-subject = "You've been invited to Kontrolia CRM"
+subject = "You've been invited to Vinqulia"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.recovery]
-subject = "Reset your Kontrolia CRM Password"
+subject = "Reset your Vinqulia Password"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.sms]

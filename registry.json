@@ -1,12 +1,12 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
-  "name": "kontrolia-crm",
-  "homepage": "https://kontrolia.com/crm/",
+  "name": "vinqulia",
+  "homepage": "https://vinqulia.com",
   "items": [
     {
-      "name": "kontrolia-crm",
+      "name": "vinqulia",
       "type": "registry:block",
-      "title": "Kontrolia CRM",
+      "title": "Vinqulia",
       "description": "CRM multiempresa construido sobre Shadcn Admin Kit",
       "registryDependencies": [
         "item",

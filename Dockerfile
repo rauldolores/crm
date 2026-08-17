@@ -1,4 +1,4 @@
-# Imagen de Kontrolia CRM.
+# Imagen de Vinqulia.
 #
 # Compilacion en varias etapas para que la imagen final no arrastre ni el
 # codigo fuente ni las dependencias de desarrollo.
