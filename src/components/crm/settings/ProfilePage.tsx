@@ -98,32 +98,6 @@ const ProfileForm = ({
   const { isDirty } = useFormState();
   const dataProvider = useDataProvider<CrmDataProvider>();
 
-  const { mutate: updatePassword } = useMutation({
-    mutationKey: ["updatePassword"],
-    mutationFn: async () => {
-      if (!identity) {
-        throw new Error(
-          translate("crm.profile.record_not_found", {
-            _: "Record not found",
-          }),
-        );
-      }
-      return dataProvider.updatePassword(identity.id);
-    },
-    onSuccess: () => {
-      notify("crm.profile.password_reset_sent", {
-        messageArgs: {
-          _: "A reset password email has been sent to your email address",
-        },
-      });
-    },
-    onError: (e) => {
-      notify(`${e}`, {
-        type: "error",
-      });
-    },
-  });
-
   const { mutate: mutateSale } = useMutation({
     mutationKey: ["signup"],
     mutationFn: async (data: SalesFormData) => {
@@ -155,8 +129,10 @@ const ProfileForm = ({
   });
   if (!identity) return null;
 
+  // La contrasena se cambia en KontrolIA Auth, que es donde viven las
+  // credenciales. El CRM nunca las recibe ni las gestiona.
   const handleClickOpenPasswordChange = () => {
-    updatePassword();
+    window.open(`${env.kontroliaAuthServerUrl}/account`, "_blank", "noopener");
   };
 
   const handleAvatarUpdate = async (values: any) => {

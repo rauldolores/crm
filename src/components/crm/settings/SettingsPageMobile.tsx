@@ -1,5 +1,5 @@
 import { env } from "@/lib/env";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/components/admin/use-theme";
 import { ChevronRight, KeyRound } from "lucide-react";
 import { Link } from "react-router";
@@ -42,39 +42,19 @@ import type { SalesFormData } from "../types";
 
 const ChangePasswordButton = () => {
   const translate = useTranslate();
-  const notify = useNotify();
-  const { identity } = useGetIdentity();
-  const dataProvider = useDataProvider<CrmDataProvider>();
 
-  const { mutate: updatePassword } = useMutation({
-    mutationKey: ["updatePassword"],
-    mutationFn: async () => {
-      if (!identity) {
-        throw new Error(
-          translate("crm.profile.record_not_found", {
-            _: "Record not found",
-          }),
-        );
-      }
-      return dataProvider.updatePassword(identity.id);
-    },
-    onSuccess: () => {
-      notify("crm.profile.password_reset_sent", {
-        messageArgs: {
-          _: "A reset password email has been sent to your email address",
-        },
-      });
-    },
-    onError: (e) => {
-      notify(`${e}`, { type: "error" });
-    },
-  });
-
+  // Lleva a KontrolIA Auth: las credenciales no pasan por el CRM.
   return (
     <Button
       variant="outline"
       className="w-full text-base h-auto"
-      onClick={() => updatePassword()}
+      onClick={() =>
+        window.open(
+          `${env.kontroliaAuthServerUrl}/account`,
+          "_blank",
+          "noopener",
+        )
+      }
     >
       <KeyRound className="size-5 mr-3" />
       {translate("crm.profile.password.change")}

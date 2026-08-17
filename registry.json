@@ -706,14 +706,6 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/crm/sales/SalesCreate.tsx",
-          "type": "registry:component"
-        },
-        {
-          "path": "src/components/crm/sales/SalesEdit.tsx",
-          "type": "registry:component"
-        },
-        {
           "path": "src/components/crm/sales/SalesInputs.tsx",
           "type": "registry:component"
         },

@@ -141,73 +141,34 @@ const getDataProviderWithCustomMethods = () => {
         password,
       };
     },
-    async salesCreate(body: SalesFormData) {
-      const { data, error } = await getSupabaseClient().functions.invoke<{
-        data: Sale;
-      }>("users", {
-        method: "POST",
-        body,
-      });
-
-      if (!data || error) {
-        console.error("salesCreate.error", error);
-        const errorDetails = await (async () => {
-          try {
-            return (await error?.context?.json()) ?? {};
-          } catch {
-            return {};
-          }
-        })();
-        throw new Error(errorDetails?.message || "Failed to create the user");
-      }
-
-      return data.data;
-    },
+    /**
+     * Actualiza la ficha del comercial.
+     *
+     * Antes pasaba por la edge function `users`, que ademas creaba y
+     * desactivaba cuentas. Eso es competencia de KontrolIA Auth, asi que la
+     * funcion desaparecio y aqui solo queda lo que si es del CRM: el avatar y
+     * los datos de la ficha. El puente impone la organizacion, de modo que no
+     * se puede tocar la ficha de otra empresa.
+     */
     async salesUpdate(
       id: Identifier,
       data: Partial<Omit<SalesFormData, "password">>,
     ) {
-      const { email, first_name, last_name, administrator, avatar, disabled } =
-        data;
+      const { first_name, last_name, avatar } = data;
 
-      const { data: updatedData, error } =
-        await getSupabaseClient().functions.invoke<{
-          data: Sale;
-        }>("users", {
-          method: "PATCH",
-          body: {
-            sales_id: id,
-            email,
-            first_name,
-            last_name,
-            administrator,
-            disabled,
-            avatar,
-          },
-        });
+      const { data: actualizado, error } = await getSupabaseClient()
+        .from("sales")
+        .update({ first_name, last_name, avatar })
+        .eq("id", id)
+        .select()
+        .single();
 
-      if (!updatedData || error) {
-        console.error("salesCreate.error", error);
-        throw new Error("Failed to update account manager");
+      if (error) {
+        console.error("salesUpdate.error", error);
+        throw new Error("No se pudo actualizar la ficha.");
       }
 
-      return updatedData.data;
-    },
-    async updatePassword(id: Identifier) {
-      const { data: passwordUpdated, error } =
-        await getSupabaseClient().functions.invoke<boolean>("update_password", {
-          method: "PATCH",
-          body: {
-            sales_id: id,
-          },
-        });
-
-      if (!passwordUpdated || error) {
-        console.error("update_password.error", error);
-        throw new Error("Failed to update password");
-      }
-
-      return passwordUpdated;
+      return actualizado as Sale;
     },
     async unarchiveDeal(deal: Deal) {
       // get all deals where stage is the same as the deal to unarchive
