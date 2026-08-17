@@ -362,6 +362,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/layout/SelectorDeOrganizacion.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/layout/TopToolbar.tsx",
           "type": "registry:component"
         },
