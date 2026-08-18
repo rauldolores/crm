@@ -22,7 +22,11 @@ import {
   type ImportFromJsonState,
   useImportFromJson,
 } from "./useImportFromJson";
-import sampleFile from "./import-sample.json?url";
+
+// Se sirve como archivo estatico. El sufijo `?url` de Vite no es estandar y
+// Next no lo resuelve, asi que la pantalla de importacion habria fallado al
+// compilar en cuanto se abriera.
+const ARCHIVO_DE_EJEMPLO = "/vinqulia-ejemplo-importacion.json";
 
 export const ImportPage = () => {
   const translate = useTranslate();
@@ -84,7 +88,7 @@ const ImportFromJsonIdle = ({
         <a
           className="underline"
           download="import-sample.json"
-          href={sampleFile}
+          href={ARCHIVO_DE_EJEMPLO}
         >
           sample.json
         </a>
