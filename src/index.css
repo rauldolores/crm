@@ -68,14 +68,19 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Barra lateral de Vinqulia: fondo oscuro con el rojo de marca como color
+     de seleccion. El fondo no es rojo saturado a proposito: la barra esta
+     siempre en pantalla, y un rojo pleno a ese tamano cansa la vista y compite
+     con los avisos de error, que tambien son rojos. El rojo se reserva para lo
+     que esta activo, que es donde debe ir la atencion. */
+  --sidebar: oklch(0.205 0.01 20);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.58 0.21 25);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.28 0.02 20);
+  --sidebar-accent-foreground: oklch(0.97 0 0);
+  --sidebar-border: oklch(0.32 0.02 20);
+  --sidebar-ring: oklch(0.58 0.21 25);
   --avatar-0: oklch(0.85 0.08 240);
   --avatar-1: oklch(0.88 0.1 340);
   --avatar-2: oklch(0.85 0.07 180);

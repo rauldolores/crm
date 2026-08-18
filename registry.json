@@ -334,6 +334,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/layout/BarraLateral.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/layout/FormToolbar.tsx",
           "type": "registry:component"
         },
