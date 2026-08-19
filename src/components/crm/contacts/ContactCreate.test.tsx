@@ -18,6 +18,39 @@ describe("ContactCreate", () => {
       .toBeInTheDocument();
   });
 
+  it("warns about a contact with a matching name and links to it", async () => {
+    const screen = await render(<ContactCreateBasic silent />);
+
+    await expect
+      .element(screen.getByPlaceholder("Correo electrónico"))
+      .toBeInTheDocument();
+
+    // El contacto sembrado por la historia se llama "Ada Lovelace" (id 1).
+    await screen.getByLabelText(/^nombre/i).fill("Ada");
+    await screen.getByLabelText(/apellidos/i).fill("Lovelace");
+
+    const aviso = screen.getByText("Ya existe un contacto parecido");
+    await expect.element(aviso).toBeInTheDocument();
+
+    const enlace = screen.getByRole("link", { name: "Ada Lovelace" });
+    await expect.element(enlace).toHaveAttribute("href", "/contacts/1/show");
+  });
+
+  it("does not warn about a name that doesn't match anyone", async () => {
+    const screen = await render(<ContactCreateBasic silent />);
+
+    await expect
+      .element(screen.getByPlaceholder("Correo electrónico"))
+      .toBeInTheDocument();
+
+    await screen.getByLabelText(/^nombre/i).fill("Grace");
+    await screen.getByLabelText(/apellidos/i).fill("Hopper");
+
+    await expect
+      .element(screen.getByText("Ya existe un contacto parecido"))
+      .not.toBeInTheDocument();
+  });
+
   it("does not submit empty email and phone entries", async () => {
     const createMock = vi
       .fn()

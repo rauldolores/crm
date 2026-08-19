@@ -61,8 +61,16 @@ export function ContactImportDialog({
 }: ContactImportModalProps) {
   const translate = useTranslate();
   const refresh = useRefresh();
-  const processBatch = useContactImport();
-  const { importer, parseCsv, reset } = usePapaParse<ContactImportSchema>({
+  const {
+    processBatch,
+    duplicatesFound,
+    reset: resetDuplicates,
+  } = useContactImport();
+  const {
+    importer,
+    parseCsv,
+    reset: resetImporter,
+  } = usePapaParse<ContactImportSchema>({
     batchSize: 10,
     processBatch,
   });
@@ -85,13 +93,15 @@ export function ContactImportDialog({
   };
 
   const handleClose = () => {
-    reset();
+    resetImporter();
+    resetDuplicates();
     onClose();
   };
 
   const handleReset = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    reset();
+    resetImporter();
+    resetDuplicates();
   };
 
   return (
@@ -151,14 +161,53 @@ export function ContactImportDialog({
             )}
 
             {importer.state === "complete" && (
-              <Alert>
-                <AlertDescription>
-                  {translate("resources.contacts.import.complete", {
-                    importCount: importer.importCount,
-                    errorCount: importer.errorCount,
-                  })}
-                </AlertDescription>
-              </Alert>
+              <>
+                <Alert>
+                  <AlertDescription>
+                    {translate("resources.contacts.import.complete", {
+                      importCount: importer.importCount,
+                      errorCount: importer.errorCount,
+                    })}
+                  </AlertDescription>
+                </Alert>
+                {duplicatesFound.length > 0 && (
+                  <Alert>
+                    <AlertDescription className="flex flex-col gap-2">
+                      <p>
+                        {translate(
+                          "resources.contacts.import.duplicates_found",
+                          { count: duplicatesFound.length },
+                        )}
+                      </p>
+                      <ul className="flex flex-col gap-1 text-sm">
+                        {duplicatesFound.slice(0, 20).map((duplicado, i) => (
+                          <li key={i}>
+                            {duplicado.fila.first_name}{" "}
+                            {duplicado.fila.last_name} →{" "}
+                            <Link
+                              to={`/contacts/${duplicado.existente.id}/show`}
+                              target="_blank"
+                              className="underline"
+                            >
+                              {translate(
+                                "resources.contacts.import.existing_contact",
+                              )}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                      {duplicatesFound.length > 20 && (
+                        <p className="text-muted-foreground">
+                          {translate(
+                            "resources.contacts.import.duplicates_more",
+                            { count: duplicatesFound.length - 20 },
+                          )}
+                        </p>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </>
             )}
 
             {importer.state === "idle" && (

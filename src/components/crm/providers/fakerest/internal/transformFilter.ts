@@ -45,6 +45,15 @@ export function transformFilter(filter: Record<string, any>) {
       continue;
     }
 
+    // Contiene, sin distinguir mayúsculas — el sufijo `_q` nativo de fakerest
+    // ya hace justo eso (RegExp case-insensitive), así que se reutiliza en
+    // vez de reinventar el comparador.
+    if (key.endsWith("@ilike") || key.endsWith("@like")) {
+      const sufijo = key.endsWith("@ilike") ? "@ilike" : "@like";
+      transformedFilters[`${key.slice(0, -sufijo.length)}_q`] = value;
+      continue;
+    }
+
     // Search query
     if (key.endsWith("@or")) {
       transformedFilters["q"] = transformOrFilter(value);

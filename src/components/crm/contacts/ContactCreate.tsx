@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { ContactInputs } from "./ContactInputs";
 import { FormToolbar } from "../layout/FormToolbar";
+import { PosiblesDuplicados } from "./PosiblesDuplicados";
 import {
   cleanupContactForCreate,
   defaultEmailJsonb,
@@ -33,6 +34,7 @@ export const ContactCreate = ({
           >
             <Card>
               <CardContent>
+                <PosiblesDuplicados />
                 <ContactInputs />
                 <FormToolbar />
               </CardContent>

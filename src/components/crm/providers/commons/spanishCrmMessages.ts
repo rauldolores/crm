@@ -137,6 +137,15 @@ export const spanishCrmMessages = {
         stop: "Detener la importación",
         csv_file: "Archivo CSV",
         contacts_label: "contacto |||| contactos",
+        duplicates_found:
+          "%{count} contacto podría ser un duplicado |||| %{count} contactos podrían ser duplicados",
+        existing_contact: "ver el contacto existente",
+        duplicates_more: "y %{count} más.",
+      },
+      duplicates: {
+        title: "Ya existe un contacto parecido",
+        same_email: "tiene el mismo correo",
+        same_name: "tiene un nombre parecido",
       },
       inputs: {
         genders: {

@@ -1,6 +1,7 @@
 import { useGetIdentity, useTranslate } from "ra-core";
 import { CreateSheet } from "../misc/CreateSheet";
 import { ContactInputs } from "./ContactInputs";
+import { PosiblesDuplicados } from "./PosiblesDuplicados";
 import {
   cleanupContactForCreate,
   defaultEmailJsonb,
@@ -31,6 +32,7 @@ export const ContactCreateSheet = ({
       open={open}
       onOpenChange={onOpenChange}
     >
+      <PosiblesDuplicados />
       <ContactInputs />
     </CreateSheet>
   );
