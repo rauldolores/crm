@@ -155,6 +155,30 @@ describe("NoteInputs", () => {
       .not.toBeInTheDocument();
   });
 
+  it("defaults the activity type to a plain note", async () => {
+    const screen = await render(<Default />);
+
+    await expect
+      .element(screen.getByRole("radio", { name: "Nota" }))
+      .toHaveAttribute("aria-checked", "true");
+    await expect
+      .element(screen.getByRole("radio", { name: "Llamada" }))
+      .toHaveAttribute("aria-checked", "false");
+  });
+
+  it("switches the selected activity type on click", async () => {
+    const screen = await render(<Default />);
+
+    await screen.getByRole("radio", { name: "Llamada" }).click();
+
+    await expect
+      .element(screen.getByRole("radio", { name: "Llamada" }))
+      .toHaveAttribute("aria-checked", "true");
+    await expect
+      .element(screen.getByRole("radio", { name: "Nota" }))
+      .toHaveAttribute("aria-checked", "false");
+  });
+
   it("allows submitting a note with an attachment and no text", async () => {
     const screen = await render(<WithAttachmentDefault />);
 

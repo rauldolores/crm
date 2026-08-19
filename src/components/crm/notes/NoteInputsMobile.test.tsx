@@ -34,6 +34,27 @@ describe("NoteInputsMobile", () => {
     await expect.element(screen.getByText("Contacto")).toBeVisible();
   });
 
+  it("defaults the activity type to a plain note", async () => {
+    const screen = await render(<Default />);
+
+    await expect
+      .element(screen.getByRole("radio", { name: "Nota" }))
+      .toHaveAttribute("aria-checked", "true");
+  });
+
+  it("switches the selected activity type on click", async () => {
+    const screen = await render(<Default />);
+
+    await screen.getByRole("radio", { name: "Llamada" }).click();
+
+    await expect
+      .element(screen.getByRole("radio", { name: "Llamada" }))
+      .toHaveAttribute("aria-checked", "true");
+    await expect
+      .element(screen.getByRole("radio", { name: "Nota" }))
+      .toHaveAttribute("aria-checked", "false");
+  });
+
   it("shows a validation error when submitting an empty note without attachments", async () => {
     const screen = await render(<Default />);
 

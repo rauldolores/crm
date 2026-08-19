@@ -13,6 +13,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 
 import { contactOptionText } from "../misc/ContactOption";
 import { AttachmentField } from "./AttachmentField";
+import { ActivityTypeSelector } from "./ActivityTypeSelector";
 import { foreignKeyMapping } from "./foreignKeyMapping";
 import { validateNoteOrAttachmentRequired } from "./noteModel";
 import type { ContactNote } from "../types";
@@ -28,6 +29,9 @@ export const NoteInputsMobile = ({
     source: "text",
     validate: validateNoteOrAttachmentRequired,
   });
+  const { control, setValue } = useFormContext();
+  const rawType = useWatch({ control, name: "type" });
+  const selectedType = rawType ?? "note";
 
   useEffect(() => {
     const node = textareaRef.current;
@@ -39,8 +43,23 @@ export const NoteInputsMobile = ({
     });
   }, []);
 
+  // Mismo motivo que en el formulario de escritorio: el campo empieza sin
+  // valor, así que se fija "note" al montar.
+  useEffect(() => {
+    if (rawType == null) {
+      setValue("type", "note", { shouldDirty: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="flex flex-col flex-1 -m-4">
+      <div className="px-4 pt-4">
+        <ActivityTypeSelector
+          value={selectedType}
+          onChange={(type) => setValue("type", type, { shouldDirty: true })}
+        />
+      </div>
       <div className="flex-1 flex flex-col">
         <textarea
           {...field}

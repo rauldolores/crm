@@ -208,6 +208,7 @@ const transformFormValues = (data: Record<string, any>) => {
       dealStages: embudos[0]?.stages ?? [],
       dealPipelineStatuses: embudos[0]?.pipelineStatuses ?? [],
       noteStatuses: ensureValues(data.noteStatuses),
+      noteTypes: ensureValues(data.noteTypes),
       contactCustomFields: aDefiniciones(data.contactCustomFields),
       companyCustomFields: aDefiniciones(data.companyCustomFields),
       dealCustomFields: aDefiniciones(data.dealCustomFields),
@@ -260,6 +261,7 @@ const SettingsForm = () => {
       dealPipelines: config.dealPipelines,
       dealLossReasons: config.dealLossReasons,
       noteStatuses: config.noteStatuses,
+      noteTypes: config.noteTypes,
       contactCustomFields: aFilasEditables(config.contactCustomFields),
       companyCustomFields: aFilasEditables(config.companyCustomFields),
       dealCustomFields: aFilasEditables(config.dealCustomFields),
@@ -474,6 +476,20 @@ const SettingsFormFields = () => {
               <SimpleFormIterator inline disableReordering disableClear>
                 <TextInput source="label" label={false} className="flex-1" />
                 <ColorInput source="color" />
+              </SimpleFormIterator>
+            </ArrayInput>
+
+            <Separator />
+
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("crm.settings.notes.types")}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {translate("crm.settings.notes.types_help")}
+            </p>
+            <ArrayInput source="noteTypes" label={false} helperText={false}>
+              <SimpleFormIterator disableReordering disableClear>
+                <TextInput source="label" label={false} />
               </SimpleFormIterator>
             </ArrayInput>
           </CardContent>

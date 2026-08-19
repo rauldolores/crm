@@ -654,6 +654,9 @@ export const spanishCrmMessages = {
       light_mode_logo: "Logo para el modo claro",
       notes: {
         statuses: "Estados",
+        types: "Tipos de actividad",
+        types_help:
+          "Cómo se registró el contacto: llamada, reunión, WhatsApp, correo… Aparecen como iconos al añadir una nota.",
       },
       reset_defaults: "Restablecer los valores por defecto",
       save_error: "No se pudo guardar la configuración",

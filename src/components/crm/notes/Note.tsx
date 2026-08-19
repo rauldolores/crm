@@ -28,6 +28,8 @@ import type { ContactNote, DealNote } from "../types";
 import { NoteAttachments } from "./NoteAttachments";
 import { NoteInputs } from "./NoteInputs";
 import { useGetSalesName } from "../sales/useGetSalesName";
+import { getActivityTypeIcon } from "./noteModel";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const Note = ({
   showStatus,
@@ -50,6 +52,16 @@ export const Note = ({
   const salesName = useGetSalesName(note.sales_id, {
     enabled: !isCurrentUser,
   });
+  const { noteTypes } = useConfigurationContext();
+  // Solo se muestra si tipificaron la actividad como algo más que una nota
+  // simple; una nota de toda la vida no necesita una etiqueta que la explique.
+  const activityType =
+    note.type && note.type !== "note"
+      ? noteTypes.find((tipo) => tipo.value === note.type)
+      : undefined;
+  const ActivityIcon = activityType
+    ? getActivityTypeIcon(activityType.value)
+    : null;
 
   // Detect if content is truncated
   useEffect(() => {
@@ -111,6 +123,12 @@ export const Note = ({
           <CompanyAvatar width={20} height={20} />
         </ReferenceField>
         <div className="inline-flex h-full items-center text-sm text-muted-foreground">
+          {activityType && ActivityIcon && (
+            <span className="inline-flex items-center gap-1 mr-2 px-1.5 py-0.5 rounded bg-muted text-xs">
+              <ActivityIcon className="size-3" />
+              {activityType.label}
+            </span>
+          )}
           {translate(
             isCurrentUser
               ? "resources.notes.you_added"

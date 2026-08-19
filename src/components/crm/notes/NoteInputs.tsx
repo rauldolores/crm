@@ -17,6 +17,7 @@ import { foreignKeyMapping } from "./foreignKeyMapping";
 import { AutocompleteInput, ReferenceInput } from "@/components/admin";
 import { contactOptionText } from "../misc/ContactOption";
 import { validateNoteOrAttachmentRequired } from "./noteModel";
+import { ActivityTypeSelector } from "./ActivityTypeSelector";
 
 export const NoteInputs = ({
   defaultStatus,
@@ -39,6 +40,8 @@ export const NoteInputs = ({
   >();
   const selectedContactId = useWatch({ control, name: "contact_id" });
   const selectedStatus = useWatch({ control, name: "status" });
+  const rawType = useWatch({ control, name: "type" as any });
+  const selectedType = rawType ?? "note";
   const textValue = useWatch({ control, name: "text" as any });
   const isExpanded = isFocused || !!textValue;
   useEffect(() => {
@@ -50,6 +53,15 @@ export const NoteInputs = ({
       }
     }
   }, [textValue]);
+  // El campo empieza sin valor (el selector solo lo escribe cuando se hace
+  // clic): se fija "note" al montar para que lo que se ve seleccionado sea
+  // también lo que se guarda si nadie lo cambia.
+  useEffect(() => {
+    if (rawType == null) {
+      setValue("type" as any, "note", { shouldDirty: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const shouldHydrateStatus =
     showStatus &&
     (defaultStatus !== undefined ||
@@ -94,6 +106,12 @@ export const NoteInputs = ({
   // but we want it to be "notes" regardless of the context
   return (
     <div ref={containerRef} className="space-y-2">
+      <ActivityTypeSelector
+        value={selectedType}
+        onChange={(type) =>
+          setValue("type" as any, type, { shouldDirty: true })
+        }
+      />
       <TextInput
         source="text"
         label={false}

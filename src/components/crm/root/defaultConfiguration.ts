@@ -93,6 +93,17 @@ export const defaultNoteStatuses = [
   { value: "in-contract", label: "Con contrato", color: "#a4e87d" },
 ];
 
+// Tipos de actividad de fábrica. El icono de cada uno vive en el código
+// (ver getActivityTypeIcon en notes/noteModel.ts), no aquí: un tipo que la
+// organización agregue o renombre desde Ajustes usa el icono genérico.
+export const defaultNoteTypes = [
+  { value: "note", label: "Nota" },
+  { value: "call", label: "Llamada" },
+  { value: "meeting", label: "Reunión" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "email", label: "Correo" },
+];
+
 export const defaultTaskTypes = [
   { value: "none", label: "Ninguno" },
   { value: "email", label: "Correo electrónico" },
@@ -114,6 +125,7 @@ export const defaultConfiguration: ConfigurationContextValue = {
   dealPipelines: defaultDealPipelines,
   dealLossReasons: defaultDealLossReasons,
   noteStatuses: defaultNoteStatuses,
+  noteTypes: defaultNoteTypes,
   taskTypes: defaultTaskTypes,
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,

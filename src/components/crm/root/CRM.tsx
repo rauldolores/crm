@@ -53,6 +53,7 @@ import {
   defaultDealStages,
   defaultLightModeLogo,
   defaultNoteStatuses,
+  defaultNoteTypes,
   defaultTaskTypes,
   defaultTitle,
 } from "./defaultConfiguration";
@@ -163,6 +164,7 @@ export const CRM = ({
           },
         ],
         dealLossReasons: defaultDealLossReasons,
+        noteTypes: defaultNoteTypes,
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

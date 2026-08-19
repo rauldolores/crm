@@ -130,6 +130,8 @@ export type ContactNote = {
   sales_id: Identifier;
   status: string;
   attachments?: AttachmentNote[];
+  /** Tipo de actividad: nota, llamada, reunión… (value de un ActivityType). */
+  type?: string;
 } & Pick<RaRecord, "id">;
 
 export type Deal = {
@@ -159,6 +161,8 @@ export type DealNote = {
   date: string;
   sales_id: Identifier;
   attachments?: AttachmentNote[];
+  /** Tipo de actividad: nota, llamada, reunión… (value de un ActivityType). */
+  type?: string;
 
   // This is defined for compatibility with `ContactNote`
   status?: undefined;

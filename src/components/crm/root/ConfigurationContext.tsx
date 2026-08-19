@@ -29,6 +29,8 @@ export interface ConfigurationContextValue {
   /** Motivos por los que se puede perder una oportunidad. */
   dealLossReasons: LabeledValue[];
   noteStatuses: NoteStatus[];
+  /** Tipos de actividad para notas: nota, llamada, reunión… */
+  noteTypes: LabeledValue[];
   taskTypes: LabeledValue[];
   title: string;
   darkModeLogo: string;
