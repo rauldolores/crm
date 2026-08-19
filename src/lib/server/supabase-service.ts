@@ -33,6 +33,7 @@ export function getServiceClient() {
   }
 
   return createClient(url, claveDeServicio, {
+    db: { schema: "crm" },
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

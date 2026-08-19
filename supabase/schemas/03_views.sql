@@ -1,9 +1,9 @@
 --
 -- Views
--- This file declares all views in the public schema.
+-- This file declares all views in the crm schema.
 --
 
-create or replace view public.activity_log with (security_invoker = on) as
+create or replace view crm.activity_log with (security_invoker = on) as
 select
     ('company.' || c.id || '.created') as id,
     'company.created' as type,
@@ -16,7 +16,7 @@ select
     null::json as contact_note,
     null::json as deal_note,
     c.organization_id
-from public.companies c
+from crm.companies c
 union all
 select
     ('contact.' || co.id || '.created') as id,
@@ -30,7 +30,7 @@ select
     null::json as contact_note,
     null::json as deal_note,
     co.organization_id
-from public.contacts co
+from crm.contacts co
 union all
 select
     ('contactNote.' || cn.id || '.created') as id,
@@ -44,8 +44,8 @@ select
     to_json(cn.*) as contact_note,
     null::json as deal_note,
     cn.organization_id
-from public.contact_notes cn
-    left join public.contacts co on co.id = cn.contact_id
+from crm.contact_notes cn
+    left join crm.contacts co on co.id = cn.contact_id
 union all
 select
     ('deal.' || d.id || '.created') as id,
@@ -59,7 +59,7 @@ select
     null::json as contact_note,
     null::json as deal_note,
     d.organization_id
-from public.deals d
+from crm.deals d
 union all
 select
     ('dealNote.' || dn.id || '.created') as id,
@@ -73,10 +73,10 @@ select
     null::json as contact_note,
     to_json(dn.*) as deal_note,
     dn.organization_id
-from public.deal_notes dn
-    left join public.deals d on d.id = dn.deal_id;
+from crm.deal_notes dn
+    left join crm.deals d on d.id = dn.deal_id;
 
-create or replace view public.companies_summary with (security_invoker = on) as
+create or replace view crm.companies_summary with (security_invoker = on) as
 select
     c.id,
     c.created_at,
@@ -101,12 +101,12 @@ select
     count(distinct co.id) as nb_contacts,
     c.organization_id,
     c.custom_fields
-from public.companies c
-    left join public.deals d on c.id = d.company_id
-    left join public.contacts co on c.id = co.company_id
+from crm.companies c
+    left join crm.deals d on c.id = d.company_id
+    left join crm.contacts co on c.id = co.company_id
 group by c.id;
 
-create or replace view public.contacts_summary with (security_invoker = on) as
+create or replace view crm.contacts_summary with (security_invoker = on) as
 select
     co.id,
     co.first_name,
@@ -131,13 +131,13 @@ select
     count(distinct t.id) filter (where t.done_date is null) as nb_tasks,
     co.organization_id,
     co.custom_fields
-from public.contacts co
-    left join public.tasks t on co.id = t.contact_id
-    left join public.companies c on co.company_id = c.id
+from crm.contacts co
+    left join crm.tasks t on co.id = t.contact_id
+    left join crm.companies c on co.company_id = c.id
 group by co.id, c.name;
 
-create or replace view public.init_state with (security_invoker = off) as
+create or replace view crm.init_state with (security_invoker = off) as
 select count(sub.id) as is_initialized
 from (
-    select sales.id from public.sales limit 1
+    select sales.id from crm.sales limit 1
 ) sub;

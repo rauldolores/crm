@@ -52,7 +52,8 @@ const getBaseDataProvider = () =>
     // Supabase, saltandose el puente y llegando como usuario anonimo.
     instanceUrl: getUrlDeDatos(),
     apiKey: env.supabasePublishableKey,
-    supabaseClient: getSupabaseClient(),
+    supabaseClient: getSupabaseClient() as any,
+    schema: () => "crm",
     sortOrder: "asc,desc.nullslast" as any,
   });
 

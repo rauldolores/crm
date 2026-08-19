@@ -1,7 +1,73 @@
 --
--- Functions
--- This file declares all PL/pgSQL functions in the crm schema.
+-- Mueve todo el contenido de la aplicación del esquema public al esquema crm,
+-- para poder compartir este proyecto de Supabase con otras aplicaciones del
+-- ecosistema KontrolIA sin colisionar nombres de tablas, vistas o funciones.
 --
+-- ALTER ... SET SCHEMA preserva los datos, los índices, las claves foráneas,
+-- las secuencias identity, los triggers y las políticas RLS: todos ellos
+-- siguen al objeto porque Postgres los referencia por OID, no por nombre
+-- calificado con el esquema. Verificado en local antes de escribir esta
+-- migración (ver commit): una tabla movida conserva su secuencia identity,
+-- su primary key y sus políticas automáticamente.
+--
+-- Las funciones PL/pgSQL son la excepción: su cuerpo es texto (`prosrc`) que
+-- se reanaliza en cada ejecución, así que aunque ALTER FUNCTION ... SET SCHEMA
+-- mueve el objeto (conservando su OID, y por tanto los triggers que lo
+-- invocan), las referencias `public.tabla` que llevaba escritas seguirían
+-- apuntando a una tabla que ya no existe ahí. Por eso, tras mover cada
+-- función, se vuelve a crear con CREATE OR REPLACE usando el cuerpo ya
+-- corregido a `crm.` (mismo esquema y firma de argumentos, así que el OID no
+-- cambia y los triggers/políticas que la referencian no se ven afectados).
+
+create schema if not exists crm;
+
+--
+-- Tablas
+--
+alter table public.companies set schema crm;
+alter table public.contacts set schema crm;
+alter table public.contact_notes set schema crm;
+alter table public.deals set schema crm;
+alter table public.deal_notes set schema crm;
+alter table public.sales set schema crm;
+alter table public.automations set schema crm;
+alter table public.public_forms set schema crm;
+alter table public.public_form_submissions set schema crm;
+alter table public.saved_views set schema crm;
+alter table public.webhooks set schema crm;
+alter table public.tags set schema crm;
+alter table public.tasks set schema crm;
+alter table public.configuration set schema crm;
+alter table public.favicons_excluded_domains set schema crm;
+
+--
+-- Vistas
+--
+alter view public.activity_log set schema crm;
+alter view public.companies_summary set schema crm;
+alter view public.contacts_summary set schema crm;
+alter view public.init_state set schema crm;
+
+--
+-- Funciones: primero se mueven (conserva el OID), después se recrean con el
+-- cuerpo corregido a `crm.` (misma firma, mismo OID).
+--
+alter function public.cleanup_note_attachments() set schema crm;
+alter function public.current_organization_id() set schema crm;
+alter function public.get_avatar_for_email(text) set schema crm;
+alter function public.get_domain_favicon(text) set schema crm;
+alter function public.get_note_attachments_function_url() set schema crm;
+alter function public.get_user_id_by_email(text) set schema crm;
+alter function public.handle_company_saved() set schema crm;
+alter function public.handle_contact_note_created_or_updated() set schema crm;
+alter function public.handle_contact_saved() set schema crm;
+alter function public.is_admin() set schema crm;
+alter function public.lowercase_email_jsonb() set schema crm;
+alter function public.merge_contacts(bigint, bigint) set schema crm;
+alter function public.notify_webhooks() set schema crm;
+alter function public.provision_crm_access() set schema crm;
+alter function public.run_automations() set schema crm;
+alter function public.set_sales_id_default() set schema crm;
 
 CREATE OR REPLACE FUNCTION "crm"."cleanup_note_attachments"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
@@ -224,10 +290,6 @@ begin
     return new;
 end;$$;
 
--- Devuelve la organización activa del usuario, o null si el token no la trae.
--- Es `stable` para que el planificador la evalúe una vez por consulta en lugar
--- de una vez por fila, que es la diferencia entre un índice usable y un escaneo
--- secuencial en tablas grandes.
 create or replace function crm.current_organization_id()
 returns uuid
 language sql
@@ -254,16 +316,10 @@ begin
   org_id := crm.current_organization_id();
   uid := auth.uid();
 
-  -- Sin organizacion activa o sin sesion no hay nada que aprovisionar. Se sale
-  -- en silencio en lugar de fallar: la funcion se invoca en cada acceso.
   if org_id is null or uid is null then
     return;
   end if;
 
-  -- Configuracion de la organizacion. Se crea vacia a proposito: los valores
-  -- por defecto viven en defaultConfiguration.ts y el frontend los aplica
-  -- cuando esta fila no trae claves. Duplicarlos aqui daria dos fuentes de
-  -- verdad que se desincronizarian.
   insert into crm.configuration (organization_id, config)
   values (org_id, '{}'::jsonb)
   on conflict (organization_id) do nothing;
@@ -275,7 +331,6 @@ begin
     return;
   end if;
 
-  -- El primer usuario que entra en una organizacion es su administrador.
   select not exists (
     select 1 from crm.sales where organization_id = org_id
   ) into es_el_primero;
@@ -312,9 +367,6 @@ CREATE OR REPLACE FUNCTION "crm"."is_admin"() RETURNS boolean
     SET "search_path" TO ''
     AS $$
 begin
-  -- El filtro por organización es obligatorio: la función es SECURITY DEFINER
-  -- y salta el RLS, así que sin él un administrador de una organización lo
-  -- sería en todas aquellas de las que es miembro.
   return exists (
     select 1 from crm.sales
     where user_id = auth.uid()
@@ -342,7 +394,6 @@ DECLARE
   email_map jsonb;
   phone_map jsonb;
 BEGIN
-  -- Fetch both contacts
   SELECT * INTO winner_contact FROM contacts WHERE id = winner_id;
   SELECT * INTO loser_contact FROM contacts WHERE id = loser_id;
 
@@ -350,13 +401,10 @@ BEGIN
     RAISE EXCEPTION 'Contact not found';
   END IF;
 
-  -- 1. Reassign tasks from loser to winner
   UPDATE tasks SET contact_id = winner_id WHERE contact_id = loser_id;
 
-  -- 2. Reassign contact notes from loser to winner
   UPDATE contact_notes SET contact_id = winner_id WHERE contact_id = loser_id;
 
-  -- 3. Update deals - replace loser with winner in contact_ids array
   FOR deal_record IN
     SELECT id, contact_ids
     FROM deals
@@ -373,17 +421,11 @@ BEGIN
     WHERE id = deal_record.id;
   END LOOP;
 
-  -- 4. Merge contact data
-
-  -- Get email arrays
   winner_emails := COALESCE(winner_contact.email_jsonb, '[]'::jsonb);
   loser_emails := COALESCE(loser_contact.email_jsonb, '[]'::jsonb);
 
-  -- Merge emails with deduplication by email address
-  -- Build a map of email -> email object, then convert back to array
   email_map := '{}'::jsonb;
 
-  -- Add winner emails to map
   IF jsonb_array_length(winner_emails) > 0 THEN
     FOR i IN 0..jsonb_array_length(winner_emails)-1 LOOP
       email_map := email_map || jsonb_build_object(
@@ -393,7 +435,6 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Add loser emails to map (won't overwrite existing keys)
   IF jsonb_array_length(loser_emails) > 0 THEN
     FOR i IN 0..jsonb_array_length(loser_emails)-1 LOOP
       IF NOT email_map ? (loser_emails->i->>'email') THEN
@@ -405,18 +446,14 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Convert map back to array
   merged_emails := (SELECT jsonb_agg(value) FROM jsonb_each(email_map));
   merged_emails := COALESCE(merged_emails, '[]'::jsonb);
 
-  -- Get phone arrays
   winner_phones := COALESCE(winner_contact.phone_jsonb, '[]'::jsonb);
   loser_phones := COALESCE(loser_contact.phone_jsonb, '[]'::jsonb);
 
-  -- Merge phones with deduplication by number
   phone_map := '{}'::jsonb;
 
-  -- Add winner phones to map
   IF jsonb_array_length(winner_phones) > 0 THEN
     FOR i IN 0..jsonb_array_length(winner_phones)-1 LOOP
       phone_map := phone_map || jsonb_build_object(
@@ -426,7 +463,6 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Add loser phones to map (won't overwrite existing keys)
   IF jsonb_array_length(loser_phones) > 0 THEN
     FOR i IN 0..jsonb_array_length(loser_phones)-1 LOOP
       IF NOT phone_map ? (loser_phones->i->>'number') THEN
@@ -438,11 +474,9 @@ BEGIN
     END LOOP;
   END IF;
 
-  -- Convert map back to array
   merged_phones := (SELECT jsonb_agg(value) FROM jsonb_each(phone_map));
   merged_phones := COALESCE(merged_phones, '[]'::jsonb);
 
-  -- Merge tags (remove duplicates)
   merged_tags := ARRAY(
     SELECT DISTINCT unnest(
       COALESCE(winner_contact.tags, ARRAY[]::bigint[]) ||
@@ -450,7 +484,6 @@ BEGIN
     )
   );
 
-  -- 5. Update winner with merged data
   UPDATE contacts SET
     avatar = COALESCE(winner_contact.avatar, loser_contact.avatar),
     gender = COALESCE(winner_contact.gender, loser_contact.gender),
@@ -469,7 +502,6 @@ BEGIN
     tags = merged_tags
   WHERE id = winner_id;
 
-  -- 6. Delete loser contact
   DELETE FROM contacts WHERE id = loser_id;
 
   RETURN winner_id;
@@ -561,7 +593,7 @@ begin
         )
       );
     exception when others then
-      null; -- la escritura original nunca se sacrifica por un aviso
+      null;
     end;
   end loop;
 
@@ -584,8 +616,6 @@ declare
   contacto bigint;
   responsable bigint;
 begin
-  -- Guarda contra cascadas: una acción que escribe (asignar responsable)
-  -- volvería a disparar el motor y podría no terminar nunca.
   if pg_trigger_depth() > 1 then
     return null;
   end if;
@@ -598,21 +628,15 @@ begin
   if tg_op = 'INSERT' then
     evento := 'created';
   elsif tg_table_name = 'deals' and new.stage is distinct from old.stage then
-    -- Solo el cambio de etapa cuenta: al crear ya se notificó como 'created'.
     evento := 'stage_changed';
   else
     return null;
   end if;
 
-  -- La etapa se lee ANTES de la consulta y solo donde existe la columna:
-  -- PL/pgSQL prepara la consulta entera, así que una referencia a new.stage
-  -- dentro de ella fallaría en contacts aunque la condición nunca se cumpla.
   if tg_table_name = 'deals' then
     etapa := new.stage;
   end if;
 
-  -- Todo el motor va protegido: ni una regla mal configurada ni un fallo
-  -- interno pueden tumbar la escritura que lo disparó.
   begin
     for regla in
       select * from crm.automations
@@ -628,8 +652,6 @@ begin
     loop
       begin
         if regla.action_type = 'create_task' then
-          -- Las tareas cuelgan siempre de un contacto. En una oportunidad se
-          -- usa su primer contacto; si no tiene ninguno, la regla se salta.
           if tg_table_name = 'contacts' then
             contacto := new.id;
           else
@@ -662,11 +684,11 @@ begin
           end if;
         end if;
       exception when others then
-        null; -- una regla concreta falla, las demás siguen
+        null;
       end;
     end loop;
   exception when others then
-    null; -- el motor nunca bloquea la escritura original
+    null;
   end;
 
   return null;
@@ -675,3 +697,31 @@ $$;
 
 grant all on function crm.run_automations() to authenticated;
 grant all on function crm.run_automations() to service_role;
+
+--
+-- Grants: uso del esquema (imprescindible; sin esto ningún rol puede ver
+-- los objetos de crm aunque tengan permisos sobre ellos) y default privileges
+-- para tablas/funciones que se creen en crm en el futuro. Los permisos ya
+-- concedidos sobre cada tabla/vista/función/secuencia siguen intactos: un
+-- GRANT es una propiedad del objeto (por OID), no del esquema, así que se
+-- conservan automáticamente al mover el objeto.
+--
+grant usage on schema crm to postgres;
+grant usage on schema crm to anon;
+grant usage on schema crm to authenticated;
+grant usage on schema crm to service_role;
+
+alter default privileges for role postgres in schema crm grant all on sequences to postgres;
+alter default privileges for role postgres in schema crm grant all on sequences to anon;
+alter default privileges for role postgres in schema crm grant all on sequences to authenticated;
+alter default privileges for role postgres in schema crm grant all on sequences to service_role;
+
+alter default privileges for role postgres in schema crm grant all on functions to postgres;
+alter default privileges for role postgres in schema crm grant all on functions to anon;
+alter default privileges for role postgres in schema crm grant all on functions to authenticated;
+alter default privileges for role postgres in schema crm grant all on functions to service_role;
+
+alter default privileges for role postgres in schema crm grant all on tables to postgres;
+alter default privileges for role postgres in schema crm grant all on tables to anon;
+alter default privileges for role postgres in schema crm grant all on tables to authenticated;
+alter default privileges for role postgres in schema crm grant all on tables to service_role;

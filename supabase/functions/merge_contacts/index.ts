@@ -88,7 +88,12 @@ async function mergeContacts(
   userId: string,
 ) {
   try {
-    return await db.transaction().execute(async (trx) => {
+    return await db.transaction().execute(async (trx0) => {
+      // Las tablas viven en el esquema crm, no en public: esta transacción usa
+      // SQL crudo (Kysely sobre una conexión directa a Postgres), así que no
+      // pasa por PostgREST y no hereda el esquema de las cabeceras Accept/Content-Profile.
+      const trx = trx0.withSchema("crm");
+
       // Enable RLS by switching to authenticated role and setting user context
       await trx.executeQuery(CompiledQuery.raw("SET LOCAL ROLE authenticated"));
       await trx.executeQuery(

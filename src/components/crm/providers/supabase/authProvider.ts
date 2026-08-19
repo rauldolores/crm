@@ -41,7 +41,9 @@ const getIdentityFromSale = async () => {
 };
 
 const getBaseAuthProvider = () =>
-  supabaseAuthProvider(getSupabaseClient(), {
+  // Cast: supabaseAuthProvider solo usa client.auth (sesión), que no depende
+  // del esquema de datos, pero su tipo asume el esquema "public" por defecto.
+  supabaseAuthProvider(getSupabaseClient() as any, {
     getIdentity: getIdentityFromSale,
   });
 

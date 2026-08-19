@@ -5,7 +5,7 @@ import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { env } from "@/lib/env";
 
-let supabaseClient: SupabaseClient | null = null;
+let supabaseClient: SupabaseClient<any, "crm"> | null = null;
 
 /** Ruta del puente que reenvía a la base de datos desde el servidor. */
 const PUENTE = "/api/supabase";
@@ -53,15 +53,18 @@ export const getSupabaseClient = () => {
   if (!supabaseClient) {
     const usarPuente = isKontroliaAuthConfigured();
 
-    supabaseClient = createClient(
+    supabaseClient = createClient<any, "crm">(
       getUrlDeDatos(),
       env.supabasePublishableKey,
-      usarPuente
-        ? {
-            global: { fetch: fetchConToken },
-            auth: { persistSession: false, autoRefreshToken: false },
-          }
-        : undefined,
+      {
+        db: { schema: "crm" },
+        ...(usarPuente
+          ? {
+              global: { fetch: fetchConToken },
+              auth: { persistSession: false, autoRefreshToken: false },
+            }
+          : {}),
+      },
     );
   }
   return supabaseClient;

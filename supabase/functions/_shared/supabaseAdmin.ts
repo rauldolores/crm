@@ -7,6 +7,7 @@ export const supabaseAdmin: SupabaseClient = createClient(
   // See https://supabase.com/docs/guides/functions/auth#get-api-details
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   {
+    db: { schema: "crm" },
     auth: {
       autoRefreshToken: false,
       persistSession: false,

@@ -4,7 +4,10 @@ import { createClient } from "@supabase/supabase-js";
 const adminSupabase = createClient(
   process.env.VITE_SUPABASE_URL ?? "http://127.0.0.1:54341",
   process.env.SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } },
+  {
+    db: { schema: "crm" },
+    auth: { autoRefreshToken: false, persistSession: false },
+  },
 );
 
 // Tables in FK-safe deletion order (children before parents)

@@ -13,218 +13,218 @@
 --
 
 -- Enable RLS on all tables
-alter table public.companies enable row level security;
-alter table public.contacts enable row level security;
-alter table public.contact_notes enable row level security;
-alter table public.deals enable row level security;
-alter table public.deal_notes enable row level security;
-alter table public.sales enable row level security;
-alter table public.automations enable row level security;
-alter table public.public_forms enable row level security;
-alter table public.public_form_submissions enable row level security;
-alter table public.saved_views enable row level security;
-alter table public.webhooks enable row level security;
-alter table public.tags enable row level security;
-alter table public.tasks enable row level security;
-alter table public.configuration enable row level security;
-alter table public.favicons_excluded_domains enable row level security;
+alter table crm.companies enable row level security;
+alter table crm.contacts enable row level security;
+alter table crm.contact_notes enable row level security;
+alter table crm.deals enable row level security;
+alter table crm.deal_notes enable row level security;
+alter table crm.sales enable row level security;
+alter table crm.automations enable row level security;
+alter table crm.public_forms enable row level security;
+alter table crm.public_form_submissions enable row level security;
+alter table crm.saved_views enable row level security;
+alter table crm.webhooks enable row level security;
+alter table crm.tags enable row level security;
+alter table crm.tasks enable row level security;
+alter table crm.configuration enable row level security;
+alter table crm.favicons_excluded_domains enable row level security;
 
 -- Companies
-create policy "Companies are scoped to the organization" on public.companies
+create policy "Companies are scoped to the organization" on crm.companies
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Companies are created in the organization" on public.companies
+    using (organization_id = crm.current_organization_id());
+create policy "Companies are created in the organization" on crm.companies
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Companies are updated within the organization" on public.companies
+    with check (organization_id = crm.current_organization_id());
+create policy "Companies are updated within the organization" on crm.companies
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Companies are deleted within the organization" on public.companies
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Companies are deleted within the organization" on crm.companies
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Contacts
-create policy "Contacts are scoped to the organization" on public.contacts
+create policy "Contacts are scoped to the organization" on crm.contacts
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Contacts are created in the organization" on public.contacts
+    using (organization_id = crm.current_organization_id());
+create policy "Contacts are created in the organization" on crm.contacts
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Contacts are updated within the organization" on public.contacts
+    with check (organization_id = crm.current_organization_id());
+create policy "Contacts are updated within the organization" on crm.contacts
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Contacts are deleted within the organization" on public.contacts
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Contacts are deleted within the organization" on crm.contacts
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Contact Notes
-create policy "Contact notes are scoped to the organization" on public.contact_notes
+create policy "Contact notes are scoped to the organization" on crm.contact_notes
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Contact notes are created in the organization" on public.contact_notes
+    using (organization_id = crm.current_organization_id());
+create policy "Contact notes are created in the organization" on crm.contact_notes
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Contact notes are updated within the organization" on public.contact_notes
+    with check (organization_id = crm.current_organization_id());
+create policy "Contact notes are updated within the organization" on crm.contact_notes
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Contact notes are deleted within the organization" on public.contact_notes
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Contact notes are deleted within the organization" on crm.contact_notes
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Deals
-create policy "Deals are scoped to the organization" on public.deals
+create policy "Deals are scoped to the organization" on crm.deals
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Deals are created in the organization" on public.deals
+    using (organization_id = crm.current_organization_id());
+create policy "Deals are created in the organization" on crm.deals
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Deals are updated within the organization" on public.deals
+    with check (organization_id = crm.current_organization_id());
+create policy "Deals are updated within the organization" on crm.deals
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Deals are deleted within the organization" on public.deals
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Deals are deleted within the organization" on crm.deals
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Deal Notes
-create policy "Deal notes are scoped to the organization" on public.deal_notes
+create policy "Deal notes are scoped to the organization" on crm.deal_notes
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Deal notes are created in the organization" on public.deal_notes
+    using (organization_id = crm.current_organization_id());
+create policy "Deal notes are created in the organization" on crm.deal_notes
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Deal notes are updated within the organization" on public.deal_notes
+    with check (organization_id = crm.current_organization_id());
+create policy "Deal notes are updated within the organization" on crm.deal_notes
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Deal notes are deleted within the organization" on public.deal_notes
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Deal notes are deleted within the organization" on crm.deal_notes
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Sales
 -- La escritura sigue reservada a las edge functions (service_role), que son las
 -- que dan de alta y desactivan comerciales; aquí solo se acota la lectura.
-create policy "Sales are scoped to the organization" on public.sales
+create policy "Sales are scoped to the organization" on crm.sales
     for select to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Tags
-create policy "Automations are scoped to the organization" on public.automations
+create policy "Automations are scoped to the organization" on crm.automations
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Automations are created in the organization" on public.automations
+    using (organization_id = crm.current_organization_id());
+create policy "Automations are created in the organization" on crm.automations
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Automations are updated within the organization" on public.automations
+    with check (organization_id = crm.current_organization_id());
+create policy "Automations are updated within the organization" on crm.automations
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Automations are deleted within the organization" on public.automations
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Automations are deleted within the organization" on crm.automations
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
-create policy "Webhooks are scoped to the organization" on public.webhooks
+create policy "Webhooks are scoped to the organization" on crm.webhooks
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Webhooks are created in the organization" on public.webhooks
+    using (organization_id = crm.current_organization_id());
+create policy "Webhooks are created in the organization" on crm.webhooks
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Webhooks are updated within the organization" on public.webhooks
+    with check (organization_id = crm.current_organization_id());
+create policy "Webhooks are updated within the organization" on crm.webhooks
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Webhooks are deleted within the organization" on public.webhooks
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Webhooks are deleted within the organization" on crm.webhooks
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
-create policy "Public forms are scoped to the organization" on public.public_forms
+create policy "Public forms are scoped to the organization" on crm.public_forms
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Public forms are created in the organization" on public.public_forms
+    using (organization_id = crm.current_organization_id());
+create policy "Public forms are created in the organization" on crm.public_forms
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Public forms are updated within the organization" on public.public_forms
+    with check (organization_id = crm.current_organization_id());
+create policy "Public forms are updated within the organization" on crm.public_forms
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Public forms are deleted within the organization" on public.public_forms
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Public forms are deleted within the organization" on crm.public_forms
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
-create policy "Public form submissions are scoped to the organization" on public.public_form_submissions
+create policy "Public form submissions are scoped to the organization" on crm.public_form_submissions
     for select to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
-create policy "Saved views are scoped to the organization" on public.saved_views
+create policy "Saved views are scoped to the organization" on crm.saved_views
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Saved views are created in the organization" on public.saved_views
+    using (organization_id = crm.current_organization_id());
+create policy "Saved views are created in the organization" on crm.saved_views
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Saved views are updated within the organization" on public.saved_views
+    with check (organization_id = crm.current_organization_id());
+create policy "Saved views are updated within the organization" on crm.saved_views
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Saved views are deleted within the organization" on public.saved_views
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Saved views are deleted within the organization" on crm.saved_views
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
-create policy "Tags are scoped to the organization" on public.tags
+create policy "Tags are scoped to the organization" on crm.tags
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Tags are created in the organization" on public.tags
+    using (organization_id = crm.current_organization_id());
+create policy "Tags are created in the organization" on crm.tags
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Tags are updated within the organization" on public.tags
+    with check (organization_id = crm.current_organization_id());
+create policy "Tags are updated within the organization" on crm.tags
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Tags are deleted within the organization" on public.tags
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Tags are deleted within the organization" on crm.tags
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Tasks
-create policy "Tasks are scoped to the organization" on public.tasks
+create policy "Tasks are scoped to the organization" on crm.tasks
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Tasks are created in the organization" on public.tasks
+    using (organization_id = crm.current_organization_id());
+create policy "Tasks are created in the organization" on crm.tasks
     for insert to authenticated
-    with check (organization_id = public.current_organization_id());
-create policy "Tasks are updated within the organization" on public.tasks
+    with check (organization_id = crm.current_organization_id());
+create policy "Tasks are updated within the organization" on crm.tasks
     for update to authenticated
-    using (organization_id = public.current_organization_id())
-    with check (organization_id = public.current_organization_id());
-create policy "Tasks are deleted within the organization" on public.tasks
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Tasks are deleted within the organization" on crm.tasks
     for delete to authenticated
-    using (organization_id = public.current_organization_id());
+    using (organization_id = crm.current_organization_id());
 
 -- Configuration
 -- Cada organización tiene su fila. La lectura es para cualquier miembro; la
 -- escritura, solo para administradores de esa organización.
-create policy "Configuration is scoped to the organization" on public.configuration
+create policy "Configuration is scoped to the organization" on crm.configuration
     for select to authenticated
-    using (organization_id = public.current_organization_id());
-create policy "Configuration is created by organization admins" on public.configuration
+    using (organization_id = crm.current_organization_id());
+create policy "Configuration is created by organization admins" on crm.configuration
     for insert to authenticated
     with check (
-        organization_id = public.current_organization_id()
-        and public.is_admin()
+        organization_id = crm.current_organization_id()
+        and crm.is_admin()
     );
-create policy "Configuration is updated by organization admins" on public.configuration
+create policy "Configuration is updated by organization admins" on crm.configuration
     for update to authenticated
     using (
-        organization_id = public.current_organization_id()
-        and public.is_admin()
+        organization_id = crm.current_organization_id()
+        and crm.is_admin()
     )
     with check (
-        organization_id = public.current_organization_id()
-        and public.is_admin()
+        organization_id = crm.current_organization_id()
+        and crm.is_admin()
     );
 
 -- Favicons excluded domains
 -- Lista técnica de dominios sin favicon utilizable: no pertenece a ninguna
 -- organización, así que se mantiene compartida.
-create policy "Enable access for authenticated users only" on public.favicons_excluded_domains to authenticated using (true) with check (true);
+create policy "Enable access for authenticated users only" on crm.favicons_excluded_domains to authenticated using (true) with check (true);
