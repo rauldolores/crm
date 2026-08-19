@@ -50,6 +50,8 @@ export const defaultDealStages = [
 
 export const defaultDealPipelineStatuses = ["won"];
 
+export const defaultDealLostStages = ["lost"];
+
 /**
  * El embudo por defecto se llama «ventas»: es también el valor que reciben
  * las oportunidades creadas antes de que existieran los embudos múltiples
@@ -61,7 +63,19 @@ export const defaultDealPipelines = [
     label: "Ventas",
     stages: defaultDealStages,
     pipelineStatuses: defaultDealPipelineStatuses,
+    lostStages: defaultDealLostStages,
   },
+];
+
+// Motivos de pérdida de fábrica. Sirven para cualquier giro; cada
+// organización los ajusta desde Ajustes.
+export const defaultDealLossReasons = [
+  { value: "price", label: "Precio" },
+  { value: "competitor", label: "Se fue con la competencia" },
+  { value: "timing", label: "No era el momento" },
+  { value: "no-budget", label: "Sin presupuesto" },
+  { value: "no-response", label: "Dejó de responder" },
+  { value: "other", label: "Otro" },
 ];
 
 export const defaultDealCategories = [
@@ -98,6 +112,7 @@ export const defaultConfiguration: ConfigurationContextValue = {
   dealPipelineStatuses: defaultDealPipelineStatuses,
   dealStages: defaultDealStages,
   dealPipelines: defaultDealPipelines,
+  dealLossReasons: defaultDealLossReasons,
   noteStatuses: defaultNoteStatuses,
   taskTypes: defaultTaskTypes,
   title: defaultTitle,

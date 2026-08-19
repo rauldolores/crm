@@ -26,6 +26,8 @@ export interface ConfigurationContextValue {
   dealStages: DealStage[];
   /** Los embudos de la organización, cada uno con sus etapas. */
   dealPipelines: DealPipeline[];
+  /** Motivos por los que se puede perder una oportunidad. */
+  dealLossReasons: LabeledValue[];
   noteStatuses: NoteStatus[];
   taskTypes: LabeledValue[];
   title: string;
@@ -62,7 +64,7 @@ export const useConfigurationContext = () => {
     // múltiples trae dealStages/dealPipelineStatuses pero no dealPipelines.
     // Se sintetiza un embudo «Ventas» con esas etapas, que es también el
     // valor por defecto de la columna `pipeline` de las oportunidades.
-    const embudos: DealPipeline[] =
+    const embudosGuardados: DealPipeline[] =
       Array.isArray(combinada.dealPipelines) && combinada.dealPipelines.length
         ? combinada.dealPipelines
         : [
@@ -71,8 +73,21 @@ export const useConfigurationContext = () => {
               label: "Ventas",
               stages: combinada.dealStages,
               pipelineStatuses: combinada.dealPipelineStatuses,
+              lostStages: [],
             },
           ];
+
+    // lostStages llegó después que los embudos: si falta, se deduce de la
+    // etapa «lost» estándar para que el motivo de pérdida funcione sin que
+    // nadie tenga que volver a Ajustes.
+    const embudos: DealPipeline[] = embudosGuardados.map((embudo) => ({
+      ...embudo,
+      lostStages:
+        embudo.lostStages ??
+        (embudo.stages?.some((etapa) => etapa.value === "lost")
+          ? ["lost"]
+          : []),
+    }));
 
     // Derivados para los consumidores que solo resuelven etiquetas o estados
     // sin importar el embudo: la unión de todas las etapas (la primera

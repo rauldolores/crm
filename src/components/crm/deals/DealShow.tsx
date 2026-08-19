@@ -52,7 +52,8 @@ export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
 
 const DealShowContent = () => {
   const translate = useTranslate();
-  const { dealStages, dealCategories, currency } = useConfigurationContext();
+  const { dealStages, dealCategories, dealLossReasons, currency } =
+    useConfigurationContext();
   const record = useRecordContext<Deal>();
   if (!record) return null;
 
@@ -139,6 +140,13 @@ const DealShowContent = () => {
               </span>
               <span className="text-sm">
                 {findDealLabel(dealStages, record.stage)}
+                {record.loss_reason && (
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {dealLossReasons.find((m) => m.value === record.loss_reason)
+                      ?.label ?? record.loss_reason}
+                  </span>
+                )}
               </span>
             </div>
           </div>

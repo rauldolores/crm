@@ -28,6 +28,7 @@ import { ImportPage } from "../misc/ImportPage";
 import { ChangelogPage } from "../misc/ChangelogPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
+import { InformesPage } from "../misc/InformesPage";
 import {
   getAuthProvider as defaultAuthProviderBuilder,
   getDataProvider as defaultDataProviderBuilder,
@@ -46,6 +47,8 @@ import {
   defaultCurrency,
   defaultDarkModeLogo,
   defaultDealCategories,
+  defaultDealLossReasons,
+  defaultDealLostStages,
   defaultDealPipelineStatuses,
   defaultDealStages,
   defaultLightModeLogo,
@@ -156,8 +159,10 @@ export const CRM = ({
             label: "Ventas",
             stages: dealStages,
             pipelineStatuses: dealPipelineStatuses,
+            lostStages: defaultDealLostStages,
           },
         ],
+        dealLossReasons: defaultDealLossReasons,
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,6 +268,7 @@ const DesktopAdmin = (
           path={AutomatizacionesPage.path}
           element={<AutomatizacionesPage />}
         />
+        <Route path={InformesPage.path} element={<InformesPage />} />
       </CustomRoutes>
       <Resource name="deals" {...deals} />
       <Resource name="contacts" {...contacts} />
@@ -335,6 +341,7 @@ const MobileAdmin = (
             path={AutomatizacionesPage.path}
             element={<AutomatizacionesPage />}
           />
+          <Route path={InformesPage.path} element={<InformesPage />} />
         </CustomRoutes>
         <Resource
           name="contacts"

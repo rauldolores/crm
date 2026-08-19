@@ -184,6 +184,9 @@ const aEmbudosGuardables = (embudos: DealPipeline[] | undefined) =>
         pipelineStatuses: (embudo.pipelineStatuses ?? []).filter((valor) =>
           valores.has(valor),
         ),
+        lostStages: (embudo.lostStages ?? []).filter((valor) =>
+          valores.has(valor),
+        ),
       };
     });
 
@@ -199,6 +202,7 @@ const transformFormValues = (data: Record<string, any>) => {
       dealCategories: ensureValues(data.dealCategories),
       taskTypes: ensureValues(data.taskTypes),
       dealPipelines: embudos,
+      dealLossReasons: ensureValues(data.dealLossReasons),
       // Derivados del primer embudo, por compatibilidad con configuraciones
       // y lectores anteriores a los embudos múltiples.
       dealStages: embudos[0]?.stages ?? [],
@@ -254,6 +258,7 @@ const SettingsForm = () => {
       dealCategories: config.dealCategories,
       taskTypes: config.taskTypes,
       dealPipelines: config.dealPipelines,
+      dealLossReasons: config.dealLossReasons,
       noteStatuses: config.noteStatuses,
       contactCustomFields: aFilasEditables(config.contactCustomFields),
       companyCustomFields: aFilasEditables(config.companyCustomFields),
@@ -428,6 +433,24 @@ const SettingsFormFields = () => {
               label={false}
               helperText={false}
               validate={validateDealCategories}
+            >
+              <SimpleFormIterator disableReordering disableClear>
+                <TextInput source="label" label={false} />
+              </SimpleFormIterator>
+            </ArrayInput>
+
+            <Separator />
+
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("crm.settings.deals.loss_reasons")}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {translate("crm.settings.deals.loss_reasons_help")}
+            </p>
+            <ArrayInput
+              source="dealLossReasons"
+              label={false}
+              helperText={false}
             >
               <SimpleFormIterator disableReordering disableClear>
                 <TextInput source="label" label={false} />
@@ -710,33 +733,23 @@ const EditorDeEmbudos = ({ deals }: { deals?: RaRecord[] }) => {
           <p className="text-sm text-muted-foreground">
             {translate("crm.settings.deals.pipeline_help")}
           </p>
-          <div className="flex flex-wrap gap-2">
-            {(embudo.stages ?? []).map((etapa, idx) => {
-              const valor = etapa.value || toSlug(etapa.label ?? "");
-              const seleccionada = (embudo.pipelineStatuses ?? []).includes(
-                valor,
-              );
-              return (
-                <Button
-                  key={idx}
-                  type="button"
-                  variant={seleccionada ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    const actuales = embudo.pipelineStatuses ?? [];
-                    setValue(
-                      `dealPipelines.${indice}.pipelineStatuses`,
-                      seleccionada
-                        ? actuales.filter((estado) => estado !== valor)
-                        : [...actuales, valor],
-                    );
-                  }}
-                >
-                  {etapa.label || valor}
-                </Button>
-              );
-            })}
-          </div>
+          <SelectorDeEtapas
+            embudo={embudo}
+            indice={indice}
+            campo="pipelineStatuses"
+          />
+
+          <h4 className="text-sm font-medium text-muted-foreground">
+            {translate("crm.settings.deals.lost_stages")}
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            {translate("crm.settings.deals.lost_stages_help")}
+          </p>
+          <SelectorDeEtapas
+            embudo={embudo}
+            indice={indice}
+            campo="lostStages"
+          />
         </div>
       ))}
 
@@ -744,6 +757,50 @@ const EditorDeEmbudos = ({ deals }: { deals?: RaRecord[] }) => {
         <Plus className="h-4 w-4 mr-1" />
         {translate("crm.settings.deals.add_pipeline")}
       </Button>
+    </div>
+  );
+};
+
+/**
+ * Botones de dos estados sobre las etapas de un embudo, para marcar cuáles
+ * cuentan como ganadas (`pipelineStatuses`) o como perdidas (`lostStages`).
+ */
+const SelectorDeEtapas = ({
+  embudo,
+  indice,
+  campo,
+}: {
+  embudo: DealPipeline;
+  indice: number;
+  campo: "pipelineStatuses" | "lostStages";
+}) => {
+  const { setValue } = useFormContext();
+  const seleccionadas = embudo[campo] ?? [];
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {(embudo.stages ?? []).map((etapa, idx) => {
+        const valor = etapa.value || toSlug(etapa.label ?? "");
+        const activa = seleccionadas.includes(valor);
+        return (
+          <Button
+            key={idx}
+            type="button"
+            variant={activa ? "default" : "outline"}
+            size="sm"
+            onClick={() =>
+              setValue(
+                `dealPipelines.${indice}.${campo}`,
+                activa
+                  ? seleccionadas.filter((estado) => estado !== valor)
+                  : [...seleccionadas, valor],
+              )
+            }
+          >
+            {etapa.label || valor}
+          </Button>
+        );
+      })}
     </div>
   );
 };

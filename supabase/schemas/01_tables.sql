@@ -90,7 +90,9 @@ create table public.deals (
     -- Embudo al que pertenece la oportunidad (value de un embudo definido en
     -- configuration.config.dealPipelines). El default coincide con el embudo
     -- que se sintetiza para configuraciones anteriores a los embudos múltiples.
-    pipeline text not null default 'ventas'
+    pipeline text not null default 'ventas',
+    -- Motivo por el que se perdió (value de configuration.config.dealLossReasons).
+    loss_reason text
 );
 
 create table public.deal_notes (

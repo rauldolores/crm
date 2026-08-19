@@ -215,6 +215,7 @@ export const spanishCrmMessages = {
         expected_closing_date: "Fecha prevista de cierre",
         stage: "Etapa",
         pipeline: "Embudo",
+        loss_reason: "Motivo de pérdida",
       },
       action: {
         back_to_deal: "Volver a la oportunidad",
@@ -247,6 +248,13 @@ export const spanishCrmMessages = {
         title: "No hay oportunidades",
       },
       invalid_date: "Fecha no válida",
+      loss: {
+        title: "¿Por qué se perdió?",
+        description:
+          "Estás moviendo «%{name}» a una etapa de pérdida. Anotar el motivo permite ver después dónde se están perdiendo las ventas.",
+        confirm: "Guardar y mover",
+        skip: "Mover sin motivo",
+      },
     },
     notes: {
       name: "Nota |||| Notas",
@@ -423,6 +431,27 @@ export const spanishCrmMessages = {
     },
     changelog: {
       title: "Novedades",
+    },
+    reports: {
+      title: "Informes",
+      intro:
+        "Dónde se atoran las oportunidades, quién está vendiendo y por qué se pierde. Sobre las oportunidades creadas en el periodo elegido.",
+      total: "Oportunidades",
+      won: "Ganadas",
+      lost: "Perdidas",
+      conversion: "Conversión",
+      by_stage: "Oportunidades por etapa",
+      by_owner: "Ventas ganadas por responsable",
+      by_loss_reason: "Motivos de pérdida",
+      empty: "No hay datos en este periodo.",
+      no_losses: "No se perdió ninguna oportunidad en este periodo.",
+      without_reason:
+        "%{count} sin motivo anotado. Se pregunta al mover una oportunidad a una etapa de pérdida.",
+      periods: {
+        quarter: "Últimos 90 días",
+        year: "Último año",
+        all: "Todo",
+      },
     },
     automations: {
       title: "Automatizaciones",
@@ -606,6 +635,12 @@ export const spanishCrmMessages = {
         remove_pipeline: "Quitar embudo",
         pipeline_in_use:
           "No se puede quitar el embudo «%{name}»: todavía tiene oportunidades.",
+        lost_stages: "Etapas de pérdida",
+        lost_stages_help:
+          "Al mover una oportunidad a una de estas etapas se preguntará por qué se perdió.",
+        loss_reasons: "Motivos de pérdida",
+        loss_reasons_help:
+          "Las opciones que se ofrecerán al perder una oportunidad. Saber por qué se pierde es lo que convierte el historial en una decisión.",
       },
       light_mode_logo: "Logo para el modo claro",
       notes: {

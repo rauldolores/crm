@@ -6,6 +6,7 @@ import {
   Users,
   Webhook,
   Zap,
+  ChartColumn,
 } from "lucide-react";
 import { CanAccess, useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
@@ -19,6 +20,7 @@ import { ImportPage } from "../misc/ImportPage";
 import { ChangelogPage } from "../misc/ChangelogPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
+import { InformesPage } from "../misc/InformesPage";
 
 /**
  * Cabecera superior del escritorio.
@@ -49,6 +51,7 @@ const Header = () => {
             <CanAccess resource="sales" action="list">
               <UsersMenu />
             </CanAccess>
+            <InformesMenu />
             <CanAccess resource="configuration" action="edit">
               <SettingsMenu />
             </CanAccess>
@@ -94,6 +97,22 @@ const ProfileMenu = () => {
       <Link to="/profile" className="flex items-center gap-2">
         <User />
         {translate("crm.profile.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const InformesMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<InformesMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={InformesPage.path} className="flex items-center gap-2">
+        <ChartColumn />
+        {translate("crm.reports.title")}
       </Link>
     </DropdownMenuItem>
   );

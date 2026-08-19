@@ -67,7 +67,8 @@ const DealLinkedToInputs = () => {
 };
 
 const DealMiscInputs = () => {
-  const { dealPipelines, dealCategories } = useConfigurationContext();
+  const { dealPipelines, dealCategories, dealLossReasons } =
+    useConfigurationContext();
   const translate = useTranslate();
   const { setValue } = useFormContext();
 
@@ -134,6 +135,17 @@ const DealMiscInputs = () => {
         helperText={false}
         validate={required()}
       />
+      {/* El motivo solo tiene sentido —y solo se pide— en una etapa de
+          pérdida del embudo elegido. */}
+      {(embudo.lostStages ?? []).includes(etapaElegida) && (
+        <SelectInput
+          source="loss_reason"
+          choices={dealLossReasons}
+          optionText="label"
+          optionValue="value"
+          helperText={false}
+        />
+      )}
       <CamposPersonalizadosInput entidad="deal" />
     </div>
   );

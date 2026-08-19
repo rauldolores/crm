@@ -1,7 +1,29 @@
 import { DragDropContext, type OnDragEndResponder } from "@hello-pangea/dnd";
 import isEqual from "lodash/isEqual";
-import { useDataProvider, useListContext, type DataProvider } from "ra-core";
+import {
+  useDataProvider,
+  useListContext,
+  useTranslate,
+  type DataProvider,
+} from "ra-core";
 import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
@@ -10,7 +32,8 @@ import type { DealsByStage } from "./stages";
 import { getDealsByStage } from "./stages";
 
 export const DealListContent = () => {
-  const { dealPipelines } = useConfigurationContext();
+  const { dealPipelines, dealLossReasons } = useConfigurationContext();
+  const translate = useTranslate();
   const {
     data: unorderedDeals,
     isPending,
@@ -29,6 +52,12 @@ export const DealListContent = () => {
   const [dealsByStage, setDealsByStage] = useState<DealsByStage>(
     getDealsByStage([], etapas),
   );
+  // Movimiento a una etapa de pérdida en espera de que se indique el motivo.
+  const [perdidaPendiente, setPerdidaPendiente] = useState<{
+    aplicar: (motivo?: string) => void;
+    nombre: string;
+  } | null>(null);
+  const [motivoElegido, setMotivoElegido] = useState<string>("");
 
   useEffect(() => {
     if (unorderedDeals) {
@@ -66,20 +95,37 @@ export const DealListContent = () => {
       index: undefined, // undefined if dropped after the last item
     };
 
-    // compute local state change synchronously
-    setDealsByStage(
-      updateDealStageLocal(
-        sourceDeal,
-        { stage: sourceStage, index: source.index },
-        { stage: destinationStage, index: destination.index },
-        dealsByStage,
-      ),
-    );
+    const aplicar = (motivo?: string) => {
+      // compute local state change synchronously
+      setDealsByStage(
+        updateDealStageLocal(
+          sourceDeal,
+          { stage: sourceStage, index: source.index },
+          { stage: destinationStage, index: destination.index },
+          dealsByStage,
+        ),
+      );
 
-    // persist the changes
-    updateDealStage(sourceDeal, destinationDeal, dataProvider).then(() => {
-      refetch();
-    });
+      // persist the changes
+      updateDealStage(sourceDeal, destinationDeal, dataProvider, motivo).then(
+        () => {
+          refetch();
+        },
+      );
+    };
+
+    // Mover a una etapa de pérdida es el momento natural para preguntar por
+    // qué: si no se pregunta aquí, nadie vuelve luego a rellenarlo.
+    const esPerdida = (embudoActivo.lostStages ?? []).includes(
+      destinationStage,
+    );
+    if (esPerdida && sourceStage !== destinationStage) {
+      setMotivoElegido("");
+      setPerdidaPendiente({ aplicar, nombre: sourceDeal.name });
+      return;
+    }
+
+    aplicar();
   };
 
   return (
@@ -93,6 +139,60 @@ export const DealListContent = () => {
           />
         ))}
       </div>
+
+      <Dialog
+        open={perdidaPendiente != null}
+        onOpenChange={(abierto) => {
+          if (!abierto) setPerdidaPendiente(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{translate("resources.deals.loss.title")}</DialogTitle>
+            <DialogDescription>
+              {translate("resources.deals.loss.description", {
+                name: perdidaPendiente?.nombre ?? "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Select value={motivoElegido} onValueChange={setMotivoElegido}>
+            <SelectTrigger>
+              <SelectValue
+                placeholder={translate("resources.deals.fields.loss_reason")}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {dealLossReasons.map((motivo) => (
+                <SelectItem key={motivo.value} value={motivo.value}>
+                  {motivo.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                perdidaPendiente?.aplicar();
+                setPerdidaPendiente(null);
+              }}
+            >
+              {translate("resources.deals.loss.skip")}
+            </Button>
+            <Button
+              disabled={!motivoElegido}
+              onClick={() => {
+                perdidaPendiente?.aplicar(motivoElegido);
+                setPerdidaPendiente(null);
+              }}
+            >
+              {translate("resources.deals.loss.confirm")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DragDropContext>
   );
 };
@@ -140,6 +240,7 @@ const updateDealStage = async (
     index?: number; // undefined if dropped after the last item
   },
   dataProvider: DataProvider,
+  lossReason?: string,
 ) => {
   if (source.stage === destination.stage) {
     // moving deal inside the same column
@@ -249,6 +350,7 @@ const updateDealStage = async (
         data: {
           index: destinationIndex,
           stage: destination.stage,
+          ...(lossReason ? { loss_reason: lossReason } : {}),
         },
         previousData: source,
       }),

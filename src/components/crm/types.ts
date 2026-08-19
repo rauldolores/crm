@@ -148,6 +148,8 @@ export type Deal = {
   index: number;
   /** Embudo al que pertenece (value de un DealPipeline de la configuración). */
   pipeline: string;
+  /** Motivo de pérdida, cuando está en una etapa de pérdida. */
+  loss_reason?: string | null;
   custom_fields?: CustomFieldValues;
 } & Pick<RaRecord, "id">;
 
@@ -291,6 +293,8 @@ export interface DealPipeline extends LabeledValue {
   stages: DealStage[];
   /** Etapas de este embudo que cuentan como parte del pipeline (ganadas). */
   pipelineStatuses: string[];
+  /** Etapas que significan «perdida»: al llegar a una se pide el motivo. */
+  lostStages: string[];
 }
 
 export interface NoteStatus extends LabeledValue {

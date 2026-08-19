@@ -418,7 +418,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/ApiPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/AsideSection.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/AutomatizacionesPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/CamposPersonalizados.tsx",
           "type": "registry:component"
         },
         {
@@ -467,6 +479,14 @@
         },
         {
           "path": "src/components/crm/misc/Status.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/VistasGuardadas.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/camposPersonalizadosCsv.ts",
           "type": "registry:component"
         },
         {
