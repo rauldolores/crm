@@ -11,6 +11,7 @@ import { ContactStatusSelector } from "./ContactInputs";
 import { ContactPersonalInfo } from "./ContactPersonalInfo";
 import { ContactBackgroundInfo } from "./ContactBackgroundInfo";
 import { AsideSection } from "../misc/AsideSection";
+import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 import type { Contact } from "../types";
 import { ContactMergeButton } from "./ContactMergeButton";
 import { ExportVCardButton } from "./ExportVCardButton";
@@ -46,6 +47,8 @@ export const ContactAside = ({ link = "edit" }: { link?: "edit" | "show" }) => {
       >
         <ContactBackgroundInfo />
       </AsideSection>
+
+      <CamposPersonalizadosField entidad="contact" />
 
       <AsideSection
         title={translate("resources.tags.name", { smart_count: 2 })}

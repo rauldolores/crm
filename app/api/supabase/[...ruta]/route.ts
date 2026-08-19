@@ -27,6 +27,7 @@ const CLAVE_DE_SERVICIO = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
 /** Tablas y vistas que pertenecen a una organización. */
 const CON_DUENO = new Set([
+  "automations",
   "companies",
   "companies_summary",
   "contacts",
@@ -35,6 +36,8 @@ const CON_DUENO = new Set([
   "deals",
   "deal_notes",
   "sales",
+  "saved_views",
+  "webhooks",
   "tags",
   "tasks",
   "configuration",

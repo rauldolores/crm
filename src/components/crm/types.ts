@@ -48,6 +48,25 @@ export type Sale = {
   password?: string;
 } & Pick<RaRecord, "id">;
 
+/** Tipos de dato que puede tener un campo personalizado. */
+export type CustomFieldType = "text" | "number" | "date" | "list" | "checkbox";
+
+/**
+ * Definición de un campo personalizado de la organización. Vive en
+ * configuration.config (una fila por organización); los valores capturados
+ * van en la columna JSONB custom_fields de cada ficha, con `value` como clave.
+ */
+export interface CustomFieldDefinition {
+  value: string;
+  label: string;
+  type: CustomFieldType;
+  /** Solo para el tipo "list": se guarda el texto de la opción tal cual. */
+  options?: string[];
+}
+
+/** Valores capturados de los campos personalizados de una ficha. */
+export type CustomFieldValues = Record<string, string | number | boolean>;
+
 export type Company = {
   name: string;
   logo: RAFile;
@@ -69,6 +88,7 @@ export type Company = {
   context_links?: string[];
   nb_contacts?: number;
   nb_deals?: number;
+  custom_fields?: CustomFieldValues;
 } & Pick<RaRecord, "id">;
 
 export type EmailAndType = {
@@ -100,6 +120,7 @@ export type Contact = {
   phone_jsonb: PhoneNumberAndType[];
   nb_tasks?: number;
   company_name?: string;
+  custom_fields?: CustomFieldValues;
 } & Pick<RaRecord, "id">;
 
 export type ContactNote = {
@@ -125,6 +146,9 @@ export type Deal = {
   expected_closing_date: string;
   sales_id: Identifier;
   index: number;
+  /** Embudo al que pertenece (value de un DealPipeline de la configuración). */
+  pipeline: string;
+  custom_fields?: CustomFieldValues;
 } & Pick<RaRecord, "id">;
 
 export type DealNote = {
@@ -136,6 +160,47 @@ export type DealNote = {
 
   // This is defined for compatibility with `ContactNote`
   status?: undefined;
+} & Pick<RaRecord, "id">;
+
+/** Vista guardada de una lista: filtros y orden con nombre, por organización. */
+export type SavedView = {
+  resource: string;
+  name: string;
+  params: {
+    filter?: Record<string, unknown>;
+    sort?: { field: string; order: "ASC" | "DESC" };
+  };
+  sales_id?: Identifier;
+  created_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Regla «cuando pase X, haz Y» de la organización. El motor vive en la base
+ * (public.run_automations), así que se aplica venga el cambio de donde venga.
+ */
+export type Automation = {
+  name: string;
+  active: boolean;
+  trigger_resource: "contacts" | "deals";
+  trigger_event: "created" | "stage_changed";
+  trigger_params: { stage?: string };
+  action_params: {
+    text?: string;
+    taskType?: string;
+    dueInDays?: number;
+    salesId?: Identifier;
+  };
+  action_type: "create_task" | "assign_owner";
+  created_at?: string;
+} & Pick<RaRecord, "id">;
+
+/** Webhook saliente de la organización. */
+export type Webhook = {
+  url: string;
+  secret?: string;
+  resources: string[];
+  active: boolean;
+  created_at?: string;
 } & Pick<RaRecord, "id">;
 
 export type Tag = {
@@ -216,6 +281,17 @@ export interface LabeledValue {
 }
 
 export type DealStage = LabeledValue;
+
+/**
+ * Un embudo de oportunidades de la organización, con sus propias etapas.
+ * Una empresa real lleva varios procesos a la vez (ventas nuevas,
+ * renovaciones, cobranza…) y cada uno tiene etapas distintas.
+ */
+export interface DealPipeline extends LabeledValue {
+  stages: DealStage[];
+  /** Etapas de este embudo que cuentan como parte del pipeline (ganadas). */
+  pipelineStatuses: string[];
+}
 
 export interface NoteStatus extends LabeledValue {
   color: string;

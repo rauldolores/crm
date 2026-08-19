@@ -6,6 +6,7 @@ import { ListPagination } from "@/components/admin/list-pagination";
 import { SortButton } from "@/components/admin/sort-button";
 
 import { TopToolbar } from "../layout/TopToolbar";
+import { VistasGuardadas } from "../misc/VistasGuardadas";
 import { CompanyEmpty } from "./CompanyEmpty";
 import { CompanyListFilter } from "./CompanyListFilter";
 import { ImageList } from "./GridList";
@@ -15,7 +16,6 @@ export const CompanyList = () => {
   if (!identity) return null;
   return (
     <List
-      title={false}
       perPage={25}
       sort={{ field: "name", order: "ASC" }}
       actions={<CompanyListActions />}
@@ -47,6 +47,7 @@ const CompanyListActions = () => {
   const translate = useTranslate();
   return (
     <TopToolbar>
+      <VistasGuardadas resource="companies" />
       <SortButton fields={["name", "created_at", "nb_contacts"]} />
       <ExportButton />
       <CreateButton

@@ -99,7 +99,8 @@ select
     c.logo,
     count(distinct d.id) as nb_deals,
     count(distinct co.id) as nb_contacts,
-    c.organization_id
+    c.organization_id,
+    c.custom_fields
 from public.companies c
     left join public.deals d on c.id = d.company_id
     left join public.contacts co on c.id = co.company_id
@@ -128,7 +129,8 @@ select
     (jsonb_path_query_array(co.phone_jsonb, '$[*]."number"'))::text as phone_fts,
     c.name as company_name,
     count(distinct t.id) filter (where t.done_date is null) as nb_tasks,
-    co.organization_id
+    co.organization_id,
+    co.custom_fields
 from public.contacts co
     left join public.tasks t on co.id = t.contact_id
     left join public.companies c on co.company_id = c.id

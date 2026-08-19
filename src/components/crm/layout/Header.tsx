@@ -1,4 +1,12 @@
-import { FileText, Import, Settings, User, Users } from "lucide-react";
+import {
+  FileText,
+  Import,
+  Settings,
+  User,
+  Users,
+  Webhook,
+  Zap,
+} from "lucide-react";
 import { CanAccess, useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
@@ -7,55 +15,55 @@ import { SelectorDeOrganizacion } from "./SelectorDeOrganizacion";
 import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ImportPage } from "../misc/ImportPage";
 import { ChangelogPage } from "../misc/ChangelogPage";
+import { ApiPage } from "../misc/ApiPage";
+import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 
+/**
+ * Cabecera superior del escritorio.
+ *
+ * No lleva logo ni nombre: eso vive en la barra lateral y duplicarlo aquí era
+ * ruido. A la izquierda queda el destino `#breadcrumb`, donde cada página
+ * proyecta su rastro de navegación (el componente Breadcrumb usa un portal);
+ * a la derecha, lo contextual: organización, tema, refresco y perfil.
+ *
+ * Ojo con envolverla en un contenedor con `grow`: dentro de la columna flex
+ * del layout absorbía todo el alto libre y dejaba un hueco enorme sobre el
+ * contenido de todas las pantallas.
+ */
 const Header = () => {
-  const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
   return (
-    <>
-      <nav className="grow">
-        <header className="bg-background border-b">
-          <div className="px-4">
-            <div className="flex justify-between items-center flex-1">
-              <Link
-                to="/"
-                className="flex items-center gap-2 text-secondary-foreground no-underline"
-              >
-                <img
-                  className="[.light_&]:hidden h-6"
-                  src={darkModeLogo}
-                  alt={title}
-                />
-                <img
-                  className="[.dark_&]:hidden h-6"
-                  src={lightModeLogo}
-                  alt={title}
-                />
-                <h1 className="text-xl font-semibold">{title}</h1>
-              </Link>
-              <div className="flex items-center">
-                <SelectorDeOrganizacion />
-                <ThemeModeToggle />
-                <RefreshButton />
-                <UserMenu>
-                  <ProfileMenu />
-                  <CanAccess resource="sales" action="list">
-                    <UsersMenu />
-                  </CanAccess>
-                  <CanAccess resource="configuration" action="edit">
-                    <SettingsMenu />
-                  </CanAccess>
-                  <ImportFromJsonMenuItem />
-                  <ChangelogMenuItem />
-                </UserMenu>
-              </div>
-            </div>
-          </div>
-        </header>
-      </nav>
-    </>
+    <header className="bg-background border-b">
+      <div className="flex h-12 items-center justify-between gap-4 px-4">
+        <div
+          id="breadcrumb"
+          className="flex min-w-0 items-center [&>[data-orientation=vertical]:first-child]:hidden"
+        />
+        <div className="flex items-center">
+          <SelectorDeOrganizacion />
+          <ThemeModeToggle />
+          <RefreshButton />
+          <UserMenu>
+            <ProfileMenu />
+            <CanAccess resource="sales" action="list">
+              <UsersMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <SettingsMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <AutomatizacionesMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <ApiMenu />
+            </CanAccess>
+            <ImportFromJsonMenuItem />
+            <ChangelogMenuItem />
+          </UserMenu>
+        </div>
+      </div>
+    </header>
   );
 };
 
@@ -102,6 +110,38 @@ const SettingsMenu = () => {
       <Link to="/settings" className="flex items-center gap-2">
         <Settings />
         {translate("crm.settings.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const AutomatizacionesMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<AutomatizacionesMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={AutomatizacionesPage.path} className="flex items-center gap-2">
+        <Zap />
+        {translate("crm.automations.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const ApiMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<ApiMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={ApiPage.path} className="flex items-center gap-2">
+        <Webhook />
+        {translate("crm.api.title")}
       </Link>
     </DropdownMenuItem>
   );

@@ -50,6 +50,20 @@ export const defaultDealStages = [
 
 export const defaultDealPipelineStatuses = ["won"];
 
+/**
+ * El embudo por defecto se llama «ventas»: es también el valor que reciben
+ * las oportunidades creadas antes de que existieran los embudos múltiples
+ * (valor por defecto de la columna `pipeline` en la base).
+ */
+export const defaultDealPipelines = [
+  {
+    value: "ventas",
+    label: "Ventas",
+    stages: defaultDealStages,
+    pipelineStatuses: defaultDealPipelineStatuses,
+  },
+];
+
 export const defaultDealCategories = [
   { value: "other", label: "Otro" },
   { value: "copywriting", label: "Redacción" },
@@ -83,9 +97,15 @@ export const defaultConfiguration: ConfigurationContextValue = {
   dealCategories: defaultDealCategories,
   dealPipelineStatuses: defaultDealPipelineStatuses,
   dealStages: defaultDealStages,
+  dealPipelines: defaultDealPipelines,
   noteStatuses: defaultNoteStatuses,
   taskTypes: defaultTaskTypes,
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,
   lightModeLogo: defaultLightModeLogo,
+  // Sin campos personalizados de fábrica: cada organización define los suyos
+  // desde Ajustes según su industria.
+  contactCustomFields: [],
+  companyCustomFields: [],
+  dealCustomFields: [],
 };

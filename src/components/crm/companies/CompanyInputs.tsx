@@ -1,4 +1,5 @@
 import { required, useRecordContext, useTranslate } from "ra-core";
+import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
@@ -8,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import ImageEditorField from "../misc/ImageEditorField";
+import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { isLinkedinUrl } from "../misc/isLinkedInUrl";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company, Sale } from "../types";
@@ -167,8 +169,16 @@ const CompanyAdditionalInformationInputs = () => {
           "disabled@neq": true,
         }}
       >
-        <SelectInput helperText={false} optionText={saleOptionRenderer} />
+        {/* Mismo selector con buscador que en contactos; la etiqueta va
+            explicita porque dentro de ReferenceInput se deduciria del
+            recurso referenciado ("sales") y no del campo. */}
+        <AutocompleteInput
+          label="resources.companies.fields.sales_id"
+          helperText={false}
+          optionText={saleOptionRenderer}
+        />
       </ReferenceInput>
+      <CamposPersonalizadosInput entidad="company" />
     </div>
   );
 };

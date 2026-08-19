@@ -26,6 +26,8 @@ import { SignupPage } from "../login/SignupPage";
 import { ConfirmationRequired } from "../login/ConfirmationRequired";
 import { ImportPage } from "../misc/ImportPage";
 import { ChangelogPage } from "../misc/ChangelogPage";
+import { ApiPage } from "../misc/ApiPage";
+import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import {
   getAuthProvider as defaultAuthProviderBuilder,
   getDataProvider as defaultDataProviderBuilder,
@@ -145,6 +147,17 @@ export const CRM = ({
         title,
         darkModeLogo,
         lightModeLogo,
+        contactCustomFields: [],
+        companyCustomFields: [],
+        dealCustomFields: [],
+        dealPipelines: [
+          {
+            value: "ventas",
+            label: "Ventas",
+            stages: dealStages,
+            pipelineStatuses: dealPipelineStatuses,
+          },
+        ],
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -245,6 +258,11 @@ const DesktopAdmin = (
         <Route path={SettingsPage.path} element={<SettingsPage />} />
         <Route path={ImportPage.path} element={<ImportPage />} />
         <Route path={ChangelogPage.path} element={<ChangelogPage />} />
+        <Route path={ApiPage.path} element={<ApiPage />} />
+        <Route
+          path={AutomatizacionesPage.path}
+          element={<AutomatizacionesPage />}
+        />
       </CustomRoutes>
       <Resource name="deals" {...deals} />
       <Resource name="contacts" {...contacts} />
@@ -309,6 +327,14 @@ const MobileAdmin = (
             element={<SettingsPageMobile />}
           />
           <Route path={ChangelogPage.path} element={<ChangelogPage />} />
+          {/* Las mismas páginas que en escritorio: son responsivas y el móvil
+              no debería quedarse sin ellas. */}
+          <Route path={ImportPage.path} element={<ImportPage />} />
+          <Route path={ApiPage.path} element={<ApiPage />} />
+          <Route
+            path={AutomatizacionesPage.path}
+            element={<AutomatizacionesPage />}
+          />
         </CustomRoutes>
         <Resource
           name="contacts"

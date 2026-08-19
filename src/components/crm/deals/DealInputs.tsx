@@ -1,4 +1,6 @@
 import { required, useTranslate } from "ra-core";
+import { useEffect } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { AutocompleteArrayInput } from "@/components/admin/autocomplete-array-input";
 import { ReferenceArrayInput } from "@/components/admin/reference-array-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
@@ -10,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { contactOptionText } from "../misc/ContactOption";
+import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { AutocompleteCompanyInput } from "../companies/AutocompleteCompanyInput.tsx";
 
@@ -64,14 +67,45 @@ const DealLinkedToInputs = () => {
 };
 
 const DealMiscInputs = () => {
-  const { dealStages, dealCategories } = useConfigurationContext();
+  const { dealPipelines, dealCategories } = useConfigurationContext();
   const translate = useTranslate();
+  const { setValue } = useFormContext();
+
+  // Las etapas disponibles dependen del embudo elegido en este formulario.
+  const embudoElegido = useWatch({ name: "pipeline" });
+  const embudo =
+    dealPipelines.find((candidato) => candidato.value === embudoElegido) ??
+    dealPipelines[0];
+
+  // Al cambiar de embudo, una etapa del anterior deja de ser valida: se
+  // recoloca en la primera etapa del nuevo.
+  const etapaElegida = useWatch({ name: "stage" });
+  useEffect(() => {
+    if (
+      etapaElegida &&
+      !embudo.stages.some((etapa) => etapa.value === etapaElegida)
+    ) {
+      setValue("stage", embudo.stages[0]?.value);
+    }
+  }, [embudo, etapaElegida, setValue]);
+
   return (
     <div className="flex flex-col gap-4 flex-1">
       <h3 className="text-base font-medium">
         {translate("resources.deals.field_categories.misc")}
       </h3>
 
+      {dealPipelines.length > 1 && (
+        <SelectInput
+          source="pipeline"
+          choices={dealPipelines}
+          optionText="label"
+          optionValue="value"
+          defaultValue={dealPipelines[0]?.value}
+          helperText={false}
+          validate={required()}
+        />
+      )}
       <SelectInput
         source="category"
         choices={dealCategories}
@@ -93,13 +127,14 @@ const DealMiscInputs = () => {
       />
       <SelectInput
         source="stage"
-        choices={dealStages}
+        choices={embudo.stages}
         optionText="label"
         optionValue="value"
-        defaultValue="opportunity"
+        defaultValue={embudo.stages[0]?.value}
         helperText={false}
         validate={required()}
       />
+      <CamposPersonalizadosInput entidad="deal" />
     </div>
   );
 };

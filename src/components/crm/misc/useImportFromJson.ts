@@ -268,6 +268,9 @@ export const useImportFromJson = (): [
               ? idsMaps.sales[dataToImport.sales_id]
               : currentSale.id,
             created_at: dataToImport.created_at,
+            custom_fields: esObjetoPlano(dataToImport.custom_fields)
+              ? dataToImport.custom_fields
+              : undefined,
           },
         });
 
@@ -383,6 +386,9 @@ export const useImportFromJson = (): [
             tags: tagsIds,
             first_seen: dataToImport.created_at,
             last_seen: dataToImport.updated_at,
+            custom_fields: esObjetoPlano(dataToImport.custom_fields)
+              ? dataToImport.custom_fields
+              : undefined,
           },
         });
         idsMaps.contacts[dataToImport.id] = data.id;
@@ -728,6 +734,7 @@ type CompanyImport = {
   context_links?: string[];
   created_at?: string;
   updated_at?: string;
+  custom_fields?: Record<string, unknown>;
 };
 
 const isCompany = (data: any): data is CompanyImport =>
@@ -754,6 +761,7 @@ type ContactImport = {
   tags: Array<string>;
   created_at?: string;
   updated_at?: string;
+  custom_fields?: Record<string, unknown>;
 };
 
 const isContact = (data: any): data is ContactImport =>
@@ -810,3 +818,7 @@ const mapSizeToCategory = (size: number): 1 | 10 | 50 | 250 | 500 => {
   if (size < 250) return 250;
   return 500;
 };
+
+/** true si el valor es un objeto plano (ni array ni null), apto para custom_fields. */
+const esObjetoPlano = (valor: unknown): valor is Record<string, unknown> =>
+  typeof valor === "object" && valor !== null && !Array.isArray(valor);

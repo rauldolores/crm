@@ -29,6 +29,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { ContactList } from "./ContactList";
 import { findDealLabel, formatISODateString } from "./dealUtils";
+import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 
 export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -166,6 +167,10 @@ const DealShowContent = () => {
               <p className="text-sm leading-6">{record.description}</p>
             </div>
           )}
+
+          <div className="m-4">
+            <CamposPersonalizadosField entidad="deal" />
+          </div>
 
           <div className="m-4">
             <Separator className="mb-4" />

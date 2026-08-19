@@ -73,6 +73,12 @@ function mergeContactData(winner: Contact, loser: Contact) {
         : (winner.last_seen ?? loser.last_seen),
     sales_id: winner.sales_id ?? loser.sales_id,
     tags: mergeArraysUnique(winner.tags || [], loser.tags || []),
+    // Los campos personalizados se combinan clave a clave: el ganador manda
+    // en las que ambos traen, y se conservan las exclusivas del perdedor.
+    custom_fields: JSON.stringify({
+      ...((loser.custom_fields as Record<string, unknown>) || {}),
+      ...((winner.custom_fields as Record<string, unknown>) || {}),
+    }) as any,
   };
 }
 

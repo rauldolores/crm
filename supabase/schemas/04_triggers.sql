@@ -81,3 +81,34 @@ create or replace trigger on_deal_notes_deleted_delete_note_attachments
 --
 -- El alta se hace ahora al primer acceso, mediante public.provision_crm_access(),
 -- que sí dispone de la organización activa en el token. Ver 02_functions.sql.
+
+-- Webhooks salientes: avisan cada alta, cambio o baja a las URLs suscritas
+-- de la organización (ver public.notify_webhooks en 02_functions.sql).
+create trigger notify_webhooks_contacts
+    after insert or update or delete on public.contacts
+    for each row execute function public.notify_webhooks();
+create trigger notify_webhooks_companies
+    after insert or update or delete on public.companies
+    for each row execute function public.notify_webhooks();
+create trigger notify_webhooks_deals
+    after insert or update or delete on public.deals
+    for each row execute function public.notify_webhooks();
+create trigger notify_webhooks_tasks
+    after insert or update or delete on public.tasks
+    for each row execute function public.notify_webhooks();
+create trigger notify_webhooks_contact_notes
+    after insert or update or delete on public.contact_notes
+    for each row execute function public.notify_webhooks();
+create trigger notify_webhooks_deal_notes
+    after insert or update or delete on public.deal_notes
+    for each row execute function public.notify_webhooks();
+
+-- Automatizaciones: aplican las reglas «cuando pase X, haz Y» de la
+-- organización (ver public.run_automations en 02_functions.sql).
+create trigger run_automations_contacts
+    after insert on public.contacts
+    for each row execute function public.run_automations();
+
+create trigger run_automations_deals
+    after insert or update on public.deals
+    for each row execute function public.run_automations();

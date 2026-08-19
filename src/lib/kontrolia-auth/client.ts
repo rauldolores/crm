@@ -75,17 +75,39 @@ export async function getKontroliaMemberships() {
   }
 }
 
+/** Rechaza si la promesa no resuelve dentro del plazo. */
+const conPlazo = <T>(promesa: Promise<T>, ms: number): Promise<T> =>
+  Promise.race([
+    promesa,
+    new Promise<never>((_, rechazar) =>
+      setTimeout(() => rechazar(new Error("Tiempo de espera agotado")), ms),
+    ),
+  ]);
+
+const PLAZO_DE_CAMBIO_MS = 8000;
+
 /**
  * Cambia la organización activa. Fuerza un refresco del token para que
  * `organization_id`, `roles` y `permissions` reflejen la nueva, que es lo que
  * hace que el RLS empiece a devolver los datos de esa empresa.
+ *
+ * El SDK primero escribe el contexto de sesión y después refresca el token.
+ * Ese segundo paso puede fallar o quedarse colgado con el contexto ya
+ * cambiado: la interfaz se quedaba sin recargar y "no pasaba nada" hasta un
+ * F5 manual. Por eso hay un plazo máximo y, si algo falla, se reintenta el
+ * refresco una vez: en el peor de los casos quien llama recarga igualmente y
+ * el token nuevo llega al arrancar.
  */
 export async function switchKontroliaOrganization(
   organizationId: string,
 ): Promise<void> {
   const c = getKontroliaClient();
   if (!c) return;
-  await c.switchOrganization(organizationId);
+  try {
+    await conPlazo(c.switchOrganization(organizationId), PLAZO_DE_CAMBIO_MS);
+  } catch {
+    await conPlazo(c.refresh(), PLAZO_DE_CAMBIO_MS).catch(() => {});
+  }
 }
 
 export async function logoutKontroliaAuth(): Promise<void> {

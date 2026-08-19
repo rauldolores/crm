@@ -12,13 +12,20 @@ import { SaveButton } from "@/components/admin/form";
 import { FormToolbar } from "@/components/admin/simple-form";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { DealInputs } from "./DealInputs";
 
 export const DealCreate = ({ open }: { open: boolean }) => {
   const redirect = useRedirect();
   const dataProvider = useDataProvider();
-  const { data: allDeals } = useListContext<Deal>();
+  const { data: allDeals, filterValues } = useListContext<Deal>();
+  const { dealPipelines } = useConfigurationContext();
+
+  // La oportunidad nueva nace en el embudo que se esta viendo.
+  const embudoInicial =
+    dealPipelines.find((embudo) => embudo.value === filterValues?.pipeline)
+      ?.value ?? dealPipelines[0]?.value;
 
   const handleClose = () => {
     redirect("/deals");
@@ -34,7 +41,10 @@ export const DealCreate = ({ open }: { open: boolean }) => {
     // increase the index of all deals in the same stage as the new deal
     // first, get the list of deals in the same stage
     const deals = allDeals.filter(
-      (d: Deal) => d.stage === deal.stage && d.id !== deal.id,
+      (d: Deal) =>
+        d.stage === deal.stage &&
+        d.pipeline === deal.pipeline &&
+        d.id !== deal.id,
     );
     // update the actual deals in the database
     await Promise.all(
@@ -81,6 +91,7 @@ export const DealCreate = ({ open }: { open: boolean }) => {
               sales_id: identity?.id,
               contact_ids: [],
               index: 0,
+              pipeline: embudoInicial,
             }}
           >
             <DealInputs />

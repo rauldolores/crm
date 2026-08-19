@@ -32,7 +32,7 @@ export const spanishCrmMessages = {
         country: "País",
         description: "Descripción",
         context_links: "Enlaces de contexto",
-        sales_id: "Responsable de cuenta",
+        sales_id: "Responsable de venta",
       },
       empty: {
         description: "Parece que tu lista de empresas está vacía.",
@@ -93,9 +93,9 @@ export const spanishCrmMessages = {
         phone_jsonb: "Teléfonos",
         phone_number: "Teléfono",
         linkedin_url: "URL de LinkedIn",
-        background: "Antecedentes (biografía, cómo os conocisteis, etc.)",
-        has_newsletter: "Recibe la newsletter",
-        sales_id: "Responsable de cuenta",
+        background: "Antecedentes (biografía, cómo se conocieron, etc.)",
+        has_newsletter: "Recibe el boletín",
+        sales_id: "Responsable de venta",
       },
       action: {
         add: "Añadir contacto",
@@ -214,6 +214,7 @@ export const spanishCrmMessages = {
         amount: "Importe",
         expected_closing_date: "Fecha prevista de cierre",
         stage: "Etapa",
+        pipeline: "Embudo",
       },
       action: {
         back_to_deal: "Volver a la oportunidad",
@@ -423,6 +424,101 @@ export const spanishCrmMessages = {
     changelog: {
       title: "Novedades",
     },
+    automations: {
+      title: "Automatizaciones",
+      intro:
+        "Reglas del tipo «cuando pase esto, haz aquello». Se aplican solas, tanto si el cambio lo haces tú en la aplicación como si entra por una importación o desde otro sistema.",
+      your_rules: "Tus reglas",
+      new_rule: "Nueva regla",
+      empty: "Aún no hay reglas. Crea la primera abajo.",
+      add: "Agregar regla",
+      created: "Regla creada y activa",
+      create_error: "No se pudo crear la regla",
+      deleted: "Regla eliminada",
+      toggle: "Activar o desactivar",
+      sentence: "%{when} → %{then}",
+      fields: {
+        name: "Nombre de la regla",
+        when: "Cuando",
+        stage: "Etapa",
+        then: "Entonces",
+        task_text: "Texto de la tarea",
+        task_type: "Tipo de tarea",
+        due_in_days: "Vence en (días)",
+        owner: "Responsable",
+      },
+      when: {
+        contact_created: "Se crea un contacto",
+        deal_created: "Se crea una oportunidad",
+        deal_stage: "Una oportunidad llega a una etapa",
+        deal_stage_named: "Una oportunidad llega a «%{stage}»",
+      },
+      then: {
+        task: "Crear una tarea",
+        assign: "Asignar responsable",
+        task_named: "Crear la tarea «%{text}» para dentro de %{days} días",
+        assign_named: "Asignar a %{name}",
+      },
+    },
+    api: {
+      title: "API y webhooks",
+      intro:
+        "Conecta Vinqulia con tus otros sistemas: consulta y escribe tus datos por la API, o recibe un aviso automático cada vez que algo cambie.",
+      rest: {
+        title: "API REST",
+        base_url: "Todas las peticiones van a esta dirección base:",
+        auth: "La autenticación usa tu token de sesión de KontrolIA Auth en la cabecera Authorization. Ejemplo de consulta:",
+        filters:
+          "Los filtros siguen la sintaxis de PostgREST (columna=operador.valor):",
+        example_ilike: "# contiene texto, sin mayúsculas",
+        example_gte: "# mayor o igual",
+        example_order: "# ordenar",
+        example_pagination: "# paginación",
+        write: "Para crear o modificar, envía JSON con POST o PATCH:",
+        resources:
+          "Recursos disponibles: contacts, companies, deals, tasks, contact_notes, deal_notes, tags, sales (lectura). Todo queda aislado a tu organización automáticamente.",
+      },
+      webhooks: {
+        title: "Webhooks",
+        intro:
+          "Un webhook es una URL de tu sistema a la que Vinqulia avisa cada vez que se crea, cambia o elimina un contacto, empresa, oportunidad, tarea o nota. Sirve para conectar n8n, Zapier, Make o tu propio servidor.",
+        add: "Agregar",
+        empty: "Aún no hay webhooks. Agrega la URL de tu sistema para empezar.",
+        created:
+          "Webhook agregado. Copia su secreto para verificar las firmas.",
+        create_error: "No se pudo agregar el webhook",
+        deleted: "Webhook eliminado",
+        toggle: "Activar o desactivar",
+        copy_secret: "Copiar secreto",
+        payload: "Cada aviso llega como POST con este cuerpo:",
+        signature:
+          "Verifica que el aviso es legítimo comparando la cabecera X-Vinqulia-Firma con el HMAC-SHA256 del cuerpo usando el secreto del webhook:",
+      },
+    },
+    saved_views: {
+      title: "Vistas",
+      save: "Guardar vista actual…",
+      name_placeholder: "Nombre de la vista",
+      saved: "Vista guardada para toda la organización",
+      save_error: "No se pudo guardar la vista",
+      deleted: "Vista eliminada",
+      delete: "Eliminar vista",
+      empty: "Aún no hay vistas guardadas",
+    },
+    custom_fields: {
+      title: "Campos personalizados",
+      field_label: "Etiqueta del campo",
+      field_type: "Tipo",
+      field_options: "Opciones",
+      options_hint: "Opción 1, Opción 2, … (solo tipo lista)",
+      types: {
+        text: "Texto",
+        number: "Número",
+        date: "Fecha",
+        list: "Lista de opciones",
+        checkbox: "Casilla",
+      },
+    },
     activity: {
       added_company: "%{name} añadió la empresa",
       you_added_company: "Añadiste la empresa",
@@ -502,6 +598,14 @@ export const spanishCrmMessages = {
           "Elige qué etapas de la oportunidad cuentan como parte del embudo.",
         pipeline_statuses: "Estados del embudo",
         stages: "Etapas",
+        pipelines: "Embudos",
+        pipelines_help:
+          "Cada embudo tiene sus propias etapas: ventas nuevas, renovaciones, cobranza… Las oportunidades viven en un solo embudo.",
+        pipeline_name: "Nombre del embudo",
+        add_pipeline: "Agregar embudo",
+        remove_pipeline: "Quitar embudo",
+        pipeline_in_use:
+          "No se puede quitar el embudo «%{name}»: todavía tiene oportunidades.",
       },
       light_mode_logo: "Logo para el modo claro",
       notes: {
@@ -519,6 +623,10 @@ export const spanishCrmMessages = {
       app_title: "Nombre de la aplicación",
       sections: {
         branding: "Marca",
+        custom_fields: "Campos personalizados",
+      },
+      custom_fields: {
+        help: "Agrega los datos propios de tu negocio a contactos, empresas y oportunidades: una inmobiliaria puede guardar «Superficie», una escuela «Grado». Para el tipo «Lista de opciones», escribe las opciones separadas por comas.",
       },
       validation: {
         duplicate: "%{display_name} duplicados: %{items}",

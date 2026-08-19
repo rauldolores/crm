@@ -14,6 +14,7 @@ import type { Company } from "../types";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
 import { useGetSalesName } from "../sales/useGetSalesName";
+import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 
 interface CompanyAsideProps {
   link?: string;
@@ -41,6 +42,8 @@ export const CompanyAside = ({ link = "edit" }: CompanyAsideProps) => {
       <ContextInfo record={record} />
 
       <AdditionalInfo record={record} />
+
+      <CamposPersonalizadosField entidad="company" />
 
       {link !== "edit" && (
         <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">

@@ -504,3 +504,174 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION "public"."notify_webhooks"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  registro jsonb;
+  org uuid;
+  evento text;
+  suscripcion record;
+  cuerpo jsonb;
+  firma text;
+begin
+  if tg_op = 'DELETE' then
+    registro := to_jsonb(old);
+  else
+    registro := to_jsonb(new);
+  end if;
+
+  org := (registro ->> 'organization_id')::uuid;
+  if org is null then
+    return null;
+  end if;
+
+  evento := tg_table_name || '.' || case tg_op
+    when 'INSERT' then 'created'
+    when 'UPDATE' then 'updated'
+    else 'deleted'
+  end;
+
+  for suscripcion in
+    select id, url, secret from public.webhooks
+    where organization_id = org
+      and active
+      and (resources = '{}' or tg_table_name = any(resources))
+  loop
+    begin
+      cuerpo := jsonb_build_object(
+        'evento', evento,
+        'recurso', tg_table_name,
+        'fecha', now(),
+        'datos', registro
+      );
+      firma := encode(
+        extensions.hmac(cuerpo::text, suscripcion.secret, 'sha256'),
+        'hex'
+      );
+      perform net.http_post(
+        url := suscripcion.url,
+        body := cuerpo,
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'X-Vinqulia-Evento', evento,
+          'X-Vinqulia-Firma', firma
+        )
+      );
+    exception when others then
+      null; -- la escritura original nunca se sacrifica por un aviso
+    end;
+  end loop;
+
+  return null;
+end;
+$$;
+
+GRANT ALL ON FUNCTION "public"."notify_webhooks"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."notify_webhooks"() TO "service_role";
+
+create or replace function public.run_automations() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  org uuid;
+  evento text;
+  etapa text;
+  regla record;
+  contacto bigint;
+  responsable bigint;
+begin
+  -- Guarda contra cascadas: una acción que escribe (asignar responsable)
+  -- volvería a disparar el motor y podría no terminar nunca.
+  if pg_trigger_depth() > 1 then
+    return null;
+  end if;
+
+  org := new.organization_id;
+  if org is null then
+    return null;
+  end if;
+
+  if tg_op = 'INSERT' then
+    evento := 'created';
+  elsif tg_table_name = 'deals' and new.stage is distinct from old.stage then
+    -- Solo el cambio de etapa cuenta: al crear ya se notificó como 'created'.
+    evento := 'stage_changed';
+  else
+    return null;
+  end if;
+
+  -- La etapa se lee ANTES de la consulta y solo donde existe la columna:
+  -- PL/pgSQL prepara la consulta entera, así que una referencia a new.stage
+  -- dentro de ella fallaría en contacts aunque la condición nunca se cumpla.
+  if tg_table_name = 'deals' then
+    etapa := new.stage;
+  end if;
+
+  -- Todo el motor va protegido: ni una regla mal configurada ni un fallo
+  -- interno pueden tumbar la escritura que lo disparó.
+  begin
+    for regla in
+      select * from public.automations
+      where organization_id = org
+        and active
+        and trigger_resource = tg_table_name
+        and trigger_event = evento
+        and (
+          evento <> 'stage_changed'
+          or trigger_params ->> 'stage' is null
+          or trigger_params ->> 'stage' = etapa
+        )
+    loop
+      begin
+        if regla.action_type = 'create_task' then
+          -- Las tareas cuelgan siempre de un contacto. En una oportunidad se
+          -- usa su primer contacto; si no tiene ninguno, la regla se salta.
+          if tg_table_name = 'contacts' then
+            contacto := new.id;
+          else
+            contacto := new.contact_ids[1];
+          end if;
+
+          if contacto is not null then
+            insert into public.tasks
+              (organization_id, contact_id, text, type, due_date, sales_id)
+            values (
+              org,
+              contacto,
+              coalesce(nullif(regla.action_params ->> 'text', ''), regla.name),
+              nullif(regla.action_params ->> 'taskType', ''),
+              now() + (
+                coalesce((regla.action_params ->> 'dueInDays')::int, 3) || ' days'
+              )::interval,
+              new.sales_id
+            );
+          end if;
+
+        elsif regla.action_type = 'assign_owner' then
+          responsable := nullif(regla.action_params ->> 'salesId', '')::bigint;
+          if responsable is not null then
+            if tg_table_name = 'contacts' then
+              update public.contacts set sales_id = responsable where id = new.id;
+            else
+              update public.deals set sales_id = responsable where id = new.id;
+            end if;
+          end if;
+        end if;
+      exception when others then
+        null; -- una regla concreta falla, las demás siguen
+      end;
+    end loop;
+  exception when others then
+    null; -- el motor nunca bloquea la escritura original
+  end;
+
+  return null;
+end;
+$$;
+
+grant all on function public.run_automations() to authenticated;
+grant all on function public.run_automations() to service_role;

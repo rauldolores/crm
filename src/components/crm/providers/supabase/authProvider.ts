@@ -11,36 +11,38 @@ import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { canAccess } from "../commons/canAccess";
 import { getSupabaseClient } from "./supabase";
 
+const getIdentityFromSale = async () => {
+  const sale = await getSale();
+
+  if (sale != null) {
+    return {
+      id: sale.id,
+      fullName: `${sale.first_name} ${sale.last_name}`,
+      avatar: sale.avatar?.src,
+    };
+  }
+
+  // Con acceso centralizado, no encontrar ficha de comercial no significa
+  // que no haya sesion: puede ser que el usuario aun no este aprovisionado
+  // en esta organizacion, o que la consulta a la base fallara. Lanzar aqui
+  // hacia que ra-core lo tomara por sesion invalida y devolviera al login,
+  // reabriendo el ciclo con KontrolIA Auth.
+  if (isKontroliaAuthConfigured()) {
+    const usuario = await getKontroliaClient()?.getUser();
+    if (usuario) {
+      return {
+        id: usuario.id,
+        fullName: usuario.email ?? "",
+      };
+    }
+  }
+
+  throw new Error();
+};
+
 const getBaseAuthProvider = () =>
   supabaseAuthProvider(getSupabaseClient(), {
-    getIdentity: async () => {
-      const sale = await getSale();
-
-      if (sale != null) {
-        return {
-          id: sale.id,
-          fullName: `${sale.first_name} ${sale.last_name}`,
-          avatar: sale.avatar?.src,
-        };
-      }
-
-      // Con acceso centralizado, no encontrar ficha de comercial no significa
-      // que no haya sesion: puede ser que el usuario aun no este aprovisionado
-      // en esta organizacion, o que la consulta a la base fallara. Lanzar aqui
-      // hacia que ra-core lo tomara por sesion invalida y devolviera al login,
-      // reabriendo el ciclo con KontrolIA Auth.
-      if (isKontroliaAuthConfigured()) {
-        const usuario = await getKontroliaClient()?.getUser();
-        if (usuario) {
-          return {
-            id: usuario.id,
-            fullName: usuario.email ?? "",
-          };
-        }
-      }
-
-      throw new Error();
-    },
+    getIdentity: getIdentityFromSale,
   });
 
 // To speed up checks, we cache the initialization state
@@ -117,13 +119,14 @@ const getSale = async () => {
     }
   }
 
+  // maybeSingle y no single: sin ficha todavía (el aprovisionamiento falló o
+  // va en camino) single responde 406 y ensucia la consola en cada intento.
   const { data: dataSale, error: errorSale } = await getSupabaseClient()
     .from("sales")
     .select("id, first_name, last_name, avatar, administrator")
     .match({ user_id: usuario.id })
-    .single();
+    .maybeSingle();
 
-  // Shouldn't happen either as all users are sales but just in case
   if (dataSale == null || errorSale) {
     return undefined;
   }
@@ -132,7 +135,13 @@ const getSale = async () => {
   return dataSale;
 };
 
-function clearCache() {
+/**
+ * Vacía lo cacheado de la sesión (ficha de comercial e inicialización).
+ * Exportada porque el selector de organización debe llamarla al cambiar: la
+ * ficha cacheada pertenece a la organización anterior y, sin limpiarla, la
+ * identidad y los permisos seguirían siendo los de la otra empresa.
+ */
+export function clearAuthCache() {
   const storage = getLocalStorage();
   storage?.removeItem(IS_INITIALIZED_CACHE_KEY);
   storage?.removeItem(CURRENT_SALE_CACHE_KEY);
@@ -142,6 +151,17 @@ export const getAuthProvider = (): AuthProvider => {
   const baseAuthProvider = getBaseAuthProvider();
   return {
     ...baseAuthProvider,
+    // Con acceso centralizado hay que saltarse el envoltorio de
+    // ra-supabase-core: antes de delegar en el getIdentity configurado,
+    // consulta client.auth.getUser() contra Supabase Auth, donde ya no hay
+    // sesion, asi que lanzaba siempre. Sin identidad, las listas (ContactList
+    // y companeras) devuelven null y la pantalla queda en blanco sin error.
+    getIdentity: async () => {
+      if (!isKontroliaAuthConfigured()) {
+        return baseAuthProvider.getIdentity!();
+      }
+      return getIdentityFromSale();
+    },
     login: async (params) => {
       // Con acceso centralizado el CRM no recibe credenciales: la pantalla de
       // acceso redirige a KontrolIA Auth antes de llegar aqui.
@@ -161,7 +181,7 @@ export const getAuthProvider = (): AuthProvider => {
       return baseAuthProvider.login(params);
     },
     logout: async (params) => {
-      clearCache();
+      clearAuthCache();
       if (isKontroliaAuthConfigured()) {
         await logoutKontroliaAuth();
         return;

@@ -176,3 +176,11 @@ alter default privileges for role postgres in schema public grant all on tables 
 alter default privileges for role postgres in schema public grant all on tables to anon;
 alter default privileges for role postgres in schema public grant all on tables to authenticated;
 alter default privileges for role postgres in schema public grant all on tables to service_role;
+
+-- Tablas añadidas después de la instalación inicial: grants explícitos.
+grant select, insert, update, delete on table public.saved_views to anon, authenticated, service_role;
+grant usage, select on sequence public.saved_views_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table public.webhooks to anon, authenticated, service_role;
+grant usage, select on sequence public.webhooks_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table public.automations to anon, authenticated, service_role;
+grant usage, select on sequence public.automations_id_seq to anon, authenticated, service_role;

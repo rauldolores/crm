@@ -11,6 +11,8 @@ import { FilterButton } from "@/components/admin/filter-form";
 import { SearchInput } from "@/components/admin/search-input";
 import { SelectInput } from "@/components/admin/select-input";
 
+import { Button } from "@/components/ui/button";
+
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { TopToolbar } from "../layout/TopToolbar";
 import { DealArchivedList } from "./DealArchivedList";
@@ -20,10 +22,11 @@ import { DealEmpty } from "./DealEmpty";
 import { DealListContent } from "./DealListContent";
 import { DealShow } from "./DealShow";
 import { OnlyMineInput } from "./OnlyMineInput";
+import { VistasGuardadas } from "../misc/VistasGuardadas";
 
 const DealList = () => {
   const { identity } = useGetIdentity();
-  const { dealCategories } = useConfigurationContext();
+  const { dealCategories, dealPipelines } = useConfigurationContext();
   const translate = useTranslate();
 
   if (!identity) return null;
@@ -53,7 +56,7 @@ const DealList = () => {
     <List
       perPage={100}
       filter={{ "archived_at@is": null }}
-      title={false}
+      filterDefaultValues={{ pipeline: dealPipelines[0]?.value }}
       sort={{ field: "index", order: "DESC" }}
       filters={dealFilters}
       actions={<DealActions />}
@@ -64,6 +67,39 @@ const DealList = () => {
   );
 };
 
+/**
+ * Pestañas para cambiar de embudo. La selección vive en el filtro de la
+ * lista (y por tanto en la URL): recargar o compartir el enlace conserva el
+ * embudo activo. No se muestra si la organización solo tiene uno.
+ */
+const SelectorDeEmbudo = () => {
+  const { dealPipelines } = useConfigurationContext();
+  const { filterValues, setFilters } = useListContext();
+  if (dealPipelines.length <= 1) return null;
+
+  const activo =
+    dealPipelines.find((embudo) => embudo.value === filterValues?.pipeline) ??
+    dealPipelines[0];
+
+  return (
+    <div className="flex flex-wrap gap-2 mb-4">
+      {dealPipelines.map((embudo) => (
+        <Button
+          key={embudo.value}
+          type="button"
+          size="sm"
+          variant={embudo.value === activo.value ? "default" : "outline"}
+          onClick={() =>
+            setFilters({ ...filterValues, pipeline: embudo.value })
+          }
+        >
+          {embudo.label}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
 const DealLayout = () => {
   const location = useLocation();
   const matchCreate = matchPath("/deals/create", location.pathname);
@@ -71,7 +107,10 @@ const DealLayout = () => {
   const matchEdit = matchPath("/deals/:id", location.pathname);
 
   const { data, isPending, filterValues } = useListContext();
-  const hasFilters = filterValues && Object.keys(filterValues).length > 0;
+  // El embudo activo siempre esta en los filtros; no cuenta como "filtro del
+  // usuario" o la pantalla de lista vacia no se mostraria nunca.
+  const { pipeline: _embudo, ...otrosFiltros } = filterValues ?? {};
+  const hasFilters = Object.keys(otrosFiltros).length > 0;
 
   if (isPending) return null;
   if (!data?.length && !hasFilters)
@@ -86,6 +125,7 @@ const DealLayout = () => {
 
   return (
     <div className="w-full">
+      <SelectorDeEmbudo />
       <DealListContent />
       <DealArchivedList />
       <DealCreate open={!!matchCreate} />
@@ -97,6 +137,7 @@ const DealLayout = () => {
 
 const DealActions = () => (
   <TopToolbar>
+    <VistasGuardadas resource="deals" />
     <FilterButton />
     <ExportButton />
     <CreateButton label="resources.deals.action.new" />

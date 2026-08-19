@@ -19,6 +19,9 @@ alter table public.contact_notes enable row level security;
 alter table public.deals enable row level security;
 alter table public.deal_notes enable row level security;
 alter table public.sales enable row level security;
+alter table public.automations enable row level security;
+alter table public.saved_views enable row level security;
+alter table public.webhooks enable row level security;
 alter table public.tags enable row level security;
 alter table public.tasks enable row level security;
 alter table public.configuration enable row level security;
@@ -107,6 +110,48 @@ create policy "Sales are scoped to the organization" on public.sales
     using (organization_id = public.current_organization_id());
 
 -- Tags
+create policy "Automations are scoped to the organization" on public.automations
+    for select to authenticated
+    using (organization_id = public.current_organization_id());
+create policy "Automations are created in the organization" on public.automations
+    for insert to authenticated
+    with check (organization_id = public.current_organization_id());
+create policy "Automations are updated within the organization" on public.automations
+    for update to authenticated
+    using (organization_id = public.current_organization_id())
+    with check (organization_id = public.current_organization_id());
+create policy "Automations are deleted within the organization" on public.automations
+    for delete to authenticated
+    using (organization_id = public.current_organization_id());
+
+create policy "Webhooks are scoped to the organization" on public.webhooks
+    for select to authenticated
+    using (organization_id = public.current_organization_id());
+create policy "Webhooks are created in the organization" on public.webhooks
+    for insert to authenticated
+    with check (organization_id = public.current_organization_id());
+create policy "Webhooks are updated within the organization" on public.webhooks
+    for update to authenticated
+    using (organization_id = public.current_organization_id())
+    with check (organization_id = public.current_organization_id());
+create policy "Webhooks are deleted within the organization" on public.webhooks
+    for delete to authenticated
+    using (organization_id = public.current_organization_id());
+
+create policy "Saved views are scoped to the organization" on public.saved_views
+    for select to authenticated
+    using (organization_id = public.current_organization_id());
+create policy "Saved views are created in the organization" on public.saved_views
+    for insert to authenticated
+    with check (organization_id = public.current_organization_id());
+create policy "Saved views are updated within the organization" on public.saved_views
+    for update to authenticated
+    using (organization_id = public.current_organization_id())
+    with check (organization_id = public.current_organization_id());
+create policy "Saved views are deleted within the organization" on public.saved_views
+    for delete to authenticated
+    using (organization_id = public.current_organization_id());
+
 create policy "Tags are scoped to the organization" on public.tags
     for select to authenticated
     using (organization_id = public.current_organization_id());

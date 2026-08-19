@@ -15,10 +15,12 @@ import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
 import { RadioButtonGroupInput } from "@/components/admin/radio-button-group-input";
 import { SelectInput } from "@/components/admin/select-input";
+import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { ArrayInput } from "@/components/admin/array-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 
 import { isLinkedinUrl } from "../misc/isLinkedInUrl";
+import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { StatusSelector } from "../notes";
 import type { Sale, Contact } from "../types";
 import { Avatar } from "./Avatar";
@@ -48,6 +50,7 @@ export const ContactInputs = () => {
         <div className="flex flex-col gap-10 flex-1">
           <ContactPersonalInformationInputs />
           <ContactMiscInputs />
+          <CamposPersonalizadosInput entidad="contact" />
         </div>
       </div>
     </div>
@@ -221,7 +224,10 @@ const ContactMiscInputs = () => {
           "disabled@neq": true,
         }}
       >
-        <SelectInput
+        {/* La etiqueta va explícita: dentro de ReferenceInput el componente la
+            deduciría del recurso referenciado ("sales") y no del campo. */}
+        <AutocompleteInput
+          label="resources.contacts.fields.sales_id"
           helperText={false}
           optionText={saleOptionRenderer}
           validate={required()}

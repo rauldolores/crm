@@ -1,6 +1,8 @@
 import { useDataProvider, useGetIdentity, type DataProvider } from "ra-core";
 import { useCallback, useMemo } from "react";
 
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import { leerCamposPersonalizadosDeFila } from "../misc/camposPersonalizadosCsv";
 import type { Company, Tag } from "../types";
 
 export type ContactImportSchema = {
@@ -29,6 +31,7 @@ export function useContactImport() {
   const today = new Date().toISOString();
   const user = useGetIdentity();
   const dataProvider = useDataProvider();
+  const { contactCustomFields } = useConfigurationContext();
 
   // company cache to avoid creating the same company multiple times and costly roundtrips
   // Cache is dependent of dataProvider, so it's safe to use it as a dependency
@@ -84,8 +87,8 @@ export function useContactImport() {
       ]);
 
       await Promise.all(
-        batch.map(
-          async ({
+        batch.map(async (fila) => {
+          const {
             first_name,
             last_name,
             gender,
@@ -104,52 +107,62 @@ export function useContactImport() {
             company: companyName,
             tags: tagNames,
             linkedin_url,
-          }) => {
-            const email_jsonb = [
-              { email: email_work, type: "Work" },
-              { email: email_home, type: "Home" },
-              { email: email_other, type: "Other" },
-            ].filter(({ email }) => email);
-            const phone_jsonb = [
-              { number: phone_work, type: "Work" },
-              { number: phone_home, type: "Home" },
-              { number: phone_other, type: "Other" },
-            ].filter(({ number }) => number);
-            const company = companyName?.trim()
-              ? companies.get(companyName.trim())
-              : undefined;
-            const tagList = parseTags(tagNames)
-              .map((name) => tags.get(name))
-              .filter((tag): tag is Tag => !!tag);
+          } = fila;
+          const email_jsonb = [
+            { email: email_work, type: "Work" },
+            { email: email_home, type: "Home" },
+            { email: email_other, type: "Other" },
+          ].filter(({ email }) => email);
+          const phone_jsonb = [
+            { number: phone_work, type: "Work" },
+            { number: phone_home, type: "Home" },
+            { number: phone_other, type: "Other" },
+          ].filter(({ number }) => number);
+          const company = companyName?.trim()
+            ? companies.get(companyName.trim())
+            : undefined;
+          const tagList = parseTags(tagNames)
+            .map((name) => tags.get(name))
+            .filter((tag): tag is Tag => !!tag);
 
-            return dataProvider.create("contacts", {
-              data: {
-                first_name,
-                last_name,
-                gender,
-                title,
-                email_jsonb,
-                phone_jsonb,
-                background,
-                first_seen: first_seen
-                  ? new Date(first_seen).toISOString()
-                  : today,
-                last_seen: last_seen
-                  ? new Date(last_seen).toISOString()
-                  : today,
-                has_newsletter,
-                status,
-                company_id: company?.id,
-                tags: tagList.map((tag) => tag.id),
-                sales_id: user?.identity?.id,
-                linkedin_url,
-              },
-            });
-          },
-        ),
+          return dataProvider.create("contacts", {
+            data: {
+              first_name,
+              last_name,
+              gender,
+              title,
+              email_jsonb,
+              phone_jsonb,
+              background,
+              first_seen: first_seen
+                ? new Date(first_seen).toISOString()
+                : today,
+              last_seen: last_seen ? new Date(last_seen).toISOString() : today,
+              has_newsletter,
+              status,
+              company_id: company?.id,
+              tags: tagList.map((tag) => tag.id),
+              sales_id: user?.identity?.id,
+              linkedin_url,
+              // Columnas adicionales del CSV que coinciden con los campos
+              // personalizados definidos (por etiqueta o por clave).
+              custom_fields: leerCamposPersonalizadosDeFila(
+                contactCustomFields,
+                fila as unknown as Record<string, unknown>,
+              ),
+            },
+          });
+        }),
       );
     },
-    [dataProvider, getCompanies, getTags, user?.identity?.id, today],
+    [
+      dataProvider,
+      getCompanies,
+      getTags,
+      user?.identity?.id,
+      today,
+      contactCustomFields,
+    ],
   );
 
   return processBatch;

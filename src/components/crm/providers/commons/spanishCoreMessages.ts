@@ -14,8 +14,8 @@ import type { TranslationMessages } from "ra-core";
 export const spanishCoreMessages: TranslationMessages = {
   ra: {
     action: {
-      add_filter: "Añadir filtro",
-      add: "Añadir",
+      add_filter: "Agregar filtro",
+      add: "Agregar",
       back: "Volver",
       bulk_actions:
         "1 elemento seleccionado |||| %{smart_count} elementos seleccionados",

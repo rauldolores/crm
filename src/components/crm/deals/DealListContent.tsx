@@ -10,23 +10,35 @@ import type { DealsByStage } from "./stages";
 import { getDealsByStage } from "./stages";
 
 export const DealListContent = () => {
-  const { dealStages } = useConfigurationContext();
-  const { data: unorderedDeals, isPending, refetch } = useListContext<Deal>();
+  const { dealPipelines } = useConfigurationContext();
+  const {
+    data: unorderedDeals,
+    isPending,
+    refetch,
+    filterValues,
+  } = useListContext<Deal>();
   const dataProvider = useDataProvider();
 
+  // Las columnas son las etapas del embudo activo (el del filtro de la
+  // lista), no la union de todos los embudos.
+  const embudoActivo =
+    dealPipelines.find((embudo) => embudo.value === filterValues?.pipeline) ??
+    dealPipelines[0];
+  const etapas = embudoActivo.stages;
+
   const [dealsByStage, setDealsByStage] = useState<DealsByStage>(
-    getDealsByStage([], dealStages),
+    getDealsByStage([], etapas),
   );
 
   useEffect(() => {
     if (unorderedDeals) {
-      const newDealsByStage = getDealsByStage(unorderedDeals, dealStages);
+      const newDealsByStage = getDealsByStage(unorderedDeals, etapas);
       if (!isEqual(newDealsByStage, dealsByStage)) {
         setDealsByStage(newDealsByStage);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [unorderedDeals]);
+  }, [unorderedDeals, etapas]);
 
   if (isPending) return null;
 
@@ -73,7 +85,7 @@ export const DealListContent = () => {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex gap-4">
-        {dealStages.map((stage) => (
+        {etapas.map((stage) => (
           <DealColumn
             stage={stage.value}
             deals={dealsByStage[stage.value]}
@@ -135,7 +147,7 @@ const updateDealStage = async (
     const { data: columnDeals } = await dataProvider.getList("deals", {
       sort: { field: "index", order: "ASC" },
       pagination: { page: 1, perPage: 100 },
-      filter: { stage: source.stage },
+      filter: { stage: source.stage, pipeline: source.pipeline },
     });
     const destinationIndex = destination.index ?? columnDeals.length + 1;
 
@@ -200,12 +212,12 @@ const updateDealStage = async (
         dataProvider.getList("deals", {
           sort: { field: "index", order: "ASC" },
           pagination: { page: 1, perPage: 100 },
-          filter: { stage: source.stage },
+          filter: { stage: source.stage, pipeline: source.pipeline },
         }),
         dataProvider.getList("deals", {
           sort: { field: "index", order: "ASC" },
           pagination: { page: 1, perPage: 100 },
-          filter: { stage: destination.stage },
+          filter: { stage: destination.stage, pipeline: source.pipeline },
         }),
       ]);
     const destinationIndex = destination.index ?? destinationDeals.length + 1;

@@ -11,6 +11,12 @@ import { env } from "@/lib/env";
 export const kontroliaAuthConfig = {
   supabaseUrl: env.kontroliaAuthUrl,
   supabaseAnonKey: env.kontroliaAuthAnonKey,
+  // Habilita en el SDK los métodos de directorio (listOrganizationMembers,
+  // searchOrganizationMembers, getOrganizationMemberCount). El CRM hoy no los
+  // llama desde el navegador —el endpoint del auth-server no admite CORS, así
+  // que el directorio se consulta vía /api/crm/comerciales/sincronizar—, pero
+  // la configuración queda lista para cuando sí se pueda.
+  authServerUrl: env.kontroliaAuthServerUrl || undefined,
 };
 
 /** true si la aplicación tiene configurado el login centralizado. */

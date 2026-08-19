@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { RotateCcw, Save } from "lucide-react";
+import { Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import type { RaRecord } from "ra-core";
 import {
   EditBase,
@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { toSlug } from "@/lib/toSlug";
 import { ArrayInput } from "@/components/admin/array-input";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
+import { SelectInput } from "@/components/admin/select-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { TextInput } from "@/components/admin/text-input";
 
@@ -27,6 +28,11 @@ import {
   type ConfigurationContextValue,
 } from "../root/ConfigurationContext";
 import { defaultConfiguration } from "../root/defaultConfiguration";
+import type {
+  CustomFieldDefinition,
+  CustomFieldType,
+  DealPipeline,
+} from "../types";
 
 const SECTIONS = [
   {
@@ -42,7 +48,51 @@ const SECTIONS = [
   { id: "deals", label: "resources.deals.name", fallback: "Deals" },
   { id: "notes", label: "resources.notes.name", fallback: "Notes" },
   { id: "tasks", label: "resources.tasks.name", fallback: "Tasks" },
+  {
+    id: "custom-fields",
+    label: "crm.settings.sections.custom_fields",
+    fallback: "Custom fields",
+  },
 ];
+
+/**
+ * Fila editable de un campo personalizado: las opciones de las listas se
+ * editan como texto separado por comas, más cómodo que un sub-iterador.
+ */
+interface FilaDeCampoPersonalizado {
+  value?: string;
+  label: string;
+  type?: CustomFieldType;
+  optionsText?: string;
+}
+
+const aFilasEditables = (campos: CustomFieldDefinition[] | undefined) =>
+  (campos ?? []).map((campo) => ({
+    value: campo.value,
+    label: campo.label,
+    type: campo.type,
+    optionsText: (campo.options ?? []).join(", "),
+  }));
+
+const aDefiniciones = (
+  filas: FilaDeCampoPersonalizado[] | undefined,
+): CustomFieldDefinition[] =>
+  (filas ?? [])
+    .filter((fila) => fila?.label)
+    .map((fila) => ({
+      // El value se conserva una vez generado: cambiarlo dejaría huérfanos
+      // los valores ya guardados en las fichas.
+      value: fila.value || toSlug(fila.label),
+      label: fila.label,
+      type: fila.type ?? "text",
+      options:
+        (fila.type ?? "text") === "list"
+          ? String(fila.optionsText ?? "")
+              .split(",")
+              .map((opcion) => opcion.trim())
+              .filter(Boolean)
+          : undefined,
+    }));
 
 /** Ensure every item in a { value, label } array has a value (slug from label). */
 const ensureValues = (items: { value?: string; label: string }[] | undefined) =>
@@ -116,20 +166,50 @@ const getCurrencyChoices = () => {
   }));
 };
 
-const transformFormValues = (data: Record<string, any>) => ({
-  config: {
-    title: data.title,
-    lightModeLogo: data.lightModeLogo,
-    darkModeLogo: data.darkModeLogo,
-    currency: data.currency,
-    companySectors: ensureValues(data.companySectors),
-    dealCategories: ensureValues(data.dealCategories),
-    taskTypes: ensureValues(data.taskTypes),
-    dealStages: ensureValues(data.dealStages),
-    dealPipelineStatuses: data.dealPipelineStatuses,
-    noteStatuses: ensureValues(data.noteStatuses),
-  } as ConfigurationContextValue,
-});
+/**
+ * Deja los embudos listos para guardar: genera los value que falten y limpia
+ * de pipelineStatuses las etapas que ya no existen en su embudo.
+ */
+const aEmbudosGuardables = (embudos: DealPipeline[] | undefined) =>
+  (embudos ?? [])
+    .filter((embudo) => embudo?.label)
+    .map((embudo) => {
+      const stages = (ensureValues(embudo.stages) ??
+        []) as DealPipeline["stages"];
+      const valores = new Set(stages.map((etapa) => etapa.value));
+      return {
+        value: embudo.value || toSlug(embudo.label),
+        label: embudo.label,
+        stages,
+        pipelineStatuses: (embudo.pipelineStatuses ?? []).filter((valor) =>
+          valores.has(valor),
+        ),
+      };
+    });
+
+const transformFormValues = (data: Record<string, any>) => {
+  const embudos = aEmbudosGuardables(data.dealPipelines);
+  return {
+    config: {
+      title: data.title,
+      lightModeLogo: data.lightModeLogo,
+      darkModeLogo: data.darkModeLogo,
+      currency: data.currency,
+      companySectors: ensureValues(data.companySectors),
+      dealCategories: ensureValues(data.dealCategories),
+      taskTypes: ensureValues(data.taskTypes),
+      dealPipelines: embudos,
+      // Derivados del primer embudo, por compatibilidad con configuraciones
+      // y lectores anteriores a los embudos múltiples.
+      dealStages: embudos[0]?.stages ?? [],
+      dealPipelineStatuses: embudos[0]?.pipelineStatuses ?? [],
+      noteStatuses: ensureValues(data.noteStatuses),
+      contactCustomFields: aDefiniciones(data.contactCustomFields),
+      companyCustomFields: aDefiniciones(data.companyCustomFields),
+      dealCustomFields: aDefiniciones(data.dealCustomFields),
+    } as ConfigurationContextValue,
+  };
+};
 
 export const SettingsPage = () => {
   const updateConfiguration = useConfigurationUpdater();
@@ -173,9 +253,11 @@ const SettingsForm = () => {
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
       taskTypes: config.taskTypes,
-      dealStages: config.dealStages,
-      dealPipelineStatuses: config.dealPipelineStatuses,
+      dealPipelines: config.dealPipelines,
       noteStatuses: config.noteStatuses,
+      contactCustomFields: aFilasEditables(config.contactCustomFields),
+      companyCustomFields: aFilasEditables(config.companyCustomFields),
+      dealCustomFields: aFilasEditables(config.dealCustomFields),
     }),
     [config],
   );
@@ -191,15 +273,10 @@ const SettingsFormFields = () => {
   const translate = useTranslate();
   const currencyChoices = useMemo(() => getCurrencyChoices(), []);
   const {
-    watch,
-    setValue,
     reset,
     formState: { isSubmitting },
   } = useFormContext();
 
-  const dealStages = watch("dealStages");
-  const dealPipelineStatuses: string[] = watch("dealPipelineStatuses") ?? [];
-  const stageDisplayName = translate("crm.settings.validation.entities.stages");
   const categoryDisplayName = translate(
     "crm.settings.validation.entities.categories",
   );
@@ -207,24 +284,6 @@ const SettingsFormFields = () => {
   const { data: deals } = useGetList("deals", {
     pagination: { page: 1, perPage: 1000 },
   });
-
-  const validateDealStages = useCallback(
-    (stages: { value: string; label: string }[] | undefined) =>
-      validateItemsInUse(stages, deals, "stage", stageDisplayName, {
-        duplicate: (displayName, duplicates) =>
-          translate("crm.settings.validation.duplicate", {
-            display_name: displayName,
-            items: duplicates.join(", "),
-          }),
-        inUse: (displayName, inUse) =>
-          translate("crm.settings.validation.in_use", {
-            display_name: displayName,
-            items: inUse.join(", "),
-          }),
-        validating: translate("crm.settings.validation.validating"),
-      }),
-    [deals, stageDisplayName, translate],
-  );
 
   const validateDealCategories = useCallback(
     (categories: { value: string; label: string }[] | undefined) =>
@@ -352,59 +411,12 @@ const SettingsFormFields = () => {
             <Separator />
 
             <h3 className="text-lg font-medium text-muted-foreground">
-              {translate("crm.settings.deals.stages")}
-            </h3>
-            <ArrayInput
-              source="dealStages"
-              label={false}
-              helperText={false}
-              validate={validateDealStages}
-            >
-              <SimpleFormIterator disableClear>
-                <TextInput source="label" label={false} />
-              </SimpleFormIterator>
-            </ArrayInput>
-
-            <Separator />
-
-            <h3 className="text-lg font-medium text-muted-foreground">
-              {translate("crm.settings.deals.pipeline_statuses")}
+              {translate("crm.settings.deals.pipelines")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {translate("crm.settings.deals.pipeline_help")}
+              {translate("crm.settings.deals.pipelines_help")}
             </p>
-            <div className="flex flex-wrap gap-2">
-              {dealStages?.map(
-                (stage: { value: string; label: string }, idx: number) => {
-                  const isSelected = dealPipelineStatuses.includes(stage.value);
-                  return (
-                    <Button
-                      key={idx}
-                      type="button"
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => {
-                        if (isSelected) {
-                          setValue(
-                            "dealPipelineStatuses",
-                            dealPipelineStatuses.filter(
-                              (s) => s !== stage.value,
-                            ),
-                          );
-                        } else {
-                          setValue("dealPipelineStatuses", [
-                            ...dealPipelineStatuses,
-                            stage.value,
-                          ]);
-                        }
-                      }}
-                    >
-                      {stage.label || stage.value}
-                    </Button>
-                  );
-                },
-              )}
-            </div>
+            <EditorDeEmbudos deals={deals} />
 
             <Separator />
 
@@ -462,6 +474,37 @@ const SettingsFormFields = () => {
             </ArrayInput>
           </CardContent>
         </Card>
+
+        {/* Custom fields */}
+        <Card id="custom-fields">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              {translate("crm.settings.sections.custom_fields")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {translate("crm.settings.custom_fields.help")}
+            </p>
+
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("resources.contacts.name", { smart_count: 2 })}
+            </h3>
+            <CustomFieldsEditor source="contactCustomFields" />
+
+            <Separator />
+
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("resources.companies.name", { smart_count: 2 })}
+            </h3>
+            <CustomFieldsEditor source="companyCustomFields" />
+
+            <Separator />
+
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("resources.deals.name", { smart_count: 2 })}
+            </h3>
+            <CustomFieldsEditor source="dealCustomFields" />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Sticky save button */}
@@ -503,6 +546,204 @@ const SettingsFormFields = () => {
           </div>
         </div>
       </div>
+    </div>
+  );
+};
+
+/**
+ * Editor de los campos personalizados de una entidad: etiqueta, tipo y —para
+ * el tipo lista— las opciones separadas por comas.
+ */
+const CustomFieldsEditor = ({ source }: { source: string }) => {
+  const translate = useTranslate();
+  const tipos = [
+    { id: "text", name: translate("crm.custom_fields.types.text") },
+    { id: "number", name: translate("crm.custom_fields.types.number") },
+    { id: "date", name: translate("crm.custom_fields.types.date") },
+    { id: "list", name: translate("crm.custom_fields.types.list") },
+    { id: "checkbox", name: translate("crm.custom_fields.types.checkbox") },
+  ];
+
+  return (
+    <ArrayInput source={source} label={false} helperText={false}>
+      <SimpleFormIterator inline disableReordering disableClear>
+        <TextInput
+          source="label"
+          label={false}
+          helperText={false}
+          placeholder={translate("crm.custom_fields.field_label")}
+          className="flex-1"
+        />
+        <SelectInput
+          source="type"
+          label={false}
+          helperText={false}
+          choices={tipos}
+          translateChoice={false}
+          defaultValue="text"
+          className="w-44 min-w-44"
+        />
+        <TextInput
+          source="optionsText"
+          label={false}
+          helperText={false}
+          placeholder={translate("crm.custom_fields.options_hint")}
+          className="flex-1"
+        />
+      </SimpleFormIterator>
+    </ArrayInput>
+  );
+};
+
+/**
+ * Editor de los embudos de oportunidades: cada uno con su nombre, sus etapas
+ * y qué etapas cuentan como parte del pipeline. El nivel exterior se maneja a
+ * mano (agregar/quitar embudos con setValue) porque los iteradores de
+ * formulario no se pueden anidar; las etapas de cada embudo sí usan el
+ * iterador normal con una ruta absoluta.
+ */
+const EditorDeEmbudos = ({ deals }: { deals?: RaRecord[] }) => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const { watch, setValue } = useFormContext();
+  const embudos: DealPipeline[] = watch("dealPipelines") ?? [];
+  const stageDisplayName = translate("crm.settings.validation.entities.stages");
+
+  const validarEtapasDelEmbudo = useCallback(
+    (valorDelEmbudo: string) =>
+      (etapas: { value: string; label: string }[] | undefined) =>
+        validateItemsInUse(
+          etapas,
+          deals?.filter(
+            (deal) => (deal.pipeline ?? "ventas") === valorDelEmbudo,
+          ),
+          "stage",
+          stageDisplayName,
+          {
+            duplicate: (displayName, duplicates) =>
+              translate("crm.settings.validation.duplicate", {
+                display_name: displayName,
+                items: duplicates.join(", "),
+              }),
+            inUse: (displayName, inUse) =>
+              translate("crm.settings.validation.in_use", {
+                display_name: displayName,
+                items: inUse.join(", "),
+              }),
+            validating: translate("crm.settings.validation.validating"),
+          },
+        ),
+    [deals, stageDisplayName, translate],
+  );
+
+  const agregarEmbudo = () => {
+    setValue("dealPipelines", [
+      ...embudos,
+      {
+        value: "",
+        label: "",
+        stages: defaultConfiguration.dealStages,
+        pipelineStatuses: defaultConfiguration.dealPipelineStatuses,
+      },
+    ]);
+  };
+
+  const quitarEmbudo = (indice: number) => {
+    const embudo = embudos[indice];
+    const enUso = deals?.some(
+      (deal) => (deal.pipeline ?? "ventas") === embudo.value,
+    );
+    if (enUso) {
+      notify("crm.settings.deals.pipeline_in_use", {
+        type: "error",
+        messageArgs: { name: embudo.label || embudo.value },
+      });
+      return;
+    }
+    setValue(
+      "dealPipelines",
+      embudos.filter((_, i) => i !== indice),
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      {embudos.map((embudo, indice) => (
+        <div key={indice} className="rounded-lg border p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <TextInput
+              source={`dealPipelines.${indice}.label`}
+              label={false}
+              helperText={false}
+              placeholder={translate("crm.settings.deals.pipeline_name")}
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={translate("crm.settings.deals.remove_pipeline")}
+              disabled={embudos.length <= 1}
+              onClick={() => quitarEmbudo(indice)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <h4 className="text-sm font-medium text-muted-foreground">
+            {translate("crm.settings.deals.stages")}
+          </h4>
+          <ArrayInput
+            source={`dealPipelines.${indice}.stages`}
+            label={false}
+            helperText={false}
+            validate={validarEtapasDelEmbudo(embudo.value)}
+          >
+            <SimpleFormIterator disableClear>
+              <TextInput source="label" label={false} />
+            </SimpleFormIterator>
+          </ArrayInput>
+
+          <h4 className="text-sm font-medium text-muted-foreground">
+            {translate("crm.settings.deals.pipeline_statuses")}
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            {translate("crm.settings.deals.pipeline_help")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {(embudo.stages ?? []).map((etapa, idx) => {
+              const valor = etapa.value || toSlug(etapa.label ?? "");
+              const seleccionada = (embudo.pipelineStatuses ?? []).includes(
+                valor,
+              );
+              return (
+                <Button
+                  key={idx}
+                  type="button"
+                  variant={seleccionada ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const actuales = embudo.pipelineStatuses ?? [];
+                    setValue(
+                      `dealPipelines.${indice}.pipelineStatuses`,
+                      seleccionada
+                        ? actuales.filter((estado) => estado !== valor)
+                        : [...actuales, valor],
+                    );
+                  }}
+                >
+                  {etapa.label || valor}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      <Button type="button" variant="outline" size="sm" onClick={agregarEmbudo}>
+        <Plus className="h-4 w-4 mr-1" />
+        {translate("crm.settings.deals.add_pipeline")}
+      </Button>
     </div>
   );
 };

@@ -1,7 +1,13 @@
 import { useMemo } from "react";
 import { useStore } from "ra-core";
 
-import type { DealStage, LabeledValue, NoteStatus } from "../types";
+import type {
+  CustomFieldDefinition,
+  DealPipeline,
+  DealStage,
+  LabeledValue,
+  NoteStatus,
+} from "../types";
 import { defaultConfiguration } from "./defaultConfiguration";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
@@ -10,13 +16,25 @@ export interface ConfigurationContextValue {
   companySectors: LabeledValue[];
   currency: string;
   dealCategories: LabeledValue[];
+  /**
+   * DERIVADOS de dealPipelines al leer la configuración: dealStages es la
+   * unión de las etapas de todos los embudos (para resolver etiquetas desde
+   * cualquier pantalla) y dealPipelineStatuses la unión de sus estados. Se
+   * conservan porque muchos consumidores (panel, fichas) solo necesitan eso.
+   */
   dealPipelineStatuses: string[];
   dealStages: DealStage[];
+  /** Los embudos de la organización, cada uno con sus etapas. */
+  dealPipelines: DealPipeline[];
   noteStatuses: NoteStatus[];
   taskTypes: LabeledValue[];
   title: string;
   darkModeLogo: string;
   lightModeLogo: string;
+  /** Campos personalizados por entidad, definidos por la organización. */
+  contactCustomFields: CustomFieldDefinition[];
+  companyCustomFields: CustomFieldDefinition[];
+  dealCustomFields: CustomFieldDefinition[];
 }
 
 export const useConfigurationContext = () => {
@@ -40,8 +58,42 @@ export const useConfigurationContext = () => {
         ? valor
         : ((valor as { src?: string })?.src ?? "");
 
+    // Retrocompatibilidad: una configuración guardada antes de los embudos
+    // múltiples trae dealStages/dealPipelineStatuses pero no dealPipelines.
+    // Se sintetiza un embudo «Ventas» con esas etapas, que es también el
+    // valor por defecto de la columna `pipeline` de las oportunidades.
+    const embudos: DealPipeline[] =
+      Array.isArray(combinada.dealPipelines) && combinada.dealPipelines.length
+        ? combinada.dealPipelines
+        : [
+            {
+              value: "ventas",
+              label: "Ventas",
+              stages: combinada.dealStages,
+              pipelineStatuses: combinada.dealPipelineStatuses,
+            },
+          ];
+
+    // Derivados para los consumidores que solo resuelven etiquetas o estados
+    // sin importar el embudo: la unión de todas las etapas (la primera
+    // aparición de un value gana) y de todos los estados.
+    const etapasVistas = new Set<string>();
+    const todasLasEtapas = embudos
+      .flatMap((embudo) => embudo.stages)
+      .filter((etapa) => {
+        if (etapasVistas.has(etapa.value)) return false;
+        etapasVistas.add(etapa.value);
+        return true;
+      });
+    const todosLosEstados = [
+      ...new Set(embudos.flatMap((embudo) => embudo.pipelineStatuses)),
+    ];
+
     return {
       ...combinada,
+      dealPipelines: embudos,
+      dealStages: todasLasEtapas,
+      dealPipelineStatuses: todosLosEstados,
       darkModeLogo: comoUrl(combinada.darkModeLogo),
       lightModeLogo: comoUrl(combinada.lightModeLogo),
     };

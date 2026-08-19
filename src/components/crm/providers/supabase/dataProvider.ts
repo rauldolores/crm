@@ -72,6 +72,121 @@ const processCompanyLogo = async (params: any) => {
   };
 };
 
+/**
+ * Búsquedas ya sincronizadas con el directorio en esta carga de página. Los
+ * miembros de una organización cambian poco: repetir la sincronización en
+ * cada tecleo solo sumaría latencia al selector.
+ */
+const sincronizacionesHechas = new Set<string>();
+
+/**
+ * Pide al servidor que dé de alta en `sales` a los miembros de la
+ * organización que aún no tienen ficha (ver /api/crm/comerciales/sincronizar).
+ *
+ * Sin esto, "responsable de venta" solo podía ofrecer a quienes ya habían
+ * iniciado sesión en el CRM al menos una vez, porque la ficha de `sales` se
+ * crea al primer acceso. KontrolIA Auth conoce a todos los miembros desde el
+ * alta. Es tolerante a fallos: si la sincronización no responde, el selector
+ * sigue funcionando con las fichas locales.
+ */
+const sincronizarComerciales = async (texto: string) => {
+  if (sincronizacionesHechas.has(texto)) return;
+
+  const token = await getKontroliaAccessToken();
+  if (!token) return;
+
+  const respuesta = await fetch("/api/crm/comerciales/sincronizar", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ buscar: texto || undefined }),
+  }).catch(() => null);
+
+  if (respuesta?.ok) sincronizacionesHechas.add(texto);
+};
+
+/**
+ * Lista de comerciales para el selector de "responsable de venta": primero se
+ * sincroniza el directorio de KontrolIA Auth hacia `sales`, y después se
+ * consulta la base local como cualquier otro recurso, conservando filtros,
+ * orden y paginación nativos.
+ */
+const getSalesList = async (
+  baseDataProvider: DataProvider,
+  params: GetListParams,
+) => {
+  const { q, ...filtro } = params.filter ?? {};
+  const texto = typeof q === "string" ? q.trim() : "";
+
+  await sincronizarComerciales(texto);
+
+  // El buscador del selector manda `q`, que en la tabla sales no tiene una
+  // columna de texto completo: se traduce a un OR sobre nombre y correo.
+  const filtroConBusqueda = texto
+    ? {
+        ...filtro,
+        "@or": {
+          "first_name@ilike": texto,
+          "last_name@ilike": texto,
+          "email@ilike": texto,
+        },
+      }
+    : filtro;
+
+  return baseDataProvider.getList("sales", {
+    ...params,
+    filter: filtroConBusqueda,
+  });
+};
+
+// La configuración es una fila por organización, y el RLS ya limita la tabla
+// a la organización activa. Por eso no se pide por id (antes era el singleton
+// `id: 1`): se pide la única fila visible, y así el frontend no necesita
+// conocer el identificador de la organización.
+const leerConfiguracion = async (): Promise<ConfigurationContextValue> => {
+  const { data, error } = await getSupabaseClient()
+    .from("configuration")
+    .select("config")
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return (data?.config as ConfigurationContextValue) ?? {};
+};
+
+const guardarConfiguracion = async (
+  config: ConfigurationContextValue,
+): Promise<ConfigurationContextValue> => {
+  // Los logos se procesan aquí y no en un callback de ciclo de vida del
+  // data provider: al escribir con el cliente de Supabase directamente,
+  // esos callbacks no se ejecutan.
+  const configConLogos: ConfigurationContextValue = {
+    ...config,
+    lightModeLogo: await processConfigLogo(config.lightModeLogo),
+    darkModeLogo: await processConfigLogo(config.darkModeLogo),
+  };
+
+  // Se usa upsert sin indicar organization_id: lo rellena el valor por
+  // defecto de la columna a partir del token, de modo que un cliente no
+  // puede escribir en la configuración de otra organización.
+  const { data, error } = await getSupabaseClient()
+    .from("configuration")
+    .upsert({ config: configConLogos }, { onConflict: "organization_id" })
+    .select("config")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data.config as ConfigurationContextValue;
+};
+
 const getDataProviderWithCustomMethods = () => {
   const baseDataProvider = getBaseDataProvider();
 
@@ -83,6 +198,9 @@ const getDataProviderWithCustomMethods = () => {
       }
       if (resource === "contacts") {
         return baseDataProvider.getList("contacts_summary", params);
+      }
+      if (resource === "sales") {
+        return getSalesList(baseDataProvider, params);
       }
       if (resource === "activity_log") {
         const { data, total } = await baseDataProvider.getList(
@@ -111,8 +229,23 @@ const getDataProviderWithCustomMethods = () => {
       if (resource === "contacts") {
         return baseDataProvider.getOne("contacts_summary", params);
       }
+      // La configuración es una fila por organización SIN columna id (su
+      // clave es organization_id, que impone el RLS/puente). La página de
+      // Ajustes edita con un id sintético; pedir `id=eq.1` a la base
+      // devolvía 400 desde la multi-tenencia.
+      if (resource === "configuration") {
+        const config = await leerConfiguracion();
+        return { data: { id: params.id, config } as any };
+      }
 
       return baseDataProvider.getOne(resource, params);
+    },
+    async update(resource: string, params: any) {
+      if (resource === "configuration") {
+        const config = await guardarConfiguracion(params.data.config);
+        return { data: { id: params.id, config } as any };
+      }
+      return baseDataProvider.update(resource, params);
     },
 
     async signUp({ email, password, first_name, last_name }: SignUpData) {
@@ -173,7 +306,7 @@ const getDataProviderWithCustomMethods = () => {
     async unarchiveDeal(deal: Deal) {
       // get all deals where stage is the same as the deal to unarchive
       const { data: deals } = await baseDataProvider.getList<Deal>("deals", {
-        filter: { stage: deal.stage },
+        filter: { stage: deal.stage, pipeline: deal.pipeline },
         pagination: { page: 1, perPage: 1000 },
         sort: { field: "index", order: "ASC" },
       });
@@ -214,49 +347,13 @@ const getDataProviderWithCustomMethods = () => {
 
       return data;
     },
-    // La configuración es una fila por organización, y el RLS ya limita la tabla
-    // a la organización activa. Por eso no se pide por id (antes era el
-    // singleton `id: 1`): se pide la única fila visible, y así el frontend no
-    // necesita conocer el identificador de la organización.
     async getConfiguration(): Promise<ConfigurationContextValue> {
-      const { data, error } = await getSupabaseClient()
-        .from("configuration")
-        .select("config")
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        throw error;
-      }
-
-      return (data?.config as ConfigurationContextValue) ?? {};
+      return leerConfiguracion();
     },
     async updateConfiguration(
       config: ConfigurationContextValue,
     ): Promise<ConfigurationContextValue> {
-      // Los logos se procesan aquí y no en un callback de ciclo de vida del
-      // data provider: al escribir con el cliente de Supabase directamente,
-      // esos callbacks no se ejecutan.
-      const configConLogos: ConfigurationContextValue = {
-        ...config,
-        lightModeLogo: await processConfigLogo(config.lightModeLogo),
-        darkModeLogo: await processConfigLogo(config.darkModeLogo),
-      };
-
-      // Se usa upsert sin indicar organization_id: lo rellena el valor por
-      // defecto de la columna a partir del token, de modo que un cliente no
-      // puede escribir en la configuración de otra organización.
-      const { data, error } = await getSupabaseClient()
-        .from("configuration")
-        .upsert({ config: configConLogos }, { onConflict: "organization_id" })
-        .select("config")
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return data.config as ConfigurationContextValue;
+      return guardarConfiguracion(config);
     },
   } satisfies DataProvider;
 };

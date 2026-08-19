@@ -16,7 +16,16 @@ import { SelectAllButton } from "@/components/admin/select-all-button";
 import { SortButton } from "@/components/admin/sort-button";
 import { Card } from "@/components/ui/card";
 
-import type { Company, Contact, Sale, Tag } from "../types";
+import type {
+  Company,
+  Contact,
+  CustomFieldDefinition,
+  Sale,
+  Tag,
+} from "../types";
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import { aplanarCamposPersonalizados } from "../misc/camposPersonalizadosCsv";
+import { VistasGuardadas } from "../misc/VistasGuardadas";
 import { BulkTagButton } from "./BulkTagButton";
 import { ContactEmpty } from "./ContactEmpty";
 import { ContactImportButton } from "./ContactImportButton";
@@ -35,16 +44,16 @@ import { MobileContent } from "../layout/MobileContent";
 
 export const ContactList = () => {
   const { identity } = useGetIdentity();
+  const { contactCustomFields } = useConfigurationContext();
 
   if (!identity) return null;
 
   return (
     <List
-      title={false}
       actions={<ContactListActions />}
       perPage={25}
       sort={{ field: "last_seen", order: "DESC" }}
-      exporter={exporter}
+      exporter={construirExportador(contactCustomFields)}
     >
       <ContactListLayoutDesktop />
     </List>
@@ -86,22 +95,24 @@ const ContactBulkActionButtons = () => (
 
 const ContactListActions = () => (
   <TopToolbar>
+    <VistasGuardadas resource="contacts" />
     <SortButton fields={["first_name", "last_name", "last_seen"]} />
     <ContactImportButton />
-    <ExportButton exporter={exporter} />
+    <ExportButton />
     <CreateButton />
   </TopToolbar>
 );
 
 export const ContactListMobile = () => {
   const { identity } = useGetIdentity();
+  const { contactCustomFields } = useConfigurationContext();
   if (!identity) return null;
 
   return (
     <InfiniteListBase
       perPage={25}
       sort={{ field: "last_seen", order: "DESC" }}
-      exporter={exporter}
+      exporter={construirExportador(contactCustomFields)}
       queryOptions={{
         onError: () => {
           /* Disable error notification as ContactListLayoutMobile handles it */
@@ -138,49 +149,64 @@ const ContactListLayoutMobile = () => {
   );
 };
 
-const exporter: Exporter<Contact> = async (records, fetchRelatedRecords) => {
-  const companies = await fetchRelatedRecords<Company>(
-    records,
-    "company_id",
-    "companies",
-  );
-  const sales = await fetchRelatedRecords<Sale>(records, "sales_id", "sales");
-  const tags = await fetchRelatedRecords<Tag>(records, "tags", "tags");
+/**
+ * El exportador se construye con los campos personalizados de la
+ * organización: cada campo sale como una columna propia, con su etiqueta como
+ * encabezado, en lugar del objeto JSON crudo.
+ */
+const construirExportador =
+  (camposPersonalizados: CustomFieldDefinition[]): Exporter<Contact> =>
+  async (records, fetchRelatedRecords) => {
+    const companies = await fetchRelatedRecords<Company>(
+      records,
+      "company_id",
+      "companies",
+    );
+    const sales = await fetchRelatedRecords<Sale>(records, "sales_id", "sales");
+    const tags = await fetchRelatedRecords<Tag>(records, "tags", "tags");
 
-  const contacts = records.map((contact) => {
-    const exportedContact = {
-      ...contact,
-      company:
-        contact.company_id != null
-          ? companies[contact.company_id].name
-          : undefined,
-      sales:
-        contact.sales_id != null
-          ? `${sales[contact.sales_id].first_name} ${sales[contact.sales_id].last_name}`
-          : undefined,
-      tags: contact.tags.map((tagId) => tags[tagId].name).join(", "),
-      email_work: contact.email_jsonb?.find((email) => email.type === "Work")
-        ?.email,
-      email_home: contact.email_jsonb?.find((email) => email.type === "Home")
-        ?.email,
-      email_other: contact.email_jsonb?.find((email) => email.type === "Other")
-        ?.email,
-      email_jsonb: JSON.stringify(contact.email_jsonb),
-      email_fts: undefined,
-      phone_work: contact.phone_jsonb?.find((phone) => phone.type === "Work")
-        ?.number,
-      phone_home: contact.phone_jsonb?.find((phone) => phone.type === "Home")
-        ?.number,
-      phone_other: contact.phone_jsonb?.find((phone) => phone.type === "Other")
-        ?.number,
-      phone_jsonb: JSON.stringify(contact.phone_jsonb),
-      phone_fts: undefined,
-    };
-    delete exportedContact.email_fts;
-    delete exportedContact.phone_fts;
-    return exportedContact;
-  });
-  return jsonExport(contacts, {}, (_err: any, csv: string) => {
-    downloadCSV(csv, "contacts");
-  });
-};
+    const contacts = records.map((contact) => {
+      const exportedContact = {
+        ...contact,
+        ...aplanarCamposPersonalizados(
+          camposPersonalizados,
+          contact.custom_fields,
+        ),
+        custom_fields: undefined,
+        company:
+          contact.company_id != null
+            ? companies[contact.company_id].name
+            : undefined,
+        sales:
+          contact.sales_id != null
+            ? `${sales[contact.sales_id].first_name} ${sales[contact.sales_id].last_name}`
+            : undefined,
+        tags: contact.tags.map((tagId) => tags[tagId].name).join(", "),
+        email_work: contact.email_jsonb?.find((email) => email.type === "Work")
+          ?.email,
+        email_home: contact.email_jsonb?.find((email) => email.type === "Home")
+          ?.email,
+        email_other: contact.email_jsonb?.find(
+          (email) => email.type === "Other",
+        )?.email,
+        email_jsonb: JSON.stringify(contact.email_jsonb),
+        email_fts: undefined,
+        phone_work: contact.phone_jsonb?.find((phone) => phone.type === "Work")
+          ?.number,
+        phone_home: contact.phone_jsonb?.find((phone) => phone.type === "Home")
+          ?.number,
+        phone_other: contact.phone_jsonb?.find(
+          (phone) => phone.type === "Other",
+        )?.number,
+        phone_jsonb: JSON.stringify(contact.phone_jsonb),
+        phone_fts: undefined,
+      };
+      delete exportedContact.email_fts;
+      delete exportedContact.phone_fts;
+      delete exportedContact.custom_fields;
+      return exportedContact;
+    });
+    return jsonExport(contacts, {}, (_err: any, csv: string) => {
+      downloadCSV(csv, "contacts");
+    });
+  };

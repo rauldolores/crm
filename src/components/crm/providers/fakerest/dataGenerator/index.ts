@@ -19,6 +19,9 @@ export default (): Db => {
   db.deals = generateDeals(db);
   db.deal_notes = generateDealNotes(db);
   db.tasks = generateTasks(db);
+  db.saved_views = [];
+  db.webhooks = [];
+  db.automations = [];
   db.configuration = [
     {
       id: 1,

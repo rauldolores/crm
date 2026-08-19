@@ -14,6 +14,7 @@ import {
   switchKontroliaOrganization,
 } from "@/lib/kontrolia-auth/client";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
+import { clearAuthCache } from "../providers/supabase/authProvider";
 
 interface Organizacion {
   id: string;
@@ -71,9 +72,13 @@ export const useOrganizaciones = () => {
     setCambiando(true);
     try {
       await switchKontroliaOrganization(id);
+    } finally {
+      // La recarga va en finally: si el refresco del token falla con el
+      // contexto ya cambiado, quedarse sin recargar dejaba la interfaz
+      // "muerta" hasta un F5 manual. Antes se limpia la caché de la sesión,
+      // porque la ficha de comercial cacheada es de la organización anterior.
+      clearAuthCache();
       window.location.reload();
-    } catch {
-      setCambiando(false);
     }
   };
 
