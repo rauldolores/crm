@@ -36,6 +36,7 @@ const CON_DUENO = new Set([
   "deals",
   "deal_notes",
   "sales",
+  "public_forms",
   "saved_views",
   "webhooks",
   "tags",

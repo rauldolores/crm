@@ -20,6 +20,8 @@ alter table public.deals enable row level security;
 alter table public.deal_notes enable row level security;
 alter table public.sales enable row level security;
 alter table public.automations enable row level security;
+alter table public.public_forms enable row level security;
+alter table public.public_form_submissions enable row level security;
 alter table public.saved_views enable row level security;
 alter table public.webhooks enable row level security;
 alter table public.tags enable row level security;
@@ -136,6 +138,24 @@ create policy "Webhooks are updated within the organization" on public.webhooks
     with check (organization_id = public.current_organization_id());
 create policy "Webhooks are deleted within the organization" on public.webhooks
     for delete to authenticated
+    using (organization_id = public.current_organization_id());
+
+create policy "Public forms are scoped to the organization" on public.public_forms
+    for select to authenticated
+    using (organization_id = public.current_organization_id());
+create policy "Public forms are created in the organization" on public.public_forms
+    for insert to authenticated
+    with check (organization_id = public.current_organization_id());
+create policy "Public forms are updated within the organization" on public.public_forms
+    for update to authenticated
+    using (organization_id = public.current_organization_id())
+    with check (organization_id = public.current_organization_id());
+create policy "Public forms are deleted within the organization" on public.public_forms
+    for delete to authenticated
+    using (organization_id = public.current_organization_id());
+
+create policy "Public form submissions are scoped to the organization" on public.public_form_submissions
+    for select to authenticated
     using (organization_id = public.current_organization_id());
 
 create policy "Saved views are scoped to the organization" on public.saved_views

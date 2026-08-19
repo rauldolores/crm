@@ -200,6 +200,18 @@ export type Automation = {
   created_at?: string;
 } & Pick<RaRecord, "id">;
 
+/**
+ * Formulario público de captación: un enlace o iframe que el cliente pega en
+ * su propia web y que crea contactos solo, sin sesión de por medio. `slug`
+ * es la clave pública, no un id secuencial.
+ */
+export type PublicForm = {
+  name: string;
+  slug: string;
+  active: boolean;
+  created_at?: string;
+} & Pick<RaRecord, "id">;
+
 /** Webhook saliente de la organización. */
 export type Webhook = {
   url: string;

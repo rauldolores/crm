@@ -1,4 +1,11 @@
-import { Mail, MessageCircle, Phone, StickyNote, Users } from "lucide-react";
+import {
+  Globe,
+  Mail,
+  MessageCircle,
+  Phone,
+  StickyNote,
+  Users,
+} from "lucide-react";
 import type { ComponentType } from "react";
 
 /**
@@ -16,6 +23,7 @@ const activityTypeIcons: Record<
   meeting: Users,
   whatsapp: MessageCircle,
   email: Mail,
+  web: Globe,
 };
 
 export const getActivityTypeIcon = (

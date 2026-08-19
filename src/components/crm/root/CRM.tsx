@@ -29,6 +29,7 @@ import { ChangelogPage } from "../misc/ChangelogPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { InformesPage } from "../misc/InformesPage";
+import { FormulariosPage } from "../misc/FormulariosPage";
 import {
   getAuthProvider as defaultAuthProviderBuilder,
   getDataProvider as defaultDataProviderBuilder,
@@ -271,6 +272,7 @@ const DesktopAdmin = (
           element={<AutomatizacionesPage />}
         />
         <Route path={InformesPage.path} element={<InformesPage />} />
+        <Route path={FormulariosPage.path} element={<FormulariosPage />} />
       </CustomRoutes>
       <Resource name="deals" {...deals} />
       <Resource name="contacts" {...contacts} />
@@ -344,6 +346,7 @@ const MobileAdmin = (
             element={<AutomatizacionesPage />}
           />
           <Route path={InformesPage.path} element={<InformesPage />} />
+          <Route path={FormulariosPage.path} element={<FormulariosPage />} />
         </CustomRoutes>
         <Resource
           name="contacts"

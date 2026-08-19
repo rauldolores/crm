@@ -102,6 +102,7 @@ export const defaultNoteTypes = [
   { value: "meeting", label: "Reunión" },
   { value: "whatsapp", label: "WhatsApp" },
   { value: "email", label: "Correo" },
+  { value: "web", label: "Formulario web" },
 ];
 
 export const defaultTaskTypes = [

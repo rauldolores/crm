@@ -1,12 +1,13 @@
 import {
+  ChartColumn,
   FileText,
+  Globe,
   Import,
   Settings,
   User,
   Users,
   Webhook,
   Zap,
-  ChartColumn,
 } from "lucide-react";
 import { CanAccess, useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
@@ -21,6 +22,7 @@ import { ChangelogPage } from "../misc/ChangelogPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { InformesPage } from "../misc/InformesPage";
+import { FormulariosPage } from "../misc/FormulariosPage";
 
 /**
  * Cabecera superior del escritorio.
@@ -57,6 +59,9 @@ const Header = () => {
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <AutomatizacionesMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <FormulariosMenu />
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <ApiMenu />
@@ -145,6 +150,22 @@ const AutomatizacionesMenu = () => {
       <Link to={AutomatizacionesPage.path} className="flex items-center gap-2">
         <Zap />
         {translate("crm.automations.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const FormulariosMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<FormulariosMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={FormulariosPage.path} className="flex items-center gap-2">
+        <Globe />
+        {translate("crm.public_forms.title")}
       </Link>
     </DropdownMenuItem>
   );

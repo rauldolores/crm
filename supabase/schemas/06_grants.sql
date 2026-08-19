@@ -184,3 +184,7 @@ grant select, insert, update, delete on table public.webhooks to anon, authentic
 grant usage, select on sequence public.webhooks_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table public.automations to anon, authenticated, service_role;
 grant usage, select on sequence public.automations_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table public.public_forms to anon, authenticated, service_role;
+grant usage, select on sequence public.public_forms_id_seq to anon, authenticated, service_role;
+grant select, insert on table public.public_form_submissions to anon, authenticated, service_role;
+grant usage, select on sequence public.public_form_submissions_id_seq to anon, authenticated, service_role;

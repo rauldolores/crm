@@ -462,6 +462,19 @@ export const spanishCrmMessages = {
         all: "Todo",
       },
     },
+    public_forms: {
+      title: "Formularios web",
+      intro:
+        "Un enlace o iframe que pegas en tu propia página web. Cuando alguien lo llena, se crea un contacto solo — nadie de tu equipo tiene que capturarlo a mano.",
+      add: "Agregar",
+      name_placeholder: "Nombre del formulario (ej. Contacto sitio web)",
+      empty: "Aún no hay formularios. Crea el primero arriba.",
+      open: "Abrir",
+      copy_link: "Copiar enlace",
+      copy_iframe: "Copiar iframe",
+      toggle: "Activar o desactivar",
+      deleted: "Formulario eliminado",
+    },
     automations: {
       title: "Automatizaciones",
       intro:

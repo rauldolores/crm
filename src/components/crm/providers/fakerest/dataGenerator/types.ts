@@ -6,6 +6,7 @@ import type {
   Deal,
   DealNote,
   Sale,
+  PublicForm,
   SavedView,
   Tag,
   Task,
@@ -21,6 +22,12 @@ export interface Db {
   deal_notes: DealNote[];
   sales: Sale[];
   automations: Automation[];
+  public_forms: PublicForm[];
+  public_form_submissions: {
+    id: number;
+    public_form_id: number;
+    created_at: string;
+  }[];
   saved_views: SavedView[];
   webhooks: Webhook[];
   tags: Tag[];

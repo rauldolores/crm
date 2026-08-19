@@ -191,3 +191,13 @@ Import `test-data/contacts.csv` via the Contacts page → Import button.
 - User deletion is not supported to avoid data loss; use account disabling instead
 - Filter operators must be supported by the `supabaseAdapter` when using FakeRest
 - Optional terse output for solo work: the `concise-dev` style ships at `.claude/styles/concise-dev.md`. To enable it just for yourself, copy it into `.claude/output-styles/` (or `~/.claude/output-styles/`) and run `/output-style concise-dev`, or set `"outputStyle": "concise-dev"` in your own `.claude/settings.local.json`. It is not enabled in the committed `settings.json`.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
