@@ -264,6 +264,32 @@ export const createDataProvider = ({
     mergeContacts: async (sourceId: Identifier, targetId: Identifier) => {
       return mergeContacts(sourceId, targetId, baseDataProvider);
     },
+    // Modo demostración: no hay servidor real que envíe nada, así que solo
+    // se registra la nota, igual que si el usuario la hubiera escrito a mano.
+    enviarCorreo: async (
+      contactId: Identifier,
+      asunto: string,
+      texto: string,
+    ) => {
+      await baseDataProvider.create("contact_notes", {
+        data: {
+          contact_id: contactId,
+          text: `${asunto}\n\n${texto}`,
+          type: "email",
+          date: new Date().toISOString(),
+        },
+      });
+    },
+    enviarWhatsapp: async (contactId: Identifier, mensaje: string) => {
+      await baseDataProvider.create("contact_notes", {
+        data: {
+          contact_id: contactId,
+          text: mensaje,
+          type: "whatsapp",
+          date: new Date().toISOString(),
+        },
+      });
+    },
     getConfiguration: async (): Promise<ConfigurationContextValue> => {
       const { data } = await baseDataProvider.getOne("configuration", {
         id: 1,

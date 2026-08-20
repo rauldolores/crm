@@ -90,6 +90,23 @@ const sincronizacionesHechas = new Set<string>();
  * alta. Es tolerante a fallos: si la sincronización no responde, el selector
  * sigue funcionando con las fichas locales.
  */
+/**
+ * POST autenticado a una ruta /api del propio CRM (no del puente de datos),
+ * con el token de KontrolIA Auth. Usado por las acciones que no son un CRUD
+ * de recurso (enviar un correo, enviar un WhatsApp).
+ */
+const llamarApiDelCrm = async (ruta: string, cuerpo: unknown) => {
+  const token = await getKontroliaAccessToken();
+  return fetch(ruta, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(cuerpo),
+  });
+};
+
 const sincronizarComerciales = async (texto: string) => {
   if (sincronizacionesHechas.has(texto)) return;
 
@@ -347,6 +364,29 @@ const getDataProviderWithCustomMethods = () => {
       }
 
       return data;
+    },
+    async enviarCorreo(contactId: Identifier, asunto: string, texto: string) {
+      const respuesta = await llamarApiDelCrm("/api/correos/enviar", {
+        contactId,
+        asunto,
+        texto,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudo enviar el correo");
+      }
+    },
+    async enviarWhatsapp(contactId: Identifier, mensaje: string) {
+      const respuesta = await llamarApiDelCrm("/api/whatsapp/enviar", {
+        contactId,
+        mensaje,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(
+          cuerpo.message || "No se pudo enviar el mensaje de WhatsApp",
+        );
+      }
     },
     async getConfiguration(): Promise<ConfigurationContextValue> {
       return leerConfiguracion();

@@ -5,11 +5,13 @@ import { MAIL_PROVIDERS } from "./mailProvider.const.ts";
 export const getOrCreateCompanyFromDomain = async ({
   domain,
   salesId,
+  organizationId,
   companyName,
   website,
 }: {
   domain: string;
   salesId: number;
+  organizationId: string;
   companyName: string;
   website: string;
 }) => {
@@ -23,6 +25,7 @@ export const getOrCreateCompanyFromDomain = async ({
     await supabaseAdmin
       .from("companies")
       .select("*")
+      .eq("organization_id", organizationId)
       .or(`website.eq.${website},name.eq.${companyName},name.eq.${domain}`)
       .maybeSingle();
   if (fetchCompanyError) {
@@ -35,9 +38,17 @@ export const getOrCreateCompanyFromDomain = async ({
     return existingCompany;
   }
 
+  // organization_id se pasa explícito: supabaseAdmin usa la clave de
+  // servicio, que no lleva JWT de usuario, así que el default de la columna
+  // (auth.jwt() ->> 'organization_id') se queda en null y viola el not null.
   const { data: newCompanies, error: createCompanyError } = await supabaseAdmin
     .from("companies")
-    .insert({ name: companyName, sales_id: salesId, website })
+    .insert({
+      organization_id: organizationId,
+      name: companyName,
+      sales_id: salesId,
+      website,
+    })
     .select();
   if (createCompanyError) {
     throw new Error(
@@ -52,6 +63,7 @@ export const getOrCreateContactFromEmailInfo = async ({
   firstName,
   lastName,
   salesId,
+  organizationId,
   domain,
   companyName,
   website,
@@ -60,6 +72,7 @@ export const getOrCreateContactFromEmailInfo = async ({
   firstName: string;
   lastName: string;
   salesId: number;
+  organizationId: string;
   domain: string;
   companyName: string;
   website: string;
@@ -69,6 +82,7 @@ export const getOrCreateContactFromEmailInfo = async ({
     await supabaseAdmin
       .from("contacts")
       .select("*")
+      .eq("organization_id", organizationId)
       .contains("email_jsonb", JSON.stringify([{ email }]))
       .maybeSingle();
   if (fetchContactError) {
@@ -84,14 +98,16 @@ export const getOrCreateContactFromEmailInfo = async ({
   const company = await getOrCreateCompanyFromDomain({
     domain,
     salesId,
+    organizationId,
     companyName,
     website,
   });
 
-  // Create the contact
+  // organization_id explícito: mismo motivo que en getOrCreateCompanyFromDomain.
   const { data: newContacts, error: createContactError } = await supabaseAdmin
     .from("contacts")
     .insert({
+      organization_id: organizationId,
       first_name: firstName,
       last_name: lastName,
       email_jsonb: [{ email, type: "Work" }],
@@ -158,6 +174,7 @@ export const addNoteToContact = async ({
     firstName,
     lastName,
     salesId: sales.id,
+    organizationId: sales.organization_id,
     domain,
     companyName,
     website,
@@ -186,12 +203,14 @@ export const addNoteToContact = async ({
     );
   }
 
-  // Add note to contact
+  // Add note to contact. organization_id explícito, mismo motivo que arriba.
   const { error: createNoteError } = await supabaseAdmin
     .from("contact_notes")
     .insert({
+      organization_id: sales.organization_id,
       contact_id: contact.id,
       text: noteContent,
+      type: "email",
       sales_id: sales.id,
       attachments,
     });

@@ -42,6 +42,25 @@ Deno.serve(async (req) => {
   const { FromFull, Attachments } = json;
   let { ToFull, TextBody, Subject } = json;
 
+  // Respuesta a un correo enviado desde el CRM (ver app/api/correos/enviar):
+  // el Reply-To llevaba un hash de hilo `contacto-<id>` en el MailboxHash, así
+  // que esta rama archiva la respuesta en esa misma ficha en vez de crear un
+  // contacto nuevo a partir del remitente (que aquí es el propio contacto, no
+  // un comercial).
+  const mailboxHash = (ToFull?.[0]?.MailboxHash ||
+    json.MailboxHash ||
+    "") as string;
+  const hiloContacto = mailboxHash.match(/^contacto-(\d+)$/);
+  if (hiloContacto) {
+    return await handleThreadedReply({
+      contactId: Number(hiloContacto[1]),
+      fromEmail: (FromFull?.Email || "").toLowerCase(),
+      subject: Subject,
+      textBody: TextBody,
+      attachmentsRaw: Attachments,
+    });
+  }
+
   const salesEmail = (FromFull.Email || "").toLowerCase();
   if (!salesEmail) {
     // Return a 403 to let Postmark know that it's no use to retry this request
@@ -131,6 +150,80 @@ Deno.serve(async (req) => {
 
   return new Response("OK");
 });
+
+/**
+ * Archiva una respuesta a un correo enviado desde el CRM. El id de contacto
+ * viene del hash de hilo, pero eso por sí solo no basta como prueba de
+ * identidad: cualquiera puede adivinar un id numérico y mandar un correo al
+ * hash correspondiente. Por eso se exige además que el remitente sea
+ * realmente uno de los correos del contacto — así el hash solo enruta, y
+ * quien demuestra ser el contacto es la dirección `From` real del mensaje.
+ */
+const handleThreadedReply = async ({
+  contactId,
+  fromEmail,
+  subject,
+  textBody,
+  attachmentsRaw,
+}: {
+  contactId: number;
+  fromEmail: string;
+  subject: string;
+  textBody: string;
+  // deno-lint-ignore no-explicit-any
+  attachmentsRaw: any;
+}) => {
+  if (!fromEmail) {
+    return new Response("Missing sender email", { status: 403 });
+  }
+
+  const { data: contact, error } = await supabaseAdmin
+    .from("contacts")
+    .select("id, organization_id, sales_id, email_jsonb")
+    .eq("id", contactId)
+    .maybeSingle();
+
+  if (error || !contact) {
+    return new Response(`Contact ${contactId} not found`, { status: 403 });
+  }
+
+  const correosDelContacto = (
+    (contact.email_jsonb ?? []) as { email: string }[]
+  ).map((e) => (e.email || "").toLowerCase());
+  if (!correosDelContacto.includes(fromEmail)) {
+    return new Response(
+      `Sender ${fromEmail} does not match contact ${contactId}`,
+      { status: 403 },
+    );
+  }
+
+  const attachments = await extractAndUploadAttachments(attachmentsRaw);
+
+  const { error: createNoteError } = await supabaseAdmin
+    .from("contact_notes")
+    .insert({
+      organization_id: contact.organization_id,
+      contact_id: contact.id,
+      text: getNoteContent(subject, textBody),
+      type: "email",
+      sales_id: contact.sales_id,
+      attachments,
+    });
+  if (createNoteError) {
+    console.error("threaded reply insert error", createNoteError);
+    return new Response(
+      `Could not add threaded reply to contact ${contactId}: ${createNoteError.message}`,
+      { status: 500 },
+    );
+  }
+
+  await supabaseAdmin
+    .from("contacts")
+    .update({ last_seen: new Date() })
+    .eq("id", contact.id);
+
+  return new Response("OK");
+};
 
 const checkRequestTypeAndHeaders = (req: Request) => {
   // Only allow known IP addresses
