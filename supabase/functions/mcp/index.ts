@@ -84,7 +84,7 @@ async function validateToken(req: Request): Promise<AuthInfo | null> {
 async function getSchemaData(): Promise<string> {
   const client = await pool.connect();
   try {
-    // Query 1: All columns from public schema
+    // Query 1: All columns from the crm schema
     const columnsResult = await client.queryObject<{
       table_name: string;
       column_name: string;
@@ -103,7 +103,7 @@ async function getSchemaData(): Promise<string> {
       FROM information_schema.columns c
       JOIN information_schema.tables t
         ON c.table_name = t.table_name AND c.table_schema = t.table_schema
-      WHERE c.table_schema = 'public'
+      WHERE c.table_schema = 'crm'
       ORDER BY c.table_name, c.ordinal_position
     `);
 
@@ -127,7 +127,7 @@ async function getSchemaData(): Promise<string> {
         ON src_att.attrelid = con.conrelid AND src_att.attnum = ANY(con.conkey)
       JOIN pg_catalog.pg_attribute tgt_att
         ON tgt_att.attrelid = con.confrelid AND tgt_att.attnum = ANY(con.confkey)
-      WHERE con.contype = 'f' AND nsp.nspname = 'public'
+      WHERE con.contype = 'f' AND nsp.nspname = 'crm'
       ORDER BY src.relname
     `);
 
@@ -223,6 +223,11 @@ async function executeQueryWithRLS(
     const claimsJson = JSON.stringify(jwtClaims);
 
     await client.queryObject("BEGIN");
+    // El SQL de esta herramienta usa nombres de tabla sin calificar (así lo
+    // documentan las descripciones de las tools), así que la conexión debe
+    // resolverlos contra crm — el esquema donde vive todo el CRM — en vez del
+    // "$user", public por defecto de la conexión cruda a Postgres.
+    await client.queryObject("SET LOCAL search_path TO crm, public");
     // set_config(..., is_local=true) is the parameterized equivalent of
     // SET LOCAL — avoids interpolating JWT claims into a SQL string.
     await client.queryObject(
