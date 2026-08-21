@@ -86,11 +86,11 @@ export const DealsChart = memo(() => {
   );
   return (
     <div className="flex flex-col">
-      <div className="flex items-center mb-4">
-        <div className="mr-3 flex">
-          <TrendingUp className="text-muted-foreground w-6 h-6" />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <TrendingUp className="size-5" />
         </div>
-        <h2 className="text-xl font-semibold text-muted-foreground">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground">
           {translate("crm.dashboard.deals_chart")}
         </h2>
       </div>

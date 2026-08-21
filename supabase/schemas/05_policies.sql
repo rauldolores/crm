@@ -28,6 +28,7 @@ alter table crm.tags enable row level security;
 alter table crm.tasks enable row level security;
 alter table crm.configuration enable row level security;
 alter table crm.favicons_excluded_domains enable row level security;
+alter table crm.tickets enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -228,3 +229,18 @@ create policy "Configuration is updated by organization admins" on crm.configura
 -- Lista técnica de dominios sin favicon utilizable: no pertenece a ninguna
 -- organización, así que se mantiene compartida.
 create policy "Enable access for authenticated users only" on crm.favicons_excluded_domains to authenticated using (true) with check (true);
+
+-- Tickets
+create policy "Tickets are scoped to the organization" on crm.tickets
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Tickets are created in the organization" on crm.tickets
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id());
+create policy "Tickets are updated within the organization" on crm.tickets
+    for update to authenticated
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Tickets are deleted within the organization" on crm.tickets
+    for delete to authenticated
+    using (organization_id = crm.current_organization_id());

@@ -336,6 +336,28 @@ export const spanishCrmMessages = {
           "Debes escribir una nota o adjuntar un archivo",
       },
     },
+    tickets: {
+      name: "Ticket |||| Tickets",
+      forcedCaseName: "Ticket",
+      fields: {
+        subject: "Asunto",
+        description: "Descripción",
+        status: "Estado",
+        contact_id: "Contacto",
+        company_id: "Empresa",
+        sales_id: "Responsable",
+        created_at: "Fecha de alta",
+      },
+      action: {
+        new: "Nuevo ticket",
+        create: "Crear ticket",
+        edit: "Editar ticket",
+      },
+      empty: {
+        title: "No hay tickets",
+        description: "Parece que tu lista de tickets está vacía.",
+      },
+    },
     sales: {
       name: "Usuario |||| Usuarios",
       fields: {
@@ -459,9 +481,6 @@ export const spanishCrmMessages = {
       me: "Yo",
       task_count: "%{smart_count} tarea |||| %{smart_count} tareas",
     },
-    changelog: {
-      title: "Novedades",
-    },
     reports: {
       title: "Informes",
       intro:
@@ -486,7 +505,7 @@ export const spanishCrmMessages = {
     public_forms: {
       title: "Formularios web",
       intro:
-        "Un enlace o iframe que pegas en tu propia página web. Cuando alguien lo llena, se crea un contacto solo — nadie de tu equipo tiene que capturarlo a mano.",
+        "Un enlace o iframe que pegas en tu propia página web. Según el tipo que elijas, cada envío crea un contacto o abre un ticket de soporte solo — nadie de tu equipo tiene que capturarlo a mano.",
       add: "Agregar",
       name_placeholder: "Nombre del formulario (ej. Contacto sitio web)",
       empty: "Aún no hay formularios. Crea el primero arriba.",
@@ -495,6 +514,10 @@ export const spanishCrmMessages = {
       copy_iframe: "Copiar iframe",
       toggle: "Activar o desactivar",
       deleted: "Formulario eliminado",
+      type: {
+        lead: "Captación de contactos",
+        ticket: "Ticket de soporte",
+      },
     },
     automations: {
       title: "Automatizaciones",
@@ -548,12 +571,17 @@ export const spanishCrmMessages = {
         example_pagination: "# paginación",
         write: "Para crear o modificar, envía JSON con POST o PATCH:",
         resources:
-          "Recursos disponibles: contacts, companies, deals, tasks, contact_notes, deal_notes, tags, sales (lectura). Todo queda aislado a tu organización automáticamente.",
+          "Recursos disponibles: contacts, companies, deals, tasks, contact_notes, deal_notes, tickets, tags, sales (lectura). Todo queda aislado a tu organización automáticamente.",
+      },
+      endpoints: {
+        title: "Recursos y ejemplos",
+        intro:
+          "Cada recurso admite las cuatro operaciones estándar en su propia dirección. Este es el ejemplo de un registro real de cada uno:",
       },
       webhooks: {
         title: "Webhooks",
         intro:
-          "Un webhook es una URL de tu sistema a la que Vinqulia avisa cada vez que se crea, cambia o elimina un contacto, empresa, oportunidad, tarea o nota. Sirve para conectar n8n, Zapier, Make o tu propio servidor.",
+          "Un webhook es una URL de tu sistema a la que Vinqulia avisa cada vez que se crea, cambia o elimina un contacto, empresa, oportunidad, tarea, nota o ticket. Sirve para conectar n8n, Zapier, Make o tu propio servidor.",
         add: "Agregar",
         empty: "Aún no hay webhooks. Agrega la URL de tu sistema para empezar.",
         created:
@@ -563,8 +591,22 @@ export const spanishCrmMessages = {
         toggle: "Activar o desactivar",
         copy_secret: "Copiar secreto",
         payload: "Cada aviso llega como POST con este cuerpo:",
+        events: "Eventos disponibles (uno por recurso, según lo que pase):",
         signature:
           "Verifica que el aviso es legítimo comparando la cabecera X-Vinqulia-Firma con el HMAC-SHA256 del cuerpo usando el secreto del webhook:",
+      },
+      mcp: {
+        title: "MCP (para asistentes de IA)",
+        intro:
+          "Vinqulia expone un servidor MCP para que un asistente de IA (como Claude) consulte y modifique tus datos por instrucciones en lenguaje natural. Conéctalo con esta dirección:",
+        auth: "La autenticación usa el mismo token de sesión de KontrolIA Auth. El servidor expone estas herramientas:",
+        tool_get_schema:
+          "obtiene las tablas, columnas y relaciones disponibles (siempre se llama primero).",
+        tool_query: "ejecuta una consulta SELECT de solo lectura.",
+        tool_mutate: "crea, modifica o elimina registros con SQL.",
+        tool_display_task_list:
+          "muestra una lista de tareas como una interfaz interactiva.",
+        tool_complete_task: "marca una tarea como hecha por su id.",
       },
     },
     saved_views: {
@@ -658,7 +700,6 @@ export const spanishCrmMessages = {
       title: "Importar datos",
     },
     settings: {
-      about: "Acerca de",
       companies: {
         sectors: "Sectores",
       },
@@ -740,9 +781,6 @@ export const spanishCrmMessages = {
         title: "Servidor MCP",
         description:
           "Usa esta dirección para conectar tu asistente de IA con los datos de tu CRM mediante el Model Context Protocol (MCP).",
-      },
-      password: {
-        change: "Cambiar la contraseña",
       },
       password_reset_sent:
         "Te hemos enviado un correo para restablecer tu contraseña",

@@ -10,6 +10,7 @@ import type {
   SavedView,
   Tag,
   Task,
+  Ticket,
   Webhook,
 } from "../../../types";
 import type { ConfigurationContextValue } from "../../../root/ConfigurationContext";
@@ -32,5 +33,6 @@ export interface Db {
   webhooks: Webhook[];
   tags: Tag[];
   tasks: Task[];
+  tickets: Ticket[];
   configuration: Array<{ id: number; config: ConfigurationContextValue }>;
 }

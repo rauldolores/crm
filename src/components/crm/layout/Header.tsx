@@ -1,6 +1,4 @@
 import {
-  ChartColumn,
-  FileText,
   Globe,
   Import,
   Settings,
@@ -18,10 +16,8 @@ import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 import { ImportPage } from "../misc/ImportPage";
-import { ChangelogPage } from "../misc/ChangelogPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
-import { InformesPage } from "../misc/InformesPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 
 /**
@@ -38,7 +34,7 @@ import { FormulariosPage } from "../misc/FormulariosPage";
  */
 const Header = () => {
   return (
-    <header className="bg-background border-b">
+    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
       <div className="flex h-12 items-center justify-between gap-4 px-4">
         <div
           id="breadcrumb"
@@ -53,7 +49,6 @@ const Header = () => {
             <CanAccess resource="sales" action="list">
               <UsersMenu />
             </CanAccess>
-            <InformesMenu />
             <CanAccess resource="configuration" action="edit">
               <SettingsMenu />
             </CanAccess>
@@ -67,7 +62,6 @@ const Header = () => {
               <ApiMenu />
             </CanAccess>
             <ImportFromJsonMenuItem />
-            <ChangelogMenuItem />
           </UserMenu>
         </div>
       </div>
@@ -102,22 +96,6 @@ const ProfileMenu = () => {
       <Link to="/profile" className="flex items-center gap-2">
         <User />
         {translate("crm.profile.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const InformesMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<InformesMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={InformesPage.path} className="flex items-center gap-2">
-        <ChartColumn />
-        {translate("crm.reports.title")}
       </Link>
     </DropdownMenuItem>
   );
@@ -203,19 +181,4 @@ const ImportFromJsonMenuItem = () => {
   );
 };
 
-const ChangelogMenuItem = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<ChangelogMenuItem> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={ChangelogPage.path} className="flex items-center gap-2">
-        <FileText />
-        {translate("crm.changelog.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
 export default Header;

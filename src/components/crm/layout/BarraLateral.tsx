@@ -1,14 +1,17 @@
 import { CanAccess, useTranslate } from "ra-core";
 import {
   Building2,
+  ChartColumn,
   Contact,
   Handshake,
   LayoutDashboard,
+  Ticket,
   Users,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { InformesPage } from "../misc/InformesPage";
 
 /**
  * Navegación principal de Vinqulia, en una barra lateral.
@@ -36,14 +39,20 @@ const EnlaceDeSeccion = ({
 }) => (
   <Link
     to={seccion.ruta}
+    aria-current={activa ? "page" : undefined}
     className={[
-      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline transition-colors",
+      "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline transition-all",
       activa
-        ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
-        : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+        ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground shadow-lg shadow-black/25 ring-1 ring-inset ring-white/15"
+        : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
     ].join(" ")}
   >
-    <seccion.Icono className="size-4 shrink-0" />
+    <seccion.Icono
+      className={[
+        "size-4 shrink-0 transition-transform",
+        activa ? "scale-105" : "",
+      ].join(" ")}
+    />
     <span className="truncate">{seccion.etiqueta}</span>
   </Link>
 );
@@ -78,10 +87,21 @@ export const BarraLateral = () => {
       recurso: "deals",
     },
     {
+      etiqueta: translate("resources.tickets.name", { smart_count: 2 }),
+      ruta: "/tickets",
+      Icono: Ticket,
+      recurso: "tickets",
+    },
+    {
       etiqueta: translate("resources.sales.name", { smart_count: 2 }),
       ruta: "/sales",
       Icono: Users,
       recurso: "sales",
+    },
+    {
+      etiqueta: translate("crm.reports.title", { _: "Informes" }),
+      ruta: InformesPage.path,
+      Icono: ChartColumn,
     },
   ];
 
@@ -91,41 +111,61 @@ export const BarraLateral = () => {
     ruta === "/" ? pathname === "/" : pathname.startsWith(ruta);
 
   return (
-    <aside className="hidden md:flex w-60 shrink-0 flex-col gap-1 bg-sidebar p-3 text-sidebar-foreground">
-      <Link
-        to="/"
-        className="mb-4 flex items-center gap-2 px-2 py-1 no-underline text-sidebar-foreground"
-      >
-        <img
-          src={darkModeLogo}
-          alt={title}
-          className="h-7 w-7 rounded-md bg-sidebar-primary p-1"
-        />
-        <span className="text-lg font-semibold tracking-tight">{title}</span>
-      </Link>
+    <aside className="relative hidden w-60 shrink-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground md:flex">
+      {/* Halo de marca en la parte superior: da profundidad a la barra sin
+          competir con la navegación. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-sidebar-primary/20 to-transparent"
+      />
 
-      <nav className="flex flex-col gap-1">
-        {secciones.map((seccion) =>
-          seccion.recurso ? (
-            <CanAccess
-              key={seccion.ruta}
-              resource={seccion.recurso}
-              action="list"
-            >
+      <div className="relative flex flex-1 flex-col gap-1 p-3">
+        <Link
+          to="/"
+          className="group mb-5 flex items-center gap-2.5 px-2 py-1 no-underline text-sidebar-foreground"
+        >
+          <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary ring-1 ring-sidebar-primary/30 transition-colors group-hover:bg-sidebar-primary/90">
+            <img src={darkModeLogo} alt={title} className="h-6 w-6" />
+          </span>
+          <span className="text-base font-semibold tracking-tight">
+            {title}
+          </span>
+        </Link>
+
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+          Principal
+        </p>
+
+        <nav className="flex flex-col gap-1">
+          {secciones.map((seccion) =>
+            seccion.recurso ? (
+              <CanAccess
+                key={seccion.ruta}
+                resource={seccion.recurso}
+                action="list"
+              >
+                <EnlaceDeSeccion
+                  seccion={seccion}
+                  activa={estaActiva(seccion.ruta)}
+                />
+              </CanAccess>
+            ) : (
               <EnlaceDeSeccion
+                key={seccion.ruta}
                 seccion={seccion}
                 activa={estaActiva(seccion.ruta)}
               />
-            </CanAccess>
-          ) : (
-            <EnlaceDeSeccion
-              key={seccion.ruta}
-              seccion={seccion}
-              activa={estaActiva(seccion.ruta)}
-            />
-          ),
-        )}
-      </nav>
+            ),
+          )}
+        </nav>
+
+        <div className="mt-auto border-t border-sidebar-border pt-4">
+          <div className="flex items-center gap-2 px-2 text-xs text-sidebar-foreground/50">
+            <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />
+            <span className="truncate">{title} · CRM</span>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 };

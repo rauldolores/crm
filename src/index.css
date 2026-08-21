@@ -43,44 +43,54 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * Paleta de marca.
+ *
+ * Vinqulia se identifica con un carmesí profundo (el "rojo de marca") sobre
+ * neutros ligeramente cálidos. El rojo antes vivía confinado a la barra
+ * lateral; ahora es el color primario, así los botones, enlaces, el foco y los
+ * avisos comparten la misma voz. Los neutros dejan de ser grises puros para no
+ * pelear con el carmesí.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.75rem;
+  --background: oklch(0.985 0.004 24);
+  --foreground: oklch(0.19 0.014 25);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.19 0.014 25);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.19 0.014 25);
+  --primary: oklch(0.52 0.2 24);
+  --primary-deep: oklch(0.44 0.16 24);
+  --primary-foreground: oklch(0.99 0.005 24);
+  --secondary: oklch(0.965 0.005 24);
+  --secondary-foreground: oklch(0.24 0.015 24);
+  --muted: oklch(0.965 0.005 24);
+  --muted-foreground: oklch(0.54 0.015 24);
+  --accent: oklch(0.945 0.018 24);
+  --accent-foreground: oklch(0.29 0.05 24);
+  /* El destructivo se mantiene más brillante y anaranjado que el primario para
+     que la acción de "borrar" siga distinguiéndose del carmesí de marca. */
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  /* Barra lateral de Vinqulia: fondo oscuro con el rojo de marca como color
-     de seleccion. El fondo no es rojo saturado a proposito: la barra esta
-     siempre en pantalla, y un rojo pleno a ese tamano cansa la vista y compite
-     con los avisos de error, que tambien son rojos. El rojo se reserva para lo
-     que esta activo, que es donde debe ir la atencion. */
-  --sidebar: oklch(0.205 0.01 20);
-  --sidebar-foreground: oklch(0.97 0 0);
-  --sidebar-primary: oklch(0.58 0.21 25);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.28 0.02 20);
-  --sidebar-accent-foreground: oklch(0.97 0 0);
-  --sidebar-border: oklch(0.32 0.02 20);
-  --sidebar-ring: oklch(0.58 0.21 25);
+  --border: oklch(0.915 0.006 24);
+  --input: oklch(0.915 0.006 24);
+  --ring: oklch(0.58 0.19 24);
+  --chart-1: oklch(0.52 0.2 24);
+  --chart-2: oklch(0.58 0.12 175);
+  --chart-3: oklch(0.7 0.13 70);
+  --chart-4: oklch(0.55 0.16 260);
+  --chart-5: oklch(0.66 0.17 330);
+  /* Barra lateral: fondo oscuro con un matiz cálido y el carmesí de marca como
+     color de selección. El fondo no es rojo saturado a propósito: la barra
+     está siempre en pantalla, y un rojo pleno a ese tamaño cansa la vista. */
+  --sidebar: oklch(0.17 0.016 24);
+  --sidebar-foreground: oklch(0.96 0.006 24);
+  --sidebar-primary: oklch(0.58 0.2 24);
+  --sidebar-primary-foreground: oklch(0.99 0.005 24);
+  --sidebar-accent: oklch(0.25 0.02 24);
+  --sidebar-accent-foreground: oklch(0.97 0.006 24);
+  --sidebar-border: oklch(0.31 0.02 24);
+  --sidebar-ring: oklch(0.58 0.2 24);
   --avatar-0: oklch(0.85 0.08 240);
   --avatar-1: oklch(0.88 0.1 340);
   --avatar-2: oklch(0.85 0.07 180);
@@ -94,37 +104,38 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.15 0.006 24);
+  --foreground: oklch(0.955 0.005 24);
+  --card: oklch(0.19 0.008 24);
+  --card-foreground: oklch(0.955 0.005 24);
+  --popover: oklch(0.19 0.008 24);
+  --popover-foreground: oklch(0.955 0.005 24);
+  --primary: oklch(0.6 0.19 24);
+  --primary-deep: oklch(0.5 0.15 24);
+  --primary-foreground: oklch(0.98 0.005 24);
+  --secondary: oklch(0.26 0.008 24);
+  --secondary-foreground: oklch(0.955 0.005 24);
+  --muted: oklch(0.26 0.008 24);
+  --muted-foreground: oklch(0.7 0.01 24);
+  --accent: oklch(0.27 0.016 24);
+  --accent-foreground: oklch(0.955 0.005 24);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 15%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.62 0.17 24);
+  --chart-1: oklch(0.62 0.19 24);
+  --chart-2: oklch(0.64 0.11 175);
+  --chart-3: oklch(0.74 0.12 70);
+  --chart-4: oklch(0.6 0.15 260);
+  --chart-5: oklch(0.7 0.16 330);
+  --sidebar: oklch(0.15 0.014 24);
+  --sidebar-foreground: oklch(0.955 0.005 24);
+  --sidebar-primary: oklch(0.6 0.19 24);
+  --sidebar-primary-foreground: oklch(0.98 0.005 24);
+  --sidebar-accent: oklch(0.24 0.018 24);
+  --sidebar-accent-foreground: oklch(0.955 0.005 24);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.62 0.17 24);
   --avatar-0: oklch(0.35 0.12 240);
   --avatar-1: oklch(0.38 0.14 340);
   --avatar-2: oklch(0.35 0.11 180);
@@ -190,4 +201,20 @@ input[type="time"] {
 
 body {
   font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Un halo de marca muy sutil sobre el fondo: da profundidad sin competir con
+     el contenido. Se mantiene fijo para que no parpadee al hacer scroll. */
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      1100px 520px at 12% -8%,
+      oklch(0.58 0.21 25 / 0.07),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 480px at 100% -4%,
+      oklch(0.52 0.2 24 / 0.05),
+      transparent 55%
+    );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }

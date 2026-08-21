@@ -105,6 +105,15 @@ export const defaultNoteTypes = [
   { value: "web", label: "Formulario web" },
 ];
 
+// Estados de fábrica de un ticket de soporte, con el mismo formato
+// {value,label,color} que los estados de contacto: mismo componente de
+// pastilla, otro significado.
+export const defaultTicketStatuses = [
+  { value: "open", label: "Abierto", color: "#e88b7d" },
+  { value: "in-progress", label: "En proceso", color: "#e8cb7d" },
+  { value: "closed", label: "Cerrado", color: "#a4e87d" },
+];
+
 export const defaultTaskTypes = [
   { value: "none", label: "Ninguno" },
   { value: "email", label: "Correo electrónico" },
@@ -128,6 +137,7 @@ export const defaultConfiguration: ConfigurationContextValue = {
   noteStatuses: defaultNoteStatuses,
   noteTypes: defaultNoteTypes,
   taskTypes: defaultTaskTypes,
+  ticketStatuses: defaultTicketStatuses,
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,
   lightModeLogo: defaultLightModeLogo,

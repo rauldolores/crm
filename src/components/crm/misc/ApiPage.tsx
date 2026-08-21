@@ -9,6 +9,7 @@ import {
 } from "ra-core";
 import { useState } from "react";
 
+import { env } from "@/lib/env";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,30 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
 import type { Webhook } from "../types";
+
+/** Recursos expuestos por la API REST, con un ejemplo real de cada uno. */
+const RECURSOS_DE_EJEMPLO: { recurso: string; ejemplo: string }[] = [
+  {
+    recurso: "contacts",
+    ejemplo: `{\n  "id": 42,\n  "first_name": "Ana",\n  "last_name": "García",\n  "email_jsonb": [{ "email": "ana@empresa.com", "type": "Work" }],\n  "phone_jsonb": [{ "number": "5551234567", "type": "Work" }],\n  "company_id": 7,\n  "status": "hot",\n  "sales_id": 1\n}`,
+  },
+  {
+    recurso: "companies",
+    ejemplo: `{\n  "id": 7,\n  "name": "Panadería La Espiga",\n  "sector": "Alimentos",\n  "website": "laespiga.com",\n  "sales_id": 1\n}`,
+  },
+  {
+    recurso: "deals",
+    ejemplo: `{\n  "id": 15,\n  "name": "Renovación anual",\n  "company_id": 7,\n  "stage": "propuesta",\n  "amount": 45000,\n  "pipeline": "ventas",\n  "sales_id": 1\n}`,
+  },
+  {
+    recurso: "tasks",
+    ejemplo: `{\n  "id": 88,\n  "contact_id": 42,\n  "type": "llamada",\n  "text": "Confirmar renovación",\n  "due_date": "2026-08-25T15:00:00Z",\n  "sales_id": 1\n}`,
+  },
+  {
+    recurso: "tickets",
+    ejemplo: `{\n  "id": 3,\n  "subject": "No puedo iniciar sesión",\n  "description": "Me sale error al entrar al CRM.",\n  "status": "open",\n  "contact_id": 42,\n  "company_id": 7,\n  "sales_id": 1\n}`,
+  },
+];
 
 /**
  * Documentación de la API y gestión de webhooks, dentro del propio CRM.
@@ -62,6 +87,23 @@ export const ApiPage = () => {
 
       <Card>
         <CardHeader>
+          <CardTitle>{translate("crm.api.endpoints.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p>{translate("crm.api.endpoints.intro")}</p>
+          {RECURSOS_DE_EJEMPLO.map(({ recurso, ejemplo }) => (
+            <div key={recurso} className="space-y-1.5">
+              <p className="font-mono text-xs font-medium">
+                GET / POST / PATCH / DELETE {urlBase}/{recurso}
+              </p>
+              <Bloque>{ejemplo}</Bloque>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>{translate("crm.api.webhooks.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
@@ -70,8 +112,43 @@ export const ApiPage = () => {
           <Separator />
           <p>{translate("crm.api.webhooks.payload")}</p>
           <Bloque>{`{\n  "evento": "contacts.created",\n  "recurso": "contacts",\n  "fecha": "2026-08-18T12:00:00Z",\n  "datos": { … }\n}`}</Bloque>
+          <p>{translate("crm.api.webhooks.events")}</p>
+          <Bloque>{`contacts.created / contacts.updated / contacts.deleted\ncompanies.created / companies.updated / companies.deleted\ndeals.created / deals.updated / deals.deleted\ntasks.created / tasks.updated / tasks.deleted\ncontact_notes.created / contact_notes.updated / contact_notes.deleted\ndeal_notes.created / deal_notes.updated / deal_notes.deleted\ntickets.created / tickets.updated / tickets.deleted`}</Bloque>
           <p>{translate("crm.api.webhooks.signature")}</p>
           <Bloque>{`firma = HMAC_SHA256(cuerpo, secreto)  →  cabecera X-Vinqulia-Firma (hex)`}</Bloque>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{translate("crm.api.mcp.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p>{translate("crm.api.mcp.intro")}</p>
+          <Bloque>{`${env.supabaseUrl}/functions/v1/mcp`}</Bloque>
+          <p>{translate("crm.api.mcp.auth")}</p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>
+              <span className="font-mono text-xs">get_schema</span> —{" "}
+              {translate("crm.api.mcp.tool_get_schema")}
+            </li>
+            <li>
+              <span className="font-mono text-xs">query</span> —{" "}
+              {translate("crm.api.mcp.tool_query")}
+            </li>
+            <li>
+              <span className="font-mono text-xs">mutate</span> —{" "}
+              {translate("crm.api.mcp.tool_mutate")}
+            </li>
+            <li>
+              <span className="font-mono text-xs">display_task_list</span> —{" "}
+              {translate("crm.api.mcp.tool_display_task_list")}
+            </li>
+            <li>
+              <span className="font-mono text-xs">complete_task</span> —{" "}
+              {translate("crm.api.mcp.tool_complete_task")}
+            </li>
+          </ul>
         </CardContent>
       </Card>
     </div>

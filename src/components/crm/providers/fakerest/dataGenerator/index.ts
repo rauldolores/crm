@@ -24,6 +24,7 @@ export default (): Db => {
   db.automations = [];
   db.public_forms = [];
   db.public_form_submissions = [];
+  db.tickets = [];
   db.configuration = [
     {
       id: 1,

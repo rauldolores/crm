@@ -15,7 +15,7 @@ export default async function PaginaDeFormulario({ params }: Props) {
 
   const { data: formulario } = await supabase
     .from("public_forms")
-    .select("organization_id, active")
+    .select("organization_id, active, type")
     .eq("slug", clave)
     .maybeSingle();
 
@@ -40,7 +40,11 @@ export default async function PaginaDeFormulario({ params }: Props) {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <FormularioPublico clave={clave} titulo={titulo} />
+      <FormularioPublico
+        clave={clave}
+        titulo={titulo}
+        tipo={formulario.type === "ticket" ? "ticket" : "lead"}
+      />
     </div>
   );
 }

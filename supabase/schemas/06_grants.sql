@@ -188,3 +188,5 @@ grant select, insert, update, delete on table crm.public_forms to anon, authenti
 grant usage, select on sequence crm.public_forms_id_seq to anon, authenticated, service_role;
 grant select, insert on table crm.public_form_submissions to anon, authenticated, service_role;
 grant usage, select on sequence crm.public_form_submissions_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table crm.tickets to anon, authenticated, service_role;
+grant usage, select on sequence crm.tickets_id_seq to anon, authenticated, service_role;

@@ -206,7 +206,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/contacts/EnviarCorreoButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/contacts/EnviarWhatsAppButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/contacts/ExportVCardButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/contacts/PosiblesDuplicados.tsx",
           "type": "registry:component"
         },
         {
@@ -226,6 +238,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/contacts/useContactDuplicates.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/contacts/useContactImport.tsx",
           "type": "registry:component"
         },
@@ -235,6 +251,10 @@
         },
         {
           "path": "src/components/crm/dashboard/DashboardActivityLog.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/dashboard/DashboardStats.tsx",
           "type": "registry:component"
         },
         {
@@ -434,10 +454,6 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/crm/misc/ChangelogPage.tsx",
-          "type": "registry:component"
-        },
-        {
           "path": "src/components/crm/misc/ContactOption.tsx",
           "type": "registry:component"
         },
@@ -450,6 +466,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/FormulariosPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/ImageEditorField.tsx",
           "type": "registry:component"
         },
@@ -459,6 +479,10 @@
         },
         {
           "path": "src/components/crm/misc/InfinitePagination.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/InformesPage.tsx",
           "type": "registry:component"
         },
         {
@@ -511,6 +535,10 @@
         },
         {
           "path": "src/components/crm/misc/usePapaParse.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/notes/ActivityTypeSelector.tsx",
           "type": "registry:component"
         },
         {
@@ -718,6 +746,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/public/FormularioPublico.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/root/CRM.tsx",
           "type": "registry:component"
         },
@@ -866,6 +898,30 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tickets/TicketCreate.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TicketEdit.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TicketInputs.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TicketList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TicketShow.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/index.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/types.ts",
           "type": "registry:component"
         },
@@ -918,11 +974,19 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/postmark.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/requireKontroliaPermission.ts",
           "type": "registry:lib"
         },
         {
           "path": "src/lib/server/supabase-service.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/twilioWhatsapp.ts",
           "type": "registry:lib"
         },
         {

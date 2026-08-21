@@ -15,13 +15,19 @@ import { Textarea } from "@/components/ui/textarea";
  * iframe que el cliente incrustó en su propia web. No usa nada de ra-core:
  * corre fuera del árbol de <Admin>, para un visitante que nunca inició
  * sesión.
+ *
+ * `tipo` decide qué campos se piden: "lead" da de alta un contacto (y su
+ * empresa) como hasta ahora; "ticket" además pide asunto y descripción, y
+ * abre un ticket de soporte asociado al contacto que lo reporta.
  */
 export const FormularioPublico = ({
   clave,
   titulo,
+  tipo,
 }: {
   clave: string;
   titulo: string;
+  tipo: "lead" | "ticket";
 }) => {
   const [estado, setEstado] = useState<
     "listo" | "enviando" | "hecho" | "error"
@@ -68,7 +74,9 @@ export const FormularioPublico = ({
           <CheckCircle2 className="size-10 text-green-600" />
           <p className="text-lg font-medium">¡Gracias!</p>
           <p className="text-sm text-muted-foreground">
-            Recibimos tu mensaje. Nos pondremos en contacto contigo pronto.
+            {tipo === "ticket"
+              ? "Recibimos tu reporte. Nos pondremos en contacto contigo pronto."
+              : "Recibimos tu mensaje. Nos pondremos en contacto contigo pronto."}
           </p>
         </CardContent>
       </Card>
@@ -78,7 +86,9 @@ export const FormularioPublico = ({
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Contáctanos</CardTitle>
+        <CardTitle>
+          {tipo === "ticket" ? "Reporta un problema" : "Contáctanos"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={enviar} className="flex flex-col gap-4">
@@ -101,13 +111,40 @@ export const FormularioPublico = ({
             <Input id="telefono" name="telefono" type="tel" maxLength={50} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="empresa">Empresa</Label>
-            <Input id="empresa" name="empresa" maxLength={200} />
+            <Label htmlFor="empresa">
+              Empresa{tipo === "ticket" ? " *" : ""}
+            </Label>
+            <Input
+              id="empresa"
+              name="empresa"
+              required={tipo === "ticket"}
+              maxLength={200}
+            />
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="mensaje">Mensaje</Label>
-            <Textarea id="mensaje" name="mensaje" rows={3} maxLength={5000} />
-          </div>
+
+          {tipo === "ticket" ? (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="asunto">Asunto *</Label>
+                <Input id="asunto" name="asunto" required maxLength={200} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="descripcion">Describe el problema *</Label>
+                <Textarea
+                  id="descripcion"
+                  name="descripcion"
+                  rows={4}
+                  required
+                  maxLength={5000}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="mensaje">Mensaje</Label>
+              <Textarea id="mensaje" name="mensaje" rows={3} maxLength={5000} />
+            </div>
+          )}
 
           {/* Señuelo para bots: oculto a la vista y al lector de pantalla, con
               nombre poco sospechoso. Una persona nunca lo rellena. */}

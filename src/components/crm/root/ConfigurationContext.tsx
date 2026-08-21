@@ -32,6 +32,8 @@ export interface ConfigurationContextValue {
   /** Tipos de actividad para notas: nota, llamada, reunión… */
   noteTypes: LabeledValue[];
   taskTypes: LabeledValue[];
+  /** Estados de un ticket de soporte: abierto, en proceso, cerrado… */
+  ticketStatuses: NoteStatus[];
   title: string;
   darkModeLogo: string;
   lightModeLogo: string;

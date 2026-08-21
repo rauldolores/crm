@@ -202,12 +202,15 @@ export type Automation = {
 
 /**
  * Formulario público de captación: un enlace o iframe que el cliente pega en
- * su propia web y que crea contactos solo, sin sesión de por medio. `slug`
- * es la clave pública, no un id secuencial.
+ * su propia web y que crea contactos o tickets solo, sin sesión de por
+ * medio. `slug` es la clave pública, no un id secuencial. `type` decide qué
+ * crea cada envío: "lead" da de alta un contacto (y su empresa); "ticket"
+ * abre un ticket de soporte asociado al contacto que lo reporta.
  */
 export type PublicForm = {
   name: string;
   slug: string;
+  type: "lead" | "ticket";
   active: boolean;
   created_at?: string;
 } & Pick<RaRecord, "id">;
@@ -234,6 +237,22 @@ export type Task = {
   due_date: string;
   done_date?: string | null;
   sales_id?: Identifier;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Ticket de soporte reportado por un cliente. Siempre va asociado a un
+ * contacto y a una empresa (la del propio contacto), para que el historial
+ * de soporte quede visible desde ambas fichas.
+ */
+export type Ticket = {
+  subject: string;
+  description?: string;
+  status: string;
+  contact_id: Identifier;
+  company_id: Identifier;
+  sales_id?: Identifier;
+  created_at?: string;
+  updated_at?: string;
 } & Pick<RaRecord, "id">;
 
 export type ActivityCompanyCreated = {

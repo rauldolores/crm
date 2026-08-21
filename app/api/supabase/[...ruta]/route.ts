@@ -41,6 +41,7 @@ const CON_DUENO = new Set([
   "webhooks",
   "tags",
   "tasks",
+  "tickets",
   "configuration",
   "activity_log",
 ]);

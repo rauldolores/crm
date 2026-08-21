@@ -28,6 +28,10 @@ create or replace trigger set_task_sales_id_trigger
     before insert on crm.tasks
     for each row execute function crm.set_sales_id_default();
 
+create or replace trigger set_ticket_sales_id_trigger
+    before insert on crm.tickets
+    for each row execute function crm.set_sales_id_default();
+
 -- Auto-fetch company logo from website favicon on save
 create or replace trigger company_saved
     before insert or update on crm.companies
@@ -101,6 +105,9 @@ create trigger notify_webhooks_contact_notes
     for each row execute function crm.notify_webhooks();
 create trigger notify_webhooks_deal_notes
     after insert or update or delete on crm.deal_notes
+    for each row execute function crm.notify_webhooks();
+create trigger notify_webhooks_tickets
+    after insert or update or delete on crm.tickets
     for each row execute function crm.notify_webhooks();
 
 -- Automatizaciones: aplican las reglas «cuando pase X, haz Y» de la

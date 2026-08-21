@@ -9,8 +9,16 @@ import {
 } from "ra-core";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
 import type { PublicForm } from "../types";
@@ -23,6 +31,7 @@ import type { PublicForm } from "../types";
 export const FormulariosPage = () => {
   const translate = useTranslate();
   const [nombre, setNombre] = useState("");
+  const [tipo, setTipo] = useState<"lead" | "ticket">("lead");
   const [create, { isPending: creando }] = useCreate();
   const { data: formularios, refetch } = useGetList<PublicForm>(
     "public_forms",
@@ -37,7 +46,7 @@ export const FormulariosPage = () => {
     if (!nombreLimpio) return;
     await create(
       "public_forms",
-      { data: { name: nombreLimpio } },
+      { data: { name: nombreLimpio, type: tipo } },
       { returnPromise: true },
     );
     setNombre("");
@@ -67,6 +76,22 @@ export const FormulariosPage = () => {
             }
           }}
         />
+        <Select
+          value={tipo}
+          onValueChange={(valor) => setTipo(valor as "lead" | "ticket")}
+        >
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lead">
+              {translate("crm.public_forms.type.lead")}
+            </SelectItem>
+            <SelectItem value="ticket">
+              {translate("crm.public_forms.type.ticket")}
+            </SelectItem>
+          </SelectContent>
+        </Select>
         <Button onClick={agregar} disabled={!nombre.trim() || creando}>
           <Plus className="h-4 w-4 mr-1" />
           {translate("crm.public_forms.add")}
@@ -134,6 +159,11 @@ const TarjetaDeFormulario = ({
           }}
         />
         <p className="flex-1 font-medium text-sm">{formulario.name}</p>
+        <Badge variant="outline">
+          {formulario.type === "ticket"
+            ? translate("crm.public_forms.type.ticket")
+            : translate("crm.public_forms.type.lead")}
+        </Badge>
         <Button
           variant="ghost"
           size="icon"

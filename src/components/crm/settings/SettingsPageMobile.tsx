@@ -1,9 +1,6 @@
 import { env } from "@/lib/env";
 import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
-import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "@/components/admin/use-theme";
-import { ChevronRight, KeyRound } from "lucide-react";
-import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import {
   Item,
@@ -26,7 +23,7 @@ import {
   useNotify,
   useTranslate,
 } from "ra-core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Tooltip,
   TooltipContent,
@@ -36,32 +33,9 @@ import {
 
 import { MobileContent } from "../layout/MobileContent";
 import MobileHeader from "../layout/MobileHeader";
-import { ChangelogPage } from "../misc/ChangelogPage";
 import ImageEditorField from "../misc/ImageEditorField";
 import type { CrmDataProvider } from "../providers/types";
 import type { SalesFormData } from "../types";
-
-const ChangePasswordButton = () => {
-  const translate = useTranslate();
-
-  // Lleva a KontrolIA Auth: las credenciales no pasan por el CRM.
-  return (
-    <Button
-      variant="outline"
-      className="w-full text-base h-auto"
-      onClick={() =>
-        window.open(
-          `${env.kontroliaAuthServerUrl}/account`,
-          "_blank",
-          "noopener",
-        )
-      }
-    >
-      <KeyRound className="size-5 mr-3" />
-      {translate("crm.profile.password.change")}
-    </Button>
-  );
-};
 
 export const SettingsPageMobile = () => {
   const translate = useTranslate();
@@ -84,11 +58,9 @@ export const SettingsPageMobile = () => {
             <PreferencesSection />
             <InboundEmailSection />
             <McpServerSection />
-            <AboutSection />
           </div>
 
           <div className="mt-auto pt-6 space-y-3 mb-4">
-            <ChangePasswordButton />
             <Button
               variant="destructive"
               className="w-full text-base h-auto"
@@ -120,52 +92,6 @@ const ProfileSection = () => {
   const translate = useTranslate();
   const notify = useNotify();
   const dataProvider = useDataProvider<CrmDataProvider>();
-  const queryClient = useQueryClient();
-
-  const saveField = useCallback(
-    async (field: string, value: string) => {
-      if (!identity || !data) return;
-      const current = data[field as keyof typeof data];
-      if (value === current) return;
-
-      const queryKey = [
-        "sales",
-        "getOne",
-        { id: String(identity.id), meta: undefined },
-      ];
-      const previousData = queryClient.getQueryData(queryKey);
-      queryClient.setQueryData(queryKey, (old: any) =>
-        old ? { ...old, [field]: value } : old,
-      );
-
-      try {
-        await dataProvider.salesUpdate(identity.id, {
-          ...data,
-          [field]: value,
-        } as SalesFormData);
-        refetchIdentity();
-        refetchUser();
-        notify("crm.profile.updated", {
-          messageArgs: { _: "Your profile has been updated" },
-        });
-      } catch {
-        queryClient.setQueryData(queryKey, previousData);
-        notify("crm.profile.update_error", {
-          type: "error",
-          messageArgs: { _: "An error occurred. Please try again" },
-        });
-      }
-    },
-    [
-      identity,
-      data,
-      dataProvider,
-      refetchIdentity,
-      refetchUser,
-      notify,
-      queryClient,
-    ],
-  );
 
   const handleAvatarUpdate = useCallback(
     async (values: SalesFormData) => {
@@ -210,121 +136,46 @@ const ProfileSection = () => {
 
         <ItemSeparator />
 
-        <InlineEditRow
+        <ReadOnlyRow
           label={translate("resources.sales.fields.first_name")}
           value={data.first_name ?? ""}
-          onSave={(v) => saveField("first_name", v)}
         />
 
         <ItemSeparator />
 
-        <InlineEditRow
+        <ReadOnlyRow
           label={translate("resources.sales.fields.last_name")}
           value={data.last_name ?? ""}
-          onSave={(v) => saveField("last_name", v)}
         />
 
         <ItemSeparator />
 
-        <InlineEditRow
+        <ReadOnlyRow
           label={translate("resources.sales.fields.email")}
           value={data.email ?? ""}
-          onSave={(v) => saveField("email", v)}
         />
       </ItemGroup>
     </div>
   );
 };
 
-const InlineEditRow = ({
-  label,
-  value,
-  onSave,
-}: {
-  label: string;
-  value: string;
-  onSave: (value: string) => void;
-}) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setEditValue(value);
-  }, [value]);
-
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    }
-  }, [isEditing]);
-
-  const handleSave = useCallback(() => {
-    setIsEditing(false);
-    const trimmed = editValue.trim();
-    if (trimmed !== value) {
-      onSave(trimmed);
-    }
-  }, [editValue, value, onSave]);
-
-  const handleCancel = useCallback(() => {
-    setEditValue(value);
-    setIsEditing(false);
-  }, [value]);
-
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        inputRef.current?.blur();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        handleCancel();
-      }
-    },
-    [handleCancel],
-  );
-
-  if (isEditing) {
-    return (
-      <Item size="sm">
-        <ItemContent>
-          <ItemTitle className="font-normal text-muted-foreground">
-            {label}
-          </ItemTitle>
-        </ItemContent>
-        <ItemActions>
-          <input
-            ref={inputRef}
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleSave}
-            onKeyDown={handleKeyDown}
-            className="bg-transparent text-right !text-base outline-none w-48"
-          />
-        </ItemActions>
-      </Item>
-    );
-  }
-
-  return (
-    <Item
-      size="sm"
-      className="cursor-pointer"
-      onClick={() => setIsEditing(true)}
-    >
-      <ItemContent>
-        <ItemTitle className="font-normal text-muted-foreground">
-          {label}
-        </ItemTitle>
-      </ItemContent>
-      <ItemActions>
-        <span className="text-base">{value}</span>
-      </ItemActions>
-    </Item>
-  );
-};
+/**
+ * Nombre y correo son de solo lectura: la identidad vive en KontrolIA Auth,
+ * no en el CRM. Editarlos aquí solo desincronizaría la ficha del comercial
+ * de la cuenta real.
+ */
+const ReadOnlyRow = ({ label, value }: { label: string; value: string }) => (
+  <Item size="sm">
+    <ItemContent>
+      <ItemTitle className="font-normal text-muted-foreground">
+        {label}
+      </ItemTitle>
+    </ItemContent>
+    <ItemActions>
+      <span className="text-base">{value}</span>
+    </ItemActions>
+  </Item>
+);
 
 const PreferencesSection = () => {
   const translate = useTranslate();
@@ -466,30 +317,6 @@ const McpServerSection = () => {
       </p>
       <ItemGroup className="rounded-lg border overflow-hidden">
         <CopyPasteRow value={`${env.supabaseUrl}/functions/v1/mcp`} />
-      </ItemGroup>
-    </div>
-  );
-};
-
-const AboutSection = () => {
-  const translate = useTranslate();
-
-  return (
-    <div>
-      <SectionLabel>{translate("crm.settings.about")}</SectionLabel>
-      <ItemGroup className="rounded-lg border overflow-hidden">
-        <Item asChild size="sm" className="cursor-pointer">
-          <Link to={ChangelogPage.path}>
-            <ItemContent>
-              <ItemTitle className="font-normal">
-                {translate("crm.changelog.title")}
-              </ItemTitle>
-            </ItemContent>
-            <ItemActions>
-              <ChevronRight className="size-4 text-muted-foreground" />
-            </ItemActions>
-          </Link>
-        </Item>
       </ItemGroup>
     </div>
   );

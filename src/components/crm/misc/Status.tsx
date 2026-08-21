@@ -1,17 +1,22 @@
 import { cn } from "@/lib/utils";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import type { NoteStatus } from "../types";
 
 export const Status = ({
   status,
+  statuses,
   className,
 }: {
   status: string;
+  /** Lista de estados a resolver contra; por defecto la de contactos. */
+  statuses?: NoteStatus[];
   className?: string;
 }) => {
   const { noteStatuses } = useConfigurationContext();
-  if (!status || !noteStatuses) return null;
-  const statusObject = noteStatuses.find((s: any) => s.value === status);
+  const listaDeEstados = statuses ?? noteStatuses;
+  if (!status || !listaDeEstados) return null;
+  const statusObject = listaDeEstados.find((s: any) => s.value === status);
 
   if (!statusObject) return null;
   return (

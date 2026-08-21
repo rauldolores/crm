@@ -1,13 +1,21 @@
-import { Building2, Check, Loader2 } from "lucide-react";
+import { Building2, Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   getKontroliaClient,
   getKontroliaMemberships,
@@ -91,42 +99,67 @@ export const useOrganizaciones = () => {
 export const SelectorDeOrganizacion = () => {
   const { organizaciones, activa, cambiando, cambiar, nombreActivo } =
     useOrganizaciones();
+  const [abierto, setAbierto] = useState(false);
 
   if (organizaciones.length <= 1) return null;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <Popover open={abierto} onOpenChange={setAbierto}>
+      <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
           className="gap-2"
           disabled={cambiando}
         >
-          {cambiando ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Building2 className="size-4" />
-          )}
+          <span className="flex size-6 items-center justify-center rounded-md bg-primary/15 text-primary">
+            {cambiando ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Building2 className="size-3.5" />
+            )}
+          </span>
           <span className="max-w-40 truncate">{nombreActivo}</span>
+          <ChevronsUpDown className="size-3.5 text-muted-foreground" />
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {organizaciones.map((organizacion) => (
-          <DropdownMenuItem
-            key={organizacion.id}
-            onClick={() => cambiar(organizacion.id)}
-            className="cursor-pointer gap-2"
-          >
-            <Check
-              className={
-                organizacion.id === activa ? "size-4" : "size-4 opacity-0"
-              }
-            />
-            {organizacion.nombre}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-64 p-0">
+        <Command>
+          <CommandInput placeholder="Buscar organización..." />
+          <CommandList>
+            <CommandEmpty>No se encontró la organización.</CommandEmpty>
+            <CommandGroup>
+              {organizaciones.map((organizacion) => (
+                <CommandItem
+                  key={organizacion.id}
+                  value={organizacion.nombre}
+                  onSelect={() => {
+                    cambiar(organizacion.id);
+                    setAbierto(false);
+                  }}
+                  className="cursor-pointer justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <Check
+                      className={
+                        organizacion.id === activa
+                          ? "size-4"
+                          : "size-4 opacity-0"
+                      }
+                    />
+                    <span className="truncate">{organizacion.nombre}</span>
+                  </span>
+                  {organizacion.id === activa && (
+                    <Badge variant="secondary" className="shrink-0">
+                      Activa
+                    </Badge>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 };

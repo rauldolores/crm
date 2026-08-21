@@ -3,6 +3,7 @@ import { useGetList } from "ra-core";
 
 import type { Contact, ContactNote } from "../types";
 import { DashboardActivityLog } from "./DashboardActivityLog";
+import { DashboardStats } from "./DashboardStats";
 import { DashboardStepper } from "./DashboardStepper";
 import { DealsChart } from "./DealsChart";
 import { HotContacts } from "./HotContacts";
@@ -45,22 +46,25 @@ export const Dashboard = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-1">
-      <div className="md:col-span-3">
-        <div className="flex flex-col gap-4">
-          {env.isDemo ? <Welcome /> : null}
-          <HotContacts />
+    <div className="mt-1 flex flex-col gap-6">
+      {env.isDemo ? <Welcome /> : null}
+      <DashboardStats />
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+        <div className="md:col-span-3">
+          <div className="flex flex-col gap-4">
+            <HotContacts />
+          </div>
         </div>
-      </div>
-      <div className="md:col-span-6">
-        <div className="flex flex-col gap-6">
-          {totalDeal ? <DealsChart /> : null}
-          <DashboardActivityLog />
+        <div className="md:col-span-6">
+          <div className="flex flex-col gap-6">
+            {totalDeal ? <DealsChart /> : null}
+            <DashboardActivityLog />
+          </div>
         </div>
-      </div>
 
-      <div className="md:col-span-3">
-        <TasksList />
+        <div className="md:col-span-3">
+          <TasksList />
+        </div>
       </div>
     </div>
   );

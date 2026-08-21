@@ -6,8 +6,11 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * — es un visitante en la página web del cliente. La organización se
  * resuelve del slug con la clave de servicio; nunca se acepta del cliente.
  *
- * GET  → datos mínimos para pintar la página (título, si está disponible).
- * POST → crea el contacto (y, si escribió mensaje, una nota tipo "web").
+ * GET  → datos mínimos para pintar la página (título, tipo, si está disponible).
+ * POST → según el tipo del formulario:
+ *   - "lead": crea el contacto (y, si escribió mensaje, una nota tipo "web").
+ *   - "ticket": crea (o reutiliza) el contacto y su empresa, y abre un ticket
+ *     de soporte asociado a ambos.
  */
 
 const MAX_NOMBRE = 200;
@@ -30,7 +33,7 @@ export async function GET(_peticion: Request, { params }: Contexto) {
 
   const { data: formulario } = await supabase
     .from("public_forms")
-    .select("organization_id, active")
+    .select("organization_id, active, type")
     .eq("slug", clave)
     .maybeSingle();
 
@@ -47,7 +50,11 @@ export async function GET(_peticion: Request, { params }: Contexto) {
   const titulo =
     (fila?.config as { title?: string } | null)?.title?.trim() || "Vinqulia";
 
-  return Response.json({ disponible: true, titulo });
+  return Response.json({
+    disponible: true,
+    titulo,
+    tipo: formulario.type === "ticket" ? "ticket" : "lead",
+  });
 }
 
 export async function POST(peticion: Request, { params }: Contexto) {
@@ -56,7 +63,7 @@ export async function POST(peticion: Request, { params }: Contexto) {
 
   const { data: formulario } = await supabase
     .from("public_forms")
-    .select("id, organization_id, active")
+    .select("id, organization_id, active, type")
     .eq("slug", clave)
     .maybeSingle();
 
@@ -66,6 +73,8 @@ export async function POST(peticion: Request, { params }: Contexto) {
       { status: 404 },
     );
   }
+
+  const esTicket = formulario.type === "ticket";
 
   const cuerpo = await peticion.json().catch(() => null);
   if (!cuerpo || typeof cuerpo !== "object") {
@@ -85,6 +94,8 @@ export async function POST(peticion: Request, { params }: Contexto) {
   const telefono = recortar(datos.telefono, MAX_TELEFONO);
   const empresa = recortar(datos.empresa, MAX_NOMBRE);
   const mensaje = recortar(datos.mensaje, MAX_TEXTO);
+  const asunto = recortar(datos.asunto, MAX_NOMBRE);
+  const descripcion = recortar(datos.descripcion, MAX_TEXTO);
 
   if (!nombreCompleto) {
     return Response.json({ message: "Escribe tu nombre." }, { status: 400 });
@@ -92,6 +103,12 @@ export async function POST(peticion: Request, { params }: Contexto) {
   if (!esCorreoValido(correo)) {
     return Response.json(
       { message: "Escribe un correo electrónico válido." },
+      { status: 400 },
+    );
+  }
+  if (esTicket && (!empresa || !asunto || !descripcion)) {
+    return Response.json(
+      { message: "Escribe la empresa, el asunto y la descripción." },
       { status: 400 },
     );
   }
@@ -139,30 +156,74 @@ export async function POST(peticion: Request, { params }: Contexto) {
         ).data?.id;
   }
 
-  const ahora = new Date().toISOString();
-  const { data: contacto, error: errorContacto } = await supabase
-    .from("contacts")
-    .insert({
-      organization_id: formulario.organization_id,
-      first_name: primerNombre,
-      last_name: resto.join(" "),
-      email_jsonb: [{ email: correo, type: "Work" }],
-      phone_jsonb: telefono ? [{ number: telefono, type: "Work" }] : [],
-      company_id: companyId,
-      first_seen: ahora,
-      last_seen: ahora,
-    })
-    .select("id")
-    .single();
+  // Un ticket exige empresa (validado arriba), así que a este punto companyId
+  // siempre está resuelto en ese caso.
+  if (esTicket && !companyId) {
+    return Response.json(
+      { message: "No se pudo registrar la empresa." },
+      { status: 500 },
+    );
+  }
 
-  if (errorContacto || !contacto) {
+  const ahora = new Date().toISOString();
+
+  // Los tickets reutilizan el contacto si ya escribió antes con el mismo
+  // correo, para no duplicarlo en cada ticket nuevo que reporte la misma
+  // persona. Los leads conservan el comportamiento de siempre: cada envío
+  // crea su propio contacto.
+  const contactoExistente = esTicket
+    ? (
+        await supabase
+          .from("contacts")
+          .select("id")
+          .eq("organization_id", formulario.organization_id)
+          .contains("email_jsonb", JSON.stringify([{ email: correo }]))
+          .maybeSingle()
+      ).data
+    : null;
+
+  const contacto =
+    contactoExistente ??
+    (
+      await supabase
+        .from("contacts")
+        .insert({
+          organization_id: formulario.organization_id,
+          first_name: primerNombre,
+          last_name: resto.join(" "),
+          email_jsonb: [{ email: correo, type: "Work" }],
+          phone_jsonb: telefono ? [{ number: telefono, type: "Work" }] : [],
+          company_id: companyId,
+          first_seen: ahora,
+          last_seen: ahora,
+        })
+        .select("id")
+        .single()
+    ).data;
+
+  if (!contacto) {
     return Response.json(
       { message: "No se pudo registrar el contacto." },
       { status: 500 },
     );
   }
 
-  if (mensaje) {
+  if (esTicket) {
+    const { error: errorTicket } = await supabase.from("tickets").insert({
+      organization_id: formulario.organization_id,
+      subject: asunto,
+      description: descripcion,
+      status: "open",
+      contact_id: contacto.id,
+      company_id: companyId,
+    });
+    if (errorTicket) {
+      return Response.json(
+        { message: "No se pudo abrir el ticket." },
+        { status: 500 },
+      );
+    }
+  } else if (mensaje) {
     await supabase.from("contact_notes").insert({
       organization_id: formulario.organization_id,
       contact_id: contacto.id,
@@ -171,6 +232,11 @@ export async function POST(peticion: Request, { params }: Contexto) {
       date: ahora,
     });
   }
+
+  await supabase
+    .from("contacts")
+    .update({ last_seen: ahora })
+    .eq("id", contacto.id);
 
   await supabase.from("public_form_submissions").insert({
     organization_id: formulario.organization_id,
