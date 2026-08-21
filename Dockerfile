@@ -5,13 +5,13 @@
 
 FROM node:22-alpine AS dependencias
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY apps/crm/package.json apps/crm/package-lock.json ./
 RUN npm ci
 
 FROM node:22-alpine AS compilacion
 WORKDIR /app
 COPY --from=dependencias /app/node_modules ./node_modules
-COPY . .
+COPY apps/crm/. .
 # Las variables NEXT_PUBLIC_ se incrustan al compilar, asi que deben estar
 # disponibles en esta etapa. Se pasan con --build-arg o con un archivo de
 # entorno montado.

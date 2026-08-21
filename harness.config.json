@@ -1,9 +1,10 @@
 {
   "name": "atomic-crm",
   "layout": {
-    "src": "src",
-    "e2e": "e2e",
-    "adr": "adr"
+    "src": "apps/crm/src",
+    "e2e": "apps/crm/e2e",
+    "adr": "adr",
+    "appDir": "apps/crm"
   },
   "validation": {
     "steps": [
@@ -42,7 +43,7 @@
         "config": "vitest.config.ts",
         "projects": ["functions"],
         "changedScoped": true,
-        "condition": { "pathExists": "supabase/functions" }
+        "condition": { "pathExists": "apps/crm/supabase/functions" }
       },
       {
         "id": "e2e",
@@ -67,9 +68,9 @@
   },
   "deploy": {
     "adapter": "supabase",
-    "relevantGlobs": ["supabase/**"],
-    "schemaDir": "supabase/schemas",
-    "migrationsDir": "supabase/migrations"
+    "relevantGlobs": ["apps/crm/supabase/**"],
+    "schemaDir": "apps/crm/supabase/schemas",
+    "migrationsDir": "apps/crm/supabase/migrations"
   },
   "skills": {
     "developerMenu": [

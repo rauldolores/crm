@@ -81,7 +81,9 @@ export default defineConfig({
         test: {
           name: "claude",
           environment: "node",
-          include: [".claude/**/*.test.mjs"],
+          // .claude/ is repo-wide tooling, not part of this app — it stays at
+          // the true repo root (two levels up), unlike everything else here.
+          include: ["../../.claude/**/*.test.mjs"],
           // These tests spawn `node` subprocesses and do real git/worktree work,
           // so they need more headroom than the default 5s.
           testTimeout: 30000,

@@ -24,6 +24,9 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         if: ${{ !github.event.pull_request.draft || github.event_name == 'push' }}
+        defaults:
+            run:
+                working-directory: apps/crm
         steps:
             - name: 📥 Checkout repo
               uses: actions/checkout@v4
@@ -33,17 +36,16 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
+                  cache-dependency-path: apps/crm/package-lock.json
 
             - name: 📥 Download deps
               run: npm ci
 
             - name: 🔬 Lint
-              uses: wearerequired/lint-action@v2
-              with:
-                  eslint: true
-                  eslint_args: "**/*.{mjs,ts,tsx}"
-                  prettier: true
-                  prettier_args: "--config ./.prettierrc.json \"**/*.{js,json,ts,tsx,css,md,html}\""
+              run: npm run lint
+
+            - name: 🎨 Prettier
+              run: npm run prettier
 
 
     typecheck:
@@ -51,6 +53,9 @@ jobs:
         timeout-minutes: 10
         runs-on: ubuntu-latest
         if: ${{ !github.event.pull_request.draft || github.event_name == 'push' }}
+        defaults:
+            run:
+                working-directory: apps/crm
         steps:
             - name: 📥 Checkout repo
               uses: actions/checkout@v4
@@ -60,18 +65,22 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
+                  cache-dependency-path: apps/crm/package-lock.json
 
             - name: 📥 Download deps
               run: npm ci
 
             - name: 🏷️ Typecheck
               run: npm run typecheck
-              
+
     test-app:
         name: 🔎 Test
         runs-on: ubuntu-latest
         timeout-minutes: 10
         if: ${{ !github.event.pull_request.draft || github.event_name == 'push' }}
+        defaults:
+            run:
+                working-directory: apps/crm
         steps:
             - name: 📥 Checkout repo
               uses: actions/checkout@v4
@@ -81,6 +90,7 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
+                  cache-dependency-path: apps/crm/package-lock.json
 
             - name: 📥 Download deps
               run: npm ci
@@ -105,9 +115,12 @@ jobs:
         with:
             node-version: 22
             cache: npm
+            cache-dependency-path: apps/crm/package-lock.json
       - name: Install dependencies
+        working-directory: apps/crm
         run: npm ci
       - name: Install Playwright Browsers
+        working-directory: apps/crm
         run: npx playwright install --with-deps chromium-headless-shell 1>/dev/null
       - name: Install wait-on and serve
         run: npm install -g wait-on serve
@@ -119,6 +132,9 @@ jobs:
         timeout-minutes: 10
         runs-on: ubuntu-latest
         if: ${{ !github.event.pull_request.draft || github.event_name == 'push' }}
+        defaults:
+            run:
+                working-directory: apps/crm
         steps:
             - name: 📥 Checkout repo
               uses: actions/checkout@v4
@@ -128,6 +144,7 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
+                  cache-dependency-path: apps/crm/package-lock.json
 
             - name: 📥 Download deps
               run: npm ci

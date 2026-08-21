@@ -29,3 +29,5 @@ cypress/screenshots
 
 .next/
 next-env.d.ts
+supabase/.temp
+.supabase-e2e

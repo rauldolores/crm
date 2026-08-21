@@ -22,7 +22,7 @@ COMMITS_TO_REVERT:
   - ...
 ```
 
-**Working directory is `<WORKTREE_PATH>`** — the shared `<base>/simple` worktree the `setup-worktree` hook creates for you. Every Bash call must `cd <WORKTREE_PATH> && …` (shell state is stateless between calls). Do NOT touch `$CLAUDE_PROJECT_DIR/src/...` — that's the base branch.
+**Working directory is `<WORKTREE_PATH>`** — the shared `<base>/simple` worktree the `setup-worktree` hook creates for you. Every Bash call must `cd <WORKTREE_PATH> && …` (shell state is stateless between calls). Do NOT touch `$CLAUDE_PROJECT_DIR/apps/crm/src/...` — that's the base branch.
 
 ## Output contract
 

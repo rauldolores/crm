@@ -15,7 +15,7 @@ export const CONFIG_FILENAME = "harness.config.json";
 // exists iff its block is present in the config.
 const DEFAULTS = {
   name: "harness",
-  layout: { src: "src", e2e: "e2e", adr: "adr" },
+  layout: { src: "src", e2e: "e2e", adr: "adr", appDir: "" },
   validation: { steps: [], extraForbidden: [] },
   worktree: { provision: "npm-link" },
   skills: { developerMenu: [] },
@@ -129,6 +129,10 @@ export const isDeployEnabled = (cfg) => isObject(cfg.deploy);
 export const deployGlobs = (cfg) => cfg.deploy?.relevantGlobs ?? [];
 export const isAppSmokeEnabled = (cfg) => isObject(cfg.app);
 export const worktreeProvision = (cfg) => cfg.worktree?.provision ?? "npm-link";
+// The Next.js app's own subdirectory relative to the worktree/repo root (e.g.
+// "apps/crm"). Empty string when the app lives at the root, so a `join(x, "")`
+// is a no-op and every consumer works unchanged for a repo without this field.
+export const appDir = (cfg) => cfg.layout?.appDir ?? "";
 export const roleNames = (cfg) => Object.keys(cfg.roles ?? {});
 export const roleModel = (cfg, role) => cfg.roles?.[role]?.model ?? "";
 export const pipelineRoles = (cfg) =>

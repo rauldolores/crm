@@ -14,7 +14,7 @@
     {
       "type": "volume",
       "source": "${devcontainerId}-node-modules",
-      "target": "${containerWorkspaceFolder}/node_modules"
+      "target": "${containerWorkspaceFolder}/apps/crm/node_modules"
     },
     {
       "type": "volume",

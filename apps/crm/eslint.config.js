@@ -17,6 +17,8 @@ export default tseslint.config(
       "**/dist/**",
       "**/.astro/**",
       "**/.next/**",
+      "**/supabase/.temp/**",
+      "**/.supabase-e2e/**",
     ],
     languageOptions: {
       ecmaVersion: 2020,

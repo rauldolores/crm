@@ -11,7 +11,7 @@
   "features": {
     "./claude-code": {},
     "./npm": {
-      "workspaceFolder": "${containerWorkspaceFolder}"
+      "workspaceFolder": "${containerWorkspaceFolder}/apps/crm"
     },
     "./playwright": {},
     "ghcr.io/devcontainers/features/docker-in-docker:3": {
@@ -23,7 +23,7 @@
       "extensions": []
     }
   },
-  "forwardPorts": [5173, 5174],
+  "forwardPorts": [3001],
   "mounts": [
     {
       "type": "volume",

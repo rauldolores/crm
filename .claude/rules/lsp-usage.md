@@ -76,7 +76,7 @@ does not replace the hook-run typecheck.
 
 ## Worktree note
 
-Pass **absolute paths inside your own worktree** (`<WORKTREE_PATH>/src/...`), per
+Pass **absolute paths inside your own worktree** (`<WORKTREE_PATH>/apps/crm/src/...`), per
 `worktree-scope.md` — never the base-branch checkout under `$CLAUDE_PROJECT_DIR`.
 Fall back to `grep` / `Read` only when LSP returns an actual error or empty result
 for a worktree file — not as the default. Do not block on it.

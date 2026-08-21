@@ -73,6 +73,10 @@ jobs:
             POSTMARK_WEBHOOK_AUTHORIZED_IPS: ${{secrets.POSTMARK_WEBHOOK_AUTHORIZED_IPS}}
             NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN: ${{secrets.NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN}}
 
+        defaults:
+            run:
+                working-directory: apps/crm
+
         steps:
             - name: 📥 Checkout repo
               uses: actions/checkout@v4
@@ -82,8 +86,10 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
+                  cache-dependency-path: apps/crm/package-lock.json
 
             - name: ⚙️ Setup git
+              working-directory: .
               run: |
                   echo Deploying to pages to ${{ vars.DEPLOY_REPOSITORY }}
                   git remote set-url origin https://git:${{ secrets.DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}@github.com/${{ vars.DEPLOY_REPOSITORY }}

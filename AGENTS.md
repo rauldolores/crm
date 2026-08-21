@@ -4,6 +4,8 @@
 
 Vinqulia is a full-featured CRM built with React, shadcn-admin-kit, and Supabase. It provides contact management, task tracking, notes, email capture, and deal management with a Kanban board.
 
+The Next.js app lives at `apps/crm/` — a sibling of the repo's other apps (e.g. `apps/web/`, the public marketing site). Every relative path below (`src/`, `supabase/`, `app/`, `e2e/`, `test-data/`, `doc/`, etc.) is relative to `apps/crm/` unless stated otherwise. `make` targets already `cd` into it, so `make install`/`make start`/etc. run unchanged from the repo root; raw `npx`/`npm` commands given directly (not via `make`) must run from inside `apps/crm/`.
+
 ## Development Commands
 
 ### Setup
@@ -30,7 +32,9 @@ make build            # Build production bundle (runs tsc + vite build)
 
 ### Database Management
 
-The database schema is defined declaratively in `supabase/schemas/` (source of truth). Migrations in `supabase/migrations/` are auto-generated and should generally not be edited directly — but sometimes manual adjustment is needed (e.g., replacing a DROP+CREATE with an ALTER TABLE RENAME for column renames). Function definitions in `02_functions.sql` must use the exact `pg_dump` format (run `npx supabase db dump --local --schema public`) to avoid phantom diffs.
+The database schema is defined declaratively in `apps/crm/supabase/schemas/` (source of truth). Migrations in `apps/crm/supabase/migrations/` are auto-generated and should generally not be edited directly — but sometimes manual adjustment is needed (e.g., replacing a DROP+CREATE with an ALTER TABLE RENAME for column renames). Function definitions in `02_functions.sql` must use the exact `pg_dump` format (run `npx supabase db dump --local --schema public`) to avoid phantom diffs.
+
+Run these from `apps/crm/` (where `supabase/config.toml` lives):
 
 ```bash
 npx supabase db diff --local -f <name>  # Generate migration from schema changes
@@ -61,6 +65,8 @@ make registry-build   # Build Shadcn registry
 - **Testing**: Vitest
 
 ### Directory Structure
+
+The CRM lives under `apps/crm/` (a sibling of other Vinqulia apps, e.g. `apps/web/`, the public marketing site). Paths below are relative to `apps/crm/`:
 
 ```
 src/
@@ -98,7 +104,7 @@ supabase/
 
 ### Key Architecture Patterns
 
-For more details, check out the doc/src/content/docs/developers/architecture-choices.mdx document.
+For more details, check out the apps/crm/doc/src/content/docs/developers/architecture-choices.mdx document.
 
 #### Mutable Dependencies
 
@@ -177,7 +183,7 @@ Import `test-data/contacts.csv` via the Contacts page → Import button.
 
 ### Accessing Local Services During Development
 
-- Frontend: http://localhost:5173/
+- Frontend: http://localhost:3001/
 - Supabase Dashboard: http://localhost:54323/
 - REST API: http://127.0.0.1:54321
 - Storage (attachments): http://localhost:54323/project/default/storage/buckets/attachments

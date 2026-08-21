@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { getBaseBranch, getWorktreeChangeSummary, getWorktreePaths } from "./git.mjs";
 import { bash, exec } from "./process.mjs";
-import { loadConfig, validationSteps } from "./config.mjs";
+import { appDir, loadConfig, validationSteps } from "./config.mjs";
 import { appendProgress } from "./progress-log.mjs";
 
 // `only` narrows to a single worktree when the caller already knows it
@@ -190,9 +190,11 @@ export function runValidationSteps(ctx, { worktree = "", base = "" } = {}) {
     return { ok: false, step: "dry-run", output: "Validation failed (simulated)." };
   }
 
-  let steps;
+  let steps, app;
   try {
-    steps = validationSteps(loadConfig(ctx.repo));
+    const cfg = loadConfig(ctx.repo);
+    steps = validationSteps(cfg);
+    app = appDir(cfg);
   } catch (e) {
     // Fail closed: a malformed config must block the stop, not silently pass.
     return { ok: false, step: "config", output: `${e.message}\n` };
@@ -219,7 +221,7 @@ export function runValidationSteps(ctx, { worktree = "", base = "" } = {}) {
     for (const step of perWorktree) {
       if (stepSkipped(ctx, step)) continue;
       progress(`[validate:${label}] ${step.id}…`);
-      const r = runStep(ctx, step, { cwd: wt, base });
+      const r = runStep(ctx, step, { cwd: join(wt, app), base });
       if (!r.ok) {
         progress(`[validate:${label}] ${step.id} FAILED`);
         ctx.log(`FAIL step=${step.id} wt=${wt}\n${r.output}`);
@@ -233,7 +235,7 @@ export function runValidationSteps(ctx, { worktree = "", base = "" } = {}) {
   for (const step of repoLevel) {
     if (stepSkipped(ctx, step)) continue;
     progress(`[validate:repo] ${step.id}…`);
-    const r = runStep(ctx, step, { cwd: ctx.repo, base });
+    const r = runStep(ctx, step, { cwd: join(ctx.repo, app), base });
     if (!r.ok) {
       progress(`[validate:repo] ${step.id} FAILED`);
       ctx.log(`FAIL step=${step.id} exit`);

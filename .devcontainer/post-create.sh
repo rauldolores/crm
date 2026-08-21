@@ -13,4 +13,4 @@ sudo npm install -g supabase typescript-language-server
 # Doing it here — instead of the playwright feature's floating `npx playwright
 # install` — is what keeps the repo the single source of truth for the version and
 # avoids the "browser revision X installed but the repo wants Y" mismatch.
-npx playwright install chromium chromium-headless-shell
+(cd apps/crm && npx playwright install chromium chromium-headless-shell)
