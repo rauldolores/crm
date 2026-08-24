@@ -1,0 +1,50 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Rampa de marca: carmesí profundo (el mismo del CRM) sobre neutros cálidos. */
+  --color-brand-50: oklch(0.97 0.015 24);
+  --color-brand-100: oklch(0.94 0.035 24);
+  --color-brand-200: oklch(0.88 0.07 24);
+  --color-brand-300: oklch(0.8 0.11 24);
+  --color-brand-400: oklch(0.7 0.15 24);
+  --color-brand-500: oklch(0.6 0.19 24);
+  --color-brand-600: oklch(0.52 0.2 24);
+  --color-brand-700: oklch(0.45 0.17 24);
+  --color-brand-800: oklch(0.38 0.14 24);
+  --color-brand-900: oklch(0.31 0.11 24);
+  --color-brand-950: oklch(0.24 0.08 24);
+
+  --color-paper: oklch(0.985 0.004 24);
+}
+
+@layer base {
+  * {
+    border-color: oklch(0.915 0.006 24);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-paper font-sans text-neutral-900 antialiased;
+  }
+}
+
+/* Fondo con un halo de marca muy sutil, igual que en el CRM. */
+body {
+  background-color: var(--color-paper);
+  background-image: radial-gradient(
+      1100px 520px at 12% -8%,
+      oklch(0.58 0.21 25 / 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 480px at 100% -4%,
+      oklch(0.52 0.2 24 / 0.06),
+      transparent 55%
+    );
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}

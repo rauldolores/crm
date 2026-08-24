@@ -1,0 +1,27 @@
+{
+  "name": "vinqulia-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sitio público de Vinqulia: la página que describe y vende el CRM.",
+  "scripts": {
+    "dev": "next dev -p 4000",
+    "build": "next build",
+    "start": "next start -p 4000"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "lucide-react": "^0.542.0",
+    "next": "^16.3.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^22.19.19",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "typescript": "~5.8.3"
+  }
+}
