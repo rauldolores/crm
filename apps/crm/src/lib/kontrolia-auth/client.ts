@@ -114,22 +114,37 @@ const conPlazo = <T>(promesa: Promise<T>, ms: number): Promise<T> =>
 
 const PLAZO_DE_CAMBIO_MS = 8000;
 
+/** organization_id del token, sin verificar firma (ver caducaOEstaPorCaducar). */
+function organizacionDelToken(token: string): string | null {
+  try {
+    const payload = JSON.parse(
+      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")),
+    );
+    return typeof payload.organization_id === "string"
+      ? payload.organization_id
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 /**
  * Cambia la organización activa. Fuerza un refresco del token para que
  * `organization_id`, `roles` y `permissions` reflejen la nueva, que es lo que
  * hace que el RLS empiece a devolver los datos de esa empresa.
  *
- * El SDK primero escribe el contexto de sesión y después refresca el token.
- * Ese segundo paso puede fallar o quedarse colgado con el contexto ya
- * cambiado, o el intento entero puede quedar en cola detrás de un refresco
- * genérico (de checkAuth o de un `<CanAccess>` del sidebar) que seguía en
- * vuelo desde antes del clic — en ese caso el contexto de sesión NUNCA llega
- * a escribirse, y un simple refresco de más no cambia nada: se queda
- * siempre en la organización anterior. Por eso, si el primer intento falla o
- * se cuelga, se reintenta el cambio en sí (no solo el refresco) una vez
- * antes de rendirse con un refresco simple como último recurso: en el peor
- * de los casos quien llama recarga igualmente y el token que haya en ese
- * momento llega al arrancar.
+ * El SDK primero escribe el contexto de sesión y después refresca el token,
+ * pero que esa promesa resuelva no garantiza que la sesión nueva ya haya
+ * terminado de persistirse (cookies/localStorage) en el navegador — quien
+ * llama recarga la página justo después, y una recarga demasiado pegada a la
+ * escritura puede leerla a medias y arrancar todavía con la organización
+ * anterior (bug real, visto en producción: el cambio "revertía" siempre a la
+ * organización con la que se había iniciado sesión). Por eso, en vez de
+ * confiar en que switchOrganization() ya dejó todo listo, se comprueba el
+ * token resultante y se reintenta unas cuantas veces antes de devolver el
+ * control a quien llama.
  */
 export async function switchKontroliaOrganization(
   organizationId: string,
@@ -137,18 +152,27 @@ export async function switchKontroliaOrganization(
   const c = getKontroliaClient();
   if (!c) return;
   descartarTokenEnVuelo();
-  try {
-    await conPlazo(c.switchOrganization(organizationId), PLAZO_DE_CAMBIO_MS);
-  } catch {
+
+  const INTENTOS = 5;
+  for (let intento = 1; intento <= INTENTOS; intento++) {
     try {
-      await conPlazo(
-        c.switchOrganization(organizationId),
-        PLAZO_DE_CAMBIO_MS,
-      );
+      await conPlazo(c.switchOrganization(organizationId), PLAZO_DE_CAMBIO_MS);
     } catch {
-      await conPlazo(c.refresh(), PLAZO_DE_CAMBIO_MS).catch(() => {});
+      // Se sigue comprobando el token de todas formas: el mensaje de error
+      // de switchOrganization() no dice si el contexto ya quedó escrito.
+    }
+
+    const token = await c.getToken().catch(() => null);
+    if (token && organizacionDelToken(token) === organizationId) {
+      return;
+    }
+
+    if (intento < INTENTOS) {
+      await esperar(200 * intento);
     }
   }
+  // Se agotaron los intentos: quien llama recarga igual, con el token que
+  // haya en ese momento — es mejor que dejar la interfaz "colgada".
 }
 
 export async function logoutKontroliaAuth(): Promise<void> {
