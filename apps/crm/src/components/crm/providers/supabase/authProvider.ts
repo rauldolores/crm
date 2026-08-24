@@ -2,6 +2,7 @@ import type { AuthProvider } from "ra-core";
 import { supabaseAuthProvider } from "ra-supabase-core";
 
 import {
+  descartarTokenEnVuelo,
   getKontroliaAccessToken,
   getKontroliaClient,
   logoutKontroliaAuth,
@@ -162,8 +163,15 @@ const getSale = async () => {
  * Exportada porque el selector de organización debe llamarla al cambiar: la
  * ficha cacheada pertenece a la organización anterior y, sin limpiarla, la
  * identidad y los permisos seguirían siendo los de la otra empresa.
+ *
+ * También descarta la promesa de getSale() en curso, si la hay: si venía de
+ * antes del cambio de organización, terminaría reflejando la organización
+ * anterior y volvería a escribir esa ficha vieja en el caché justo después
+ * de limpiarlo.
  */
 export function clearAuthCache() {
+  peticionDeFichaEnVuelo = null;
+  descartarTokenEnVuelo();
   const storage = getLocalStorage();
   storage?.removeItem(IS_INITIALIZED_CACHE_KEY);
   storage?.removeItem(CURRENT_SALE_CACHE_KEY);

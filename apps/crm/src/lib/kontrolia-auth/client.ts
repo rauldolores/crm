@@ -62,9 +62,9 @@ let peticionDeTokenEnVuelo: Promise<string | null> | null = null;
 export async function getKontroliaAccessToken(): Promise<string | null> {
   if (peticionDeTokenEnVuelo) return peticionDeTokenEnVuelo;
   peticionDeTokenEnVuelo = (async () => {
-    const c = getKontroliaClient();
-    if (!c) return null;
     try {
+      const c = getKontroliaClient();
+      if (!c) return null;
       let token = await c.getToken();
       if (token && caducaOEstaPorCaducar(token)) {
         await c.refresh();
@@ -78,6 +78,18 @@ export async function getKontroliaAccessToken(): Promise<string | null> {
     }
   })();
   return peticionDeTokenEnVuelo;
+}
+
+/**
+ * Descarta cualquier promesa de token compartida que siga en curso, sin
+ * esperarla. La usa `switchKontroliaOrganization` antes de cambiar de
+ * organización: si un refresco genérico (de checkAuth o de un `<CanAccess>`
+ * del sidebar) seguía en vuelo desde antes del clic, quedaba compartido con
+ * el de aquí y el cambio de organización esperaba —o corría— detrás de un
+ * refresco que reflejaba todavía la organización anterior.
+ */
+export function descartarTokenEnVuelo(): void {
+  peticionDeTokenEnVuelo = null;
 }
 
 /** Organizaciones a las que pertenece el usuario, para el selector. */
@@ -109,20 +121,33 @@ const PLAZO_DE_CAMBIO_MS = 8000;
  *
  * El SDK primero escribe el contexto de sesión y después refresca el token.
  * Ese segundo paso puede fallar o quedarse colgado con el contexto ya
- * cambiado: la interfaz se quedaba sin recargar y "no pasaba nada" hasta un
- * F5 manual. Por eso hay un plazo máximo y, si algo falla, se reintenta el
- * refresco una vez: en el peor de los casos quien llama recarga igualmente y
- * el token nuevo llega al arrancar.
+ * cambiado, o el intento entero puede quedar en cola detrás de un refresco
+ * genérico (de checkAuth o de un `<CanAccess>` del sidebar) que seguía en
+ * vuelo desde antes del clic — en ese caso el contexto de sesión NUNCA llega
+ * a escribirse, y un simple refresco de más no cambia nada: se queda
+ * siempre en la organización anterior. Por eso, si el primer intento falla o
+ * se cuelga, se reintenta el cambio en sí (no solo el refresco) una vez
+ * antes de rendirse con un refresco simple como último recurso: en el peor
+ * de los casos quien llama recarga igualmente y el token que haya en ese
+ * momento llega al arrancar.
  */
 export async function switchKontroliaOrganization(
   organizationId: string,
 ): Promise<void> {
   const c = getKontroliaClient();
   if (!c) return;
+  descartarTokenEnVuelo();
   try {
     await conPlazo(c.switchOrganization(organizationId), PLAZO_DE_CAMBIO_MS);
   } catch {
-    await conPlazo(c.refresh(), PLAZO_DE_CAMBIO_MS).catch(() => {});
+    try {
+      await conPlazo(
+        c.switchOrganization(organizationId),
+        PLAZO_DE_CAMBIO_MS,
+      );
+    } catch {
+      await conPlazo(c.refresh(), PLAZO_DE_CAMBIO_MS).catch(() => {});
+    }
   }
 }
 
