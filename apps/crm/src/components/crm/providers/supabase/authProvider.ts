@@ -78,63 +78,83 @@ export async function getIsInitialized() {
   return isInitialized;
 }
 
+let peticionDeFichaEnVuelo: Promise<any> | null = null;
+
+/**
+ * ra-core llama a esto desde varios sitios independientes casi al mismo
+ * tiempo: una vez por getIdentity (menú de usuario) y una vez por cada
+ * `<CanAccess>` del sidebar (5 recursos). Sin compartir la llamada en curso,
+ * los primeros en llegar veían el caché de localStorage todavía frío y cada
+ * uno disparaba su propia consulta a KontrolIA Auth — con el token por
+ * vencer, eso eran varios refrescos simultáneos con el mismo refresh token,
+ * que KontrolIA Auth rechazaba con 429 en cascada. Se comparte una sola
+ * promesa en vuelo por eso.
+ */
 const getSale = async () => {
-  const storage = getLocalStorage();
-  const cachedValue = storage?.getItem(CURRENT_SALE_CACHE_KEY);
-  if (cachedValue != null) {
-    return JSON.parse(cachedValue);
-  }
+  if (peticionDeFichaEnVuelo) return peticionDeFichaEnVuelo;
+  peticionDeFichaEnVuelo = (async () => {
+    try {
+      const storage = getLocalStorage();
+      const cachedValue = storage?.getItem(CURRENT_SALE_CACHE_KEY);
+      if (cachedValue != null) {
+        return JSON.parse(cachedValue);
+      }
 
-  // La identidad viene de KontrolIA Auth. No se usa supabase.auth porque, al
-  // configurar el cliente con `accessToken`, supabase-js lo deshabilita.
-  const usuario = await getKontroliaClient()?.getUser();
-  if (usuario == null) {
-    return undefined;
-  }
+      // La identidad viene de KontrolIA Auth. No se usa supabase.auth porque, al
+      // configurar el cliente con `accessToken`, supabase-js lo deshabilita.
+      const usuario = await getKontroliaClient()?.getUser();
+      if (usuario == null) {
+        return undefined;
+      }
 
-  // Da de alta al usuario en el CRM la primera vez que entra, y con el la
-  // configuracion de su organizacion. Se hace en el servidor porque es quien
-  // conoce la organizacion del token: dentro de la base, consultando con la
-  // clave de servicio, ese dato no esta disponible.
-  const token = await getKontroliaAccessToken();
-  const respuesta = await fetch("/api/crm/aprovisionar", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    // KontrolIA Auth guarda el nombre completo en un solo campo; el CRM lo
-    // separa en dos. Se parte por el primer espacio, que es lo razonable sin
-    // inventar reglas por idioma.
-    body: JSON.stringify({
-      email: usuario.email ?? "",
-      first_name: (usuario.fullName ?? "").split(" ")[0] ?? "",
-      last_name: (usuario.fullName ?? "").split(" ").slice(1).join(" "),
-    }),
-  }).catch(() => null);
+      // Da de alta al usuario en el CRM la primera vez que entra, y con el la
+      // configuracion de su organizacion. Se hace en el servidor porque es quien
+      // conoce la organizacion del token: dentro de la base, consultando con la
+      // clave de servicio, ese dato no esta disponible.
+      const token = await getKontroliaAccessToken();
+      const respuesta = await fetch("/api/crm/aprovisionar", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        // KontrolIA Auth guarda el nombre completo en un solo campo; el CRM lo
+        // separa en dos. Se parte por el primer espacio, que es lo razonable sin
+        // inventar reglas por idioma.
+        body: JSON.stringify({
+          email: usuario.email ?? "",
+          first_name: (usuario.fullName ?? "").split(" ")[0] ?? "",
+          last_name: (usuario.fullName ?? "").split(" ").slice(1).join(" "),
+        }),
+      }).catch(() => null);
 
-  if (respuesta?.ok) {
-    const { sale } = await respuesta.json();
-    if (sale) {
-      storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(sale));
-      return sale;
+      if (respuesta?.ok) {
+        const { sale } = await respuesta.json();
+        if (sale) {
+          storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(sale));
+          return sale;
+        }
+      }
+
+      // maybeSingle y no single: sin ficha todavía (el aprovisionamiento falló o
+      // va en camino) single responde 406 y ensucia la consola en cada intento.
+      const { data: dataSale, error: errorSale } = await getSupabaseClient()
+        .from("sales")
+        .select("id, first_name, last_name, avatar, administrator")
+        .match({ user_id: usuario.id })
+        .maybeSingle();
+
+      if (dataSale == null || errorSale) {
+        return undefined;
+      }
+
+      storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(dataSale));
+      return dataSale;
+    } finally {
+      peticionDeFichaEnVuelo = null;
     }
-  }
-
-  // maybeSingle y no single: sin ficha todavía (el aprovisionamiento falló o
-  // va en camino) single responde 406 y ensucia la consola en cada intento.
-  const { data: dataSale, error: errorSale } = await getSupabaseClient()
-    .from("sales")
-    .select("id, first_name, last_name, avatar, administrator")
-    .match({ user_id: usuario.id })
-    .maybeSingle();
-
-  if (dataSale == null || errorSale) {
-    return undefined;
-  }
-
-  storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(dataSale));
-  return dataSale;
+  })();
+  return peticionDeFichaEnVuelo;
 };
 
 /**

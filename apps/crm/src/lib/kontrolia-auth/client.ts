@@ -42,26 +42,42 @@ function caducaOEstaPorCaducar(token: string): boolean {
   }
 }
 
+let peticionDeTokenEnVuelo: Promise<string | null> | null = null;
+
 /**
  * Token de acceso de la sesión actual, o null si no hay.
  *
  * El singleton vive fuera de `<AuthProvider>` y por tanto sin su temporizador
  * de refresco automático, así que un token que llevaba rato sin usarse puede
  * llegar caducado al servidor. Se fuerza el refresco aquí cuando hace falta.
+ *
+ * El CRM llama a esto desde varios sitios independientes casi al mismo
+ * tiempo (checkAuth, y cada `<CanAccess>` del sidebar vía getSale) — sin
+ * compartir la llamada en curso, cada uno refrescaba el token por su cuenta
+ * con el mismo refresh token, y KontrolIA Auth respondía 429 a los que
+ * llegaban en paralelo, disparando una cascada de reintentos. Se comparte
+ * una sola promesa en vuelo por eso: los llamadores concurrentes esperan el
+ * mismo resultado en vez de refrescar cada uno por separado.
  */
 export async function getKontroliaAccessToken(): Promise<string | null> {
-  const c = getKontroliaClient();
-  if (!c) return null;
-  try {
-    let token = await c.getToken();
-    if (token && caducaOEstaPorCaducar(token)) {
-      await c.refresh();
-      token = await c.getToken();
+  if (peticionDeTokenEnVuelo) return peticionDeTokenEnVuelo;
+  peticionDeTokenEnVuelo = (async () => {
+    const c = getKontroliaClient();
+    if (!c) return null;
+    try {
+      let token = await c.getToken();
+      if (token && caducaOEstaPorCaducar(token)) {
+        await c.refresh();
+        token = await c.getToken();
+      }
+      return token;
+    } catch {
+      return null;
+    } finally {
+      peticionDeTokenEnVuelo = null;
     }
-    return token;
-  } catch {
-    return null;
-  }
+  })();
+  return peticionDeTokenEnVuelo;
 }
 
 /** Organizaciones a las que pertenece el usuario, para el selector. */
