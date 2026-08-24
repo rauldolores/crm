@@ -11,6 +11,11 @@ import { env } from "@/lib/env";
 export const kontroliaAuthConfig = {
   supabaseUrl: env.kontroliaAuthUrl,
   supabaseAnonKey: env.kontroliaAuthAnonKey,
+  // Sesión compartida entre subdominios, tal como la documenta KontrolIA Auth
+  // ("Conectar tu aplicación": si la app vive en un subdominio del mismo
+  // dominio que auth-server, basta con fijar cookieDomain). Ver `env.ts` para
+  // el detalle del choque de cookies que esto evita.
+  cookieDomain: env.cookieDomain,
   // Habilita en el SDK los métodos de directorio (listOrganizationMembers,
   // searchOrganizationMembers, getOrganizationMemberCount). El CRM hoy no los
   // llama desde el navegador —el endpoint del auth-server no admite CORS, así

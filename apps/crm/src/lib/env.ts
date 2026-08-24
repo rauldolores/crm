@@ -24,6 +24,18 @@ export const env = {
     process.env.NEXT_PUBLIC_KONTROLIA_AUTH_SERVER_URL ?? "",
   kontroliaOAuthClientId:
     process.env.NEXT_PUBLIC_KONTROLIA_OAUTH_CLIENT_ID ?? "",
+  /**
+   * Dominio de la cookie de sesión, cuando el CRM vive en un subdominio del
+   * mismo dominio que KontrolIA Auth (`.kontrolia.io` para `crm.kontrolia.io`
+   * junto a `auth.kontrolia.io`). Sin esto ambas apps escriben una cookie con
+   * el MISMO nombre —se deriva del proyecto de Supabase, que comparten— pero
+   * en ámbitos distintos: la del dominio padre se lee primero y tapa a la del
+   * host, así que el CRM guardaba bien la sesión al cambiar de organización y
+   * después leía la del auth-server, que sigue en la organización del acceso.
+   * Vacío en local (`localhost` no recibe cookies de `.kontrolia.io`, así que
+   * no hay choque) y en cualquier despliegue fuera de ese dominio.
+   */
+  cookieDomain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
 
   /** Opcionales. */
   googleWorkplaceDomain: process.env.NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN || undefined,
