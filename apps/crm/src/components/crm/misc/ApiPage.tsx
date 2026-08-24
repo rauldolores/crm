@@ -9,7 +9,6 @@ import {
 } from "ra-core";
 import { useState } from "react";
 
-import { env } from "@/lib/env";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,16 +45,19 @@ const RECURSOS_DE_EJEMPLO: { recurso: string; ejemplo: string }[] = [
  * Documentación de la API y gestión de webhooks, dentro del propio CRM.
  *
  * La API es la misma que usa la aplicación (PostgREST detrás del puente
- * /api/supabase), así que documentar es describir lo que ya existe. Los
+ * /api/datos), así que documentar es describir lo que ya existe. Los
  * webhooks se administran aquí mismo para que la explicación y el alta vivan
  * juntas.
+ *
+ * Todas las direcciones que se muestran aquí (REST, MCP) usan el propio
+ * dominio de la aplicación, nunca el de Supabase: son puentes del servidor
+ * (`/api/datos`, `/api/mcp`) que reenvían la petición internamente.
  */
 export const ApiPage = () => {
   const translate = useTranslate();
-  const urlBase =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/api/supabase/rest/v1`
-      : "/api/supabase/rest/v1";
+  const origen = typeof window !== "undefined" ? window.location.origin : "";
+  const urlBase = `${origen}/api/datos/rest/v1`;
+  const urlMcp = `${origen}/api/mcp`;
 
   return (
     <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
@@ -125,7 +127,7 @@ export const ApiPage = () => {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p>{translate("crm.api.mcp.intro")}</p>
-          <Bloque>{`${env.supabaseUrl}/functions/v1/mcp`}</Bloque>
+          <Bloque>{urlMcp}</Bloque>
           <p>{translate("crm.api.mcp.auth")}</p>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>

@@ -41,8 +41,11 @@ function getBaseUrl(req: Request): string {
   return `${proto}://${host}`;
 }
 
+// La ruta se fija a /api/mcp (el puente de Next.js en app/api/mcp/), no a
+// /functions/v1/mcp: un cliente externo solo debe conocer el dominio de la
+// aplicación, nunca el de la función de Supabase que hay detrás.
 function getResourceMetadataUrl(req: Request): string {
-  return `${getBaseUrl(req)}/functions/v1/mcp/oauth-protected-resource`;
+  return `${getBaseUrl(req)}/api/mcp/oauth-protected-resource`;
 }
 
 // --- Auth ---
@@ -564,8 +567,13 @@ function handleProtectedResourceMetadata(req: Request): Response {
   const baseUrl = getBaseUrl(req);
   return new Response(
     JSON.stringify({
-      resource: `${baseUrl}/functions/v1/mcp`,
-      authorization_servers: [`${baseUrl}/auth/v1`],
+      resource: `${baseUrl}/api/mcp`,
+      // El servidor que EMITE el token sí es el de Supabase de verdad: la
+      // app no proxya /auth/v1 (no reemite tokens), así que un cliente que
+      // haga descubrimiento OAuth completo necesita esta URL real para
+      // poder autenticarse. Es la única dirección de esta respuesta que no
+      // pasa por el dominio de la aplicación.
+      authorization_servers: [`${SUPABASE_URL}/auth/v1`],
       bearer_methods_supported: ["header"],
     }),
     {

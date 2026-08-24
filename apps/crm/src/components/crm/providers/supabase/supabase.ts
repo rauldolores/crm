@@ -8,7 +8,7 @@ import { env } from "@/lib/env";
 let supabaseClient: SupabaseClient<any, "crm"> | null = null;
 
 /** Ruta del puente que reenvía a la base de datos desde el servidor. */
-const PUENTE = "/api/supabase";
+const PUENTE = "/api/datos";
 
 /**
  * Envía el token de KontrolIA Auth en cada petición.
@@ -31,7 +31,7 @@ const fetchConToken: typeof fetch = async (entrada, opciones) => {
  * Cliente de la base de datos del CRM.
  *
  * Con acceso centralizado el navegador NO habla con la base directamente:
- * apunta al puente `/api/supabase`, que verifica el token de KontrolIA Auth en
+ * apunta al puente `/api/datos`, que verifica el token de KontrolIA Auth en
  * el servidor y reenvía la petición firmando otro token que lleva la
  * organización activa. Las políticas RLS se aplican entonces dentro de la base.
  *

@@ -316,7 +316,13 @@ const McpServerSection = () => {
         })}
       </p>
       <ItemGroup className="rounded-lg border overflow-hidden">
-        <CopyPasteRow value={`${env.supabaseUrl}/functions/v1/mcp`} />
+        <CopyPasteRow
+          value={
+            typeof window !== "undefined"
+              ? `${window.location.origin}/api/mcp`
+              : "/api/mcp"
+          }
+        />
       </ItemGroup>
     </div>
   );

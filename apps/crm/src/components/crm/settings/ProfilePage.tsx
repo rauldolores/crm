@@ -147,7 +147,13 @@ const ProfileForm = ({ refetchUser }: { refetchUser: () => void }) => {
                 _: "Use this URL to connect your AI assistant to your CRM data via the Model Context Protocol (MCP).",
               })}
             </p>
-            <CopyPaste value={`${env.supabaseUrl}/functions/v1/mcp`} />
+            <CopyPaste
+              value={
+                typeof window !== "undefined"
+                  ? `${window.location.origin}/api/mcp`
+                  : "/api/mcp"
+              }
+            />
           </div>
         </CardContent>
       </Card>

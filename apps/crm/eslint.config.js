@@ -8,7 +8,16 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".next", "next-env.d.ts"] },
+  {
+    ignores: [
+      "dist",
+      ".next",
+      "next-env.d.ts",
+      "**/.astro/**",
+      "**/supabase/.temp/**",
+      "**/.supabase-e2e/**",
+    ],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx,mjs}"],
