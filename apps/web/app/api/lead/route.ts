@@ -60,6 +60,12 @@ async function llamarCRM(ruta: string, metodo: string, cuerpo?: unknown) {
   const cabeceras: Record<string, string> = {
     Authorization: `Bearer ${CLAVE}`,
     "Content-Type": "application/json",
+    // Todo Vinqulia vive en el esquema `crm`, no en `public` (el que
+    // PostgREST usa si no se le indica otro). Sin esto, /api/datos
+    // reenvía la petición pero PostgREST busca las tablas en el esquema
+    // equivocado y responde 404 (PGRST205).
+    "Accept-Profile": "crm",
+    "Content-Profile": "crm",
   };
   if (cuerpo !== undefined) cabeceras["Prefer"] = "return=representation";
   const respuesta = await fetch(`${BASE}/${ruta}`, {
