@@ -97,6 +97,7 @@ export const generateContacts = (db: Db, size = 500): Required<Contact>[] => {
       nb_tasks: 0,
       linkedin_url: null,
       custom_fields: {},
+      lead_score: random.number({ min: 0, max: 100 }),
     };
   });
 };

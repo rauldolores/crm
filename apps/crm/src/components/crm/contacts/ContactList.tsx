@@ -96,7 +96,9 @@ const ContactBulkActionButtons = () => (
 const ContactListActions = () => (
   <TopToolbar>
     <VistasGuardadas resource="contacts" />
-    <SortButton fields={["first_name", "last_name", "last_seen"]} />
+    <SortButton
+      fields={["first_name", "last_name", "last_seen", "lead_score"]}
+    />
     <ContactImportButton />
     <ExportButton />
     <CreateButton />

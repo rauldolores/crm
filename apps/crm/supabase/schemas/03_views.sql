@@ -130,10 +130,31 @@ select
     c.name as company_name,
     count(distinct t.id) filter (where t.done_date is null) as nb_tasks,
     co.organization_id,
-    co.custom_fields
+    co.custom_fields,
+    -- Puntaje de interés (0-100): recencia de actividad (0-40) + volumen de
+    -- interacciones, notas + tareas completadas (0-30) + oportunidad activa
+    -- sin archivar (0-30). Bandas fijas (Caliente/Tibio/Frío), no
+    -- configurables por organización: ver LeadScoreBadge.tsx.
+    (
+        case
+            when co.last_seen >= now() - interval '7 days' then 40
+            when co.last_seen >= now() - interval '30 days' then 25
+            when co.last_seen >= now() - interval '90 days' then 10
+            else 0
+        end
+        + case
+            when count(distinct cn.id) + count(distinct t.id) filter (where t.done_date is not null) >= 6 then 30
+            when count(distinct cn.id) + count(distinct t.id) filter (where t.done_date is not null) >= 3 then 20
+            when count(distinct cn.id) + count(distinct t.id) filter (where t.done_date is not null) >= 1 then 10
+            else 0
+        end
+        + case when bool_or(d.id is not null) then 30 else 0 end
+    )::smallint as lead_score
 from crm.contacts co
     left join crm.tasks t on co.id = t.contact_id
     left join crm.companies c on co.company_id = c.id
+    left join crm.contact_notes cn on co.id = cn.contact_id
+    left join crm.deals d on co.id = any(d.contact_ids) and d.archived_at is null
 group by co.id, c.name;
 
 create or replace view crm.init_state with (security_invoker = off) as

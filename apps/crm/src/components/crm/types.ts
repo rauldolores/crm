@@ -121,6 +121,7 @@ export type Contact = {
   nb_tasks?: number;
   company_name?: string;
   custom_fields?: CustomFieldValues;
+  lead_score?: number;
 } & Pick<RaRecord, "id">;
 
 export type ContactNote = {

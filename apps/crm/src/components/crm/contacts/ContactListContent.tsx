@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
 
 import { Status } from "../misc/Status";
+import { LeadScoreBadge } from "../misc/LeadScoreBadge";
 import { formatRelativeDate } from "../misc/RelativeDate";
 import type { Contact } from "../types";
 import { Avatar } from "./Avatar";
@@ -166,6 +167,10 @@ const ContactItemContent = ({
               })}{" "}
               <Status status={contact.status} />
             </div>
+            <LeadScoreBadge
+              score={contact.lead_score}
+              className="justify-end mt-1"
+            />
           </div>
         )}
       </Link>
@@ -259,7 +264,10 @@ const ContactItemContentMobile = ({ contact }: { contact: Contact }) => {
             <div className="font-medium">
               <RecordRepresentation />
             </div>
-            <Status status={contact.status} />
+            <div className="flex items-center gap-1.5">
+              <LeadScoreBadge score={contact.lead_score} />
+              <Status status={contact.status} />
+            </div>
           </div>
           <div className="text-sm text-muted-foreground">
             <div className="flex flex-col gap-1">

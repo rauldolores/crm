@@ -96,6 +96,13 @@ export const spanishCrmMessages = {
         background: "Antecedentes (biografía, cómo se conocieron, etc.)",
         has_newsletter: "Recibe el boletín",
         sales_id: "Responsable de venta",
+        lead_score: "Puntaje",
+      },
+      lead_score: {
+        label: "Puntaje: %{score}",
+        hot: "Caliente",
+        warm: "Tibio",
+        cold: "Frío",
       },
       action: {
         add: "Añadir contacto",
