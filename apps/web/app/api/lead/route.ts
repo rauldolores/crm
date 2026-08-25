@@ -4,15 +4,20 @@ import { NextResponse } from "next/server";
  * Captura de leads comerciales del formulario de demo.
  *
  * El sitio es una página pública; este endpoint es el punto único por donde
- * entran los leads. Hoy: valida, normaliza, calcula señales de scoring y
- * reenvía a un webhook si está configurado. Si no hay webhook, lo deja
- * registrado en el log del servidor (modo "captura").
+ * entran los leads. Valida, normaliza, calcula señales de calificación y:
+ *   1. si CRM_LEAD_FORM_URL está configurada, crea el contacto directamente
+ *      en Vinqulia (reenvío servidor-a-servidor al formulario público del
+ *      CRM — /api/formularios/<clave> —, sin exponer ninguna clave al
+ *      navegador: la propia URL con su slug es el único secreto);
+ *   2. si además hay LEAD_WEBHOOK_URL, reenvía también ahí (p. ej. un aviso
+ *      a Slack) — son destinos independientes, no alternativos.
+ * Si ninguna está configurada, el lead queda en el log del servidor (modo
+ * "captura").
  *
- * Para conectar el embudo completo, define en el entorno de despliegue:
- *   LEAD_WEBHOOK_URL = https://tu-backend/leads   (recibe el JSON del lead)
- *
- * La estructura del payload y las señales están pensadas para que un sistema
- * de lead scoring (o el CRM) pueda consumirlas sin cambios en esta página.
+ * Para conectar el CRM, define en el entorno de despliegue:
+ *   CRM_LEAD_FORM_URL = https://crm.kontrolia.io/api/formularios/<clave>
+ * La <clave> se obtiene creando un formulario tipo "lead" en el CRM
+ * (Formularios); no se usa como iframe, solo se reutiliza su endpoint.
  */
 
 export const runtime = "nodejs";
@@ -95,31 +100,70 @@ export async function POST(request: Request) {
     },
   };
 
-  const destino = process.env.LEAD_WEBHOOK_URL;
+  const urlFormularioCrm = process.env.CRM_LEAD_FORM_URL;
+  const urlWebhook = process.env.LEAD_WEBHOOK_URL;
 
-  if (destino) {
-    try {
-      await fetch(destino, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(8000),
-      });
-    } catch (error) {
-      console.error("[lead] No se pudo reenviar el lead al webhook", error);
-      return NextResponse.json(
-        { ok: true, reenviado: false },
-        { status: 200 },
-      );
-    }
-    return NextResponse.json({ ok: true, reenviado: true });
+  let creadoEnCrm = false;
+  if (urlFormularioCrm) {
+    creadoEnCrm = await reenviarAlCrm(urlFormularioCrm, lead);
   }
 
-  // Modo captura: sin webhook configurado, el lead queda en el log del
-  // servidor (conectable a cualquier sistema de seguimiento más adelante).
-  console.log("[lead] Nuevo lead:", JSON.stringify(payload, null, 2));
-  return NextResponse.json({ ok: true, modo: "captura" });
+  let reenviadoAWebhook = false;
+  if (urlWebhook) {
+    reenviadoAWebhook = await reenviarAWebhook(urlWebhook, payload);
+  }
+
+  if (!urlFormularioCrm && !urlWebhook) {
+    // Modo captura: sin destino configurado, el lead queda en el log del
+    // servidor (conectable a cualquier sistema de seguimiento más adelante).
+    console.log("[lead] Nuevo lead:", JSON.stringify(payload, null, 2));
+    return NextResponse.json({ ok: true, modo: "captura" });
+  }
+
+  return NextResponse.json({ ok: true, creadoEnCrm, reenviadoAWebhook });
 }
+
+const reenviarAlCrm = async (url: string, lead: Lead): Promise<boolean> => {
+  const { email, ...resto } = lead;
+  try {
+    const respuesta = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...resto, correo: email }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!respuesta.ok) {
+      console.error(
+        "[lead] El CRM rechazó el contacto",
+        respuesta.status,
+        await respuesta.text().catch(() => ""),
+      );
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("[lead] No se pudo crear el contacto en el CRM", error);
+    return false;
+  }
+};
+
+const reenviarAWebhook = async (
+  url: string,
+  payload: unknown,
+): Promise<boolean> => {
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    });
+    return true;
+  } catch (error) {
+    console.error("[lead] No se pudo reenviar el lead al webhook", error);
+    return false;
+  }
+};
 
 /**
  * Señales de calificación (ver brief de ventas):

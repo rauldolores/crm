@@ -16,6 +16,7 @@ import { getServiceClient } from "@/lib/server/supabase-service";
 const MAX_NOMBRE = 200;
 const MAX_TEXTO = 5000;
 const MAX_TELEFONO = 50;
+const MAX_ETIQUETA = 100;
 const MAX_ENVIOS_POR_VENTANA = 20;
 const VENTANA_MINUTOS = 10;
 
@@ -23,6 +24,53 @@ type Contexto = { params: Promise<{ clave: string }> };
 
 const recortar = (valor: unknown, limite: number): string =>
   typeof valor === "string" ? valor.trim().slice(0, limite) : "";
+
+const recortarLista = (valor: unknown, limite: number): string[] =>
+  Array.isArray(valor)
+    ? valor
+        .filter((v): v is string => typeof v === "string" && v.trim() !== "")
+        .slice(0, 10)
+        .map((v) => v.trim().slice(0, limite))
+    : [];
+
+/**
+ * Preguntas de calificación comercial (opcionales): las manda el formulario
+ * de la web pública, no el formulario nativo del CRM. Se anexan como nota
+ * en vez de custom_fields para no depender de que la organización tenga
+ * definidos esos campos en Ajustes.
+ */
+const construirNotaDeCalificacion = (
+  datos: Record<string, unknown>,
+): string => {
+  const problema = recortar(datos.problema, MAX_TEXTO);
+  const empleados = recortar(datos.empleados, MAX_ETIQUETA);
+  const personasVentas = recortar(datos.personas_ventas, MAX_ETIQUETA);
+  const gestionActual = recortar(datos.gestion_actual, MAX_ETIQUETA);
+  const usaCrm = recortar(datos.usa_crm, MAX_ETIQUETA);
+  const crmCual = recortar(datos.crm_cual, MAX_ETIQUETA);
+  const necesidades = recortarLista(datos.necesidades, MAX_ETIQUETA);
+  const modalidad = recortar(datos.modalidad, MAX_ETIQUETA);
+  const interes = recortar(datos.interes, MAX_ETIQUETA);
+
+  const detalles: string[] = [];
+  if (empleados) detalles.push(`Empleados: ${empleados}`);
+  if (personasVentas) detalles.push(`Personas en ventas: ${personasVentas}`);
+  if (gestionActual) detalles.push(`Gestión actual: ${gestionActual}`);
+  if (usaCrm) {
+    detalles.push(`¿Usa otro CRM?: ${usaCrm}${crmCual ? ` (${crmCual})` : ""}`);
+  }
+  if (necesidades.length)
+    detalles.push(`Necesidades: ${necesidades.join(", ")}`);
+  if (modalidad) detalles.push(`Modalidad preferida: ${modalidad}`);
+  if (interes) detalles.push(`Interés: ${interes}`);
+
+  const partes = [
+    problema,
+    detalles.length ? detalles.map((d) => `- ${d}`).join("\n") : "",
+  ].filter(Boolean);
+
+  return partes.join("\n\n").slice(0, MAX_TEXTO);
+};
 
 const esCorreoValido = (correo: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
@@ -223,14 +271,17 @@ export async function POST(peticion: Request, { params }: Contexto) {
         { status: 500 },
       );
     }
-  } else if (mensaje) {
-    await supabase.from("contact_notes").insert({
-      organization_id: formulario.organization_id,
-      contact_id: contacto.id,
-      text: mensaje,
-      type: "web",
-      date: ahora,
-    });
+  } else {
+    const textoNota = mensaje || construirNotaDeCalificacion(datos);
+    if (textoNota) {
+      await supabase.from("contact_notes").insert({
+        organization_id: formulario.organization_id,
+        contact_id: contacto.id,
+        text: textoNota,
+        type: "web",
+        date: ahora,
+      });
+    }
   }
 
   await supabase
