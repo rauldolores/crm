@@ -13,10 +13,14 @@ export const kontroliaAuthConfig = {
   supabaseAnonKey: env.kontroliaAuthAnonKey,
   // Habilita en el SDK los métodos de directorio (listOrganizationMembers,
   // searchOrganizationMembers, getOrganizationMemberCount). El CRM hoy no los
-  // llama desde el navegador —el endpoint del auth-server no admite CORS, así
-  // que el directorio se consulta vía /api/crm/comerciales/sincronizar—, pero
-  // la configuración queda lista para cuando sí se pueda.
+  // llama desde el navegador —requieren que auth-server tenga el origen del
+  // CRM en su lista de apps de confianza (CORS)—, pero la configuración
+  // queda lista para cuando sí se pueda.
   authServerUrl: env.kontroliaAuthServerUrl || undefined,
+  // Nombre propio de cookie: ver el comentario en env.ts. Evita que la
+  // cookie de sesión de auth-server (compartida con admin-panel en
+  // .kontrolia.io) tape la del CRM en su propio subdominio.
+  cookieName: env.cookieName,
 };
 
 /** true si la aplicación tiene configurado el login centralizado. */

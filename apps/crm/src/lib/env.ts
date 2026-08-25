@@ -24,6 +24,16 @@ export const env = {
     process.env.NEXT_PUBLIC_KONTROLIA_AUTH_SERVER_URL ?? "",
   kontroliaOAuthClientId:
     process.env.NEXT_PUBLIC_KONTROLIA_OAUTH_CLIENT_ID ?? "",
+  /**
+   * Nombre propio para la cookie de sesión del CRM. El CRM comparte proyecto
+   * de Supabase con KontrolIA Auth, así que ambos derivarían por defecto el
+   * mismo nombre de cookie (`sb-<ref>-auth-token`); como auth-server la fija
+   * en `.kontrolia.io` para compartirla con admin-panel, esa cookie también
+   * llega a `crm.kontrolia.io` y tapa la propia del CRM —el dominio padre se
+   * lee antes que el host—, así que cambiar de organización parecía no
+   * funcionar (@kontrolia/auth 2.2.0, ver su changelog para el detalle).
+   */
+  cookieName: process.env.NEXT_PUBLIC_COOKIE_NAME || "sb-crm-auth-token",
 
   /** Opcionales. */
   googleWorkplaceDomain: process.env.NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN || undefined,
