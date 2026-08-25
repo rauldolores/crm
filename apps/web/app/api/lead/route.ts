@@ -211,7 +211,9 @@ async function pasoUno(cuerpo: Record<string, unknown>) {
 
   const dealFila = fila(
     await llamarCRM("deals", "POST", {
-      name: `Demo personalizada — ${empresa}`,
+      // El prefijo identifica el producto: esta organización de Kontrolia
+      // puede recibir oportunidades de más de un producto/sitio.
+      name: `VINQULIA - Demo personalizada — ${empresa}`,
       company_id: companyId,
       contact_ids: [contactId],
       stage: ETAPA,
