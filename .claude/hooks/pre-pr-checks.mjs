@@ -6,7 +6,8 @@
 
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { loadConfig, prePrSteps } from "./lib/config.mjs";
+import { join } from "node:path";
+import { appDir, loadConfig, prePrSteps } from "./lib/config.mjs";
 import { REPO } from "./lib/paths.mjs";
 
 const PR_TRIGGER_RE = /\bgh\s+pr\s+create\b|\bgit\s+push\b/;
@@ -24,9 +25,11 @@ if (input.agent_type || process.env.CLAUDE_AGENT_NAME) process.exit(0);
 const command = input.tool_input?.command ?? "";
 if (!PR_TRIGGER_RE.test(command)) process.exit(0);
 
-let steps;
+let steps, app;
 try {
-  steps = prePrSteps(loadConfig());
+  const cfg = loadConfig();
+  steps = prePrSteps(cfg);
+  app = appDir(cfg);
 } catch {
   process.exit(0); // no readable config -> do not block the human
 }
@@ -36,7 +39,7 @@ const failures = [];
 for (const step of steps) {
   if (!step.command) continue;
   try {
-    execSync(step.command, { cwd: REPO, stdio: "pipe", timeout: 120_000 });
+    execSync(step.command, { cwd: join(REPO, app), stdio: "pipe", timeout: 120_000 });
   } catch (err) {
     const out = (err.stdout?.toString() || err.message || "").slice(0, 800);
     failures.push(`- ${step.id} (\`${step.command}\`) failed:\n${out}`);
