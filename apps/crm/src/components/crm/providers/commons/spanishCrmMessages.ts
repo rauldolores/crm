@@ -570,6 +570,8 @@ export const spanishCrmMessages = {
         title: "API REST",
         base_url: "Todas las peticiones van a esta dirección base:",
         auth: "La autenticación usa tu token de sesión de KontrolIA Auth en la cabecera Authorization. Ejemplo de consulta:",
+        auth_api_key:
+          "Para una integración externa (un formulario en otro sitio, por ejemplo) usa una clave de API en su lugar, con el mismo formato de cabecera. Queda limitada a contacts, contact_notes y companies — crea una abajo.",
         filters:
           "Los filtros siguen la sintaxis de PostgREST (columna=operador.valor):",
         example_ilike: "# contiene texto, sin mayúsculas",
@@ -579,6 +581,20 @@ export const spanishCrmMessages = {
         write: "Para crear o modificar, envía JSON con POST o PATCH:",
         resources:
           "Recursos disponibles: contacts, companies, deals, tasks, contact_notes, deal_notes, tickets, tags, sales (lectura). Todo queda aislado a tu organización automáticamente.",
+      },
+      keys: {
+        title: "Claves de API",
+        intro:
+          "Para que un sistema externo cree o gestione datos sin que nadie inicie sesión — por ejemplo, un formulario de captación en tu propia web, con los campos que tú definas ahí. Cada clave puede leer y escribir contactos, sus notas y empresas; nada más.",
+        name_placeholder: "Nombre de la clave (ej. Formulario del sitio)",
+        add: "Crear clave",
+        empty: "Aún no hay claves de API.",
+        toggle: "Activar o desactivar",
+        deleted: "Clave eliminada",
+        reveal_title: "Copia esta clave ahora — no se vuelve a mostrar",
+        reveal_warning:
+          "Por seguridad, Vinqulia solo guarda un hash de la clave. Si la pierdes, tendrás que crear una nueva.",
+        reveal_dismiss: "Ya la copié",
       },
       endpoints: {
         title: "Recursos y ejemplos",

@@ -1,4 +1,4 @@
-import { Copy, Plus, Trash2 } from "lucide-react";
+import { Check, Copy, Plus, Trash2 } from "lucide-react";
 import {
   useCreate,
   useDelete,
@@ -7,15 +7,16 @@ import {
   useTranslate,
   useUpdate,
 } from "ra-core";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
+import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
-import type { Webhook } from "../types";
+import type { ApiKey, Webhook } from "../types";
 
 /** Recursos expuestos por la API REST, con un ejemplo real de cada uno. */
 const RECURSOS_DE_EJEMPLO: { recurso: string; ejemplo: string }[] = [
@@ -77,6 +78,7 @@ export const ApiPage = () => {
           <Bloque>{urlBase}</Bloque>
           <p>{translate("crm.api.rest.auth")}</p>
           <Bloque>{`curl "${urlBase}/contacts?select=id,first_name,last_name&status=eq.hot" \\\n  -H "Authorization: Bearer <token>"`}</Bloque>
+          <p>{translate("crm.api.rest.auth_api_key")}</p>
           <p>{translate("crm.api.rest.filters")}</p>
           <Bloque>{`?first_name=ilike.*ana*     ${translate("crm.api.rest.example_ilike")}\n?amount=gte.10000          ${translate("crm.api.rest.example_gte")}\n?order=last_seen.desc      ${translate("crm.api.rest.example_order")}\n?limit=25&offset=50        ${translate("crm.api.rest.example_pagination")}`}</Bloque>
           <p>{translate("crm.api.rest.write")}</p>
@@ -84,6 +86,16 @@ export const ApiPage = () => {
           <p className="text-muted-foreground">
             {translate("crm.api.rest.resources")}
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{translate("crm.api.keys.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p>{translate("crm.api.keys.intro")}</p>
+          <GestorDeClavesDeApi />
         </CardContent>
       </Card>
 
@@ -164,6 +176,215 @@ const Bloque = ({ children }: { children: string }) => (
     {children}
   </pre>
 );
+
+/**
+ * Llama a una ruta propia del CRM (no PostgREST) con el token de sesión.
+ * Lanza con el mensaje del servidor si la respuesta no es 2xx.
+ */
+const llamarApi = async (ruta: string, opciones: RequestInit = {}) => {
+  const token = await getKontroliaAccessToken();
+  const respuesta = await fetch(ruta, {
+    ...opciones,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opciones.headers,
+    },
+  });
+  const cuerpo = await respuesta.json().catch(() => ({}));
+  if (!respuesta.ok) {
+    throw new Error(cuerpo.message ?? "Ocurrió un error inesperado.");
+  }
+  return cuerpo;
+};
+
+/**
+ * Alta, activación y baja de las claves de API de la organización.
+ *
+ * No usa los hooks de ra-core (a diferencia de GestorDeWebhooks): crear una
+ * clave pasa por /api/claves, no por PostgREST, porque generar el secreto y
+ * devolverlo una única vez es lógica de servidor, no una fila más.
+ */
+const GestorDeClavesDeApi = () => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const [claves, setClaves] = useState<ApiKey[]>([]);
+  const [nombre, setNombre] = useState("");
+  const [creando, setCreando] = useState(false);
+  const [claveNueva, setClaveNueva] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+
+  const cargar = useCallback(async () => {
+    try {
+      const { claves: datos } = await llamarApi("/api/claves");
+      setClaves(datos ?? []);
+    } catch {
+      // Probablemente no es administrador: el resto de la página sigue
+      // siendo útil, así que no se muestra error.
+      setClaves([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    cargar();
+  }, [cargar]);
+
+  const crear = async () => {
+    const nombreLimpio = nombre.trim();
+    if (!nombreLimpio) return;
+    setCreando(true);
+    try {
+      const creada = await llamarApi("/api/claves", {
+        method: "POST",
+        body: JSON.stringify({ name: nombreLimpio }),
+      });
+      setClaveNueva(creada.key);
+      setCopiado(false);
+      setNombre("");
+      cargar();
+    } catch (error) {
+      notify(
+        error instanceof Error ? error.message : "No se pudo crear la clave.",
+        { type: "error" },
+      );
+    } finally {
+      setCreando(false);
+    }
+  };
+
+  const alternar = async (clave: ApiKey) => {
+    try {
+      await llamarApi(`/api/claves/${clave.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ active: !clave.active }),
+      });
+      cargar();
+    } catch (error) {
+      notify(
+        error instanceof Error
+          ? error.message
+          : "No se pudo actualizar la clave.",
+        { type: "error" },
+      );
+    }
+  };
+
+  const eliminar = async (clave: ApiKey) => {
+    try {
+      await llamarApi(`/api/claves/${clave.id}`, { method: "DELETE" });
+      notify(translate("crm.api.keys.deleted"), { type: "info" });
+      cargar();
+    } catch (error) {
+      notify(
+        error instanceof Error
+          ? error.message
+          : "No se pudo eliminar la clave.",
+        { type: "error" },
+      );
+    }
+  };
+
+  const copiarClaveNueva = async () => {
+    if (!claveNueva) return;
+    await navigator.clipboard.writeText(claveNueva);
+    setCopiado(true);
+    notify("crm.common.copied", { type: "info" });
+  };
+
+  return (
+    <div className="space-y-3">
+      {claveNueva && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 space-y-2 dark:border-amber-900 dark:bg-amber-950">
+          <p className="text-sm font-medium">
+            {translate("crm.api.keys.reveal_title")}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {translate("crm.api.keys.reveal_warning")}
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 truncate rounded bg-muted px-2 py-1 text-xs">
+              {claveNueva}
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={copiarClaveNueva}
+            >
+              {copiado ? (
+                <Check className="h-3.5 w-3.5" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
+              {translate("crm.api.webhooks.copy_secret")}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setClaveNueva(null)}
+            >
+              {translate("crm.api.keys.reveal_dismiss")}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Input
+          value={nombre}
+          placeholder={translate("crm.api.keys.name_placeholder")}
+          onChange={(evento) => setNombre(evento.target.value)}
+          onKeyDown={(evento) => {
+            if (evento.key === "Enter") {
+              evento.preventDefault();
+              crear();
+            }
+          }}
+        />
+        <Button onClick={crear} disabled={!nombre.trim() || creando}>
+          <Plus className="h-4 w-4 mr-1" />
+          {translate("crm.api.keys.add")}
+        </Button>
+      </div>
+
+      {claves.length === 0 ? (
+        <p className="text-muted-foreground">
+          {translate("crm.api.keys.empty")}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {claves.map((clave) => (
+            <div
+              key={clave.id}
+              className="flex items-center gap-3 rounded-md border p-3"
+            >
+              <Switch
+                checked={clave.active}
+                onCheckedChange={() => alternar(clave)}
+                aria-label={translate("crm.api.keys.toggle")}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-medium">{clave.name}</p>
+                <p className="truncate font-mono text-xs text-muted-foreground">
+                  {clave.key_prefix}…
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={translate("ra.action.delete")}
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => eliminar(clave)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 /** Alta, activación y baja de los webhooks de la organización. */
 const GestorDeWebhooks = () => {

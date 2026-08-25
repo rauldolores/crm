@@ -216,6 +216,15 @@ export type PublicForm = {
   created_at?: string;
 } & Pick<RaRecord, "id">;
 
+/** Clave de API para integraciones externas (servidor a servidor). */
+export type ApiKey = {
+  name: string;
+  key_prefix: string;
+  active: boolean;
+  created_at?: string;
+  last_used_at?: string | null;
+} & Pick<RaRecord, "id">;
+
 /** Webhook saliente de la organización. */
 export type Webhook = {
   url: string;

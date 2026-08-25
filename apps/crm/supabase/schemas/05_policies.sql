@@ -24,6 +24,7 @@ alter table crm.public_forms enable row level security;
 alter table crm.public_form_submissions enable row level security;
 alter table crm.saved_views enable row level security;
 alter table crm.webhooks enable row level security;
+alter table crm.api_keys enable row level security;
 alter table crm.tags enable row level security;
 alter table crm.tasks enable row level security;
 alter table crm.configuration enable row level security;
@@ -140,6 +141,24 @@ create policy "Webhooks are updated within the organization" on crm.webhooks
 create policy "Webhooks are deleted within the organization" on crm.webhooks
     for delete to authenticated
     using (organization_id = crm.current_organization_id());
+
+-- Como configuration: cualquiera de la organización puede ver que existen,
+-- pero solo un administrador puede crear, activar/desactivar o borrar una
+-- clave, porque una clave de API da acceso a los datos como si fuera un
+-- miembro más.
+create policy "Api keys are scoped to the organization" on crm.api_keys
+    for select to authenticated
+    using (organization_id = crm.current_organization_id() and crm.is_admin());
+create policy "Api keys are created by organization admins" on crm.api_keys
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id() and crm.is_admin());
+create policy "Api keys are updated by organization admins" on crm.api_keys
+    for update to authenticated
+    using (organization_id = crm.current_organization_id() and crm.is_admin())
+    with check (organization_id = crm.current_organization_id() and crm.is_admin());
+create policy "Api keys are deleted by organization admins" on crm.api_keys
+    for delete to authenticated
+    using (organization_id = crm.current_organization_id() and crm.is_admin());
 
 create policy "Public forms are scoped to the organization" on crm.public_forms
     for select to authenticated

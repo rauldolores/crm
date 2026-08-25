@@ -1,7 +1,13 @@
+import {
+  organizacionDeClaveDeApi,
+  PREFIJO_CLAVE_DE_API,
+  RECURSOS_PERMITIDOS_CON_API_KEY,
+} from "@/lib/server/apiKeys";
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 
 /**
- * Puente entre el navegador y la base de datos del CRM.
+ * Puente entre el navegador (o una integración externa) y la base de datos
+ * del CRM.
  *
  * El servidor valida el token de KontrolIA Auth, y consulta la base con la
  * clave de servicio. Como esa clave salta el RLS, el aislamiento entre
@@ -17,6 +23,12 @@ import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermiss
  *
  * Para las rutas que en el futuro reciban un recurso por id fuera de este
  * puente, sigue disponible `verificarTenencia()`.
+ *
+ * Autenticación: además del token de sesión, se acepta una clave de API
+ * (`Authorization: Bearer vnq_...`, ver /api/claves) para integraciones
+ * externas — un formulario en otro sitio, por ejemplo. Se resuelve igual la
+ * organización, pero queda limitada a `RECURSOS_PERMITIDOS_CON_API_KEY`: una
+ * clave filtrada no debe poder leer ni tocar todo el CRM.
  */
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
@@ -68,6 +80,37 @@ const CABECERAS_REENVIADAS = [
 const esError = (estado: number, mensaje: string) =>
   Response.json({ message: mensaje }, { status: estado });
 
+type Autenticacion =
+  | { ok: true; organizacionId: string; viaClaveDeApi: boolean }
+  | { ok: false; response: Response };
+
+async function autenticar(peticion: Request): Promise<Autenticacion> {
+  const encabezado = peticion.headers.get("authorization") ?? "";
+  const token = encabezado.startsWith("Bearer ") ? encabezado.slice(7) : "";
+
+  if (token.startsWith(PREFIJO_CLAVE_DE_API)) {
+    const organizacionId = await organizacionDeClaveDeApi(token);
+    if (!organizacionId) {
+      return {
+        ok: false,
+        response: esError(401, "Clave de API inválida o revocada."),
+      };
+    }
+    return { ok: true, organizacionId, viaClaveDeApi: true };
+  }
+
+  // El permiso fino por recurso llegará cuando se declare en cada ruta; aquí
+  // se exige sesión con organización activa, que es lo que decide qué datos
+  // son visibles.
+  const auth = await requireKontroliaPermission(peticion, []);
+  if (!auth.ok) return { ok: false, response: auth.response };
+  return {
+    ok: true,
+    organizacionId: auth.sesion.organizacionId,
+    viaClaveDeApi: false,
+  };
+}
+
 async function reenviar(peticion: Request, ruta: string[]) {
   if (!SUPABASE_URL || !CLAVE_DE_SERVICIO) {
     return esError(
@@ -76,15 +119,28 @@ async function reenviar(peticion: Request, ruta: string[]) {
     );
   }
 
-  // El permiso fino por recurso llegará cuando se declare en cada ruta; aquí
-  // se exige sesión con organización activa, que es lo que decide qué datos
-  // son visibles.
-  const auth = await requireKontroliaPermission(peticion, []);
+  const auth = await autenticar(peticion);
   if (!auth.ok) return auth.response;
 
-  const { organizacionId } = auth.sesion;
+  const { organizacionId, viaClaveDeApi } = auth;
   const origen = new URL(peticion.url);
   const recurso = ruta[ruta.length - 1];
+
+  if (viaClaveDeApi) {
+    if (!RECURSOS_PERMITIDOS_CON_API_KEY.has(recurso)) {
+      return esError(403, "Esta clave de API no tiene acceso a este recurso.");
+    }
+    // PostgREST permite incrustar relaciones (?select=*,sales(*)) que saltan
+    // la lista de recursos permitidos: contacts y contact_notes tienen FK a
+    // sales, así que sin este bloqueo una clave podría leer ese directorio.
+    if (origen.searchParams.get("select")?.includes("(")) {
+      return esError(
+        403,
+        "Esta clave de API no puede incrustar relaciones (select con paréntesis).",
+      );
+    }
+  }
+
   const parametros = new URLSearchParams(origen.search);
 
   // El filtro de organización se impone, no se acepta del cliente: si viniera
