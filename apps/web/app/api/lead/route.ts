@@ -216,6 +216,12 @@ async function pasoUno(cuerpo: Record<string, unknown>) {
       contact_ids: [contactId],
       stage: ETAPA,
       description: descripcionBase,
+      // El formulario propio del CRM exige amount y expected_closing_date y
+      // los precarga (0 y hoy); sin esto la oportunidad queda con esos
+      // campos en null, algo que ninguna oportunidad creada desde el CRM
+      // produce y que su pantalla de detalle no esperaba (ver DealShow.tsx).
+      amount: 0,
+      expected_closing_date: new Date().toISOString().split("T")[0],
       ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
     }),
   );
