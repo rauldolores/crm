@@ -486,6 +486,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/LeadScoreBadge.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/Markdown.tsx",
           "type": "registry:component"
         },
