@@ -3,3 +3,7 @@ node_modules
 out
 *.tsbuildinfo
 next-env.d.ts
+
+# Secretos locales
+.env.local
+.env*.local

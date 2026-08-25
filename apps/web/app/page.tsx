@@ -1420,8 +1420,9 @@ const Demo = () => (
           </p>
           <ul className="mt-6 space-y-3">
             {[
+              "Primero solo 4 datos (nombre, empresa, correo y WhatsApp): te llevará menos de un minuto.",
+              "En un segundo paso afinamos tu caso para preparar la demo.",
               "Una demo pensada para tu operación, no una visita genérica.",
-              "Respondemos las dudas de migración y de integración.",
               "Sin compromiso: sal de la llamada con un plan claro.",
             ].map((punto) => (
               <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">

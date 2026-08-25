@@ -1,51 +1,116 @@
 import { NextResponse } from "next/server";
 
 /**
- * Captura de leads comerciales del formulario de demo.
+ * Captura de leads del formulario de demo, en dos pasos.
  *
- * El sitio es una página pública; este endpoint es el punto único por donde
- * entran los leads. Valida, normaliza, calcula señales de calificación y:
- *   1. si CRM_LEAD_FORM_URL está configurada, crea el contacto directamente
- *      en Vinqulia (reenvío servidor-a-servidor al formulario público del
- *      CRM — /api/formularios/<clave> —, sin exponer ninguna clave al
- *      navegador: la propia URL con su slug es el único secreto);
- *   2. si además hay LEAD_WEBHOOK_URL, reenvía también ahí (p. ej. un aviso
- *      a Slack) — son destinos independientes, no alternativos.
- * Si ninguna está configurada, el lead queda en el log del servidor (modo
- * "captura").
+ * Paso 1: datos básicos (nombre, empresa, correo, teléfono). Crea en el CRM,
+ *         vía su API de datos (/api/datos), la empresa, el contacto y la
+ *         oportunidad (deal) que representa al lead. Si el visitante abandona
+ *         aquí, ya hay un lead registrado al que dar seguimiento.
  *
- * Para conectar el CRM, define en el entorno de despliegue:
- *   CRM_LEAD_FORM_URL = https://crm.kontrolia.io/api/formularios/<clave>
- * La <clave> se obtiene creando un formulario tipo "lead" en el CRM
- * (Formularios); no se usa como iframe, solo se reutiliza su endpoint.
+ * Paso 2: datos de calificación (equipo, gestión actual, problema,
+ *         necesidades, modalidad…). Actualiza la MISMA oportunidad: los datos
+ *         que no son campos del CRM se guardan en su descripción; los que sí
+ *         existen (p. ej. tamaño de empresa) se escriben en su campo.
+ *
+ * Configuración (ver .env.example):
+ *   CRM_API_BASE_URL  — base de la API del CRM (local o producción)
+ *   CRM_API_KEY       — clave de API externa del CRM (formato vnq_...)
+ *   CRM_DEAL_STAGE    — etapa de las oportunidades nuevas (por defecto "propuesta")
+ *   CRM_SALES_ID      — (opcional) responsable fijo de las oportunidades
  */
 
 export const runtime = "nodejs";
 
-const CAMPOS_OBLIGATORIOS = ["nombre", "empresa", "email"] as const;
+const BASE = (
+  process.env.CRM_API_BASE_URL ?? "http://localhost:3001/api/datos/rest/v1"
+).replace(/\/$/, "");
+const CLAVE = process.env.CRM_API_KEY ?? "";
+const ETAPA = process.env.CRM_DEAL_STAGE ?? "propuesta";
+const RESPONSABLE = process.env.CRM_SALES_ID
+  ? Number(process.env.CRM_SALES_ID)
+  : undefined;
 
-type Lead = {
-  nombre: string;
-  empresa: string;
-  email: string;
-  telefono?: string;
-  empleados?: string;
-  personas_ventas?: string;
-  gestion_actual?: string;
-  usa_crm?: string;
-  crm_cual?: string;
-  problema?: string;
-  necesidades?: string[];
-  modalidad?: string;
-  interes?: string;
-  /** Señuelo anti-bots: si viene relleno, la petición se ignora. */
-  sitio_web?: string;
+const limpiar = (v: unknown, max = 500) =>
+  String(v ?? "").trim().slice(0, max);
+
+const GESTION_LABEL: Record<string, string> = {
+  excel: "Excel u hojas de cálculo",
+  whatsapp: "WhatsApp",
+  correo: "Correo electrónico",
+  crm: "Otro CRM",
+  nada: "Nada centralizado",
+  otro: "Otro",
 };
 
-const limpiar = (v: unknown) => String(v ?? "").trim().slice(0, 500);
+const MODALIDAD_LABEL: Record<string, string> = {
+  gestionado: "Servicio gestionado por Kontrolia",
+  propia: "Instalación en infraestructura propia",
+  indefinido: "Aún no lo sé",
+};
+
+const NECESIDAD_LABEL: Record<string, string> = {
+  integracion: "Integración con otros sistemas",
+  automatizacion: "Automatización de procesos",
+  ia: "IA / agentes inteligentes",
+  whatsapp: "WhatsApp",
+};
+
+async function llamarCRM(ruta: string, metodo: string, cuerpo?: unknown) {
+  const cabeceras: Record<string, string> = {
+    Authorization: `Bearer ${CLAVE}`,
+    "Content-Type": "application/json",
+  };
+  if (cuerpo !== undefined) cabeceras["Prefer"] = "return=representation";
+  const respuesta = await fetch(`${BASE}/${ruta}`, {
+    method: metodo,
+    headers: cabeceras,
+    body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
+    signal: AbortSignal.timeout(15000),
+  });
+  const texto = await respuesta.text();
+  let datos: unknown = null;
+  try {
+    datos = texto ? JSON.parse(texto) : null;
+  } catch {
+    // Respuesta no JSON: se deja null y se reporta abajo.
+  }
+  if (!respuesta.ok) {
+    throw new Error(
+      `El CRM respondió ${respuesta.status}: ${texto.slice(0, 300)}`,
+    );
+  }
+  return datos;
+}
+
+const fila = (datos: unknown) =>
+  (Array.isArray(datos) ? datos[0] : datos) as
+    | Record<string, unknown>
+    | undefined;
+
+/** Rango "11-50" -> 50 (companies.size es smallint). */
+const tamanoDeEmpresa = (rango: string) =>
+  ({
+    "1-10": 10,
+    "11-50": 50,
+    "51-150": 150,
+    "151-250": 250,
+    "251+": 251,
+  })[rango];
+
+const separarNombre = (nombre: string) => {
+  const partes = nombre.split(/\s+/).filter(Boolean);
+  return {
+    first_name: partes[0] ?? "",
+    last_name: partes.slice(1).join(" "),
+  };
+};
 
 export async function POST(request: Request) {
-  const cuerpo = (await request.json().catch(() => null)) as Partial<Lead> | null;
+  const cuerpo = (await request.json().catch(() => null)) as Record<
+    string,
+    unknown
+  > | null;
   if (!cuerpo) {
     return NextResponse.json(
       { ok: false, message: "Cuerpo inválido." },
@@ -58,193 +123,179 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignorado: true });
   }
 
-  for (const campo of CAMPOS_OBLIGATORIOS) {
-    if (!limpiar(cuerpo[campo])) {
-      return NextResponse.json(
-        { ok: false, message: `Falta el campo ${campo}.` },
-        { status: 400 },
-      );
-    }
+  if (!CLAVE) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "El formulario aún no está conectado al CRM. Por favor, escríbenos por WhatsApp mientras lo activamos.",
+      },
+      { status: 503 },
+    );
   }
 
-  const lead: Lead = {
-    nombre: limpiar(cuerpo.nombre),
-    empresa: limpiar(cuerpo.empresa),
-    email: limpiar(cuerpo.email),
-    telefono: limpiar(cuerpo.telefono) || undefined,
-    empleados: limpiar(cuerpo.empleados) || undefined,
-    personas_ventas: limpiar(cuerpo.personas_ventas) || undefined,
-    gestion_actual: limpiar(cuerpo.gestion_actual) || undefined,
-    usa_crm: limpiar(cuerpo.usa_crm) || undefined,
-    crm_cual: limpiar(cuerpo.crm_cual) || undefined,
-    problema: limpiar(cuerpo.problema) || undefined,
-    necesidades: Array.isArray(cuerpo.necesidades)
-      ? cuerpo.necesidades.filter(Boolean).slice(0, 10)
-      : [],
-    modalidad: limpiar(cuerpo.modalidad) || undefined,
-    interes: limpiar(cuerpo.interes) || undefined,
-  };
+  const paso = String(cuerpo.paso ?? "");
 
-  const señales = construirSeñales(lead);
-
-  const payload = {
-    lead,
-    señales,
-    // Puntuación orientativa. Reemplazar por el sistema de scoring real cuando
-    // exista; aquí solo prioriza qué leads atender primero.
-    puntuacion: señales.filter((s) => s.valor).length,
-    meta: {
-      recibido_en: new Date().toISOString(),
-      origen: request.headers.get("referer") ?? "directo",
-      user_agent: request.headers.get("user-agent") ?? "",
-    },
-  };
-
-  const urlFormularioCrm = process.env.CRM_LEAD_FORM_URL;
-  const urlWebhook = process.env.LEAD_WEBHOOK_URL;
-
-  let creadoEnCrm = false;
-  if (urlFormularioCrm) {
-    creadoEnCrm = await reenviarAlCrm(urlFormularioCrm, lead);
+  try {
+    if (paso === "1") return await pasoUno(cuerpo);
+    if (paso === "2") return await pasoDos(cuerpo);
+    return NextResponse.json(
+      { ok: false, message: "Paso desconocido." },
+      { status: 400 },
+    );
+  } catch (error) {
+    console.error("[lead] Error al guardar en el CRM:", error);
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          "No se pudo guardar tu solicitud. Inténtalo de nuevo o escríbenos por WhatsApp.",
+      },
+      { status: 502 },
+    );
   }
-
-  let reenviadoAWebhook = false;
-  if (urlWebhook) {
-    reenviadoAWebhook = await reenviarAWebhook(urlWebhook, payload);
-  }
-
-  if (!urlFormularioCrm && !urlWebhook) {
-    // Modo captura: sin destino configurado, el lead queda en el log del
-    // servidor (conectable a cualquier sistema de seguimiento más adelante).
-    console.log("[lead] Nuevo lead:", JSON.stringify(payload, null, 2));
-    return NextResponse.json({ ok: true, modo: "captura" });
-  }
-
-  return NextResponse.json({ ok: true, creadoEnCrm, reenviadoAWebhook });
 }
 
-const reenviarAlCrm = async (url: string, lead: Lead): Promise<boolean> => {
-  const { email, ...resto } = lead;
-  try {
-    const respuesta = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...resto, correo: email }),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!respuesta.ok) {
-      console.error(
-        "[lead] El CRM rechazó el contacto",
-        respuesta.status,
-        await respuesta.text().catch(() => ""),
-      );
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error("[lead] No se pudo crear el contacto en el CRM", error);
-    return false;
+async function pasoUno(cuerpo: Record<string, unknown>) {
+  const nombre = limpiar(cuerpo.nombre, 120);
+  const empresa = limpiar(cuerpo.empresa, 120);
+  const email = limpiar(cuerpo.email, 200);
+  const telefono = limpiar(cuerpo.telefono, 50);
+
+  if (!nombre || !empresa || !email) {
+    return NextResponse.json(
+      { ok: false, message: "Faltan datos obligatorios." },
+      { status: 400 },
+    );
   }
-};
 
-const reenviarAWebhook = async (
-  url: string,
-  payload: unknown,
-): Promise<boolean> => {
-  try {
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
-    });
-    return true;
-  } catch (error) {
-    console.error("[lead] No se pudo reenviar el lead al webhook", error);
-    return false;
+  const { first_name, last_name } = separarNombre(nombre);
+
+  // 1) Empresa
+  const empresaFila = fila(
+    await llamarCRM("companies", "POST", { name: empresa }),
+  );
+  const companyId = Number(empresaFila?.id);
+  if (!companyId) throw new Error("No se pudo crear la empresa.");
+
+  // 2) Contacto
+  const contactoFila = fila(
+    await llamarCRM("contacts", "POST", {
+      first_name,
+      last_name: last_name || undefined,
+      email_jsonb: email ? [{ email, type: "Work" }] : undefined,
+      phone_jsonb: telefono ? [{ number: telefono, type: "Work" }] : undefined,
+      company_id: companyId,
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const contactId = Number(contactoFila?.id);
+  if (!contactId) throw new Error("No se pudo crear el contacto.");
+
+  // 3) Oportunidad que representa al lead
+  const descripcionBase = [
+    "Solicitud de demo personalizada",
+    "Canal: formulario web",
+    "Paso: 1 (datos básicos)",
+    `Contacto: ${nombre}`,
+    `Empresa: ${empresa}`,
+    `Correo: ${email}`,
+    ...(telefono ? [`WhatsApp/teléfono: ${telefono}`] : []),
+  ].join("\n");
+
+  const dealFila = fila(
+    await llamarCRM("deals", "POST", {
+      name: `Demo personalizada — ${empresa}`,
+      company_id: companyId,
+      contact_ids: [contactId],
+      stage: ETAPA,
+      description: descripcionBase,
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const dealId = Number(dealFila?.id);
+  if (!dealId) throw new Error("No se pudo crear la oportunidad.");
+
+  return NextResponse.json({
+    ok: true,
+    leadId: dealId,
+    companyId,
+    contactId,
+  });
+}
+
+async function pasoDos(cuerpo: Record<string, unknown>) {
+  const leadId = Number(cuerpo.leadId);
+  const companyId = Number(cuerpo.companyId ?? 0);
+  if (!leadId) {
+    return NextResponse.json(
+      { ok: false, message: "Falta la referencia del lead." },
+      { status: 400 },
+    );
   }
-};
 
-/**
- * Señales de calificación (ver brief de ventas):
- * - solicita demo, quiere migrar, tiene equipo comercial, usa otro CRM,
- *   necesita integración, necesita IA, instalación propia, varios usuarios,
- *   problemas de seguimiento, automatización.
- */
-const construirSeñales = (lead: Lead) => {
-  const señales: { clave: string; etiqueta: string; valor: boolean }[] = [];
+  const nombre = limpiar(cuerpo.nombre, 120);
+  const empresa = limpiar(cuerpo.empresa, 120);
+  const email = limpiar(cuerpo.email, 200);
+  const telefono = limpiar(cuerpo.telefono, 50);
+  const empleados = limpiar(cuerpo.empleados, 50);
+  const personasVentas = limpiar(cuerpo.personas_ventas, 50);
+  const gestion = limpiar(cuerpo.gestion_actual, 50);
+  const usaCrm = limpiar(cuerpo.usa_crm, 10);
+  const crmCual = limpiar(cuerpo.crm_cual, 120);
+  const problema = limpiar(cuerpo.problema, 1000);
+  const modalidad = limpiar(cuerpo.modalidad, 30);
+  const interes = limpiar(cuerpo.interes, 30);
+  const necesidades = Array.isArray(cuerpo.necesidades)
+    ? cuerpo.necesidades
+        .map((n) => limpiar(n, 50))
+        .filter(Boolean)
+        .slice(0, 10)
+    : [];
 
-  señales.push({
-    clave: "solicita_demo",
-    etiqueta: "Solicita una demo personalizada",
-    valor: true,
+  const lineas = [
+    "Solicitud de demo personalizada",
+    "Canal: formulario web",
+    `Interés: ${interes || "Demo personalizada"}`,
+    `Contacto: ${nombre || "—"}`,
+    `Empresa: ${empresa || "—"}`,
+    `Correo: ${email || "—"}`,
+    ...(telefono ? [`WhatsApp/teléfono: ${telefono}`] : []),
+    ...(empleados ? [`Empleados: ${empleados}`] : []),
+    ...(personasVentas ? [`Personas en ventas: ${personasVentas}`] : []),
+    ...(gestion
+      ? [`Gestión actual: ${GESTION_LABEL[gestion] ?? gestion}`]
+      : []),
+    ...(usaCrm
+      ? [
+          `¿Usa otro CRM?: ${usaCrm === "si" ? "Sí" : "No"}${
+            crmCual ? ` (${crmCual})` : ""
+          }`,
+        ]
+      : []),
+    ...(problema ? [`Problema principal: ${problema}`] : []),
+    ...(necesidades.length
+      ? [
+          `Necesita: ${necesidades
+            .map((n) => NECESIDAD_LABEL[n] ?? n)
+            .join(", ")}`,
+        ]
+      : []),
+    ...(modalidad
+      ? [`Modalidad: ${MODALIDAD_LABEL[modalidad] ?? modalidad}`]
+      : []),
+  ].join("\n");
+
+  // Actualiza la oportunidad con la descripción completa.
+  await llamarCRM(`deals?id=eq.${leadId}`, "PATCH", {
+    description: lineas,
   });
 
-  const quiereMigrar =
-    lead.interes === "migracion" ||
-    lead.interes === "implementacion" ||
-    /^s[ií]/i.test(lead.usa_crm ?? "");
-  señales.push({
-    clave: "quiere_migrar",
-    etiqueta: "Quiere migrar (otro CRM o datos existentes)",
-    valor: quiereMigrar,
-  });
+  // El tamaño de empresa sí es un campo del CRM (companies.size).
+  const tamano = empleados ? tamanoDeEmpresa(empleados) : undefined;
+  if (companyId && tamano) {
+    await llamarCRM(`companies?id=eq.${companyId}`, "PATCH", { size: tamano });
+  }
 
-  const personasVentas = Number.parseInt(lead.personas_ventas ?? "0", 10) || 0;
-  señales.push({
-    clave: "tiene_equipo_comercial",
-    etiqueta: "Tiene equipo comercial",
-    valor: personasVentas >= 4,
-  });
-
-  señales.push({
-    clave: "usa_crm_actual",
-    etiqueta: "Utiliza actualmente otro CRM",
-    valor: /^s[ií]/i.test(lead.usa_crm ?? ""),
-  });
-
-  señales.push({
-    clave: "necesita_integracion",
-    etiqueta: "Necesita integración con otros sistemas",
-    valor: (lead.necesidades ?? []).includes("integracion"),
-  });
-
-  señales.push({
-    clave: "necesita_ia",
-    etiqueta: "Necesita automatización o IA",
-    valor:
-      (lead.necesidades ?? []).includes("ia") ||
-      (lead.necesidades ?? []).includes("automatizacion"),
-  });
-
-  señales.push({
-    clave: "instalacion_propia",
-    etiqueta: "Quiere instalación en infraestructura propia",
-    valor: lead.modalidad === "propia",
-  });
-
-  const empleados = Number.parseInt(lead.empleados ?? "0", 10) || 0;
-  señales.push({
-    clave: "varios_usuarios",
-    etiqueta: "Varios usuarios",
-    valor: empleados >= 51 || personasVentas >= 11,
-  });
-
-  señales.push({
-    clave: "problemas_seguimiento",
-    etiqueta: "Menciona problemas de seguimiento",
-    valor: /seguimiento|estancad|olvid|recordar|enfr|escapa/i.test(
-      lead.problema ?? "",
-    ),
-  });
-
-  señales.push({
-    clave: "automatizacion",
-    etiqueta: "Menciona automatización",
-    valor:
-      (lead.necesidades ?? []).includes("automatizacion") ||
-      /automatiz|repetitiv|manualmente/i.test(lead.problema ?? ""),
-  });
-
-  return señales;
-};
+  return NextResponse.json({ ok: true });
+}

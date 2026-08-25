@@ -17,6 +17,9 @@ export const RECURSOS_PERMITIDOS_CON_API_KEY = new Set([
   "contacts",
   "contact_notes",
   "companies",
+  // La clave externa del formulario del sitio web crea la oportunidad (deal)
+  // que representa al lead, con los datos extra en su descripción.
+  "deals",
 ]);
 
 export const generarClaveDeApi = () =>
