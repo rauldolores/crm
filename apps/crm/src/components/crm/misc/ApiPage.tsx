@@ -40,6 +40,18 @@ const RECURSOS_DE_EJEMPLO: { recurso: string; ejemplo: string }[] = [
     recurso: "tickets",
     ejemplo: `{\n  "id": 3,\n  "subject": "No puedo iniciar sesión",\n  "description": "Me sale error al entrar al CRM.",\n  "status": "open",\n  "contact_id": 42,\n  "company_id": 7,\n  "sales_id": 1\n}`,
   },
+  {
+    recurso: "contact_notes",
+    ejemplo: `{\n  "id": 120,\n  "contact_id": 42,\n  "type": "note",\n  "text": "Le interesa el plan anual, pidió una demo la próxima semana.",\n  "date": "2026-08-25T18:30:00Z",\n  "sales_id": 1\n}`,
+  },
+  {
+    recurso: "deal_notes",
+    ejemplo: `{\n  "id": 34,\n  "deal_id": 15,\n  "type": "llamada",\n  "text": "Confirmó presupuesto, falta aprobación del gerente.",\n  "date": "2026-08-25T18:30:00Z",\n  "sales_id": 1\n}`,
+  },
+  {
+    recurso: "tags",
+    ejemplo: `{\n  "id": 5,\n  "name": "Cliente VIP",\n  "color": "#f59e0b"\n}`,
+  },
 ];
 
 /**
