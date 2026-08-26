@@ -571,7 +571,7 @@ export const spanishCrmMessages = {
         base_url: "Todas las peticiones van a esta dirección base:",
         auth: "La autenticación usa tu token de sesión de KontrolIA Auth en la cabecera Authorization. Ejemplo de consulta:",
         auth_api_key:
-          "Para una integración externa (un formulario en otro sitio, por ejemplo) usa una clave de API en su lugar, con el mismo formato de cabecera. Queda limitada a contacts, contact_notes y companies — crea una abajo.",
+          "Para una integración externa (un formulario en otro sitio, un bot, tu propio sistema) usa una clave de API en su lugar, con el mismo formato de cabecera. Tiene acceso a los mismos recursos que una sesión — trátala como la contraseña de un usuario más: crea una abajo.",
         filters:
           "Los filtros siguen la sintaxis de PostgREST (columna=operador.valor):",
         example_ilike: "# contiene texto, sin mayúsculas",
@@ -585,7 +585,7 @@ export const spanishCrmMessages = {
       keys: {
         title: "Claves de API",
         intro:
-          "Para que un sistema externo cree o gestione datos sin que nadie inicie sesión — por ejemplo, un formulario de captación en tu propia web, con los campos que tú definas ahí. Cada clave puede leer y escribir contactos, sus notas y empresas; nada más.",
+          "Para que un sistema externo cree o gestione datos sin que nadie inicie sesión — un formulario propio, un bot, tu propio backend. Cada clave tiene acceso a los mismos datos que un usuario con sesión iniciada, así que trátala con el mismo cuidado: solo un administrador puede crearla, y puedes desactivarla o borrarla en cualquier momento desde aquí.",
         name_placeholder: "Nombre de la clave (ej. Formulario del sitio)",
         add: "Crear clave",
         empty: "Aún no hay claves de API.",

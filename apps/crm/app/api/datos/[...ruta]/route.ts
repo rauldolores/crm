@@ -1,7 +1,6 @@
 import {
   organizacionDeClaveDeApi,
   PREFIJO_CLAVE_DE_API,
-  RECURSOS_PERMITIDOS_CON_API_KEY,
 } from "@/lib/server/apiKeys";
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 
@@ -26,9 +25,11 @@ import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermiss
  *
  * Autenticación: además del token de sesión, se acepta una clave de API
  * (`Authorization: Bearer vnq_...`, ver /api/claves) para integraciones
- * externas — un formulario en otro sitio, por ejemplo. Se resuelve igual la
- * organización, pero queda limitada a `RECURSOS_PERMITIDOS_CON_API_KEY`: una
- * clave filtrada no debe poder leer ni tocar todo el CRM.
+ * externas. Se resuelve igual la organización y tiene acceso a los mismos
+ * recursos que una sesión — la única diferencia es que no puede incrustar
+ * relaciones de PostgREST (ver más abajo). Ojo con `webhooks`: una clave que
+ * llegue a filtrarse puede crear uno propio y quedarse un canal permanente
+ * de lectura de datos aunque luego se revoque para todo lo demás.
  */
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
@@ -126,19 +127,14 @@ async function reenviar(peticion: Request, ruta: string[]) {
   const origen = new URL(peticion.url);
   const recurso = ruta[ruta.length - 1];
 
-  if (viaClaveDeApi) {
-    if (!RECURSOS_PERMITIDOS_CON_API_KEY.has(recurso)) {
-      return esError(403, "Esta clave de API no tiene acceso a este recurso.");
-    }
-    // PostgREST permite incrustar relaciones (?select=*,sales(*)) que saltan
-    // la lista de recursos permitidos: contacts y contact_notes tienen FK a
-    // sales, así que sin este bloqueo una clave podría leer ese directorio.
-    if (origen.searchParams.get("select")?.includes("(")) {
-      return esError(
-        403,
-        "Esta clave de API no puede incrustar relaciones (select con paréntesis).",
-      );
-    }
+  // PostgREST permite incrustar relaciones (?select=*,sales(*)); una clave
+  // de API nunca puede, para que su alcance real sea siempre el recurso de
+  // la URL y no dependa de lo que ese recurso tenga como FK.
+  if (viaClaveDeApi && origen.searchParams.get("select")?.includes("(")) {
+    return esError(
+      403,
+      "Esta clave de API no puede incrustar relaciones (select con paréntesis).",
+    );
   }
 
   const parametros = new URLSearchParams(origen.search);

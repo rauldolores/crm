@@ -4,23 +4,17 @@ import { getServiceClient } from "./supabase-service";
 
 /**
  * Claves de API para integraciones externas (servidor a servidor): un
- * formulario en otro sitio, con sus propios campos, que crea contactos en
- * Vinqulia sin que un humano inicie sesión. El secreto en claro solo existe
- * en el momento de crearlo — se guarda únicamente su hash — y solo se
- * reenvían las tablas de `RECURSOS_PERMITIDOS_CON_API_KEY`, no todo el CRM.
+ * formulario en otro sitio, un bot, un sistema propio. El secreto en claro
+ * solo existe en el momento de crearlo — se guarda únicamente su hash.
+ *
+ * Da acceso a los mismos recursos que una sesión normal (ver CON_DUENO en
+ * /api/datos), sin una lista aparte que mantener sincronizada — la única
+ * restricción propia de una clave es que no puede incrustar relaciones de
+ * PostgREST. Por eso una clave de API es tan sensible como dar de alta a un
+ * usuario más: solo un administrador puede crearlas o revocarlas.
  */
 
 export const PREFIJO_CLAVE_DE_API = "vnq_";
-
-/** Tablas a las que una clave de API puede acceder vía /api/datos. */
-export const RECURSOS_PERMITIDOS_CON_API_KEY = new Set([
-  "contacts",
-  "contact_notes",
-  "companies",
-  // La clave externa del formulario del sitio web crea la oportunidad (deal)
-  // que representa al lead, con los datos extra en su descripción.
-  "deals",
-]);
 
 export const generarClaveDeApi = () =>
   `${PREFIJO_CLAVE_DE_API}${randomBytes(24).toString("hex")}`;
