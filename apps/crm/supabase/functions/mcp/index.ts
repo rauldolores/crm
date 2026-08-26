@@ -27,6 +27,14 @@ const pool = new Pool(connectionString, 1);
 // --- URL Helpers ---
 
 function getBaseUrl(req: Request): string {
+  // Preferido: Supabase's edge gateway strips/overrides x-forwarded-host
+  // (confirmado en producción — el fallback de abajo termina devolviendo el
+  // dominio de supabase.co, no el de la app), así que sin esto tanto el
+  // WWW-Authenticate del 401 como el "resource" del descubrimiento OAuth
+  // apuntan a una URL que ni siquiera existe (404), y un cliente MCP nunca
+  // llega a completar el flujo.
+  if (CRM_BASE_URL) return CRM_BASE_URL;
+
   const forwardedHost = req.headers.get("x-forwarded-host");
   if (forwardedHost) {
     // When behind a proxy (ngrok, production), always use HTTPS.

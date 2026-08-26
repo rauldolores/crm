@@ -24,7 +24,7 @@ export const TASK_LIST_HTML = /*html*/ `
   .check { width:20px; height:20px; min-width:20px; margin-top:1px; border:1.5px solid #888; border-radius:999px; background:transparent; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center; color:transparent; font-size:12px; line-height:1; transition:background 0.15s, border-color 0.15s, color 0.15s; }
   .check:hover:not(:disabled) { border-color:#2563eb; background:rgba(37,99,235,0.12); }
   .check.checked { background:#10b981; border-color:#10b981; color:white; }
-  .check.checked::after { content:"\\2713"; }
+  .check.checked::after { content:"✓"; }
   .task-content { flex:1; min-width:0; }
   .task-text { font-weight:500; white-space:pre-wrap; word-break:break-word; }
   .task-meta { margin-top:3px; font-size:12px; color:#6b7280; display:flex; flex-wrap:wrap; gap:10px; }
