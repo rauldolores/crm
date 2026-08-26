@@ -1,102 +1,58 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { McpServer } from "npm:@modelcontextprotocol/sdk@1.28.0/server/mcp.js";
-import { WebStandardStreamableHTTPServerTransport } from "npm:@modelcontextprotocol/sdk@1.28.0/server/webStandardStreamableHttp.js";
-import { createRemoteJWKSet, jwtVerify, decodeJwt } from "npm:jose@5";
-import { Pool } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
-import { z } from "npm:zod@^3.25";
-import { validateReadOnly, validateWrite } from "./validateSql.ts";
-import { TASK_LIST_HTML, TASK_LIST_UI_URI } from "./taskListUi.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { decodeJwt } from "jose";
+import { Pool, types } from "pg";
+import { z } from "zod";
 
-// --- Environment & Config ---
+import type { AuthInfo } from "./auth";
+import { TASK_LIST_HTML, TASK_LIST_UI_URI } from "./taskListUi";
+import { validateReadOnly, validateWrite } from "./validateSql";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_JWT_ISSUER =
-  Deno.env.get("SB_JWT_ISSUER") ?? `${SUPABASE_URL}/auth/v1`;
-const CRM_BASE_URL = (Deno.env.get("CRM_BASE_URL") ?? "").replace(/\/$/, "");
+// int8 (bigint) llega como string por defecto en pg, para no perder
+// precisión en valores fuera del rango seguro de un number. Los recuentos y
+// montos de este CRM nunca se acercan a ese límite, así que se acepta la
+// misma pérdida de precisión que ya aceptaba la función de Deno (que
+// convertía bigint -> Number antes de serializar).
+types.setTypeParser(types.builtins.INT8, (value: string) => parseInt(value, 10));
 
-const JWKS = createRemoteJWKSet(
-  new URL(`${SUPABASE_URL}/auth/v1/.well-known/jwks.json`),
-);
+const connectionString = process.env.SUPABASE_DB_URL ?? "";
 
-const connectionString =
-  Deno.env.get("SUPABASE_DB_URL") ||
-  "postgresql://postgres:postgres@db:5432/postgres";
-const pool = new Pool(connectionString, 1);
+/**
+ * Una sola instancia por contenedor de función serverless, reutilizada entre
+ * invocaciones cuando el contenedor sigue caliente — igual que hacía la
+ * función de Supabase Edge Functions (Pool con una sola conexión).
+ */
+const pool = connectionString
+  ? new Pool({ connectionString, max: 1 })
+  : null;
 
-// --- URL Helpers ---
+// --- Rate limiting, por usuario (claims.sub), no por IP ---
+//
+// Un conector alojado (Claude.ai, ChatGPT) manda el tráfico de muchos
+// usuarios reales desde pocas IPs de salida, así que limitar por IP
+// penalizaría a todos los usuarios de ese conector a la vez. En memoria del
+// proceso: se reinicia en cada cold start y no se comparte entre instancias,
+// pero es suficiente como primera barrera contra un bucle descontrolado.
+const RATE_LIMIT_MAX = 60;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const llamadasPorUsuario = new Map<string, number[]>();
 
-function getBaseUrl(req: Request): string {
-  // Preferido: Supabase's edge gateway strips/overrides x-forwarded-host
-  // (confirmado en producción — el fallback de abajo termina devolviendo el
-  // dominio de supabase.co, no el de la app), así que sin esto tanto el
-  // WWW-Authenticate del 401 como el "resource" del descubrimiento OAuth
-  // apuntan a una URL que ni siquiera existe (404), y un cliente MCP nunca
-  // llega a completar el flujo.
-  if (CRM_BASE_URL) return CRM_BASE_URL;
-
-  const forwardedHost = req.headers.get("x-forwarded-host");
-  if (forwardedHost) {
-    // When behind a proxy (ngrok, production), always use HTTPS.
-    // x-forwarded-proto may not survive the Supabase gateway chain.
-    return `https://${forwardedHost}`;
-  }
-  const url = new URL(req.url);
-  const host = url.host;
-  // Supabase edge functions see http:// internally, but are served over HTTPS publicly
-  const proto =
-    host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https";
-  return `${proto}://${host}`;
-}
-
-// La ruta se fija a /api/mcp (el puente de Next.js en app/api/mcp/), no a
-// /functions/v1/mcp: un cliente externo solo debe conocer el dominio de la
-// aplicación, nunca el de la función de Supabase que hay detrás.
-function getResourceMetadataUrl(req: Request): string {
-  return `${getBaseUrl(req)}/api/mcp/oauth-protected-resource`;
-}
-
-// --- Auth ---
-
-interface AuthInfo {
-  token: string;
-  userId: string;
-  role?: string;
-  clientId?: string;
-}
-
-async function validateToken(req: Request): Promise<AuthInfo | null> {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) return null;
-
-  const [bearer, token] = authHeader.split(" ");
-  if (bearer !== "Bearer" || !token) return null;
-
-  try {
-    const { payload } = await jwtVerify(token, JWKS, {
-      issuer: SUPABASE_JWT_ISSUER,
-    });
-
-    if (!payload.sub) return null;
-
-    return {
-      token,
-      userId: payload.sub,
-      role: payload.role as string | undefined,
-      clientId: payload.client_id as string | undefined,
-    };
-  } catch {
-    return null;
-  }
+function excedeLimite(userId: string): boolean {
+  const ahora = Date.now();
+  const llamadas = (llamadasPorUsuario.get(userId) ?? []).filter(
+    (marca) => ahora - marca < RATE_LIMIT_WINDOW_MS,
+  );
+  llamadas.push(ahora);
+  llamadasPorUsuario.set(userId, llamadas);
+  return llamadas.length > RATE_LIMIT_MAX;
 }
 
 // --- Database: get_schema ---
 
 async function getSchemaData(): Promise<string> {
+  if (!pool) throw new Error("Falta configurar SUPABASE_DB_URL.");
   const client = await pool.connect();
   try {
-    // Query 1: All columns from the crm schema
-    const columnsResult = await client.queryObject<{
+    const columnsResult = await client.query<{
       table_name: string;
       column_name: string;
       data_type: string;
@@ -118,8 +74,7 @@ async function getSchemaData(): Promise<string> {
       ORDER BY c.table_name, c.ordinal_position
     `);
 
-    // Query 2: Foreign key relationships
-    const fkResult = await client.queryObject<{
+    const fkResult = await client.query<{
       source_table: string;
       source_column: string;
       target_table: string;
@@ -142,7 +97,6 @@ async function getSchemaData(): Promise<string> {
       ORDER BY src.relname
     `);
 
-    // Group columns by table
     const tables = new Map<
       string,
       {
@@ -170,7 +124,6 @@ async function getSchemaData(): Promise<string> {
       });
     }
 
-    // Group foreign keys by source table
     const foreignKeys = new Map<
       string,
       { source_column: string; target_table: string; target_column: string }[]
@@ -186,7 +139,6 @@ async function getSchemaData(): Promise<string> {
       });
     }
 
-    // Format output
     const lines: string[] = [];
     for (const [tableName, table] of tables) {
       lines.push(`${table.type}: ${tableName}`);
@@ -227,51 +179,39 @@ async function executeQueryWithRLS(
   if (validationError) {
     return { success: false, error: validationError };
   }
+  if (!pool) {
+    return { success: false, error: "Falta configurar SUPABASE_DB_URL." };
+  }
 
   const client = await pool.connect();
   try {
-    const jwtClaims = decodeJwt(userToken);
-    const claimsJson = JSON.stringify(jwtClaims);
+    const claimsJson = JSON.stringify(decodeJwt(userToken));
 
-    await client.queryObject("BEGIN");
+    await client.query("BEGIN");
     // El SQL de esta herramienta usa nombres de tabla sin calificar (así lo
     // documentan las descripciones de las tools), así que la conexión debe
     // resolverlos contra crm — el esquema donde vive todo el CRM — en vez del
     // "$user", public por defecto de la conexión cruda a Postgres.
-    await client.queryObject("SET LOCAL search_path TO crm, public");
+    await client.query("SET LOCAL search_path TO crm, public");
     // set_config(..., is_local=true) is the parameterized equivalent of
     // SET LOCAL — avoids interpolating JWT claims into a SQL string.
-    await client.queryObject(
-      "SELECT set_config('role', 'authenticated', true)",
+    await client.query("SELECT set_config('role', 'authenticated', true)");
+    await client.query(
+      "SELECT set_config('request.jwt.claims', $1, true)",
+      [claimsJson],
     );
-    await client.queryObject({
-      text: "SELECT set_config('request.jwt.claims', $1, true)",
-      args: [claimsJson],
-    });
 
-    const result = await client.queryObject(sql);
-    await client.queryObject("COMMIT");
+    const result = await client.query(sql);
+    await client.query("COMMIT");
 
-    // Convert BigInt values to numbers (Deno Postgres returns bigint for
-    // PostgreSQL int8/count results, but JSON.stringify can't handle them)
-    const rows = JSON.parse(
-      JSON.stringify(result.rows, (_key, value) =>
-        typeof value === "bigint" ? Number(value) : value,
-      ),
-    );
-    return { success: true, data: rows };
+    return { success: true, data: result.rows };
   } catch (error) {
     try {
-      await client.queryObject("ROLLBACK");
+      await client.query("ROLLBACK");
     } catch {
       // Ignore rollback errors
     }
-    const message =
-      error instanceof AggregateError
-        ? error.errors.map((e) => e.message).join("; ")
-        : error instanceof Error
-          ? error.message
-          : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     return { success: false, error: message };
   } finally {
     client.release();
@@ -280,11 +220,16 @@ async function executeQueryWithRLS(
 
 // --- MCP Server Factory ---
 
-function createMcpServer(authInfo: AuthInfo): McpServer {
+export function createMcpServer(
+  authInfo: AuthInfo,
+  crmBaseUrl: string,
+): McpServer {
   const server = new McpServer({
     name: "atomic-crm",
     version: "1.0.0",
   });
+
+  const limitado = () => excedeLimite(authInfo.userId);
 
   server.registerTool(
     "get_schema",
@@ -295,6 +240,12 @@ function createMcpServer(authInfo: AuthInfo): McpServer {
       annotations: { readOnlyHint: true },
     },
     async () => {
+      if (limitado()) {
+        return {
+          content: [{ type: "text" as const, text: "Rate limit exceeded. Try again in a minute." }],
+          isError: true,
+        };
+      }
       const schema = await getSchemaData();
       return { content: [{ type: "text" as const, text: schema }] };
     },
@@ -334,8 +285,13 @@ Examples:
       annotations: { readOnlyHint: true },
     },
     async ({ sql }: { sql: string }) => {
-      // eslint-disable-next-line no-console
-      console.log(`[MCP query] user=${authInfo.userId} sql=${sql}`);
+      if (limitado()) {
+        return {
+          content: [{ type: "text" as const, text: "Rate limit exceeded. Try again in a minute." }],
+          isError: true,
+        };
+      }
+      console.warn(`[MCP query] user=${authInfo.userId} sql=${sql}`);
       const result = await executeQueryWithRLS(
         sql,
         authInfo.token,
@@ -389,8 +345,13 @@ Examples:
       annotations: { destructiveHint: true },
     },
     async ({ sql }: { sql: string }) => {
-      // eslint-disable-next-line no-console
-      console.log(`[MCP mutate] user=${authInfo.userId} sql=${sql}`);
+      if (limitado()) {
+        return {
+          content: [{ type: "text" as const, text: "Rate limit exceeded. Try again in a minute." }],
+          isError: true,
+        };
+      }
+      console.warn(`[MCP mutate] user=${authInfo.userId} sql=${sql}`);
       const result = await executeQueryWithRLS(
         sql,
         authInfo.token,
@@ -419,7 +380,7 @@ Examples:
   // so contact names can link back to the CRM
   const taskListHtml = TASK_LIST_HTML.replace(
     /__CRM_BASE_URL__/g,
-    CRM_BASE_URL,
+    crmBaseUrl,
   );
 
   server.registerResource(
@@ -495,8 +456,7 @@ Each task should include at least: id (required, used for the mark-as-done actio
       },
     },
     ({ tasks }: { tasks: Task[] }) => {
-      // eslint-disable-next-line no-console
-      console.log(
+      console.warn(
         `[MCP display_task_list] user=${authInfo.userId} count=${tasks.length}`,
       );
       // content carries the display text (used by Claude's guest HTML);
@@ -530,12 +490,17 @@ Each task should include at least: id (required, used for the mark-as-done actio
       },
     },
     async ({ id }: { id: number }) => {
+      if (limitado()) {
+        return {
+          content: [{ type: "text" as const, text: "Rate limit exceeded. Try again in a minute." }],
+          isError: true,
+        };
+      }
       // RETURNING id lets us distinguish a successful update from an
       // RLS-blocked or non-existent row (executeQueryWithRLS would otherwise
       // report success on 0 rows affected).
       const sql = `UPDATE tasks SET done_date = NOW() WHERE id = ${id} RETURNING id`;
-      // eslint-disable-next-line no-console
-      console.log(`[MCP complete_task] user=${authInfo.userId} id=${id}`);
+      console.warn(`[MCP complete_task] user=${authInfo.userId} id=${id}`);
       const result = await executeQueryWithRLS(
         sql,
         authInfo.token,
@@ -568,102 +533,3 @@ Each task should include at least: id (required, used for the mark-as-done actio
 
   return server;
 }
-
-// --- OAuth Protected Resource Metadata ---
-
-function handleProtectedResourceMetadata(req: Request): Response {
-  const baseUrl = getBaseUrl(req);
-  return new Response(
-    JSON.stringify({
-      resource: `${baseUrl}/api/mcp`,
-      // El servidor que EMITE el token sí es el de Supabase de verdad: la
-      // app no proxya /auth/v1 (no reemite tokens), así que un cliente que
-      // haga descubrimiento OAuth completo necesita esta URL real para
-      // poder autenticarse. Es la única dirección de esta respuesta que no
-      // pasa por el dominio de la aplicación.
-      authorization_servers: [`${SUPABASE_URL}/auth/v1`],
-      bearer_methods_supported: ["header"],
-    }),
-    {
-      headers: { "Content-Type": "application/json" },
-    },
-  );
-}
-
-// --- MCP Request Handler ---
-
-async function handleMcpRequest(req: Request): Promise<Response> {
-  // Validate auth
-  const authInfo = await validateToken(req);
-  if (!authInfo) {
-    const metadataUrl = getResourceMetadataUrl(req);
-    return new Response("Unauthorized", {
-      status: 401,
-      headers: {
-        "WWW-Authenticate": `Bearer resource_metadata="${metadataUrl}"`,
-      },
-    });
-  }
-
-  // Create stateless MCP server + transport for this request
-  const server = createMcpServer(authInfo);
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined, // Stateless
-  });
-
-  await server.connect(transport);
-
-  // Clean up server + transport when the connection closes.
-  // Do NOT close in a finally block — the SSE response body is a
-  // ReadableStream that must remain open until the client consumes it.
-  transport.onclose = () => {
-    server.close().catch(() => {});
-  };
-
-  try {
-    return await transport.handleRequest(req);
-  } catch (error) {
-    console.error("MCP request error:", error);
-    await transport.close();
-    await server.close();
-    return new Response("Internal Server Error", { status: 500 });
-  }
-}
-
-// --- CORS Helper ---
-
-function withCorsHeaders(response: Response): Response {
-  const headers = new Headers(response.headers);
-  for (const [key, value] of Object.entries(corsHeaders)) {
-    headers.set(key, value);
-  }
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
-  });
-}
-
-// --- Route Dispatcher ---
-
-Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
-
-  const url = new URL(req.url);
-  const path = url.pathname;
-
-  // GET /functions/v1/mcp/oauth-protected-resource → RFC 9728 metadata
-  if (path.endsWith("/oauth-protected-resource") && req.method === "GET") {
-    return withCorsHeaders(handleProtectedResourceMetadata(req));
-  }
-
-  // POST/GET/DELETE /functions/v1/mcp → MCP protocol handler
-  if (path.endsWith("/mcp") || path.endsWith("/mcp/")) {
-    return withCorsHeaders(await handleMcpRequest(req));
-  }
-
-  return withCorsHeaders(new Response("Not Found", { status: 404 }));
-});

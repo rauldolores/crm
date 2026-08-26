@@ -127,7 +127,7 @@ export const TASK_LIST_HTML = /*html*/ `
     }
 
     if (!ready) {
-      root.appendChild(el('div', { class: 'empty', text: 'Waiting for data\u2026' }));
+      root.appendChild(el('div', { class: 'empty', text: 'Waiting for data…' }));
       return;
     }
 

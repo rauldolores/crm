@@ -1,4 +1,4 @@
-import { parse, type Statement } from "npm:pgsql-ast-parser@^12";
+import { parse, type Statement } from "pgsql-ast-parser";
 
 const ALLOWED_READ_TYPES = new Set(["select", "with"]);
 const ALLOWED_WRITE_TYPES = new Set(["insert", "update", "delete", "with"]);
