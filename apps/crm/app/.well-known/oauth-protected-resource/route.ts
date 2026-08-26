@@ -2,9 +2,9 @@ import { protectedResourceMetadata } from "@/lib/server/mcp/auth";
 import { CORS_HEADERS } from "@/lib/server/mcp/cors";
 
 /**
- * Mismo documento que las dos rutas .well-known — esta es la que
- * anunciamos en el header WWW-Authenticate del 401 (ver
- * getResourceMetadataUrl en src/lib/server/mcp/auth.ts).
+ * Fallback "raíz" de la RFC 9728 (sin el path del recurso): algunos
+ * clientes MCP prueban esta ruta cuando la que trae el path falla. Ver
+ * app/.well-known/oauth-protected-resource/api/mcp/route.ts para el porqué.
  */
 export const runtime = "nodejs";
 

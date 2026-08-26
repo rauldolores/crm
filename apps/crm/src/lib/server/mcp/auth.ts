@@ -58,3 +58,17 @@ export function getBaseUrl(req: Request): string {
 export function getResourceMetadataUrl(req: Request): string {
   return `${getBaseUrl(req)}/api/mcp/oauth-protected-resource`;
 }
+
+/**
+ * Metadata RFC 9728 (OAuth 2.0 Protected Resource Metadata): le dice a un
+ * cliente MCP dónde autenticarse. No hace falta servir por separado el
+ * documento RFC 8414 (.well-known/oauth-authorization-server): KontrolIA
+ * Auth ya lo expone en su propio proyecto de Supabase.
+ */
+export function protectedResourceMetadata(req: Request) {
+  return {
+    resource: `${getBaseUrl(req)}/api/mcp`,
+    authorization_servers: [`${kontroliaAuthConfig.supabaseUrl}/auth/v1`],
+    bearer_methods_supported: ["header"],
+  };
+}

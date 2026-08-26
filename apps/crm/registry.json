@@ -982,6 +982,30 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/mcp/auth.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/cors.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/mcpServer.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/taskListUi.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/validateSql.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/validateSql.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/postmark.ts",
           "type": "registry:lib"
         },
