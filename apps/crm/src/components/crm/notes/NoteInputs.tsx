@@ -28,7 +28,7 @@ export const NoteInputs = ({
   defaultStatus?: string;
   showStatus?: boolean;
   selectReference?: boolean;
-  reference?: "contacts" | "deals";
+  reference?: "contacts" | "deals" | "tickets";
 }) => {
   const { noteStatuses } = useConfigurationContext();
   const translate = useTranslate();
@@ -137,7 +137,9 @@ export const NoteInputs = ({
             label={
               reference === "contacts"
                 ? "resources.notes.fields.contact_id"
-                : "resources.notes.fields.deal_id"
+                : reference === "deals"
+                  ? "resources.notes.fields.deal_id"
+                  : "resources.notes.fields.ticket_id"
             }
             optionText={
               reference === "contacts" ? contactOptionText : undefined

@@ -25,6 +25,7 @@ export default (): Db => {
   db.public_forms = [];
   db.public_form_submissions = [];
   db.tickets = [];
+  db.ticket_notes = [];
   db.configuration = [
     {
       id: 1,

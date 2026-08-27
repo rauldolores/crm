@@ -32,6 +32,10 @@ create or replace trigger set_ticket_sales_id_trigger
     before insert on crm.tickets
     for each row execute function crm.set_sales_id_default();
 
+create or replace trigger set_ticket_notes_sales_id_trigger
+    before insert on crm.ticket_notes
+    for each row execute function crm.set_sales_id_default();
+
 -- Auto-fetch company logo from website favicon on save
 create or replace trigger company_saved
     before insert or update on crm.companies
@@ -74,6 +78,17 @@ create or replace trigger on_deal_notes_deleted_delete_note_attachments
     after delete on crm.deal_notes
     for each row execute function crm.cleanup_note_attachments();
 
+-- Cleanup storage attachments when ticket notes are updated or deleted
+create or replace trigger on_ticket_notes_attachments_updated_delete_note_attachments
+    after update on crm.ticket_notes
+    for each row
+    when (old.attachments is distinct from new.attachments)
+    execute function crm.cleanup_note_attachments();
+
+create or replace trigger on_ticket_notes_deleted_delete_note_attachments
+    after delete on crm.ticket_notes
+    for each row execute function crm.cleanup_note_attachments();
+
 -- No hay triggers sobre auth.users.
 --
 -- Antes existían `on_auth_user_created` y `on_auth_user_updated`, que creaban un
@@ -108,6 +123,9 @@ create trigger notify_webhooks_deal_notes
     for each row execute function crm.notify_webhooks();
 create trigger notify_webhooks_tickets
     after insert or update or delete on crm.tickets
+    for each row execute function crm.notify_webhooks();
+create trigger notify_webhooks_ticket_notes
+    after insert or update or delete on crm.ticket_notes
     for each row execute function crm.notify_webhooks();
 
 -- Automatizaciones: aplican las reglas «cuando pase X, haz Y» de la

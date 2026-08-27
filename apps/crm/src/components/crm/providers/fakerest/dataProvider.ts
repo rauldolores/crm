@@ -18,6 +18,7 @@ import type {
   SalesFormData,
   SignUpData,
   Task,
+  TicketNote,
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { getActivityLog } from "../commons/activity";
@@ -598,6 +599,10 @@ export const createDataProvider = ({
         resource: "deal_notes",
         beforeSave: async (params) => preserveAttachmentMimeType(params),
       } satisfies ResourceCallbacks<DealNote>,
+      {
+        resource: "ticket_notes",
+        beforeSave: async (params) => preserveAttachmentMimeType(params),
+      } satisfies ResourceCallbacks<TicketNote>,
     ],
   ) as CrmDataProvider;
 

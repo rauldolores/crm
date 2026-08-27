@@ -11,6 +11,7 @@ import type {
   Tag,
   Task,
   Ticket,
+  TicketNote,
   Webhook,
 } from "../../../types";
 import type { ConfigurationContextValue } from "../../../root/ConfigurationContext";
@@ -34,5 +35,6 @@ export interface Db {
   tags: Tag[];
   tasks: Task[];
   tickets: Ticket[];
+  ticket_notes: TicketNote[];
   configuration: Array<{ id: number; config: ConfigurationContextValue }>;
 }

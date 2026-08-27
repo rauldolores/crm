@@ -1,9 +1,17 @@
 import { EditButton } from "@/components/admin/edit-button";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { Card, CardContent } from "@/components/ui/card";
-import { ShowBase, useShowContext, useTranslate } from "ra-core";
+import { Separator } from "@/components/ui/separator";
+import {
+  InfiniteListBase,
+  ShowBase,
+  useShowContext,
+  useTranslate,
+} from "ra-core";
 
 import { Markdown } from "../misc/Markdown";
+import { NoteCreate } from "../notes/NoteCreate";
+import { NotesIterator } from "../notes/NotesIterator";
 import { formatRelativeDate } from "../misc/RelativeDate";
 import { Status } from "../misc/Status";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -84,6 +92,19 @@ const TicketShowContent = () => {
                 </div>
               )}
             </div>
+
+            <Separator className="my-4" />
+            <InfiniteListBase
+              resource="ticket_notes"
+              filter={{ ticket_id: record.id }}
+              sort={{ field: "date", order: "DESC" }}
+              perPage={25}
+              disableSyncWithLocation
+              storeKey={false}
+              empty={<NoteCreate reference="tickets" />}
+            >
+              <NotesIterator reference="tickets" />
+            </InfiniteListBase>
           </CardContent>
         </Card>
       </div>

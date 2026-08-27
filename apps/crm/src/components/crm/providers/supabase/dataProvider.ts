@@ -17,6 +17,7 @@ import type {
   Sale,
   SalesFormData,
   SignUpData,
+  TicketNote,
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
@@ -427,6 +428,17 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
   {
     resource: "deal_notes",
     beforeSave: async (data: DealNote, _, __) => {
+      if (data.attachments) {
+        data.attachments = await Promise.all(
+          data.attachments.map((fi) => uploadToBucket(fi)),
+        );
+      }
+      return data;
+    },
+  },
+  {
+    resource: "ticket_notes",
+    beforeSave: async (data: TicketNote, _, __) => {
       if (data.attachments) {
         data.attachments = await Promise.all(
           data.attachments.map((fi) => uploadToBucket(fi)),

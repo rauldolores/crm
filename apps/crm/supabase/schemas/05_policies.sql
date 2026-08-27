@@ -30,6 +30,7 @@ alter table crm.tasks enable row level security;
 alter table crm.configuration enable row level security;
 alter table crm.favicons_excluded_domains enable row level security;
 alter table crm.tickets enable row level security;
+alter table crm.ticket_notes enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -261,5 +262,20 @@ create policy "Tickets are updated within the organization" on crm.tickets
     using (organization_id = crm.current_organization_id())
     with check (organization_id = crm.current_organization_id());
 create policy "Tickets are deleted within the organization" on crm.tickets
+    for delete to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Ticket Notes
+create policy "Ticket notes are scoped to the organization" on crm.ticket_notes
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Ticket notes are created in the organization" on crm.ticket_notes
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id());
+create policy "Ticket notes are updated within the organization" on crm.ticket_notes
+    for update to authenticated
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Ticket notes are deleted within the organization" on crm.ticket_notes
     for delete to authenticated
     using (organization_id = crm.current_organization_id());

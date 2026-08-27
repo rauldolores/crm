@@ -302,6 +302,7 @@ export const spanishCrmMessages = {
         attachments: "Archivos adjuntos",
         contact_id: "Contacto",
         deal_id: "Oportunidad",
+        ticket_id: "Ticket",
       },
       action: {
         add: "Añadir nota",

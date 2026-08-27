@@ -169,6 +169,19 @@ export type DealNote = {
   status?: undefined;
 } & Pick<RaRecord, "id">;
 
+export type TicketNote = {
+  ticket_id: Identifier;
+  text: string;
+  date: string;
+  sales_id: Identifier;
+  attachments?: AttachmentNote[];
+  /** Tipo de actividad: nota, llamada, reunión… (value de un ActivityType). */
+  type?: string;
+
+  // This is defined for compatibility with `ContactNote`
+  status?: undefined;
+} & Pick<RaRecord, "id">;
+
 /** Vista guardada de una lista: filtros y orden con nombre, por organización. */
 export type SavedView = {
   resource: string;

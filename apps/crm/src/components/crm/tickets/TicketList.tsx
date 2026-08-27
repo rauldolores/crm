@@ -1,4 +1,4 @@
-import { useRecordContext, useTranslate } from "ra-core";
+import { useRecordContext, useTranslate, useUpdate } from "ra-core";
 import { CreateButton } from "@/components/admin/create-button";
 import { DataTable } from "@/components/admin/data-table";
 import { ExportButton } from "@/components/admin/export-button";
@@ -6,10 +6,16 @@ import { List } from "@/components/admin/list";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { SearchInput } from "@/components/admin/search-input";
 import { SelectInput } from "@/components/admin/select-input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { TopToolbar } from "../layout/TopToolbar";
 import { RelativeDate } from "../misc/RelativeDate";
-import { Status } from "../misc/Status";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
 
@@ -30,14 +36,46 @@ const TicketListActions = () => {
 const StatusField = () => {
   const record = useRecordContext<Ticket>();
   const { ticketStatuses } = useConfigurationContext();
-  const translate = useTranslate();
+  const [update, { isPending }] = useUpdate();
   if (!record) return null;
-  const estado = ticketStatuses.find((s) => s.value === record.status);
+
+  const handleValueChange = (value: string) => {
+    if (value === record.status) return;
+    update("tickets", {
+      id: record.id,
+      data: { status: value },
+      previousData: record,
+    });
+  };
+
   return (
-    <span className="flex items-center gap-2">
-      <Status status={record.status} statuses={ticketStatuses} />
-      {estado?.label ?? translate(record.status)}
-    </span>
+    <div
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <Select
+        disabled={isPending}
+        value={record.status}
+        onValueChange={handleValueChange}
+      >
+        <SelectTrigger size="sm" className="border-none shadow-none">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ticketStatuses.map((estado) => (
+            <SelectItem key={estado.value} value={estado.value}>
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block size-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: estado.color }}
+                />
+                {estado.label}
+              </div>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 };
 
