@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +34,16 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" translate="no" className="notranslate">
-      <body className="min-h-screen">{children}</body>
+      <body className="min-h-screen">
+        {children}
+        {/* Widget de chat de Nodia */}
+        <Script
+          src="https://nodia-agents.vercel.app/widget.js"
+          data-bot="534072dd-b853-463f-b33c-eaa41fed9162"
+          data-key="61dad282-91c8-4995-9312-115ed742e888"
+          strategy="afterInteractive"
+        />
+      </body>
     </html>
   );
 }
