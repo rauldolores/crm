@@ -70,6 +70,7 @@ export const ApiPage = () => {
   const translate = useTranslate();
   const origen = typeof window !== "undefined" ? window.location.origin : "";
   const urlBase = `${origen}/api/datos/rest/v1`;
+  const urlAttachments = `${origen}/api/attachments`;
   const urlMcp = `${origen}/api/mcp`;
 
   return (
@@ -125,6 +126,18 @@ export const ApiPage = () => {
               <Bloque>{ejemplo}</Bloque>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{translate("crm.api.attachments.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p>{translate("crm.api.attachments.intro")}</p>
+          <Bloque>{`curl -X POST "${urlAttachments}" \\\n  -H "Authorization: Bearer <token>" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "filename": "factura.pdf",\n    "contentType": "application/pdf",\n    "contentBase64": "JVBERi0xLj..."\n  }'`}</Bloque>
+          <p>{translate("crm.api.attachments.response")}</p>
+          <Bloque>{`{\n  "src": "https://.../storage/v1/object/public/attachments/0.1234.pdf",\n  "title": "factura.pdf",\n  "path": "0.1234.pdf",\n  "type": "application/pdf"\n}`}</Bloque>
         </CardContent>
       </Card>
 

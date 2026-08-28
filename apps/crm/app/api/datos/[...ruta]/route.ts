@@ -1,8 +1,4 @@
-import {
-  organizacionDeClaveDeApi,
-  PREFIJO_CLAVE_DE_API,
-} from "@/lib/server/apiKeys";
-import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
+import { autenticarPuente } from "@/lib/server/autenticarPuente";
 
 /**
  * Puente entre el navegador (o una integración externa) y la base de datos
@@ -81,37 +77,6 @@ const CABECERAS_REENVIADAS = [
 const esError = (estado: number, mensaje: string) =>
   Response.json({ message: mensaje }, { status: estado });
 
-type Autenticacion =
-  | { ok: true; organizacionId: string; viaClaveDeApi: boolean }
-  | { ok: false; response: Response };
-
-async function autenticar(peticion: Request): Promise<Autenticacion> {
-  const encabezado = peticion.headers.get("authorization") ?? "";
-  const token = encabezado.startsWith("Bearer ") ? encabezado.slice(7) : "";
-
-  if (token.startsWith(PREFIJO_CLAVE_DE_API)) {
-    const organizacionId = await organizacionDeClaveDeApi(token);
-    if (!organizacionId) {
-      return {
-        ok: false,
-        response: esError(401, "Clave de API inválida o revocada."),
-      };
-    }
-    return { ok: true, organizacionId, viaClaveDeApi: true };
-  }
-
-  // El permiso fino por recurso llegará cuando se declare en cada ruta; aquí
-  // se exige sesión con organización activa, que es lo que decide qué datos
-  // son visibles.
-  const auth = await requireKontroliaPermission(peticion, []);
-  if (!auth.ok) return { ok: false, response: auth.response };
-  return {
-    ok: true,
-    organizacionId: auth.sesion.organizacionId,
-    viaClaveDeApi: false,
-  };
-}
-
 async function reenviar(peticion: Request, ruta: string[]) {
   if (!SUPABASE_URL || !CLAVE_DE_SERVICIO) {
     return esError(
@@ -120,7 +85,7 @@ async function reenviar(peticion: Request, ruta: string[]) {
     );
   }
 
-  const auth = await autenticar(peticion);
+  const auth = await autenticarPuente(peticion);
   if (!auth.ok) return auth.response;
 
   const { organizacionId, viaClaveDeApi } = auth;

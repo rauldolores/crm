@@ -581,7 +581,7 @@ export const spanishCrmMessages = {
         example_pagination: "# paginación",
         write: "Para crear o modificar, envía JSON con POST o PATCH:",
         resources:
-          "Recursos disponibles: contacts, companies, deals, tasks, contact_notes, deal_notes, tickets, tags, sales (lectura). Todo queda aislado a tu organización automáticamente.",
+          "Recursos disponibles: contacts, companies, deals, tasks, contact_notes, deal_notes, tickets, ticket_notes, tags, sales (lectura). Todo queda aislado a tu organización automáticamente.",
       },
       keys: {
         title: "Claves de API",
@@ -601,6 +601,12 @@ export const spanishCrmMessages = {
         title: "Recursos y ejemplos",
         intro:
           "Cada recurso admite las cuatro operaciones estándar en su propia dirección. Este es el ejemplo de un registro real de cada uno:",
+      },
+      attachments: {
+        title: "Adjuntos",
+        intro:
+          "Para adjuntar un archivo a una nota (contact_notes, deal_notes o ticket_notes), primero súbelo aquí en base64 y usa la respuesta como un elemento del arreglo attachments al crear o editar la nota. Límite: 10 MB por archivo.",
+        response: "La respuesta trae el objeto listo para usar:",
       },
       webhooks: {
         title: "Webhooks",
