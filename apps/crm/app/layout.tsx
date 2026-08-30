@@ -4,6 +4,12 @@ import "../src/index.css";
 export const metadata: Metadata = {
   title: "Vinqulia",
   applicationName: "Vinqulia",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/vinqulia-favicon.png",
+    shortcut: "/vinqulia-favicon.png",
+    apple: "/appIcon/180.png",
+  },
 };
 
 export const viewport: Viewport = {

@@ -124,9 +124,11 @@ export const BarraLateral = () => {
           to="/"
           className="group mb-5 flex items-center gap-2.5 px-2 py-1 no-underline text-sidebar-foreground"
         >
-          <span className="flex size-9 items-center justify-center rounded-lg bg-sidebar-primary ring-1 ring-sidebar-primary/30 transition-colors group-hover:bg-sidebar-primary/90">
-            <img src={darkModeLogo} alt={title} className="h-6 w-6" />
-          </span>
+          <img
+            src={darkModeLogo}
+            alt={title}
+            className="size-9 rounded-lg ring-1 ring-sidebar-primary/30 transition-opacity group-hover:opacity-90"
+          />
           <span className="text-base font-semibold tracking-tight">
             {title}
           </span>

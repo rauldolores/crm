@@ -1,8 +1,8 @@
 import type { ConfigurationContextValue } from "./ConfigurationContext";
 // Los logos se importan como recurso del modulo y no con una ruta relativa,
 // que se rompe en rutas anidadas y bajo un subdirectorio de despliegue.
-import darkModeLogo from "./logos/logo_vinqulia_dark.svg";
-import lightModeLogo from "./logos/logo_vinqulia_light.svg";
+import darkModeLogo from "./logos/logo_vinqulia_dark.png";
+import lightModeLogo from "./logos/logo_vinqulia_light.png";
 
 /**
  * Next devuelve un objeto al importar una imagen (`{ src, width, height }`),
