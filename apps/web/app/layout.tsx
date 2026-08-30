@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   description:
     "Vinqulia centraliza clientes, oportunidades, seguimiento y comunicación en un CRM que se adapta a la forma en que trabaja tu empresa. Úsalo como servicio, instálalo en tu propia infraestructura o llévalo más lejos con automatización e IA de Kontrolia.",
   applicationName: "Vinqulia",
+  icons: {
+    icon: "/vinqulia-favicon.png",
+    shortcut: "/vinqulia-favicon.png",
+    apple: "/vinqulia-icon.png",
+  },
   keywords: [
     "CRM",
     "CRM para pymes",

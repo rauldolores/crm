@@ -43,30 +43,20 @@ import { FormularioDemo } from "../components/FormularioDemo";
 
 const Logo = ({ small = false }: { small?: boolean }) => (
   <span className="flex items-center gap-2.5">
-    <span className="flex size-9 items-center justify-center rounded-xl bg-brand-600 shadow-sm shadow-brand-600/30">
-      <svg
-        width={small ? 16 : 20}
-        height={small ? 16 : 20}
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <g fill="white">
-          <rect x="16" y="14" width="16" height="72" rx="2" />
-          <path d="M30.18 44.13 L76.18 14.13 L83.82 25.87 L37.82 55.87 Z" />
-          <path d="M37.82 44.13 L83.82 74.13 L76.18 85.87 L30.18 55.87 Z" />
-        </g>
-      </svg>
-    </span>
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img
+      src="/vinqulia-icon.png"
+      alt="Vinqulia"
+      className={small ? "size-7 rounded-lg" : "size-9 rounded-lg"}
+    />
     <span
       className={
         small
-          ? "text-lg font-semibold tracking-tight"
-          : "text-xl font-semibold tracking-tight"
+          ? "text-lg font-bold tracking-tight"
+          : "text-xl font-bold tracking-tight"
       }
     >
-      Vinqulia
+      vinq<span className="text-brand-600">u</span>lia
     </span>
   </span>
 );
@@ -582,15 +572,13 @@ const Hero = () => (
           <div className="flex">
             <div className="hidden w-44 shrink-0 flex-col gap-1 bg-neutral-900 p-3 sm:flex">
               <div className="mb-3 flex items-center gap-1.5 px-1.5">
-                <span className="flex size-6 items-center justify-center rounded-md bg-brand-600">
-                  <svg width="11" height="11" viewBox="0 0 100 100" fill="none" aria-hidden>
-                    <g fill="white">
-                      <rect x="16" y="14" width="16" height="72" rx="2" />
-                      <path d="M30.18 44.13 L76.18 14.13 L83.82 25.87 L37.82 55.87 Z" />
-                      <path d="M37.82 44.13 L83.82 74.13 L76.18 85.87 L30.18 55.87 Z" />
-                    </g>
-                  </svg>
-                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/vinqulia-icon.png"
+                  alt=""
+                  aria-hidden
+                  className="size-6 rounded-md"
+                />
                 <span className="text-[13px] font-semibold text-white">Vinqulia</span>
               </div>
               {[
