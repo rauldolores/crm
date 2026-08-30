@@ -982,6 +982,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/autenticarPuente.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/mcp/auth.ts",
           "type": "registry:lib"
         },
