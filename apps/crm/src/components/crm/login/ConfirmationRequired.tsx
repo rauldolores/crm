@@ -4,23 +4,12 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 
 export const ConfirmationRequired = () => {
   const translate = useTranslate();
-  const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
+  const { darkModeLogo, title } = useConfigurationContext();
 
   return (
     <div className="h-screen p-8">
       <div className="flex items-center gap-4">
-        <img
-          src={lightModeLogo}
-          alt={title}
-          width={24}
-          className="dark:hidden"
-        />
-        <img
-          src={darkModeLogo}
-          alt={title}
-          width={24}
-          className="hidden dark:block"
-        />
+        <img src={darkModeLogo} alt={title} width={24} className="rounded" />
         <h1 className="text-xl font-semibold">{title}</h1>
       </div>
       <div className="h-full text-center">
