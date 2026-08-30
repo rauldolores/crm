@@ -1,0 +1,1 @@
+analiza vinqulia.com quiero que me des un texto lo mas completo posible que voy a subir como base de conocimiento a un rag para que la utilice para vender el sistema y conseguir leads
