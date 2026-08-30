@@ -1584,6 +1584,9 @@ const Footer = () => (
         personalizable para tu empresa · CRM para pymes y equipos comerciales ·
         Alternativa a HubSpot, Pipedrive o Zoho CRM.
       </p>
+      <p className="mx-auto mt-2 max-w-7xl text-center text-xs leading-relaxed text-neutral-400">
+        Hecho en 🇲🇽 México con amor ❤️
+      </p>
     </div>
   </footer>
 );
