@@ -77,7 +77,7 @@ export type CRMProps = {
   store?: CoreAdminProps["store"];
   dashboard?: DashboardComponent;
   layout?: LayoutComponent;
-} & Partial<ConfigurationContextValue>;
+} & Omit<Partial<ConfigurationContextValue>, "darkModeLogo" | "lightModeLogo">;
 
 /**
  * CRM Component
@@ -86,6 +86,11 @@ export type CRMProps = {
  * default configurations and themes but allows for customization through props. The component
  * seeds the store with any custom prop values for backwards compatibility.
  *
+ * The logo is NOT configurable through props, Settings, or the stored
+ * configuration: `darkModeLogo`/`lightModeLogo` always resolve to the assets
+ * in `src/components/crm/root/logos/` (see `ConfigurationContext.tsx`), so
+ * it can never drift from what's checked into the codebase.
+ *
  * @param {LabeledValue[]} companySectors - The list of company sectors used in the application.
  * @param {string} currency - The ISO 4217 currency code used to format monetary values (e.g. "USD", "EUR", "GBP").
  * @param {RaThemeOptions} darkTheme - The theme to use when the application is in dark mode.
@@ -93,8 +98,6 @@ export type CRMProps = {
  * @param {string[]} dealPipelineStatuses - The statuses of deals in the pipeline used in the application.
  * @param {DealStage[]} dealStages - The stages of deals used in the application.
  * @param {RaThemeOptions} lightTheme - The theme to use when the application is in light mode.
- * @param {string} darkModeLogo - Logo shown in dark mode and on the auth pages. Must be an imported asset, an absolute URL, or a data URI — never a route-relative path like "./logos/x.svg", which breaks on nested routes such as /oauth/consent (issue #291).
- * @param {string} lightModeLogo - Logo shown in light mode. Same rule as darkModeLogo: imported asset, absolute URL, or data URI only.
  * @param {NoteStatus[]} noteStatuses - The statuses of notes used in the application.
  * @param {LabeledValue[]} taskTypes - The types of tasks used in the application.
  * @param {string} title - The title of the CRM application.
@@ -107,8 +110,6 @@ export type CRMProps = {
  *
  * const App = () => (
  *     <CRM
- *         darkModeLogo="https://example.com/logo-dark.svg"
- *         lightModeLogo="https://example.com/logo-light.svg"
  *         title="My Custom CRM"
  *         lightTheme={{
  *             ...defaultTheme,
@@ -127,8 +128,6 @@ export const CRM = ({
   dealCategories = defaultDealCategories,
   dealPipelineStatuses = defaultDealPipelineStatuses,
   dealStages = defaultDealStages,
-  darkModeLogo = defaultDarkModeLogo,
-  lightModeLogo = defaultLightModeLogo,
   noteStatuses = defaultNoteStatuses,
   taskTypes = defaultTaskTypes,
   title = defaultTitle,
@@ -151,8 +150,12 @@ export const CRM = ({
         noteStatuses,
         taskTypes,
         title,
-        darkModeLogo,
-        lightModeLogo,
+        // Se siembran aunque ya no sean configurables: el store exige la
+        // forma completa de ConfigurationContextValue, pero el valor no se
+        // llega a leer — ConfigurationContext.tsx siempre devuelve el logo
+        // del código, sin importar lo que haya aquí.
+        darkModeLogo: defaultDarkModeLogo,
+        lightModeLogo: defaultLightModeLogo,
         contactCustomFields: [],
         companyCustomFields: [],
         dealCustomFields: [],

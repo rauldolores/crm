@@ -733,7 +733,6 @@ export const spanishCrmMessages = {
       companies: {
         sectors: "Sectores",
       },
-      dark_mode_logo: "Logo para el modo oscuro",
       deals: {
         categories: "Categorías",
         currency: "Moneda",
@@ -756,7 +755,6 @@ export const spanishCrmMessages = {
         loss_reasons_help:
           "Las opciones que se ofrecerán al perder una oportunidad. Saber por qué se pierde es lo que convierte el historial en una decisión.",
       },
-      light_mode_logo: "Logo para el modo claro",
       notes: {
         statuses: "Estados",
         types: "Tipos de actividad",

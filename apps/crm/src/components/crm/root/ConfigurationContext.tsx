@@ -51,18 +51,8 @@ export const useConfigurationContext = () => {
   // Se combina con los valores por defecto para que un ajuste nuevo no quede
   // vacio en instalaciones que guardaron la configuracion antes de que
   // existiera.
-  //
-  // Los logos se normalizan ademas a cadena: la configuracion viene del
-  // almacenamiento del navegador o de la base de datos, asi que puede traer
-  // valores antiguos. Al migrar a Next, importar una imagen paso a devolver un
-  // objeto en lugar de una URL, y los guardados de entonces terminaban en el
-  // atributo `src` como "[object Object]", pidiendo una ruta inexistente.
   return useMemo(() => {
     const combinada = { ...defaultConfiguration, ...config };
-    const comoUrl = (valor: unknown): string =>
-      typeof valor === "string"
-        ? valor
-        : ((valor as { src?: string })?.src ?? "");
 
     // Retrocompatibilidad: una configuración guardada antes de los embudos
     // múltiples trae dealStages/dealPipelineStatuses pero no dealPipelines.
@@ -113,8 +103,12 @@ export const useConfigurationContext = () => {
       dealPipelines: embudos,
       dealStages: todasLasEtapas,
       dealPipelineStatuses: todosLosEstados,
-      darkModeLogo: comoUrl(combinada.darkModeLogo),
-      lightModeLogo: comoUrl(combinada.lightModeLogo),
+      // El logo ya no es configurable por organización: siempre es el que
+      // vive en el código (src/components/crm/root/logos/), para que nunca
+      // quede pisado por un valor guardado en el navegador o en la base de
+      // datos de una personalización antigua.
+      darkModeLogo: defaultConfiguration.darkModeLogo,
+      lightModeLogo: defaultConfiguration.lightModeLogo,
     };
   }, [config]);
 };
