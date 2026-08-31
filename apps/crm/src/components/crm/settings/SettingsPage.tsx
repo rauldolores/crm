@@ -35,11 +35,6 @@ import type {
 
 const SECTIONS = [
   {
-    id: "branding",
-    label: "crm.settings.sections.branding",
-    fallback: "Branding",
-  },
-  {
     id: "companies",
     label: "resources.companies.name",
     fallback: "Companies",
@@ -193,7 +188,6 @@ const transformFormValues = (data: Record<string, any>) => {
   const embudos = aEmbudosGuardables(data.dealPipelines);
   return {
     config: {
-      title: data.title,
       currency: data.currency,
       companySectors: ensureValues(data.companySectors),
       dealCategories: ensureValues(data.dealCategories),
@@ -248,7 +242,6 @@ const SettingsForm = () => {
 
   const defaultValues = useMemo(
     () => ({
-      title: config.title,
       currency: config.currency,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
@@ -332,16 +325,6 @@ const SettingsFormFields = () => {
 
       {/* Main content */}
       <div className="flex-1 min-w-0 max-w-2xl space-y-6">
-        {/* Branding */}
-        <Card id="branding">
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              {translate("crm.settings.sections.branding")}
-            </h2>
-            <TextInput source="title" label="crm.settings.app_title" />
-          </CardContent>
-        </Card>
-
         {/* Companies */}
         <Card id="companies">
           <CardContent className="space-y-4">

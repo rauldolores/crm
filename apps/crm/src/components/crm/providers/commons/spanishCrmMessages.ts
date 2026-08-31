@@ -770,9 +770,7 @@ export const spanishCrmMessages = {
       },
       preferences: "Preferencias",
       title: "Ajustes",
-      app_title: "Nombre de la aplicación",
       sections: {
-        branding: "Marca",
         custom_fields: "Campos personalizados",
       },
       custom_fields: {

@@ -77,7 +77,10 @@ export type CRMProps = {
   store?: CoreAdminProps["store"];
   dashboard?: DashboardComponent;
   layout?: LayoutComponent;
-} & Omit<Partial<ConfigurationContextValue>, "darkModeLogo" | "lightModeLogo">;
+} & Omit<
+  Partial<ConfigurationContextValue>,
+  "darkModeLogo" | "lightModeLogo" | "title"
+>;
 
 /**
  * CRM Component
@@ -86,10 +89,11 @@ export type CRMProps = {
  * default configurations and themes but allows for customization through props. The component
  * seeds the store with any custom prop values for backwards compatibility.
  *
- * The logo is NOT configurable through props, Settings, or the stored
- * configuration: `darkModeLogo`/`lightModeLogo` always resolve to the assets
- * in `src/components/crm/root/logos/` (see `ConfigurationContext.tsx`), so
- * it can never drift from what's checked into the codebase.
+ * The logo and the app name are NOT configurable through props, Settings, or
+ * the stored configuration: `darkModeLogo`/`lightModeLogo`/`title` always
+ * resolve to `defaultConfiguration.ts` (see `ConfigurationContext.tsx`), so
+ * they can never drift from what's checked into the codebase. The app is
+ * always named "Vinqulia".
  *
  * @param {LabeledValue[]} companySectors - The list of company sectors used in the application.
  * @param {string} currency - The ISO 4217 currency code used to format monetary values (e.g. "USD", "EUR", "GBP").
@@ -100,7 +104,6 @@ export type CRMProps = {
  * @param {RaThemeOptions} lightTheme - The theme to use when the application is in light mode.
  * @param {NoteStatus[]} noteStatuses - The statuses of notes used in the application.
  * @param {LabeledValue[]} taskTypes - The types of tasks used in the application.
- * @param {string} title - The title of the CRM application.
  *
  * @returns {JSX.Element} The rendered CRM application.
  *
@@ -110,7 +113,6 @@ export type CRMProps = {
  *
  * const App = () => (
  *     <CRM
- *         title="My Custom CRM"
  *         lightTheme={{
  *             ...defaultTheme,
  *             palette: {
@@ -130,7 +132,6 @@ export const CRM = ({
   dealStages = defaultDealStages,
   noteStatuses = defaultNoteStatuses,
   taskTypes = defaultTaskTypes,
-  title = defaultTitle,
   dataProvider = defaultDataProviderBuilder(),
   authProvider = defaultAuthProviderBuilder(),
   i18nProvider = defaulti18nProvider,
@@ -149,11 +150,11 @@ export const CRM = ({
         dealStages,
         noteStatuses,
         taskTypes,
-        title,
         // Se siembran aunque ya no sean configurables: el store exige la
         // forma completa de ConfigurationContextValue, pero el valor no se
         // llega a leer — ConfigurationContext.tsx siempre devuelve el logo
-        // del código, sin importar lo que haya aquí.
+        // y el nombre del código, sin importar lo que haya aquí.
+        title: defaultTitle,
         darkModeLogo: defaultDarkModeLogo,
         lightModeLogo: defaultLightModeLogo,
         contactCustomFields: [],

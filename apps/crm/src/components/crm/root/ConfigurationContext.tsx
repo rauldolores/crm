@@ -103,12 +103,13 @@ export const useConfigurationContext = () => {
       dealPipelines: embudos,
       dealStages: todasLasEtapas,
       dealPipelineStatuses: todosLosEstados,
-      // El logo ya no es configurable por organización: siempre es el que
-      // vive en el código (src/components/crm/root/logos/), para que nunca
-      // quede pisado por un valor guardado en el navegador o en la base de
-      // datos de una personalización antigua.
+      // Ni el logo ni el nombre son configurables por organización: siempre
+      // son los del código (defaultConfiguration.ts), para que nunca queden
+      // pisados por un valor guardado en el navegador o en la base de datos
+      // de una personalización antigua. La app siempre se llama Vinqulia.
       darkModeLogo: defaultConfiguration.darkModeLogo,
       lightModeLogo: defaultConfiguration.lightModeLogo,
+      title: defaultConfiguration.title,
     };
   }, [config]);
 };
