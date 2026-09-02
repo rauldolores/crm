@@ -14,7 +14,16 @@ const esError = (estado: number, mensaje: string) =>
   Response.json({ message: mensaje }, { status: estado });
 
 export type Autenticacion =
-  | { ok: true; organizacionId: string; viaClaveDeApi: boolean }
+  | {
+      ok: true;
+      organizacionId: string;
+      viaClaveDeApi: boolean;
+      /**
+       * Quien actúa, cuando hay sesión. Una clave de API no representa a
+       * nadie, así que ahí es null y lo que escriba queda sin responsable.
+       */
+      usuarioId: string | null;
+    }
   | { ok: false; response: Response };
 
 export async function autenticarPuente(
@@ -31,7 +40,12 @@ export async function autenticarPuente(
         response: esError(401, "Clave de API inválida o revocada."),
       };
     }
-    return { ok: true, organizacionId, viaClaveDeApi: true };
+    return {
+      ok: true,
+      organizacionId,
+      viaClaveDeApi: true,
+      usuarioId: null,
+    };
   }
 
   // El permiso fino por recurso llegará cuando se declare en cada ruta; aquí
@@ -43,5 +57,6 @@ export async function autenticarPuente(
     ok: true,
     organizacionId: auth.sesion.organizacionId,
     viaClaveDeApi: false,
+    usuarioId: auth.sesion.usuarioId,
   };
 }

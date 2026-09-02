@@ -1,4 +1,6 @@
 import { autenticarPuente } from "@/lib/server/autenticarPuente";
+import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
+import { imponerDueno } from "@/lib/server/imponerDueno";
 
 /**
  * Puente entre el navegador (o una integración externa) y la base de datos
@@ -56,6 +58,28 @@ const CON_DUENO = new Set([
 ]);
 
 /**
+ * Tablas con columna `sales_id`, donde el alta debe quedar a nombre de quien
+ * la hace.
+ *
+ * La base no puede deducirlo sola: el disparador `set_sales_id_default()` mira
+ * `auth.uid()`, y aqui se consulta con la clave de servicio, sin JWT de
+ * usuario. Se rellena en el mismo sitio que impone `organization_id`, y por el
+ * mismo motivo: este archivo es lo unico que sabe quien esta detras de la
+ * peticion.
+ */
+const CON_RESPONSABLE = new Set([
+  "companies",
+  "contacts",
+  "contact_notes",
+  "deals",
+  "deal_notes",
+  "saved_views",
+  "tasks",
+  "tickets",
+  "ticket_notes",
+]);
+
+/**
  * Cabeceras que se reenvian, por lista blanca y no por exclusion.
  *
  * Reenviar todo lo que manda el navegador enviaba tambien sus cookies de
@@ -88,7 +112,7 @@ async function reenviar(peticion: Request, ruta: string[]) {
   const auth = await autenticarPuente(peticion);
   if (!auth.ok) return auth.response;
 
-  const { organizacionId, viaClaveDeApi } = auth;
+  const { organizacionId, viaClaveDeApi, usuarioId } = auth;
   const origen = new URL(peticion.url);
   const recurso = ruta[ruta.length - 1];
 
@@ -124,21 +148,17 @@ async function reenviar(peticion: Request, ruta: string[]) {
     const texto = await peticion.text();
     cuerpo = texto;
 
-    // En altas y modificaciones la organización tambien se impone, para que no
-    // se pueda crear ni mover un registro a otra empresa.
+    // La organización (y en el alta, el responsable) se imponen sobre el
+    // cuerpo antes de reenviarlo. Ver imponerDueno.
     if (CON_DUENO.has(recurso) && texto) {
-      try {
-        const datos = JSON.parse(texto);
-        const conDueno = (fila: Record<string, unknown>) => ({
-          ...fila,
-          organization_id: organizacionId,
-        });
-        cuerpo = JSON.stringify(
-          Array.isArray(datos) ? datos.map(conDueno) : conDueno(datos),
-        );
-      } catch {
-        // Cuerpo no JSON: se reenvía tal cual.
-      }
+      // Solo en el alta: en una modificacion, quitar el responsable es una
+      // decision del usuario y reponerlo aqui la desharia.
+      const responsable =
+        peticion.method === "POST" && CON_RESPONSABLE.has(recurso)
+          ? await comercialDeLaSesion(organizacionId, usuarioId)
+          : null;
+
+      cuerpo = imponerDueno(texto, organizacionId, responsable);
     }
   }
 

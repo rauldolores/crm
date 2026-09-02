@@ -499,7 +499,14 @@ CREATE OR REPLACE FUNCTION "crm"."set_sales_id_default"() RETURNS "trigger"
     AS $$
 BEGIN
   IF NEW.sales_id IS NULL THEN
-    SELECT id INTO NEW.sales_id FROM sales WHERE user_id = auth.uid();
+    -- La organizacion forma parte de la busqueda: una misma persona puede
+    -- tener ficha en varias, y sin este filtro `SELECT INTO` se quedaba con
+    -- una cualquiera de ellas, pudiendo firmar la fila con el comercial de
+    -- otro inquilino.
+    SELECT id INTO NEW.sales_id
+      FROM sales
+     WHERE user_id = auth.uid()
+       AND organization_id = NEW.organization_id;
   END IF;
   RETURN NEW;
 END;
