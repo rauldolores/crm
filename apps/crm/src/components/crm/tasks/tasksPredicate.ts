@@ -8,8 +8,9 @@ import { getDay, isAfter } from "date-fns";
 export const isBeforeFriday = () => getDay(new Date()) < 5; // Friday is represented by 5
 
 type Task = {
-  due_date: string;
-  done_date: string | null;
+  due_date?: string | null;
+  done_date?: string | null;
+  sales_id?: string | number | null;
 };
 
 export const isDone = (task: Task) => task.done_date != null;
@@ -20,21 +21,36 @@ export const isRecentlyDone = (task: Task) =>
   task.done_date != null &&
   isAfter(new Date(task.done_date), new Date(Date.now() - 5 * 60 * 1000));
 
-export const isOverdue = (dateString: string) => {
+type DueDate = string | null | undefined;
+
+/**
+ * Una tarea sin fecha de vencimiento no es una tarea vencida.
+ *
+ * Antes se pasaba el nulo directamente a `new Date()`, que lo interpreta como
+ * el 1 de enero de 1970: las tareas sin fecha aparecian como vencidas hace
+ * medio siglo. Ahora tienen su propio grupo.
+ */
+export const hasNoDueDate = (dateString: DueDate) => !dateString;
+
+export const isOverdue = (dateString: DueDate) => {
+  if (!dateString) return false;
   return new Date(dateString) < startOfToday();
 };
 
-export const isDueToday = (dateString: string) => {
+export const isDueToday = (dateString: DueDate) => {
+  if (!dateString) return false;
   const dueDate = new Date(dateString);
   return dueDate >= startOfToday() && dueDate < endOfToday();
 };
 
-export const isDueTomorrow = (dateString: string) => {
+export const isDueTomorrow = (dateString: DueDate) => {
+  if (!dateString) return false;
   const dueDate = new Date(dateString);
   return dueDate >= endOfToday() && dueDate < endOfTomorrow();
 };
 
-export const isDueThisWeek = (dateString: string) => {
+export const isDueThisWeek = (dateString: DueDate) => {
+  if (!dateString) return false;
   const dueDate = new Date(dateString);
   return (
     dueDate >= endOfTomorrow() &&
@@ -42,7 +58,23 @@ export const isDueThisWeek = (dateString: string) => {
   );
 };
 
-export const isDueLater = (dateString: string) => {
+export const isDueLater = (dateString: DueDate) => {
+  if (!dateString) return false;
   const dueDate = new Date(dateString);
   return dueDate >= endOfWeek(new Date(), { weekStartsOn: 0 });
 };
+
+/**
+ * Tareas que le tocan al comercial que ha iniciado sesion.
+ *
+ * Incluye deliberadamente las que no tienen responsable (`sales_id` nulo).
+ * Todo lo que se escribe por el puente `/api/datos` o por el servidor MCP
+ * llega asi, porque el disparador que rellenaba `sales_id` se apoya en
+ * `auth.uid()` y el servidor consulta con la clave de servicio. Filtrando solo
+ * por `sales_id` esas tareas existian en la base pero no se veian en ninguna
+ * pantalla.
+ */
+export const isAssignedToOrUnassigned = (
+  task: Task,
+  salesId: string | number | undefined,
+) => task.sales_id == null || String(task.sales_id) === String(salesId);

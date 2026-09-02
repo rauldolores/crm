@@ -63,6 +63,7 @@ import { i18nProvider as defaulti18nProvider } from "../providers/commons/i18nPr
 import { RedireccionAlAcceso } from "../login/RedireccionAlAcceso.tsx";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { MobileTasksList } from "../tasks/MobileTasksList.tsx";
+import { TaskList } from "../tasks/TaskList.tsx";
 import { ContactListMobile } from "../contacts/ContactList.tsx";
 import { ContactShow } from "../contacts/ContactShow.tsx";
 import { CompanyShow } from "../companies/CompanyShow.tsx";
@@ -286,7 +287,7 @@ const DesktopAdmin = (
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />
       <Resource name="ticket_notes" />
-      <Resource name="tasks" />
+      <Resource name="tasks" list={TaskList} />
       <Resource name="sales" {...sales} />
       <Resource name="tags" />
     </Admin>

@@ -257,9 +257,18 @@ export type Task = {
   contact_id: Identifier;
   type: string;
   text: string;
-  due_date: string;
+  /**
+   * Nulo cuando nadie puso plazo. La columna lo permite, y lo que crea el
+   * servidor MCP suele llegar asi.
+   */
+  due_date: string | null;
   done_date?: string | null;
-  sales_id?: Identifier;
+  /**
+   * Nulo cuando la fila no tiene responsable: el disparador que lo rellenaba
+   * se apoya en auth.uid(), y el puente /api consulta con la clave de
+   * servicio. Ver `isAssignedToOrUnassigned`.
+   */
+  sales_id?: Identifier | null;
 } & Pick<RaRecord, "id">;
 
 /**

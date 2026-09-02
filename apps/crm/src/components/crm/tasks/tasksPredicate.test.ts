@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
+  hasNoDueDate,
+  isAssignedToOrUnassigned,
   isOverdue,
   isDueToday,
   isDueTomorrow,
@@ -204,5 +206,45 @@ describe("tasksPredicate", () => {
       expect(isDueThisWeek(twoDaysFromNow)).toBe(true);
       expect(isDueLater(twoDaysFromNow)).toBe(false);
     });
+  });
+});
+
+describe("tareas sin fecha de vencimiento", () => {
+  it("no las cuenta en ningun grupo de fecha", () => {
+    // Arrange
+    const sinFecha = null;
+
+    // Act & Assert
+    expect(isOverdue(sinFecha)).toBe(false);
+    expect(isDueToday(sinFecha)).toBe(false);
+    expect(isDueTomorrow(sinFecha)).toBe(false);
+    expect(isDueThisWeek(sinFecha)).toBe(false);
+    expect(isDueLater(sinFecha)).toBe(false);
+  });
+
+  it("las reconoce como tareas sin fecha", () => {
+    expect(hasNoDueDate(null)).toBe(true);
+    expect(hasNoDueDate(undefined)).toBe(true);
+    expect(hasNoDueDate("")).toBe(true);
+    expect(hasNoDueDate("2026-09-02T10:00:00Z")).toBe(false);
+  });
+});
+
+describe("reparto de tareas por comercial", () => {
+  it("incluye las tareas del comercial que ha iniciado sesion", () => {
+    expect(isAssignedToOrUnassigned({ sales_id: 9 }, 9)).toBe(true);
+  });
+
+  it("incluye las tareas sin responsable, que es como las deja la API", () => {
+    expect(isAssignedToOrUnassigned({ sales_id: null }, 9)).toBe(true);
+    expect(isAssignedToOrUnassigned({}, 9)).toBe(true);
+  });
+
+  it("excluye las tareas de otro comercial", () => {
+    expect(isAssignedToOrUnassigned({ sales_id: 10 }, 9)).toBe(false);
+  });
+
+  it("compara identificadores de distinto tipo por su valor", () => {
+    expect(isAssignedToOrUnassigned({ sales_id: "9" }, 9)).toBe(true);
   });
 });

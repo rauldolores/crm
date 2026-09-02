@@ -2,6 +2,7 @@ import { CanAccess, useTranslate } from "ra-core";
 import {
   Building2,
   ChartColumn,
+  CheckSquare,
   Contact,
   Handshake,
   LayoutDashboard,
@@ -85,6 +86,12 @@ export const BarraLateral = () => {
       ruta: "/deals",
       Icono: Handshake,
       recurso: "deals",
+    },
+    {
+      etiqueta: translate("resources.tasks.name", { smart_count: 2 }),
+      ruta: "/tasks",
+      Icono: CheckSquare,
+      recurso: "tasks",
     },
     {
       etiqueta: translate("resources.tickets.name", { smart_count: 2 }),

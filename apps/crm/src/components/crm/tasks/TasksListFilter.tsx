@@ -12,6 +12,8 @@ type TaskListProps = {
   title: string;
   showContact?: boolean;
   isMobile: boolean;
+  /** Cuantas se ven antes de "cargar mas". El panel resume, la pagina no. */
+  perPage?: number;
 };
 
 export const TaskListFilter = ({
@@ -19,12 +21,13 @@ export const TaskListFilter = ({
   title,
   showContact,
   isMobile,
+  perPage,
 }: TaskListProps) => {
   const translate = useTranslate();
   const listContext = useList({
     data: tasks,
     resource: "tasks",
-    perPage: isMobile ? 10 : 5,
+    perPage: perPage ?? (isMobile ? 10 : 5),
   });
 
   const { total } = listContext;
