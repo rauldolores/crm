@@ -188,6 +188,11 @@ const transformFormValues = (data: Record<string, any>) => {
   const embudos = aEmbudosGuardables(data.dealPipelines);
   return {
     config: {
+      // No hay ningún campo de formulario para `modules` en esta página —
+      // se guarda tal cual llegó en defaultValues para no borrar qué
+      // módulos están activos cada vez que se guardan Ajustes. Se activan y
+      // desactivan solo desde Módulos > Catálogo.
+      modules: data.modules,
       currency: data.currency,
       companySectors: ensureValues(data.companySectors),
       dealCategories: ensureValues(data.dealCategories),
@@ -242,6 +247,7 @@ const SettingsForm = () => {
 
   const defaultValues = useMemo(
     () => ({
+      modules: config.modules,
       currency: config.currency,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
@@ -267,6 +273,7 @@ const SettingsForm = () => {
 const SettingsFormFields = () => {
   const translate = useTranslate();
   const currencyChoices = useMemo(() => getCurrencyChoices(), []);
+  const config = useConfigurationContext();
   const {
     reset,
     formState: { isSubmitting },
@@ -506,7 +513,9 @@ const SettingsFormFields = () => {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => reset({ ...defaultConfiguration })}
+              onClick={() =>
+                reset({ ...defaultConfiguration, modules: config.modules })
+              }
             >
               <RotateCcw className="h-4 w-4 mr-1" />
               {translate("crm.settings.reset_defaults")}

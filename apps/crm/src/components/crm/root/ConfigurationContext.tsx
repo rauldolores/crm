@@ -12,6 +12,18 @@ import { defaultConfiguration } from "./defaultConfiguration";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
 
+/**
+ * Estado de un módulo activable por organización. Cada módulo agrega sus
+ * propias claves además de `active` (ver apps/crm/src/components/crm/modules/registry.ts
+ * y, por ejemplo, AffiliatesModuleConfig en el módulo Afiliados) — este tipo
+ * base es intencionalmente laxo porque `useConfigurationContext` no conoce
+ * la forma de cada módulo, solo la guarda y la pasa tal cual.
+ */
+export interface ModuleConfig {
+  active: boolean;
+  [clave: string]: unknown;
+}
+
 export interface ConfigurationContextValue {
   companySectors: LabeledValue[];
   currency: string;
@@ -41,6 +53,8 @@ export interface ConfigurationContextValue {
   contactCustomFields: CustomFieldDefinition[];
   companyCustomFields: CustomFieldDefinition[];
   dealCustomFields: CustomFieldDefinition[];
+  /** Módulos activables por organización, indexados por clave (ver modules/registry.ts). */
+  modules: Record<string, ModuleConfig>;
 }
 
 export const useConfigurationContext = () => {
@@ -110,6 +124,13 @@ export const useConfigurationContext = () => {
       darkModeLogo: defaultConfiguration.darkModeLogo,
       lightModeLogo: defaultConfiguration.lightModeLogo,
       title: defaultConfiguration.title,
+      // Combinado módulo por módulo, no reemplazado entero: así un módulo
+      // agregado después de que la organización ya guardó su configuración
+      // sigue apareciendo (apagado) en vez de faltar por completo.
+      modules: {
+        ...defaultConfiguration.modules,
+        ...(config?.modules ?? {}),
+      },
     };
   }, [config]);
 };

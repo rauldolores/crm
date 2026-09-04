@@ -13,6 +13,7 @@ import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
+import { MODULE_REGISTRY } from "../modules/registry";
 
 /**
  * Navegación principal de Vinqulia, en una barra lateral.
@@ -60,8 +61,20 @@ const EnlaceDeSeccion = ({
 
 export const BarraLateral = () => {
   const translate = useTranslate();
-  const { darkModeLogo, title } = useConfigurationContext();
+  const { darkModeLogo, title, modules } = useConfigurationContext();
   const { pathname } = useLocation();
+
+  // Un ítem por módulo ACTIVO, en el orden del catálogo. Un módulo apagado
+  // simplemente no aparece — no hace falta más para "activar/desactivar sin
+  // afectar el sistema" del lado de la navegación.
+  const seccionesDeModulos: Seccion[] = MODULE_REGISTRY.filter(
+    (modulo) => modules[modulo.key]?.active,
+  ).map((modulo) => ({
+    etiqueta: translate(modulo.nameKey),
+    ruta: modulo.path,
+    Icono: modulo.icon,
+    recurso: modulo.key,
+  }));
 
   const secciones: Seccion[] = [
     {
@@ -167,6 +180,28 @@ export const BarraLateral = () => {
             ),
           )}
         </nav>
+
+        {seccionesDeModulos.length > 0 && (
+          <>
+            <p className="mt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              {translate("crm.modules.title")}
+            </p>
+            <nav className="flex flex-col gap-1">
+              {seccionesDeModulos.map((seccion) => (
+                <CanAccess
+                  key={seccion.ruta}
+                  resource={seccion.recurso}
+                  action="list"
+                >
+                  <EnlaceDeSeccion
+                    seccion={seccion}
+                    activa={estaActiva(seccion.ruta)}
+                  />
+                </CanAccess>
+              ))}
+            </nav>
+          </>
+        )}
 
         <div className="mt-auto border-t border-sidebar-border pt-4">
           <div className="flex items-center gap-2 px-2 text-xs text-sidebar-foreground/50">

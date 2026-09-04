@@ -1,4 +1,5 @@
 import {
+  Blocks,
   Globe,
   Import,
   Settings,
@@ -19,6 +20,7 @@ import { ImportPage } from "../misc/ImportPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
+import { CatalogoPage } from "../modules/CatalogoPage";
 
 /**
  * Cabecera superior del escritorio.
@@ -60,6 +62,9 @@ const Header = () => {
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <ApiMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <ModulosMenu />
             </CanAccess>
             <ImportFromJsonMenuItem />
           </UserMenu>
@@ -160,6 +165,22 @@ const ApiMenu = () => {
       <Link to={ApiPage.path} className="flex items-center gap-2">
         <Webhook />
         {translate("crm.api.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const ModulosMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<ModulosMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={CatalogoPage.path} className="flex items-center gap-2">
+        <Blocks />
+        {translate("crm.modules.title")}
       </Link>
     </DropdownMenuItem>
   );

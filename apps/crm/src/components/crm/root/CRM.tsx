@@ -15,11 +15,14 @@ import { ForgotPasswordPage } from "@/components/supabase/forgot-password-page";
 import { SetPasswordPage } from "@/components/supabase/set-password-page";
 import { OAuthConsentPage } from "@/components/supabase/oauth-consent-page";
 
+import affiliates from "../affiliates";
+import { AffiliatesConfigPage } from "../affiliates/AffiliatesConfigPage";
 import companies from "../companies";
 import contacts from "../contacts";
 import { Dashboard } from "../dashboard/Dashboard";
 import { MobileDashboard } from "../dashboard/MobileDashboard";
 import deals from "../deals";
+import { CatalogoPage } from "../modules/CatalogoPage";
 import tickets from "../tickets";
 import { Layout } from "../layout/Layout";
 import { MobileLayout } from "../layout/MobileLayout";
@@ -53,6 +56,7 @@ import {
   defaultDealPipelineStatuses,
   defaultDealStages,
   defaultLightModeLogo,
+  defaultModules,
   defaultNoteStatuses,
   defaultNoteTypes,
   defaultTaskTypes,
@@ -173,6 +177,7 @@ export const CRM = ({
         dealLossReasons: defaultDealLossReasons,
         noteTypes: defaultNoteTypes,
         ticketStatuses: defaultTicketStatuses,
+        modules: defaultModules,
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -279,11 +284,17 @@ const DesktopAdmin = (
         />
         <Route path={InformesPage.path} element={<InformesPage />} />
         <Route path={FormulariosPage.path} element={<FormulariosPage />} />
+        <Route path={CatalogoPage.path} element={<CatalogoPage />} />
+        <Route
+          path={AffiliatesConfigPage.path}
+          element={<AffiliatesConfigPage />}
+        />
       </CustomRoutes>
       <Resource name="deals" {...deals} />
       <Resource name="contacts" {...contacts} />
       <Resource name="companies" {...companies} />
       <Resource name="tickets" {...tickets} />
+      <Resource name="affiliates" {...affiliates} />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />
       <Resource name="ticket_notes" />

@@ -36,6 +36,10 @@ create or replace trigger set_ticket_notes_sales_id_trigger
     before insert on crm.ticket_notes
     for each row execute function crm.set_sales_id_default();
 
+create or replace trigger set_affiliates_sales_id_trigger
+    before insert on crm.affiliates
+    for each row execute function crm.set_sales_id_default();
+
 -- Auto-fetch company logo from website favicon on save
 create or replace trigger company_saved
     before insert or update on crm.companies
@@ -137,3 +141,11 @@ create trigger run_automations_contacts
 create trigger run_automations_deals
     after insert or update on crm.deals
     for each row execute function crm.run_automations();
+
+-- Módulo Afiliados: ver crm.gestionar_modulo_afiliados en 02_functions.sql.
+-- Trigger propio (no reusa run_automations) para que el módulo entero pueda
+-- apagarse por organización sin tocar el motor de automatizaciones que usan
+-- todas las demás.
+create trigger gestionar_modulo_afiliados_deals
+    after update on crm.deals
+    for each row execute function crm.gestionar_modulo_afiliados();

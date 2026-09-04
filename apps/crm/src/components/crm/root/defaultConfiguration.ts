@@ -114,6 +114,11 @@ export const defaultTicketStatuses = [
   { value: "closed", label: "Cerrado", color: "#a4e87d" },
 ];
 
+// Sin módulos activos de fábrica: cada organización los prende desde
+// Módulos > Catálogo. El catálogo de módulos DISPONIBLES vive en
+// modules/registry.ts; esto es solo el estado de activación por defecto.
+export const defaultModules: ConfigurationContextValue["modules"] = {};
+
 export const defaultTaskTypes = [
   { value: "none", label: "Ninguno" },
   { value: "email", label: "Correo electrónico" },
@@ -146,4 +151,5 @@ export const defaultConfiguration: ConfigurationContextValue = {
   contactCustomFields: [],
   companyCustomFields: [],
   dealCustomFields: [],
+  modules: defaultModules,
 };

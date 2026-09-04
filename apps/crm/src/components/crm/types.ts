@@ -287,6 +287,25 @@ export type Ticket = {
   updated_at?: string;
 } & Pick<RaRecord, "id">;
 
+/**
+ * Afiliado: un contacto que llegó a la etapa de "afiliación completa" del
+ * embudo configurado en el módulo Afiliados (crm.gestionar_modulo_afiliados).
+ * `kontrolia_auth_user_id` queda nulo hasta que un administrador vincula
+ * manualmente la cuenta que creó en KontrolIA Auth.
+ */
+export type Affiliate = {
+  contact_id: Identifier;
+  company_id: Identifier;
+  deal_id?: Identifier | null;
+  referral_code: string;
+  commission_percentage?: number | null;
+  active: boolean;
+  kontrolia_auth_user_id?: string | null;
+  sales_id?: Identifier | null;
+  created_at?: string;
+  updated_at?: string;
+} & Pick<RaRecord, "id">;
+
 export type ActivityCompanyCreated = {
   type: typeof COMPANY_CREATED;
   company_id: Identifier;

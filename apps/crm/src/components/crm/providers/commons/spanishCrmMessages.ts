@@ -366,6 +366,15 @@ export const spanishCrmMessages = {
         description: "Parece que tu lista de tickets está vacía.",
       },
     },
+    affiliates: {
+      name: "Afiliado |||| Afiliados",
+      forcedCaseName: "Afiliado",
+      empty: {
+        title: "No hay afiliados",
+        description:
+          "Un contacto se vuelve afiliado solo cuando gana una oportunidad en el embudo configurado en Módulos > Afiliados.",
+      },
+    },
     sales: {
       name: "Usuario |||| Usuarios",
       fields: {
@@ -577,6 +586,64 @@ export const spanishCrmMessages = {
         assign_named: "Asignar a %{name}",
       },
     },
+    modules: {
+      title: "Módulos",
+      catalog: {
+        title: "Catálogo de módulos",
+        intro:
+          "Activa o desactiva funcionalidades para tu organización. Cada módulo es independiente: apagarlo no borra sus datos, solo lo oculta.",
+        updated: "Módulo actualizado",
+        update_error: "No se pudo actualizar el módulo",
+        active_hint: "Activo. Aparece en el menú lateral bajo Módulos.",
+      },
+      affiliates: {
+        name: "Afiliados",
+        description:
+          "Gestiona afiliados que revenden tus servicios: cuando ganan una oportunidad en el embudo que configures, aparecen aquí con su código de referido y su comisión.",
+      },
+    },
+    affiliates: {
+      config: {
+        title: "Configuración de Afiliados",
+        intro:
+          "Define qué oportunidad ganada convierte a un contacto en afiliado, y cómo se arma su URL de referidos.",
+        link: "Configurar módulo",
+        pipeline_title: "Embudo de afiliación",
+        pipeline: "Embudo",
+        completion_stages_help:
+          "Elige qué etapas de ese embudo cuentan como «afiliación completa». Al ganar una oportunidad en una de estas etapas, el contacto se vuelve afiliado.",
+        commercial_title: "Condiciones comerciales",
+        default_commission: "Comisión por defecto (%)",
+        default_commission_help:
+          "Se usa como punto de partida al crear un afiliado nuevo; se puede ajustar por afiliado después.",
+        url_title: "URL de referidos",
+        url_template: "Plantilla de la URL",
+        url_template_help:
+          "Usa {id} donde debe ir el código de cada afiliado, por ejemplo: https://tudominio.com?ref={id}. Cada afiliado ve su propia URL ya armada en su ficha.",
+        saved: "Configuración guardada",
+        save_error: "No se pudo guardar la configuración",
+      },
+      fields: {
+        contact_id: "Contacto",
+        company_id: "Empresa",
+        referral_code: "Código de referido",
+        referral_code_help:
+          "Es el {id} de tu URL de referidos. Solo minúsculas, números y guiones — lo puedes personalizar, pero debe ser único.",
+        commission_percentage: "Comisión (%)",
+        active: "Activo",
+        inactive: "Inactivo",
+        kontrolia_auth_user_id: "Usuario de KontrolIA Auth",
+        kontrolia_auth_user_id_help:
+          "Vincula este afiliado con la cuenta que le creaste en KontrolIA Auth, para que solo vea las empresas y contactos que gestiona. Déjalo vacío mientras no tenga cuenta todavía.",
+        referral_url: "URL de referidos",
+        referral_url_not_configured:
+          "Configura la plantilla de URL en Módulos > Afiliados > Configurar módulo para verla aquí.",
+      },
+      validation: {
+        referral_code_format:
+          "Solo minúsculas, números y guiones, sin empezar ni terminar en guión.",
+      },
+    },
     api: {
       title: "API y webhooks",
       intro:
@@ -751,8 +818,8 @@ export const spanishCrmMessages = {
         categories: "Categorías",
         currency: "Moneda",
         pipeline_help:
-          "Elige qué etapas de la oportunidad cuentan como parte del embudo.",
-        pipeline_statuses: "Estados del embudo",
+          "Marca cuáles de las etapas de arriba significan que la oportunidad se ganó. El CRM las usa para calcular tu tasa de conversión en Informes.",
+        pipeline_statuses: "Etapas ganadas",
         stages: "Etapas",
         pipelines: "Embudos",
         pipelines_help:
@@ -762,9 +829,9 @@ export const spanishCrmMessages = {
         remove_pipeline: "Quitar embudo",
         pipeline_in_use:
           "No se puede quitar el embudo «%{name}»: todavía tiene oportunidades.",
-        lost_stages: "Etapas de pérdida",
+        lost_stages: "Etapas perdidas",
         lost_stages_help:
-          "Al mover una oportunidad a una de estas etapas se preguntará por qué se perdió.",
+          "Marca cuáles significan que la oportunidad se perdió. Al mover una oportunidad a una de ellas, el CRM preguntará el motivo.",
         loss_reasons: "Motivos de pérdida",
         loss_reasons_help:
           "Las opciones que se ofrecerán al perder una oportunidad. Saber por qué se pierde es lo que convierte el historial en una decisión.",

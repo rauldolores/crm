@@ -1,6 +1,8 @@
+import { afiliadoDeLaSesion } from "@/lib/server/afiliadoDeLaSesion";
 import { autenticarPuente } from "@/lib/server/autenticarPuente";
 import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
 import { imponerDueno } from "@/lib/server/imponerDueno";
+import { restringirAPropios } from "@/lib/server/restringirAPropios";
 
 /**
  * Puente entre el navegador (o una integración externa) y la base de datos
@@ -28,6 +30,13 @@ import { imponerDueno } from "@/lib/server/imponerDueno";
  * relaciones de PostgREST (ver más abajo). Ojo con `webhooks`: una clave que
  * llegue a filtrarse puede crear uno propio y quedarse un canal permanente
  * de lectura de datos aunque luego se revoque para todo lo demás.
+ *
+ * Módulo Afiliados: si quien hace la petición es un afiliado vinculado (ver
+ * afiliadoDeLaSesion), además del filtro de organización se le fuerza el de
+ * su propio sales_id en companies/contacts/deals (CON_SOLO_PROPIOS) — mismo
+ * mecanismo que CON_DUENO, mismo archivo. Una clave de API nunca es
+ * afiliado (no representa a un usuario), así que integraciones como la de
+ * diagnóstico de Kontrolia no se ven afectadas.
  */
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
@@ -53,9 +62,18 @@ const CON_DUENO = new Set([
   "tags",
   "tasks",
   "tickets",
+  "ticket_notes",
   "configuration",
   "activity_log",
+  "affiliates",
 ]);
+
+/**
+ * Recursos donde, si quien pregunta es un afiliado (módulo Afiliados), solo
+ * debe ver y tocar lo que gestiona — su propio `sales_id`, igual que
+ * cualquier responsable asignado. Ver afiliadoDeLaSesion().
+ */
+const CON_SOLO_PROPIOS = new Set(["companies", "contacts", "deals"]);
 
 /**
  * Tablas con columna `sales_id`, donde el alta debe quedar a nombre de quien
@@ -126,6 +144,14 @@ async function reenviar(peticion: Request, ruta: string[]) {
     );
   }
 
+  // Si quien pregunta es un afiliado vinculado, además del filtro de
+  // organización se le fuerza el de su propio sales_id. Para una sesión o
+  // clave normal (el caso de siempre) esto resuelve a null de inmediato.
+  const salesIdDelAfiliado = await afiliadoDeLaSesion(
+    organizacionId,
+    usuarioId,
+  );
+
   const parametros = new URLSearchParams(origen.search);
 
   // El filtro de organización se impone, no se acepta del cliente: si viniera
@@ -133,6 +159,11 @@ async function reenviar(peticion: Request, ruta: string[]) {
   if (CON_DUENO.has(recurso)) {
     parametros.delete("organization_id");
     parametros.append("organization_id", `eq.${organizacionId}`);
+
+    if (salesIdDelAfiliado != null && CON_SOLO_PROPIOS.has(recurso)) {
+      parametros.delete("sales_id");
+      parametros.append("sales_id", `eq.${salesIdDelAfiliado}`);
+    }
   }
 
   const cabeceras = new Headers();
@@ -159,6 +190,14 @@ async function reenviar(peticion: Request, ruta: string[]) {
           : null;
 
       cuerpo = imponerDueno(texto, organizacionId, responsable);
+
+      // Un afiliado no puede crear ni mover un registro fuera de lo que
+      // gestiona: a diferencia de `responsable` (que solo rellena si viene
+      // vacío), aquí se sobrescribe siempre `sales_id`, aunque el cliente
+      // mande otro valor.
+      if (salesIdDelAfiliado != null && CON_SOLO_PROPIOS.has(recurso)) {
+        cuerpo = restringirAPropios(cuerpo, salesIdDelAfiliado);
+      }
     }
   }
 

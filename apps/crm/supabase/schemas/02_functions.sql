@@ -682,3 +682,138 @@ $$;
 
 grant all on function crm.run_automations() to authenticated;
 grant all on function crm.run_automations() to service_role;
+
+-- Genera un código de referido válido y libre dentro de la organización, a
+-- partir del nombre del contacto. Es solo un punto de partida: el afiliado
+-- (o un administrador) lo puede cambiar después desde la propia página.
+create or replace function crm.generar_codigo_referido_disponible(
+  org uuid,
+  contacto bigint
+) returns text
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  base text;
+  candidato text;
+  intento int := 0;
+begin
+  select regexp_replace(lower(coalesce(first_name, '') || '-' || coalesce(last_name, '')), '[^a-z0-9]+', '-', 'g')
+    into base
+    from crm.contacts
+   where id = contacto;
+
+  base := trim(both '-' from coalesce(base, ''));
+  if base = '' then
+    base := 'afiliado';
+  end if;
+
+  loop
+    candidato := case when intento = 0 then base else base || '-' || substr(md5(random()::text), 1, 5) end;
+
+    exit when not exists (
+      select 1 from crm.affiliates
+       where organization_id = org and referral_code = candidato
+    );
+
+    intento := intento + 1;
+    if intento > 20 then
+      -- No debería pasar nunca en la práctica, pero si veinte sufijos
+      -- aleatorios chocan, un identificador largo garantiza salir del bucle.
+      candidato := 'afiliado-' || substr(md5(random()::text || clock_timestamp()::text), 1, 10);
+      exit;
+    end if;
+  end loop;
+
+  return candidato;
+end;
+$$;
+
+grant all on function crm.generar_codigo_referido_disponible(uuid, bigint) to service_role;
+
+-- Módulo Afiliados: cuando una oportunidad cambia de etapa y esa etapa es una
+-- de las configuradas como "afiliación completa" para el embudo configurado,
+-- da de alta (o refresca) al contacto principal del deal como afiliado.
+--
+-- Todo el cuerpo va protegido con manejo de excepciones: si el módulo está
+-- apagado para la organización, si falta configurarlo, o si algo falla, esta
+-- función no debe impedir jamás que se guarde el cambio de etapa del deal.
+-- Así "cada módulo es independiente, se activa o desactiva sin afectar el
+-- sistema" es literal, no solo una intención.
+create or replace function crm.gestionar_modulo_afiliados() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  org uuid;
+  cfg jsonb;
+  pipeline_id text;
+  etapas_completas jsonb;
+  contacto bigint;
+  empresa bigint;
+  codigo text;
+begin
+  if old.stage is not distinct from new.stage then
+    return null;
+  end if;
+
+  org := new.organization_id;
+  if org is null then
+    return null;
+  end if;
+
+  begin
+    select config -> 'modules' -> 'affiliates' into cfg
+      from crm.configuration
+     where organization_id = org;
+
+    if cfg is null or coalesce((cfg ->> 'active')::boolean, false) is not true then
+      return null;
+    end if;
+
+    pipeline_id := cfg ->> 'pipelineId';
+    etapas_completas := cfg -> 'completionStages';
+
+    if pipeline_id is null or etapas_completas is null then
+      return null;
+    end if;
+
+    if new.pipeline is distinct from pipeline_id then
+      return null;
+    end if;
+
+    if not (etapas_completas ? new.stage) then
+      return null;
+    end if;
+
+    contacto := new.contact_ids[1];
+    if contacto is null then
+      return null;
+    end if;
+
+    select company_id into empresa from crm.contacts where id = contacto;
+    if empresa is null then
+      return null;
+    end if;
+
+    codigo := crm.generar_codigo_referido_disponible(org, contacto);
+
+    insert into crm.affiliates (organization_id, contact_id, company_id, deal_id, referral_code)
+    values (org, contacto, empresa, new.id, codigo)
+    on conflict (organization_id, contact_id) do update
+      set company_id = excluded.company_id,
+          deal_id = excluded.deal_id,
+          updated_at = now();
+      -- referral_code no se toca en el conflicto: si el contacto ya era
+      -- afiliado, conserva el código que ya tenía (posiblemente
+      -- personalizado), en vez de reemplazarlo por el recién generado.
+  exception when others then
+    null;
+  end;
+
+  return null;
+end;
+$$;
+
+grant all on function crm.gestionar_modulo_afiliados() to authenticated;
+grant all on function crm.gestionar_modulo_afiliados() to service_role;

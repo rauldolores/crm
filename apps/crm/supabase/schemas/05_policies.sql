@@ -31,6 +31,7 @@ alter table crm.configuration enable row level security;
 alter table crm.favicons_excluded_domains enable row level security;
 alter table crm.tickets enable row level security;
 alter table crm.ticket_notes enable row level security;
+alter table crm.affiliates enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -279,3 +280,31 @@ create policy "Ticket notes are updated within the organization" on crm.ticket_n
 create policy "Ticket notes are deleted within the organization" on crm.ticket_notes
     for delete to authenticated
     using (organization_id = crm.current_organization_id());
+
+-- Affiliates
+create policy "Affiliates are scoped to the organization" on crm.affiliates
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Affiliates are created in the organization" on crm.affiliates
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id());
+create policy "Affiliates are updated within the organization" on crm.affiliates
+    for update to authenticated
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Affiliates are deleted within the organization" on crm.affiliates
+    for delete to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Un afiliado, si algún día llega a consultar con su propio JWT en vez de por
+-- el puente con la clave de servicio (ver route.ts), puede ver su propia
+-- fila. Hoy es letra muerta como el resto del RLS de esta app — ver la nota
+-- de aislamiento al inicio de este archivo — pero queda lista.
+--
+-- No se agrega una política de UPDATE aquí a propósito: RLS solo controla
+-- filas, no columnas, y un afiliado no debe poder tocar su propia comisión.
+-- Que un afiliado edite su código de referido se resuelve en la capa de
+-- aplicación (route.ts), que sí puede limitar qué campos acepta.
+create policy "Affiliates can see their own row" on crm.affiliates
+    for select to authenticated
+    using (kontrolia_auth_user_id = auth.uid());

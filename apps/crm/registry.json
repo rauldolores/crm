@@ -70,6 +70,30 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/affiliates/AffiliateEdit.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/AffiliateInputs.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/AffiliateList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/AffiliateShow.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/AffiliatesConfigPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/index.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/companies/AutocompleteCompanyInput.tsx",
           "type": "registry:component"
         },
@@ -542,6 +566,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/modules/CatalogoPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/modules/registry.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/notes/ActivityTypeSelector.tsx",
           "type": "registry:component"
         },
@@ -870,6 +902,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tasks/TaskDayDialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/tasks/TaskEdit.tsx",
           "type": "registry:component"
         },
@@ -879,6 +915,14 @@
         },
         {
           "path": "src/components/crm/tasks/TaskFormContent.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tasks/TaskList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tasks/TasksCalendar.tsx",
           "type": "registry:component"
         },
         {
@@ -899,6 +943,10 @@
         },
         {
           "path": "src/components/crm/tasks/tasksPredicate.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tasks/useVisibleTasks.ts",
           "type": "registry:component"
         },
         {
@@ -978,11 +1026,31 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/afiliadoDeLaSesion.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/afiliadoDeLaSesion.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/apiKeys.ts",
           "type": "registry:lib"
         },
         {
           "path": "src/lib/server/autenticarPuente.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/comercialDeLaSesion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/imponerDueno.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/imponerDueno.ts",
           "type": "registry:lib"
         },
         {
@@ -1015,6 +1083,14 @@
         },
         {
           "path": "src/lib/server/requireKontroliaPermission.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/restringirAPropios.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/restringirAPropios.ts",
           "type": "registry:lib"
         },
         {
