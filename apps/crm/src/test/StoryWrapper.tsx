@@ -9,6 +9,11 @@ import { DEFAULT_USER } from "@/components/crm/providers/fakerest/authProvider";
 import type { Db } from "@/components/crm/providers/fakerest/dataGenerator/types";
 import type { Contact, Sale } from "@/components/crm/types";
 import { CRM } from "@/components/crm/root/CRM";
+import {
+  CONFIGURATION_STORE_KEY,
+  type ConfigurationContextValue,
+} from "@/components/crm/root/ConfigurationContext";
+import { defaultConfiguration } from "@/components/crm/root/defaultConfiguration";
 import { testI18nProvider } from "@/components/crm/providers/commons/i18nProvider";
 
 export const createTestAuthProvider = (): AuthProvider => ({
@@ -77,12 +82,19 @@ export const buildContact = (overrides: Partial<Contact> = {}): Contact => ({
 
 export const StoryWrapper = ({
   children,
+  configuration,
   data,
   dataProvider: dataProviderOverrides,
   initialEntries,
   silent = process.env.NODE_ENV === "test",
 }: {
   children: ReactNode;
+  /**
+   * Configuración de la organización (embudos, monedas, módulos…). Se siembra
+   * en el store porque `useConfigurationLoader`, que es quien la traería de la
+   * base, vive en el layout real y aquí se reemplaza por uno de prueba.
+   */
+  configuration?: Partial<ConfigurationContextValue>;
   data?: Partial<Db>;
   dataProvider?: Partial<ReturnType<typeof createDataProvider>>;
   initialEntries?: string[];
@@ -97,7 +109,25 @@ export const StoryWrapper = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
-  const store = useMemo(() => memoryStore(), []);
+  // Va como valor INICIAL del store, no con un setItem posterior: memoryStore
+  // reinicia su contenido a `initialStorage` dentro de setup(), así que
+  // cualquier escritura previa se perdería. Sembrada aquí, <CRM> ve el store
+  // ya lleno y no la pisa con la configuración por defecto.
+  const store = useMemo(
+    () =>
+      memoryStore(
+        configuration
+          ? {
+              [CONFIGURATION_STORE_KEY]: {
+                ...defaultConfiguration,
+                ...configuration,
+              },
+            }
+          : undefined,
+      ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   useEffect(() => {
     // Clear localStorage on mount to prevent data pollution from previous story / test, since we persist react-query cache in localStorage.

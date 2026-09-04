@@ -113,14 +113,19 @@ const DealLayout = () => {
   const hasFilters = Object.keys(otrosFiltros).length > 0;
 
   if (isPending) return null;
+  // El selector de embudos va TAMBIEN aqui, no solo en el tablero: un embudo
+  // sin oportunidades es un estado normal cuando hay varios, y sin las
+  // pestanas no habria forma de volver a uno que si tenga. Antes se quedaba
+  // sin salida al apagar el filtro de "solo lo mio" sobre un embudo vacio.
   if (!data?.length && !hasFilters)
     return (
-      <>
+      <div className="w-full">
+        <SelectorDeEmbudo />
         <DealEmpty>
           <DealShow open={!!matchShow} id={matchShow?.params.id} />
           <DealArchivedList />
         </DealEmpty>
-      </>
+      </div>
     );
 
   return (
