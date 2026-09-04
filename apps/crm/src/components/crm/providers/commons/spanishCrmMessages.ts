@@ -639,6 +639,15 @@ export const spanishCrmMessages = {
         referral_url_not_configured:
           "Configura la plantilla de URL en Módulos > Afiliados > Configurar módulo para verla aquí.",
       },
+      commissions: {
+        title: "Negocio referido",
+        referred_companies: "Clientes traídos",
+        won_deals: "Oportunidades ganadas",
+        won_amount: "Importe ganado",
+        commission_amount: "Comisión",
+        no_percentage:
+          "Sin porcentaje de comisión configurado todavía: edita el afiliado para asignárselo.",
+      },
       validation: {
         referral_code_format:
           "Solo minúsculas, números y guiones, sin empezar ni terminar en guión.",

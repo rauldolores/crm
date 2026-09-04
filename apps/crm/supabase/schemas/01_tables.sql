@@ -39,8 +39,14 @@ create table crm.companies (
     logo jsonb,
     -- Valores de los campos personalizados definidos en configuration.config;
     -- clave = value del campo, valor = lo capturado en el formulario.
-    custom_fields jsonb not null default '{}'::jsonb
+    custom_fields jsonb not null default '{}'::jsonb,
+    -- Módulo Afiliados: qué afiliado trajo a este cliente. Ver la clave
+    -- foránea más abajo.
+    referred_by_affiliate_id bigint
 );
+
+create index if not exists companies_referred_by_affiliate_id_idx
+    on crm.companies (referred_by_affiliate_id);
 
 create table crm.contacts (
     organization_id uuid not null default (auth.jwt() ->> 'organization_id')::uuid,
@@ -391,6 +397,17 @@ alter table crm.affiliates
 
 alter table crm.affiliates
     add constraint affiliates_sales_id_fkey foreign key (sales_id) references crm.sales(id);
+
+-- Atribución: qué afiliado trajo a este cliente. Se marca en la EMPRESA, no
+-- en cada oportunidad, porque la comisión es sobre "los pagos de los clientes
+-- referenciados" — todo lo que ese cliente compre después cuenta, sin que
+-- quien capta el lead tenga que repetir el código de referido cada vez.
+--
+-- Es de primer toque: una vez asignado no se reasigna (ver
+-- crm.conservar_afiliado_de_referencia en 02_functions.sql).
+alter table crm.companies
+    add constraint companies_referred_by_affiliate_id_fkey
+    foreign key (referred_by_affiliate_id) references crm.affiliates(id) on delete set null;
 
 -- Legacy primary key constraint names (from before snake_case rename)
 alter table only crm.contact_notes

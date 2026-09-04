@@ -89,6 +89,8 @@ export type Company = {
   nb_contacts?: number;
   nb_deals?: number;
   custom_fields?: CustomFieldValues;
+  /** Módulo Afiliados: qué afiliado trajo a este cliente (primer toque). */
+  referred_by_affiliate_id?: Identifier | null;
 } & Pick<RaRecord, "id">;
 
 export type EmailAndType = {
@@ -304,6 +306,22 @@ export type Affiliate = {
   sales_id?: Identifier | null;
   created_at?: string;
   updated_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Negocio referido y comisión devengada por afiliado (vista
+ * crm.affiliate_commissions, solo lectura). El `id` es el del afiliado.
+ */
+export type AffiliateCommission = {
+  contact_id: Identifier;
+  company_id: Identifier;
+  referral_code: string;
+  commission_percentage?: number | null;
+  active: boolean;
+  nb_referred_companies: number;
+  nb_won_deals: number;
+  won_amount: number;
+  commission_amount: number;
 } & Pick<RaRecord, "id">;
 
 export type ActivityCompanyCreated = {

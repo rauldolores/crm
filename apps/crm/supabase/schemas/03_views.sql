@@ -157,6 +157,64 @@ from crm.contacts co
     left join crm.deals d on co.id = any(d.contact_ids) and d.archived_at is null
 group by co.id, c.name;
 
+-- Módulo Afiliados: negocio referido y comisión devengada por afiliado.
+--
+-- "Ganada" no es un estado en la base — cada organización decide qué etapas
+-- de cada embudo cuentan como ganadas (config.dealPipelines[].pipelineStatuses,
+-- lo mismo que usa la pantalla de Informes). Por eso la vista cruza contra
+-- crm.configuration en vez de comparar contra una etapa fija: una etapa
+-- llamada "won" en un embudo puede no significar nada en otro.
+--
+-- La atribución viene de companies.referred_by_affiliate_id (primer toque),
+-- así que TODO lo que compre un cliente referido cuenta, no solo la primera
+-- oportunidad.
+create or replace view crm.affiliate_commissions with (security_invoker = on) as
+select
+    a.id as id,
+    a.organization_id,
+    a.contact_id,
+    a.company_id,
+    a.referral_code,
+    a.commission_percentage,
+    a.active,
+    count(distinct c.id) as nb_referred_companies,
+    count(distinct d.id) filter (where d.es_ganada) as nb_won_deals,
+    coalesce(sum(d.amount) filter (where d.es_ganada), 0) as won_amount,
+    -- Lo que le toca al afiliado. Sin porcentaje configurado todavía, 0:
+    -- el negocio referido igual queda visible en las columnas de arriba.
+    round(
+        coalesce(sum(d.amount) filter (where d.es_ganada), 0)
+        * coalesce(a.commission_percentage, 0) / 100.0
+    ) as commission_amount
+from crm.affiliates a
+    left join crm.companies c
+        on c.referred_by_affiliate_id = a.id
+       and c.organization_id = a.organization_id
+    left join lateral (
+        select
+            deals.id,
+            deals.amount,
+            -- ¿Está en una etapa que su propio embudo marca como ganada?
+            coalesce(
+                (
+                    select embudo -> 'pipelineStatuses' ? deals.stage
+                    from crm.configuration cfg
+                        cross join lateral jsonb_array_elements(
+                            coalesce(cfg.config -> 'dealPipelines', '[]'::jsonb)
+                        ) as embudo
+                    where cfg.organization_id = deals.organization_id
+                      and embudo ->> 'value' = coalesce(deals.pipeline, 'ventas')
+                    limit 1
+                ),
+                false
+            ) as es_ganada
+        from crm.deals
+        where deals.company_id = c.id
+          and deals.organization_id = a.organization_id
+          and deals.archived_at is null
+    ) d on true
+group by a.id;
+
 create or replace view crm.init_state with (security_invoker = off) as
 select count(sub.id) as is_initialized
 from (

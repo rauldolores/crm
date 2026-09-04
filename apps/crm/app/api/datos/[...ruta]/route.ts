@@ -66,6 +66,7 @@ const CON_DUENO = new Set([
   "configuration",
   "activity_log",
   "affiliates",
+  "affiliate_commissions",
 ]);
 
 /**

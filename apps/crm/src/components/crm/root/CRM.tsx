@@ -295,6 +295,7 @@ const DesktopAdmin = (
       <Resource name="companies" {...companies} />
       <Resource name="tickets" {...tickets} />
       <Resource name="affiliates" {...affiliates} />
+      <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />
       <Resource name="ticket_notes" />

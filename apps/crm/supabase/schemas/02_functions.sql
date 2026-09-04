@@ -817,3 +817,28 @@ $$;
 
 grant all on function crm.gestionar_modulo_afiliados() to authenticated;
 grant all on function crm.gestionar_modulo_afiliados() to service_role;
+
+-- La atribución de un cliente a un afiliado es de PRIMER TOQUE: una vez
+-- asignada no se reasigna. Sin esto, cualquier edición posterior de la
+-- empresa (o un segundo formulario con otro código de referido) podría
+-- cambiar a quién le toca la comisión de un cliente que ya estaba atribuido.
+--
+-- Sí se permite quitarla explícitamente poniéndola a NULL: es la vía para
+-- corregir una atribución equivocada.
+create or replace function crm.conservar_afiliado_de_referencia() returns trigger
+    language plpgsql
+    set search_path = ''
+    as $$
+begin
+  if old.referred_by_affiliate_id is not null
+     and new.referred_by_affiliate_id is not null
+     and new.referred_by_affiliate_id is distinct from old.referred_by_affiliate_id
+  then
+    new.referred_by_affiliate_id := old.referred_by_affiliate_id;
+  end if;
+  return new;
+end;
+$$;
+
+grant all on function crm.conservar_afiliado_de_referencia() to authenticated;
+grant all on function crm.conservar_afiliado_de_referencia() to service_role;

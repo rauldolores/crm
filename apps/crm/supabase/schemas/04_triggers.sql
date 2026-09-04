@@ -149,3 +149,9 @@ create trigger run_automations_deals
 create trigger gestionar_modulo_afiliados_deals
     after update on crm.deals
     for each row execute function crm.gestionar_modulo_afiliados();
+
+-- La atribución a un afiliado es de primer toque: ver
+-- crm.conservar_afiliado_de_referencia en 02_functions.sql.
+create or replace trigger conservar_afiliado_de_referencia_companies
+    before update on crm.companies
+    for each row execute function crm.conservar_afiliado_de_referencia();

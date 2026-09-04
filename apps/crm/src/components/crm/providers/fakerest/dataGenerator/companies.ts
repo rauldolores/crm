@@ -49,6 +49,9 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       country: random.arrayElement(["USA", "France", "UK"]),
       context_links: [],
       custom_fields: {},
+      // Los datos de demostración no traen el módulo Afiliados activo, así
+      // que ninguna empresa viene referida por nadie.
+      referred_by_affiliate_id: null,
     };
   });
 };

@@ -6,10 +6,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ShowBase, useNotify, useShowContext, useTranslate } from "ra-core";
+import type { Identifier } from "ra-core";
+import {
+  ShowBase,
+  useGetOne,
+  useNotify,
+  useShowContext,
+  useTranslate,
+} from "ra-core";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Affiliate } from "../types";
+import type { Affiliate, AffiliateCommission } from "../types";
 
 export const AffiliateShow = () => (
   <ShowBase>
@@ -131,9 +138,79 @@ const AffiliateShowContent = () => {
                 {translate("crm.affiliates.fields.referral_url_not_configured")}
               </p>
             )}
+
+            <Separator className="my-4" />
+            <NegocioReferido afiliadoId={record.id} />
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+};
+
+/**
+ * Clientes traídos por este afiliado y comisión devengada. Los números salen
+ * de la vista crm.affiliate_commissions, que resuelve qué cuenta como
+ * "ganada" contra la configuración de embudos de la organización.
+ */
+const NegocioReferido = ({ afiliadoId }: { afiliadoId: Identifier }) => {
+  const translate = useTranslate();
+  const { currency } = useConfigurationContext();
+  const { data, isPending } = useGetOne<AffiliateCommission>(
+    "affiliate_commissions",
+    { id: afiliadoId },
+  );
+
+  if (isPending || !data) return null;
+
+  const formatearImporte = (importe: number) =>
+    importe.toLocaleString(undefined, {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+
+  return (
+    <>
+      <p className="text-muted-foreground mb-2 text-sm">
+        {translate("crm.affiliates.commissions.title")}
+      </p>
+      <div className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+        <div>
+          <p className="text-muted-foreground mb-1">
+            {translate("crm.affiliates.commissions.referred_companies")}
+          </p>
+          <p className="text-lg font-medium">{data.nb_referred_companies}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-1">
+            {translate("crm.affiliates.commissions.won_deals")}
+          </p>
+          <p className="text-lg font-medium">{data.nb_won_deals}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-1">
+            {translate("crm.affiliates.commissions.won_amount")}
+          </p>
+          <p className="text-lg font-medium">
+            {formatearImporte(data.won_amount)}
+          </p>
+        </div>
+        <div>
+          <p className="text-muted-foreground mb-1">
+            {translate("crm.affiliates.commissions.commission_amount")}
+          </p>
+          <p className="text-lg font-medium">
+            {formatearImporte(data.commission_amount)}
+          </p>
+        </div>
+      </div>
+      {data.commission_percentage == null && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {translate("crm.affiliates.commissions.no_percentage")}
+        </p>
+      )}
+    </>
   );
 };
