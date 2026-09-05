@@ -245,6 +245,12 @@ export type Webhook = {
   url: string;
   secret?: string;
   resources: string[];
+  /**
+   * Eventos concretos a los que se suscribe («contacts.created»…). Vacío =
+   * todos los del recurso. Suscribirse solo a lo necesario es lo que evita
+   * el bucle cuando el receptor responde escribiendo de vuelta en el CRM.
+   */
+  events: string[];
   active: boolean;
   created_at?: string;
 } & Pick<RaRecord, "id">;

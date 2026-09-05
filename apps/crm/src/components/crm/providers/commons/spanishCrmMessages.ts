@@ -718,6 +718,12 @@ export const spanishCrmMessages = {
           "Si tu servidor no responde con un código 2xx, el aviso se reintenta hasta 5 veces con esperas crecientes (1, 3, 9, 27 y 81 minutos). Como un mismo evento puede llegar más de una vez, usa X-Vinqulia-Evento-Id para descartar repetidos.",
         loops:
           "Si tu sistema responde al aviso escribiendo de vuelta en el CRM, suscríbete solo a los eventos que necesites (por ejemplo, únicamente «created»). Suscribirse también a «updated» haría que tu propia escritura te volviera como un aviso nuevo, y los dos sistemas se llamarían sin parar.",
+        events_title: "Eventos:",
+        events_all: "Todos",
+        events_count: "%{smart_count} evento |||| %{smart_count} eventos",
+        events_help:
+          "Elige qué avisos quieres recibir. Sin ninguno marcado llegan todos. Si tu sistema responde escribiendo de vuelta en el CRM, marca solo «created»: con «updated» tu propia escritura te volvería como aviso nuevo y entrarían en bucle.",
+        events_error: "No se pudieron guardar los eventos",
       },
       mcp: {
         title: "MCP (para asistentes de IA)",

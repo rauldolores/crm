@@ -1,4 +1,11 @@
-import { Check, Copy, Plus, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import {
   useCreate,
   useDelete,
@@ -17,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
 import type { ApiKey, Webhook } from "../types";
+import { RECURSOS_NOTIFICABLES, eventosDeRecurso } from "./webhookEvents";
 
 /** Recursos expuestos por la API REST, con un ejemplo real de cada uno. */
 const RECURSOS_DE_EJEMPLO: { recurso: string; ejemplo: string }[] = [
@@ -152,7 +160,11 @@ export const ApiPage = () => {
           <p>{translate("crm.api.webhooks.payload")}</p>
           <Bloque>{`{\n  "evento": "contacts.created",\n  "recurso": "contacts",\n  "fecha": "2026-08-18T12:00:00Z",\n  "datos": { … }\n}`}</Bloque>
           <p>{translate("crm.api.webhooks.events")}</p>
-          <Bloque>{`contacts.created / contacts.updated / contacts.deleted\ncompanies.created / companies.updated / companies.deleted\ndeals.created / deals.updated / deals.deleted\ntasks.created / tasks.updated / tasks.deleted\ncontact_notes.created / contact_notes.updated / contact_notes.deleted\ndeal_notes.created / deal_notes.updated / deal_notes.deleted\ntickets.created / tickets.updated / tickets.deleted`}</Bloque>
+          <Bloque>
+            {RECURSOS_NOTIFICABLES.map((recurso) =>
+              eventosDeRecurso(recurso).join(" / "),
+            ).join("\n")}
+          </Bloque>
           <p>{translate("crm.api.webhooks.signature")}</p>
           <Bloque>{`firma = HMAC_SHA256(cuerpo_crudo, secreto)  →  X-Vinqulia-Firma (hex, sin prefijo)\n\nCabeceras de cada envío:\n  X-Vinqulia-Evento      contacts.created\n  X-Vinqulia-Evento-Id   identificador único del evento\n  X-Vinqulia-Intento     número de intento (1, 2, 3…)\n  X-Vinqulia-Firma       la firma`}</Bloque>
           <p>{translate("crm.api.webhooks.retries")}</p>
@@ -498,36 +510,150 @@ const GestorDeWebhooks = () => {
       ) : (
         <div className="space-y-2">
           {(webhooks ?? []).map((webhook) => (
-            <div
-              key={webhook.id}
-              className="flex items-center gap-3 rounded-md border p-3"
-            >
-              <Switch
-                checked={webhook.active}
-                onCheckedChange={() => alternar(webhook)}
-                aria-label={translate("crm.api.webhooks.toggle")}
-              />
-              <span className="flex-1 truncate font-mono text-xs">
-                {webhook.url}
+            <div key={webhook.id} className="rounded-md border p-3">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={webhook.active}
+                  onCheckedChange={() => alternar(webhook)}
+                  aria-label={translate("crm.api.webhooks.toggle")}
+                />
+                <span className="flex-1 truncate font-mono text-xs">
+                  {webhook.url}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1"
+                  onClick={() => copiarSecreto(webhook)}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  {translate("crm.api.webhooks.copy_secret")}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={translate("ra.action.delete")}
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => eliminar(webhook)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <SelectorDeEventos webhook={webhook} onGuardado={refetch} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
+ * Qué eventos recibe un webhook. Sin ninguno marcado recibe todos, que es
+ * como se comportaba antes de que existiera este selector.
+ *
+ * Importa más de lo que parece: si el sistema receptor responde al aviso
+ * escribiendo de vuelta en el CRM, suscribirlo también a «updated» hace que
+ * su propia escritura le vuelva como aviso nuevo y los dos sistemas se
+ * llamen sin parar. Por eso el aviso de abajo.
+ */
+const SelectorDeEventos = ({
+  webhook,
+  onGuardado,
+}: {
+  webhook: Webhook;
+  onGuardado: () => void;
+}) => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const [abierto, setAbierto] = useState(false);
+  const [update] = useUpdate();
+
+  const seleccionados = webhook.events ?? [];
+  const todos = seleccionados.length === 0;
+
+  const alternarEvento = async (evento: string) => {
+    const nuevos = seleccionados.includes(evento)
+      ? seleccionados.filter((actual) => actual !== evento)
+      : [...seleccionados, evento];
+    try {
+      await update(
+        "webhooks",
+        { id: webhook.id, data: { events: nuevos }, previousData: webhook },
+        { returnPromise: true },
+      );
+      onGuardado();
+    } catch {
+      notify("crm.api.webhooks.events_error", { type: "error" });
+    }
+  };
+
+  const recibirTodos = async () => {
+    try {
+      await update(
+        "webhooks",
+        { id: webhook.id, data: { events: [] }, previousData: webhook },
+        { returnPromise: true },
+      );
+      onGuardado();
+    } catch {
+      notify("crm.api.webhooks.events_error", { type: "error" });
+    }
+  };
+
+  return (
+    <div className="mt-2 border-t pt-2">
+      <button
+        type="button"
+        onClick={() => setAbierto(!abierto)}
+        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+      >
+        {abierto ? (
+          <ChevronDown className="h-3.5 w-3.5" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5" />
+        )}
+        {translate("crm.api.webhooks.events_title")}
+        <span className="ml-1 font-medium">
+          {todos
+            ? translate("crm.api.webhooks.events_all")
+            : translate("crm.api.webhooks.events_count", {
+                smart_count: seleccionados.length,
+              })}
+        </span>
+      </button>
+
+      {abierto && (
+        <div className="mt-3 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            {translate("crm.api.webhooks.events_help")}
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant={todos ? "default" : "outline"}
+            onClick={recibirTodos}
+          >
+            {translate("crm.api.webhooks.events_all")}
+          </Button>
+          {RECURSOS_NOTIFICABLES.map((recurso) => (
+            <div key={recurso} className="flex flex-wrap items-center gap-2">
+              <span className="w-32 shrink-0 font-mono text-xs text-muted-foreground">
+                {recurso}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1"
-                onClick={() => copiarSecreto(webhook)}
-              >
-                <Copy className="h-3.5 w-3.5" />
-                {translate("crm.api.webhooks.copy_secret")}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={translate("ra.action.delete")}
-                className="text-muted-foreground hover:text-destructive"
-                onClick={() => eliminar(webhook)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {eventosDeRecurso(recurso).map((evento) => (
+                <Button
+                  key={evento}
+                  type="button"
+                  size="sm"
+                  variant={
+                    seleccionados.includes(evento) ? "default" : "outline"
+                  }
+                  onClick={() => alternarEvento(evento)}
+                >
+                  {evento.split(".")[1]}
+                </Button>
+              ))}
             </div>
           ))}
         </div>
