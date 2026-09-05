@@ -196,4 +196,7 @@ grant select, insert, update, delete on table crm.api_keys to anon, authenticate
 grant usage, select on sequence crm.api_keys_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table crm.affiliates to anon, authenticated, service_role;
 grant usage, select on sequence crm.affiliates_id_seq to anon, authenticated, service_role;
+-- Solo lectura: la cola de envíos no se edita a mano, ver 05_policies.sql.
+grant select on table crm.webhook_deliveries to anon, authenticated, service_role;
+grant usage, select on sequence crm.webhook_deliveries_id_seq to anon, authenticated, service_role;
 grant select on table crm.affiliate_commissions to anon, authenticated, service_role;

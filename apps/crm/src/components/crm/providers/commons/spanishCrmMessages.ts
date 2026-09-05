@@ -713,7 +713,11 @@ export const spanishCrmMessages = {
         payload: "Cada aviso llega como POST con este cuerpo:",
         events: "Eventos disponibles (uno por recurso, según lo que pase):",
         signature:
-          "Verifica que el aviso es legítimo comparando la cabecera X-Vinqulia-Firma con el HMAC-SHA256 del cuerpo usando el secreto del webhook:",
+          "Verifica que el aviso es legítimo comparando la cabecera X-Vinqulia-Firma con el HMAC-SHA256 del cuerpo usando el secreto del webhook. Calcúlalo sobre el cuerpo CRUDO tal como llega, no sobre el JSON reserializado: cambiaría espacios y orden de claves y no cuadraría nunca.",
+        retries:
+          "Si tu servidor no responde con un código 2xx, el aviso se reintenta hasta 5 veces con esperas crecientes (1, 3, 9, 27 y 81 minutos). Como un mismo evento puede llegar más de una vez, usa X-Vinqulia-Evento-Id para descartar repetidos.",
+        loops:
+          "Si tu sistema responde al aviso escribiendo de vuelta en el CRM, suscríbete solo a los eventos que necesites (por ejemplo, únicamente «created»). Suscribirse también a «updated» haría que tu propia escritura te volviera como un aviso nuevo, y los dos sistemas se llamarían sin parar.",
       },
       mcp: {
         title: "MCP (para asistentes de IA)",

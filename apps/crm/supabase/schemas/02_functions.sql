@@ -521,9 +521,15 @@ declare
   org uuid;
   evento text;
   suscripcion record;
-  cuerpo jsonb;
-  firma text;
 begin
+  -- Cascadas dentro de la misma transacción: si una automatización escribe a
+  -- raíz de este mismo cambio, no se vuelve a avisar. No protege del bucle
+  -- ENTRE sistemas (esa escritura llega en otra transacción, con profundidad
+  -- 1 de nuevo): para eso está el filtro de eventos de más abajo.
+  if pg_trigger_depth() > 1 then
+    return null;
+  end if;
+
   if tg_op = 'DELETE' then
     registro := to_jsonb(old);
   else
@@ -535,41 +541,41 @@ begin
     return null;
   end if;
 
+  -- Un UPDATE que deja la fila idéntica no es noticia. Corta el rebote más
+  -- típico: el sistema externo reescribe el mismo valor que ya estaba.
+  if tg_op = 'UPDATE' and to_jsonb(old) = to_jsonb(new) then
+    return null;
+  end if;
+
   evento := tg_table_name || '.' || case tg_op
     when 'INSERT' then 'created'
     when 'UPDATE' then 'updated'
     else 'deleted'
   end;
 
+  -- Solo se encola. El envío, la firma y los reintentos son cosa de
+  -- crm.despachar_webhooks(), que corre programado.
   for suscripcion in
-    select id, url, secret from crm.webhooks
+    select id from crm.webhooks
     where organization_id = org
       and active
       and (resources = '{}' or tg_table_name = any(resources))
+      and (events = '{}' or evento = any(events))
   loop
-    begin
-      cuerpo := jsonb_build_object(
+    insert into crm.webhook_deliveries
+      (organization_id, webhook_id, event, resource, payload)
+    values (
+      org,
+      suscripcion.id,
+      evento,
+      tg_table_name,
+      jsonb_build_object(
         'evento', evento,
         'recurso', tg_table_name,
         'fecha', now(),
         'datos', registro
-      );
-      firma := encode(
-        extensions.hmac(cuerpo::text, suscripcion.secret, 'sha256'),
-        'hex'
-      );
-      perform net.http_post(
-        url := suscripcion.url,
-        body := cuerpo,
-        headers := jsonb_build_object(
-          'Content-Type', 'application/json',
-          'X-Vinqulia-Evento', evento,
-          'X-Vinqulia-Firma', firma
-        )
-      );
-    exception when others then
-      null; -- la escritura original nunca se sacrifica por un aviso
-    end;
+      )
+    );
   end loop;
 
   return null;
@@ -578,6 +584,134 @@ $$;
 
 GRANT ALL ON FUNCTION "crm"."notify_webhooks"() TO "authenticated";
 GRANT ALL ON FUNCTION "crm"."notify_webhooks"() TO "service_role";
+
+-- Cierra los envíos que ya contestaron: pg_net es asíncrono y deja la
+-- respuesta en net._http_response, así que hay que ir a buscarla.
+create or replace function crm.reconciliar_webhooks() returns integer
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  entrega record;
+  respuesta record;
+  cerradas integer := 0;
+begin
+  for entrega in
+    select id, net_request_id, attempts, max_attempts
+    from crm.webhook_deliveries
+    where net_request_id is not null and delivered_at is null
+  loop
+    select status_code, error_msg, timed_out
+      into respuesta
+      from net._http_response
+     where id = entrega.net_request_id;
+
+    -- Todavía en vuelo: pg_net aún no ha escrito la respuesta.
+    continue when not found;
+
+    if respuesta.status_code between 200 and 299 then
+      update crm.webhook_deliveries
+         set delivered_at = now(),
+             net_request_id = null,
+             last_status_code = respuesta.status_code,
+             last_error = null
+       where id = entrega.id;
+    else
+      -- Espera creciente: 1, 3, 9, 27 y 81 minutos.
+      update crm.webhook_deliveries
+         set net_request_id = null,
+             last_status_code = respuesta.status_code,
+             last_error = coalesce(
+               respuesta.error_msg,
+               case when respuesta.timed_out then 'timeout' else null end,
+               'HTTP ' || coalesce(respuesta.status_code::text, '?')
+             ),
+             next_attempt_at = now() + (interval '1 minute' * power(3, entrega.attempts))
+       where id = entrega.id;
+    end if;
+
+    cerradas := cerradas + 1;
+  end loop;
+
+  return cerradas;
+end;
+$$;
+
+grant all on function crm.reconciliar_webhooks() to service_role;
+
+-- Firma y envía lo que toca. Lo ejecuta pg_cron cada minuto (ver la
+-- programación en la migración que lo introdujo).
+create or replace function crm.despachar_webhooks(lote integer default 50)
+returns integer
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  entrega record;
+  cuerpo text;
+  firma text;
+  peticion bigint;
+  enviadas integer := 0;
+begin
+  perform crm.reconciliar_webhooks();
+
+  for entrega in
+    select d.id, d.payload, d.event, d.event_id, d.attempts, w.url, w.secret
+      from crm.webhook_deliveries d
+      join crm.webhooks w on w.id = d.webhook_id
+     where d.delivered_at is null
+       and d.net_request_id is null
+       and d.attempts < d.max_attempts
+       and d.next_attempt_at <= now()
+       and w.active
+     order by d.next_attempt_at
+     limit lote
+     for update of d skip locked
+  loop
+    begin
+      -- Se firma exactamente el texto que sale por el cable: pg_net serializa
+      -- el jsonb con ::text, comprobado byte a byte contra su propia cola.
+      cuerpo := entrega.payload::text;
+      firma := encode(
+        extensions.hmac(cuerpo, entrega.secret, 'sha256'),
+        'hex'
+      );
+
+      peticion := net.http_post(
+        url := entrega.url,
+        body := entrega.payload,
+        headers := jsonb_build_object(
+          'Content-Type', 'application/json',
+          'X-Vinqulia-Evento', entrega.event,
+          'X-Vinqulia-Evento-Id', entrega.event_id::text,
+          'X-Vinqulia-Intento', (entrega.attempts + 1)::text,
+          'X-Vinqulia-Firma', firma
+        )
+      );
+
+      update crm.webhook_deliveries
+         set attempts = attempts + 1,
+             net_request_id = peticion,
+             -- Si la respuesta no llega nunca, el siguiente ciclo lo reintenta
+             -- en vez de dejarlo colgado para siempre.
+             next_attempt_at = now() + (interval '1 minute' * power(3, attempts + 1))
+       where id = entrega.id;
+
+      enviadas := enviadas + 1;
+    exception when others then
+      update crm.webhook_deliveries
+         set attempts = attempts + 1,
+             last_error = sqlerrm,
+             next_attempt_at = now() + (interval '1 minute' * power(3, attempts + 1))
+       where id = entrega.id;
+    end;
+  end loop;
+
+  return enviadas;
+end;
+$$;
+
+grant all on function crm.despachar_webhooks(integer) to service_role;
 
 create or replace function crm.run_automations() returns trigger
     language plpgsql security definer

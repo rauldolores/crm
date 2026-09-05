@@ -32,6 +32,7 @@ alter table crm.favicons_excluded_domains enable row level security;
 alter table crm.tickets enable row level security;
 alter table crm.ticket_notes enable row level security;
 alter table crm.affiliates enable row level security;
+alter table crm.webhook_deliveries enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -308,3 +309,11 @@ create policy "Affiliates are deleted within the organization" on crm.affiliates
 create policy "Affiliates can see their own row" on crm.affiliates
     for select to authenticated
     using (kontrolia_auth_user_id = auth.uid());
+
+-- Webhook deliveries
+-- Solo lectura, para poder consultar qué se envió y qué falló. La cola la
+-- escribe el disparador y la gestiona el despachador, ambos SECURITY DEFINER;
+-- que un usuario pudiera editarla sería reescribir el historial de envíos.
+create policy "Webhook deliveries are scoped to the organization" on crm.webhook_deliveries
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());

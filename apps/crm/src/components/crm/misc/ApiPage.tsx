@@ -154,7 +154,9 @@ export const ApiPage = () => {
           <p>{translate("crm.api.webhooks.events")}</p>
           <Bloque>{`contacts.created / contacts.updated / contacts.deleted\ncompanies.created / companies.updated / companies.deleted\ndeals.created / deals.updated / deals.deleted\ntasks.created / tasks.updated / tasks.deleted\ncontact_notes.created / contact_notes.updated / contact_notes.deleted\ndeal_notes.created / deal_notes.updated / deal_notes.deleted\ntickets.created / tickets.updated / tickets.deleted`}</Bloque>
           <p>{translate("crm.api.webhooks.signature")}</p>
-          <Bloque>{`firma = HMAC_SHA256(cuerpo, secreto)  →  cabecera X-Vinqulia-Firma (hex)`}</Bloque>
+          <Bloque>{`firma = HMAC_SHA256(cuerpo_crudo, secreto)  →  X-Vinqulia-Firma (hex, sin prefijo)\n\nCabeceras de cada envío:\n  X-Vinqulia-Evento      contacts.created\n  X-Vinqulia-Evento-Id   identificador único del evento\n  X-Vinqulia-Intento     número de intento (1, 2, 3…)\n  X-Vinqulia-Firma       la firma`}</Bloque>
+          <p>{translate("crm.api.webhooks.retries")}</p>
+          <p>{translate("crm.api.webhooks.loops")}</p>
         </CardContent>
       </Card>
 
