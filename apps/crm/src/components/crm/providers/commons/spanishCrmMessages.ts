@@ -586,6 +586,32 @@ export const spanishCrmMessages = {
         assign_named: "Asignar a %{name}",
       },
     },
+    email: {
+      title: "Correo saliente",
+      intro:
+        "Por qué servidor salen los correos que envía el CRM. Mientras no configures uno, no se puede enviar correo desde las fichas ni desde las automatizaciones.",
+      server_title: "Servidor de envío",
+      provider: "Proveedor",
+      api_key: "Clave de API",
+      api_key_placeholder: "Pega aquí la clave de tu proveedor",
+      api_key_saved:
+        "Ya hay una clave guardada — escribe una nueva para reemplazarla",
+      api_key_help:
+        "La clave se guarda cifrada del lado del servidor y no vuelve a mostrarse nunca, ni siquiera a un administrador. Si la pierdes, genera otra en tu proveedor y pégala aquí.",
+      from_email: "Correo del remitente",
+      from_email_help:
+        "Tiene que ser una dirección de un dominio verificado en tu proveedor; si no, rechazará los envíos.",
+      from_name: "Nombre del remitente",
+      active: "Enviar correo con esta configuración",
+      saved: "Configuración de correo guardada",
+      inherited:
+        "Ahora mismo estás enviando con la configuración general de la instalación. Guarda la tuya para enviar desde tu propio dominio.",
+      test_title: "Enviar una prueba",
+      test_intro:
+        "Manda un correo de prueba para comprobar que la configuración funciona antes de usarla de verdad.",
+      test_send: "Enviar prueba",
+      test_sent: "Correo de prueba enviado",
+    },
     modules: {
       title: "Módulos",
       catalog: {

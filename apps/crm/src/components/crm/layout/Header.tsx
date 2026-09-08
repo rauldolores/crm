@@ -1,6 +1,7 @@
 import {
   Blocks,
   Globe,
+  Mail,
   Import,
   Settings,
   User,
@@ -21,6 +22,7 @@ import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import { CatalogoPage } from "../modules/CatalogoPage";
+import { CorreoPage } from "../misc/CorreoPage";
 
 /**
  * Cabecera superior del escritorio.
@@ -65,6 +67,9 @@ const Header = () => {
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <ModulosMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <CorreoMenu />
             </CanAccess>
             <ImportFromJsonMenuItem />
           </UserMenu>
@@ -181,6 +186,22 @@ const ModulosMenu = () => {
       <Link to={CatalogoPage.path} className="flex items-center gap-2">
         <Blocks />
         {translate("crm.modules.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const CorreoMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<CorreoMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={CorreoPage.path} className="flex items-center gap-2">
+        <Mail />
+        {translate("crm.email.title")}
       </Link>
     </DropdownMenuItem>
   );

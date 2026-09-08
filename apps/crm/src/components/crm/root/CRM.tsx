@@ -31,6 +31,7 @@ import { ConfirmationRequired } from "../login/ConfirmationRequired";
 import { ImportPage } from "../misc/ImportPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
+import { CorreoPage } from "../misc/CorreoPage";
 import { InformesPage } from "../misc/InformesPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import {
@@ -285,6 +286,7 @@ const DesktopAdmin = (
         <Route path={InformesPage.path} element={<InformesPage />} />
         <Route path={FormulariosPage.path} element={<FormulariosPage />} />
         <Route path={CatalogoPage.path} element={<CatalogoPage />} />
+        <Route path={CorreoPage.path} element={<CorreoPage />} />
         <Route
           path={AffiliatesConfigPage.path}
           element={<AffiliatesConfigPage />}

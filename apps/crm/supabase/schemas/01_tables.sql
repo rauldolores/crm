@@ -265,6 +265,30 @@ create table crm.api_keys (
     last_used_at timestamp with time zone
 );
 
+-- Servidor de correo saliente de la organización: por dónde salen TODOS los
+-- correos que envía el CRM (envío manual desde una ficha, automatizaciones…).
+--
+-- Una fila por organización, de ahí la clave primaria: cada cliente envía
+-- desde su propio dominio y con su propia cuenta del proveedor.
+--
+-- OJO con `api_key`: es un secreto reutilizable, no un hash como en
+-- crm.api_keys —hay que presentarlo al proveedor en cada envío—, así que
+-- esta tabla NO se expone. No tiene grants para anon/authenticated, no tiene
+-- políticas RLS (nadie pasa salvo service_role), y está en la lista de
+-- recursos prohibidos del puente /api/datos, que consulta con la clave de
+-- servicio y sí llegaría a leerla. Se gestiona solo por /api/correos/configuracion,
+-- que nunca devuelve el secreto.
+create table crm.email_settings (
+    organization_id uuid not null primary key default (auth.jwt() ->> 'organization_id')::uuid,
+    provider text not null check (provider in ('resend', 'postmark', 'sendgrid')),
+    api_key text not null,
+    from_email text not null,
+    from_name text,
+    active boolean not null default true,
+    created_at timestamp with time zone not null default now(),
+    updated_at timestamp with time zone not null default now()
+);
+
 create index api_keys_organization_id_idx on crm.api_keys (organization_id);
 
 create table crm.tags (

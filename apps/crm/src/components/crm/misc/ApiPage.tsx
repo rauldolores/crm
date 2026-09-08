@@ -16,7 +16,6 @@ import {
 } from "ra-core";
 import { useCallback, useEffect, useState } from "react";
 
-import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 
 import type { ApiKey, Webhook } from "../types";
+import { llamarApi } from "./llamarApi";
 import { RECURSOS_NOTIFICABLES, eventosDeRecurso } from "./webhookEvents";
 
 /** Recursos expuestos por la API REST, con un ejemplo real de cada uno. */
@@ -217,27 +217,6 @@ const Bloque = ({ children }: { children: string }) => (
 );
 
 /**
- * Llama a una ruta propia del CRM (no PostgREST) con el token de sesión.
- * Lanza con el mensaje del servidor si la respuesta no es 2xx.
- */
-const llamarApi = async (ruta: string, opciones: RequestInit = {}) => {
-  const token = await getKontroliaAccessToken();
-  const respuesta = await fetch(ruta, {
-    ...opciones,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...opciones.headers,
-    },
-  });
-  const cuerpo = await respuesta.json().catch(() => ({}));
-  if (!respuesta.ok) {
-    throw new Error(cuerpo.message ?? "Ocurrió un error inesperado.");
-  }
-  return cuerpo;
-};
-
-/**
  * Alta, activación y baja de las claves de API de la organización.
  *
  * No usa los hooks de ra-core (a diferencia de GestorDeWebhooks): crear una
@@ -255,7 +234,9 @@ const GestorDeClavesDeApi = () => {
 
   const cargar = useCallback(async () => {
     try {
-      const { claves: datos } = await llamarApi("/api/claves");
+      const { claves: datos } = await llamarApi<{ claves: ApiKey[] }>(
+        "/api/claves",
+      );
       setClaves(datos ?? []);
     } catch {
       // Probablemente no es administrador: el resto de la página sigue
@@ -273,7 +254,7 @@ const GestorDeClavesDeApi = () => {
     if (!nombreLimpio) return;
     setCreando(true);
     try {
-      const creada = await llamarApi("/api/claves", {
+      const creada = await llamarApi<{ key: string }>("/api/claves", {
         method: "POST",
         body: JSON.stringify({ name: nombreLimpio }),
       });

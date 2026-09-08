@@ -33,6 +33,11 @@ alter table crm.tickets enable row level security;
 alter table crm.ticket_notes enable row level security;
 alter table crm.affiliates enable row level security;
 alter table crm.webhook_deliveries enable row level security;
+-- Sin una sola politica, a proposito: guarda el secreto del proveedor de
+-- correo y no debe leerla NADIE por PostgREST, ni siquiera un administrador.
+-- Se gestiona por /api/correos/configuracion, que devuelve metadatos pero
+-- nunca la clave. Ver tambien la lista de recursos prohibidos del puente.
+alter table crm.email_settings enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies

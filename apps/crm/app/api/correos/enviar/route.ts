@@ -3,9 +3,9 @@ import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermiss
 import { getServiceClient } from "@/lib/server/supabase-service";
 import {
   construirResponderA,
-  enviarCorreo,
-  envioDeCorreoConfigurado,
-} from "@/lib/server/postmark";
+  enviarCorreoDeOrganizacion,
+  puedeEnviarCorreo,
+} from "@/lib/server/correo/enviar";
 
 /**
  * Envía un correo real a un contacto desde el CRM y deja constancia como una
@@ -24,11 +24,13 @@ export async function POST(peticion: Request) {
   const auth = await requireKontroliaPermission(peticion, []);
   if (!auth.ok) return auth.response;
 
-  if (!envioDeCorreoConfigurado()) {
+  // Depende de la organización: cada una configura su propio servidor de
+  // correo saliente (Ajustes → Correo saliente).
+  if (!(await puedeEnviarCorreo(auth.sesion.organizacionId))) {
     return Response.json(
       {
         message:
-          "El envío de correo no está configurado. Pide a quien administra el CRM que añada POSTMARK_SERVER_TOKEN y POSTMARK_FROM_EMAIL.",
+          "El envío de correo no está configurado. Pide a quien administra el CRM que configure el servidor de correo saliente en Ajustes.",
       },
       { status: 501 },
     );
@@ -91,7 +93,7 @@ export async function POST(peticion: Request) {
     ? construirResponderA(env.inboundEmail, contacto.id)
     : null;
 
-  const resultado = await enviarCorreo({
+  const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
     para: correoDestino,
     asunto,
     textoPlano: texto,

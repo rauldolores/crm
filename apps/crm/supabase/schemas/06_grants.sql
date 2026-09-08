@@ -200,3 +200,12 @@ grant usage, select on sequence crm.affiliates_id_seq to anon, authenticated, se
 grant select on table crm.webhook_deliveries to anon, authenticated, service_role;
 grant usage, select on sequence crm.webhook_deliveries_id_seq to anon, authenticated, service_role;
 grant select on table crm.affiliate_commissions to anon, authenticated, service_role;
+-- Correo saliente: SOLO service_role. Ni anon ni authenticated deben poder
+-- tocar esta tabla — guarda la clave del proveedor en claro, porque hay que
+-- presentarla en cada envio y por tanto no puede ser un hash.
+grant select, insert, update, delete on table crm.email_settings to service_role;
+-- Y se revoca lo que los default privileges de mas arriba le conceden sola a
+-- toda tabla nueva del esquema: sin esto, anon y authenticated acaban con
+-- `grant all` sobre la tabla del secreto.
+revoke all on table crm.email_settings from anon;
+revoke all on table crm.email_settings from authenticated;

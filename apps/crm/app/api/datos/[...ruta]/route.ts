@@ -45,6 +45,18 @@ const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
 );
 const CLAVE_DE_SERVICIO = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 
+/**
+ * Tablas que este puente NO sirve nunca, pase lo que pase.
+ *
+ * Consulta con la clave de servicio, que salta el RLS, así que una tabla que
+ * no esté aquí acaba siendo legible por cualquiera con sesión —o con clave de
+ * API— aunque no tenga ni una política. `email_settings` guarda la clave del
+ * proveedor de correo en claro: se gestiona solo desde
+ * /api/correos/configuracion, que exige ser administrador y jamás devuelve
+ * el secreto.
+ */
+const RECURSOS_PROHIBIDOS = new Set(["email_settings"]);
+
 /** Tablas y vistas que pertenecen a una organización. */
 const CON_DUENO = new Set([
   "automations",
@@ -134,6 +146,10 @@ async function reenviar(peticion: Request, ruta: string[]) {
   const { organizacionId, viaClaveDeApi, usuarioId } = auth;
   const origen = new URL(peticion.url);
   const recurso = ruta[ruta.length - 1];
+
+  if (RECURSOS_PROHIBIDOS.has(recurso)) {
+    return esError(404, "Recurso no disponible.");
+  }
 
   // PostgREST permite incrustar relaciones (?select=*,sales(*)); una clave
   // de API nunca puede, para que su alcance real sea siempre el recurso de
