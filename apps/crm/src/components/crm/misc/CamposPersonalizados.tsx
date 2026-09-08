@@ -108,6 +108,61 @@ const formatearValor = (
   return String(valor);
 };
 
+/**
+ * El valor como URL navegable, o null si no lo es.
+ *
+ * Solo http y https: lo que hay en un campo personalizado lo escribe una
+ * persona o una integración, y un `javascript:` ahí se ejecutaría al pulsar
+ * el enlace. Se exige el esquema explícito para no convertir en enlace
+ * cualquier texto con un punto («versión 2.1» no es una dirección).
+ */
+const comoUrl = (valor: string | number | boolean): URL | null => {
+  if (typeof valor !== "string") return null;
+  try {
+    const url = new URL(valor.trim());
+    return url.protocol === "http:" || url.protocol === "https:" ? url : null;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * El valor de un campo en la ficha. Una URL se pinta como enlace real que
+ * abre en otra pestaña, recortada con puntos suspensivos: estas direcciones
+ * llevan parámetros y firmas larguísimas, y enteras deforman la ficha. La
+ * dirección completa queda en el `title`, al pasar el ratón.
+ */
+const ValorDeCampo = ({
+  campo,
+  valor,
+}: {
+  campo: CustomFieldDefinition;
+  valor: string | number | boolean;
+}) => {
+  const translate = useTranslate();
+  const url = comoUrl(valor);
+
+  if (!url) {
+    return (
+      <span className="text-right">
+        {formatearValor(campo, valor, translate)}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={url.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={url.href}
+      className="min-w-0 truncate underline hover:no-underline"
+    >
+      {url.href.replace(/^https?:\/\//, "")}
+    </a>
+  );
+};
+
 /** Los valores de los campos personalizados de una ficha, para pantallas de detalle. */
 export const CamposPersonalizadosField = ({
   entidad,
@@ -132,10 +187,8 @@ export const CamposPersonalizadosField = ({
     <AsideSection title={translate("crm.custom_fields.title")}>
       {conValor.map((campo) => (
         <div key={campo.value} className="flex justify-between gap-2 text-sm">
-          <span className="text-muted-foreground">{campo.label}</span>
-          <span className="text-right">
-            {formatearValor(campo, valores[campo.value], translate)}
-          </span>
+          <span className="text-muted-foreground shrink-0">{campo.label}</span>
+          <ValorDeCampo campo={campo} valor={valores[campo.value]} />
         </div>
       ))}
     </AsideSection>
