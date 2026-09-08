@@ -586,6 +586,65 @@ export const spanishCrmMessages = {
         assign_named: "Asignar a %{name}",
       },
     },
+    email_templates: {
+      title: "Plantillas de correo",
+      action: {
+        new: "Nueva plantilla",
+        create: "Crear plantilla",
+      },
+      fields: {
+        name: "Nombre de la plantilla",
+        subject: "Asunto",
+        subject_help:
+          "Puedes usar campos aquí también, por ejemplo: Hola {{contacto.nombre}}",
+        body: "Cuerpo del correo",
+        active: "Activa",
+        updated_at: "Última modificación",
+      },
+      active: "Activa",
+      inactive: "Inactiva",
+      merge_fields: "Campos que se rellenan solos",
+      merge_fields_help:
+        "Pulsa uno para insertarlo donde tengas el cursor. Al enviar, cada campo se sustituye por el dato real del contacto, su empresa o la oportunidad.",
+      preview: "Vista previa",
+      ai_title: "Generar con inteligencia artificial",
+      ai_intro:
+        "Describe qué quieres que diga el correo y se redacta solo, usando los campos disponibles. Después lo puedes ajustar a mano.",
+      ai_placeholder:
+        "Ej. Dale la bienvenida al contacto, dile que en breve le llamamos para agendar la demo, e invítalo a hacer su diagnóstico.",
+      generate: "Generar",
+      generating: "Generando...",
+      upload_logo: "Subir logo",
+      uploading_logo: "Subiendo...",
+      logo_uploaded: "Logo insertado en la plantilla",
+      generated: "Plantilla generada. Revísala antes de guardar.",
+      entity_contact: "Contacto",
+      entity_company: "Empresa",
+      entity_deal: "Oportunidad",
+      empty: {
+        title: "No hay plantillas",
+        description:
+          "Crea una plantilla para reutilizar el mismo correo desde las automatizaciones.",
+      },
+    },
+    ai: {
+      title: "Inteligencia artificial",
+      intro:
+        "Con qué proveedor se generan las plantillas de correo. La clave es tuya y el consumo se factura en tu cuenta del proveedor.",
+      provider: "Proveedor",
+      api_key: "Clave de API",
+      api_key_placeholder: "Pega aquí la clave de tu proveedor",
+      api_key_saved:
+        "Ya hay una clave guardada — escribe una nueva para reemplazarla",
+      api_key_help:
+        "Se guarda del lado del servidor y no vuelve a mostrarse nunca, ni siquiera a un administrador.",
+      model: "Modelo",
+      model_help: "Déjalo vacío para usar el modelo recomendado: %{modelo}",
+      active: "Usar la IA con esta configuración",
+      saved: "Configuración de IA guardada",
+      not_configured:
+        "Todavía no has configurado un proveedor de IA. Sin él, las plantillas se escriben a mano.",
+    },
     email: {
       title: "Correo saliente",
       intro:

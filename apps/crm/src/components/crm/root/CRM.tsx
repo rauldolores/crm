@@ -16,6 +16,7 @@ import { SetPasswordPage } from "@/components/supabase/set-password-page";
 import { OAuthConsentPage } from "@/components/supabase/oauth-consent-page";
 
 import affiliates from "../affiliates";
+import emailTemplates from "../email";
 import { AffiliatesConfigPage } from "../affiliates/AffiliatesConfigPage";
 import companies from "../companies";
 import contacts from "../contacts";
@@ -32,6 +33,7 @@ import { ImportPage } from "../misc/ImportPage";
 import { ApiPage } from "../misc/ApiPage";
 import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { CorreoPage } from "../misc/CorreoPage";
+import { IaPage } from "../misc/IaPage";
 import { InformesPage } from "../misc/InformesPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import {
@@ -287,6 +289,7 @@ const DesktopAdmin = (
         <Route path={FormulariosPage.path} element={<FormulariosPage />} />
         <Route path={CatalogoPage.path} element={<CatalogoPage />} />
         <Route path={CorreoPage.path} element={<CorreoPage />} />
+        <Route path={IaPage.path} element={<IaPage />} />
         <Route
           path={AffiliatesConfigPage.path}
           element={<AffiliatesConfigPage />}
@@ -297,6 +300,7 @@ const DesktopAdmin = (
       <Resource name="companies" {...companies} />
       <Resource name="tickets" {...tickets} />
       <Resource name="affiliates" {...affiliates} />
+      <Resource name="email_templates" {...emailTemplates} />
       <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />

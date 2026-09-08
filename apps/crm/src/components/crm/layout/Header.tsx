@@ -2,6 +2,7 @@ import {
   Blocks,
   Globe,
   Mail,
+  Sparkles,
   Import,
   Settings,
   User,
@@ -23,6 +24,7 @@ import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { CorreoPage } from "../misc/CorreoPage";
+import { IaPage } from "../misc/IaPage";
 
 /**
  * Cabecera superior del escritorio.
@@ -70,6 +72,9 @@ const Header = () => {
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <CorreoMenu />
+            </CanAccess>
+            <CanAccess resource="configuration" action="edit">
+              <IaMenu />
             </CanAccess>
             <ImportFromJsonMenuItem />
           </UserMenu>
@@ -202,6 +207,22 @@ const CorreoMenu = () => {
       <Link to={CorreoPage.path} className="flex items-center gap-2">
         <Mail />
         {translate("crm.email.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const IaMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<IaMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={IaPage.path} className="flex items-center gap-2">
+        <Sparkles />
+        {translate("crm.ai.title")}
       </Link>
     </DropdownMenuItem>
   );

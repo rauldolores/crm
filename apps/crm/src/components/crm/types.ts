@@ -240,6 +240,21 @@ export type ApiKey = {
   last_used_at?: string | null;
 } & Pick<RaRecord, "id">;
 
+/**
+ * Plantilla de correo de la organización. El cuerpo es HTML con los campos
+ * de fusión escritos como {{contacto.nombre}} — ver camposDeFusion.ts.
+ */
+export type EmailTemplate = {
+  name: string;
+  subject: string;
+  body_html: string;
+  logo_url?: string | null;
+  active: boolean;
+  sales_id?: Identifier | null;
+  created_at?: string;
+  updated_at?: string;
+} & Pick<RaRecord, "id">;
+
 /** Webhook saliente de la organización. */
 export type Webhook = {
   url: string;
