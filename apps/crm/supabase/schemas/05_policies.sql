@@ -38,6 +38,9 @@ alter table crm.webhook_deliveries enable row level security;
 -- Se gestiona por /api/correos/configuracion, que devuelve metadatos pero
 -- nunca la clave. Ver tambien la lista de recursos prohibidos del puente.
 alter table crm.email_settings enable row level security;
+alter table crm.email_outbox enable row level security;
+-- Sin politicas, como email_settings: guarda el secreto de despacho.
+alter table crm.internal_settings enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -320,5 +323,11 @@ create policy "Affiliates can see their own row" on crm.affiliates
 -- escribe el disparador y la gestiona el despachador, ambos SECURITY DEFINER;
 -- que un usuario pudiera editarla sería reescribir el historial de envíos.
 create policy "Webhook deliveries are scoped to the organization" on crm.webhook_deliveries
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Cola de correos: solo lectura, para poder ver qué se envió y qué falló.
+-- La escribe el disparador y la gestiona el despachador.
+create policy "Email outbox is scoped to the organization" on crm.email_outbox
     for select to authenticated
     using (organization_id = crm.current_organization_id());

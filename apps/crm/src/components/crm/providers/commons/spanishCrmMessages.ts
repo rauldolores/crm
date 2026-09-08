@@ -570,6 +570,9 @@ export const spanishCrmMessages = {
         then: "Entonces",
         task_text: "Texto de la tarea",
         task_type: "Tipo de tarea",
+        template: "Plantilla",
+        template_help:
+          "Solo aparecen las plantillas activas. El asunto, el cuerpo y el diseño salen de ella.",
         due_in_days: "Vence en (días)",
         due_in_days_help: "Déjalo vacío si la tarea no lleva fecha límite.",
         owner: "Responsable",
@@ -583,9 +586,11 @@ export const spanishCrmMessages = {
       then: {
         task: "Crear una tarea",
         assign: "Asignar responsable",
+        email: "Enviar un correo",
         task_named: "Crear la tarea «%{text}» para dentro de %{days} días",
         task_named_no_due: "Crear la tarea «%{text}», sin fecha límite",
         assign_named: "Asignar a %{name}",
+        email_named: "Enviar el correo de la plantilla «%{name}»",
       },
     },
     email_templates: {

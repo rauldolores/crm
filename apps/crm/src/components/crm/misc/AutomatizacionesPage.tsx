@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Automation, Sale } from "../types";
+import type { Automation, EmailTemplate, Sale } from "../types";
 
 /**
  * Automatizaciones: reglas «cuando pase X, haz Y», en lenguaje llano.
@@ -104,6 +104,15 @@ const TarjetaDeRegla = ({
     pagination: { page: 1, perPage: 200 },
     sort: { field: "last_name", order: "ASC" },
   });
+  const { data: plantillas } = useGetList<EmailTemplate>("email_templates", {
+    pagination: { page: 1, perPage: 200 },
+    sort: { field: "name", order: "ASC" },
+  });
+
+  const nombreDePlantilla = (plantillas ?? []).find(
+    (plantilla) =>
+      String(plantilla.id) === String(regla.action_params?.templateId),
+  )?.name;
 
   const etiquetaDeEtapa =
     dealStages.find((etapa) => etapa.value === regla.trigger_params?.stage)
@@ -121,26 +130,30 @@ const TarjetaDeRegla = ({
         );
 
   const entonces =
-    regla.action_type === "assign_owner"
-      ? translate("crm.automations.then.assign_named", {
-          name: (() => {
-            const comercial = (comerciales ?? []).find(
-              (candidato) =>
-                String(candidato.id) === String(regla.action_params?.salesId),
-            );
-            return comercial
-              ? `${comercial.first_name} ${comercial.last_name}`
-              : "—";
-          })(),
+    regla.action_type === "send_email"
+      ? translate("crm.automations.then.email_named", {
+          name: nombreDePlantilla ?? "—",
         })
-      : regla.action_params?.dueInDays == null
-        ? translate("crm.automations.then.task_named_no_due", {
-            text: regla.action_params?.text ?? regla.name,
+      : regla.action_type === "assign_owner"
+        ? translate("crm.automations.then.assign_named", {
+            name: (() => {
+              const comercial = (comerciales ?? []).find(
+                (candidato) =>
+                  String(candidato.id) === String(regla.action_params?.salesId),
+              );
+              return comercial
+                ? `${comercial.first_name} ${comercial.last_name}`
+                : "—";
+            })(),
           })
-        : translate("crm.automations.then.task_named", {
-            text: regla.action_params?.text ?? regla.name,
-            days: regla.action_params.dueInDays,
-          });
+        : regla.action_params?.dueInDays == null
+          ? translate("crm.automations.then.task_named_no_due", {
+              text: regla.action_params?.text ?? regla.name,
+            })
+          : translate("crm.automations.then.task_named", {
+              text: regla.action_params?.text ?? regla.name,
+              days: regla.action_params.dueInDays,
+            });
 
   return (
     <div className="flex items-start gap-3 rounded-md border p-3">
@@ -196,6 +209,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
   const guardar = async (valores: FieldValues) => {
     const [trigger_resource, trigger_event] = String(valores.cuando).split(":");
     const esTarea = valores.accion === "create_task";
+    const esCorreo = valores.accion === "send_email";
 
     try {
       await create(
@@ -211,19 +225,21 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
                 ? { stage: valores.stage }
                 : {},
             action_type: valores.accion,
-            action_params: esTarea
-              ? {
-                  text: valores.text,
-                  taskType: valores.taskType,
-                  // Vacio = tarea sin fecha limite. Se omite la clave en vez
-                  // de mandar null para que el disparador la vea ausente.
-                  ...(valores.dueInDays === "" ||
-                  valores.dueInDays === null ||
-                  valores.dueInDays === undefined
-                    ? {}
-                    : { dueInDays: Number(valores.dueInDays) }),
-                }
-              : { salesId: valores.salesId },
+            action_params: esCorreo
+              ? { templateId: valores.templateId }
+              : esTarea
+                ? {
+                    text: valores.text,
+                    taskType: valores.taskType,
+                    // Vacio = tarea sin fecha limite. Se omite la clave en vez
+                    // de mandar null para que el disparador la vea ausente.
+                    ...(valores.dueInDays === "" ||
+                    valores.dueInDays === null ||
+                    valores.dueInDays === undefined
+                      ? {}
+                      : { dueInDays: Number(valores.dueInDays) }),
+                  }
+                : { salesId: valores.salesId },
           },
         },
         { returnPromise: true },
@@ -278,6 +294,7 @@ const CamposDeLaRegla = () => {
   const acciones = [
     { id: "create_task", name: "crm.automations.then.task" },
     { id: "assign_owner", name: "crm.automations.then.assign" },
+    { id: "send_email", name: "crm.automations.then.email" },
   ];
 
   return (
@@ -331,6 +348,19 @@ const CamposDeLaRegla = () => {
             min={0}
           />
         </>
+      ) : accion === "send_email" ? (
+        <ReferenceInput
+          source="templateId"
+          reference="email_templates"
+          filter={{ active: true }}
+        >
+          <SelectInput
+            label="crm.automations.fields.template"
+            optionText="name"
+            helperText="crm.automations.fields.template_help"
+            validate={required()}
+          />
+        </ReferenceInput>
       ) : (
         <ReferenceInput
           source="salesId"

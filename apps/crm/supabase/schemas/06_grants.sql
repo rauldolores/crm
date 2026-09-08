@@ -209,3 +209,12 @@ grant select, insert, update, delete on table crm.email_settings to service_role
 -- `grant all` sobre la tabla del secreto.
 revoke all on table crm.email_settings from anon;
 revoke all on table crm.email_settings from authenticated;
+
+-- Cola de correos: solo lectura, no se edita a mano.
+grant select on table crm.email_outbox to anon, authenticated, service_role;
+grant usage, select on sequence crm.email_outbox_id_seq to anon, authenticated, service_role;
+
+-- Ajustes internos: SOLO service_role, guardan el secreto de despacho.
+grant select, insert, update, delete on table crm.internal_settings to service_role;
+revoke all on table crm.internal_settings from anon;
+revoke all on table crm.internal_settings from authenticated;

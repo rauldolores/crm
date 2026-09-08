@@ -209,10 +209,13 @@ export type Automation = {
   action_params: {
     text?: string;
     taskType?: string;
+    /** Ausente = la tarea se crea sin fecha límite. */
     dueInDays?: number;
     salesId?: Identifier;
+    /** Plantilla que se envía, para la acción send_email. */
+    templateId?: Identifier;
   };
-  action_type: "create_task" | "assign_owner";
+  action_type: "create_task" | "assign_owner" | "send_email";
   created_at?: string;
 } & Pick<RaRecord, "id">;
 

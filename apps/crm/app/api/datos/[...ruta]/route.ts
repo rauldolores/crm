@@ -55,7 +55,14 @@ const CLAVE_DE_SERVICIO = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
  * /api/correos/configuracion, que exige ser administrador y jamás devuelve
  * el secreto.
  */
-const RECURSOS_PROHIBIDOS = new Set(["email_settings", "ai_settings"]);
+const RECURSOS_PROHIBIDOS = new Set([
+  "email_settings",
+  "ai_settings",
+  // Guarda el secreto con el que la base autentica el despacho de correos,
+  // y ni siquiera tiene organization_id: sin esta linea el puente la
+  // serviria ENTERA a cualquiera que la pidiese.
+  "internal_settings",
+]);
 
 /** Tablas y vistas que pertenecen a una organización. */
 const CON_DUENO = new Set([
@@ -80,6 +87,7 @@ const CON_DUENO = new Set([
   "affiliates",
   "affiliate_commissions",
   "email_templates",
+  "email_outbox",
 ]);
 
 /**
