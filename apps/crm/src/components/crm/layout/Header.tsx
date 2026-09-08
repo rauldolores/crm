@@ -1,5 +1,6 @@
 import {
   Blocks,
+  FileText,
   Globe,
   Mail,
   Sparkles,
@@ -72,6 +73,9 @@ const Header = () => {
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <CorreoMenu />
+            </CanAccess>
+            <CanAccess resource="email_templates" action="list">
+              <PlantillasMenu />
             </CanAccess>
             <CanAccess resource="configuration" action="edit">
               <IaMenu />
@@ -207,6 +211,22 @@ const CorreoMenu = () => {
       <Link to={CorreoPage.path} className="flex items-center gap-2">
         <Mail />
         {translate("crm.email.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+const PlantillasMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<PlantillasMenu> must be used inside <UserMenu>");
+  }
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to="/email_templates" className="flex items-center gap-2">
+        <FileText />
+        {translate("crm.email_templates.title")}
       </Link>
     </DropdownMenuItem>
   );

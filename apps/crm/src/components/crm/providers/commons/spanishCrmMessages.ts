@@ -639,7 +639,12 @@ export const spanishCrmMessages = {
       api_key_help:
         "Se guarda del lado del servidor y no vuelve a mostrarse nunca, ni siquiera a un administrador.",
       model: "Modelo",
-      model_help: "Déjalo vacío para usar el modelo recomendado: %{modelo}",
+      model_default: "El recomendado",
+      model_default_help:
+        "Deja que Vinqulia elija por ti. Es lo que conviene salvo que tengas un motivo concreto.",
+      model_other: "Otro",
+      model_other_help:
+        "Escribe el identificador exacto, tal como lo publica tu proveedor. Úsalo si acaba de salir un modelo que no está en la lista.",
       active: "Usar la IA con esta configuración",
       saved: "Configuración de IA guardada",
       not_configured:
