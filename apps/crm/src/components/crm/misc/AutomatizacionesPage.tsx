@@ -133,10 +133,14 @@ const TarjetaDeRegla = ({
               : "—";
           })(),
         })
-      : translate("crm.automations.then.task_named", {
-          text: regla.action_params?.text ?? regla.name,
-          days: regla.action_params?.dueInDays ?? 3,
-        });
+      : regla.action_params?.dueInDays == null
+        ? translate("crm.automations.then.task_named_no_due", {
+            text: regla.action_params?.text ?? regla.name,
+          })
+        : translate("crm.automations.then.task_named", {
+            text: regla.action_params?.text ?? regla.name,
+            days: regla.action_params.dueInDays,
+          });
 
   return (
     <div className="flex items-start gap-3 rounded-md border p-3">
@@ -211,7 +215,13 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
               ? {
                   text: valores.text,
                   taskType: valores.taskType,
-                  dueInDays: Number(valores.dueInDays ?? 3),
+                  // Vacio = tarea sin fecha limite. Se omite la clave en vez
+                  // de mandar null para que el disparador la vea ausente.
+                  ...(valores.dueInDays === "" ||
+                  valores.dueInDays === null ||
+                  valores.dueInDays === undefined
+                    ? {}
+                    : { dueInDays: Number(valores.dueInDays) }),
                 }
               : { salesId: valores.salesId },
           },
@@ -233,7 +243,6 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
       defaultValues={{
         cuando: "contacts:created",
         accion: "create_task",
-        dueInDays: 3,
       }}
     >
       <div className="flex flex-col gap-4">
@@ -318,7 +327,7 @@ const CamposDeLaRegla = () => {
           <NumberInput
             source="dueInDays"
             label="crm.automations.fields.due_in_days"
-            helperText={false}
+            helperText="crm.automations.fields.due_in_days_help"
             min={0}
           />
         </>

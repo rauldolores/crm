@@ -571,6 +571,7 @@ export const spanishCrmMessages = {
         task_text: "Texto de la tarea",
         task_type: "Tipo de tarea",
         due_in_days: "Vence en (días)",
+        due_in_days_help: "Déjalo vacío si la tarea no lleva fecha límite.",
         owner: "Responsable",
       },
       when: {
@@ -583,6 +584,7 @@ export const spanishCrmMessages = {
         task: "Crear una tarea",
         assign: "Asignar responsable",
         task_named: "Crear la tarea «%{text}» para dentro de %{days} días",
+        task_named_no_due: "Crear la tarea «%{text}», sin fecha límite",
         assign_named: "Asignar a %{name}",
       },
     },

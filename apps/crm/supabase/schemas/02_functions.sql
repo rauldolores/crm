@@ -785,9 +785,16 @@ begin
               contacto,
               coalesce(nullif(regla.action_params ->> 'text', ''), regla.name),
               nullif(regla.action_params ->> 'taskType', ''),
-              now() + (
-                coalesce((regla.action_params ->> 'dueInDays')::int, 3) || ' days'
-              )::interval,
+              -- Sin dias, la tarea queda SIN vencimiento: no todo lo que
+              -- genera una automatizacion tiene fecha limite, y poner una
+              -- inventada llena el calendario de plazos que nadie pacto.
+              case
+                when regla.action_params ->> 'dueInDays' ~ '^[0-9]+$'
+                then now() + (
+                  (regla.action_params ->> 'dueInDays') || ' days'
+                )::interval
+                else null
+              end,
               new.sales_id
             );
           end if;
