@@ -249,6 +249,11 @@ export type EmailTemplate = {
   subject: string;
   body_html: string;
   logo_url?: string | null;
+  /** Diseño: lo que necesita plantillaBase.ts para armar el correo. */
+  accent_color?: string | null;
+  cta_text?: string | null;
+  cta_url?: string | null;
+  footer_text?: string | null;
   active: boolean;
   sales_id?: Identifier | null;
   created_at?: string;

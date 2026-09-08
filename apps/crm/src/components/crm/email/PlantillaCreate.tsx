@@ -4,6 +4,7 @@ import { CancelButton } from "@/components/admin/cancel-button";
 import { SaveButton } from "@/components/admin/form";
 
 import { PlantillaInputs } from "./PlantillaInputs";
+import { COLOR_PRINCIPAL_POR_DEFECTO } from "./plantillaBase";
 
 export const PlantillaCreate = () => {
   const translate = useTranslate();
@@ -11,7 +12,13 @@ export const PlantillaCreate = () => {
     <CreateBase redirect="list">
       <div className="mt-2 flex">
         <div className="flex-1">
-          <Form defaultValues={{ active: true, body_html: "" }}>
+          <Form
+            defaultValues={{
+              active: true,
+              body_html: "",
+              accent_color: COLOR_PRINCIPAL_POR_DEFECTO,
+            }}
+          >
             <Card>
               <CardContent>
                 <PlantillaInputs />

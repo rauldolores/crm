@@ -24,18 +24,32 @@ const esError = (estado: number, mensaje: string) =>
 const INSTRUCCIONES = `Eres un redactor de correos comerciales para un CRM. Escribes en español de México, con tuteo, en tono cercano y profesional, sin exagerar ni sonar a publicidad.
 
 Devuelves SIEMPRE un JSON válido y nada más, con esta forma exacta:
-{"asunto": "...", "html": "..."}
+{"asunto": "...", "html": "...", "ctaTexto": "...", "ctaUrl": "...", "colorPrincipal": "#2563eb", "pie": "..."}
 
-Reglas del HTML:
-- Solo estas etiquetas: <p>, <strong>, <em>, <ul>, <ol>, <li>, <a>, <h2>, <br>, <img>.
-- Nada de <script>, <style>, <table>, atributos de estilo ni clases: el CRM le da el formato al enviarlo.
-- Párrafos cortos. Un correo comercial se lee en diagonal.
-- Si te dan un logo, colócalo UNA vez al principio con <img src="LA_URL_DEL_LOGO">.
+IMPORTANTE — el diseño no lo pones tú: el CRM envuelve tu contenido en una
+plantilla ya diseñada (tarjeta blanca centrada, cabecera con el logo del
+cliente, franja de color, tipografía y espaciados cuidados, botón de verdad).
+Tú aportas el CONTENIDO y las decisiones de diseño de los campos de abajo. Si
+metieras tablas o estilos propios, romperías esa plantilla.
+
+Reglas del campo "html" (el cuerpo):
+- Solo estas etiquetas: <p>, <strong>, <em>, <ul>, <ol>, <li>, <a>, <h2>, <h3>, <blockquote>, <br>.
+- NO uses <table>, <style>, <img>, atributos style ni clases.
+- NO metas el logo: la plantilla lo coloca sola en la cabecera si el cliente subió uno.
+- NO repitas dentro del cuerpo la llamada a la acción que ya pones en "ctaTexto": quedaría dos veces.
+- Estructura recomendada: un <h2> que enganche, dos o tres párrafos CORTOS, y si aporta, una lista de 3 beneficios concretos. Un correo comercial se lee en diagonal.
+- Cierra con una despedida breve.
+
+Reglas de los demás campos:
+- "ctaTexto": el texto del botón, 2 a 4 palabras, en imperativo ("Agenda tu demo", "Haz tu diagnóstico"). Cadena vacía si el correo no pide ninguna acción.
+- "ctaUrl": a dónde lleva el botón. Si la acción es abrir algo que vive en un campo de fusión (por ejemplo un enlace de diagnóstico), pon AHÍ el campo entre dobles llaves. Cadena vacía si no hay botón.
+- "colorPrincipal": color hexadecimal de 6 dígitos que pegue con el asunto del correo. Si te dan el logo del cliente, elige un color que combine con una marca sobria. Ante la duda: #2563eb.
+- "pie": una línea corta de cierre para el pie (quién escribe, o una nota discreta). Cadena vacía si no aporta.
 
 Reglas de los campos de fusión:
 - Puedes usar SOLO los campos que se te indiquen, escritos tal cual entre dobles llaves.
-- Está PROHIBIDO inventar campos que no estén en esa lista: no se sustituirían y el destinatario vería las llaves.
-- Usa el saludo con el nombre del contacto si ese campo está disponible.`;
+- Está PROHIBIDO inventar campos que no estén en esa lista: no se sustituirían y el destinatario vería las llaves escritas.
+- Saluda con el nombre del contacto si ese campo está disponible.`;
 
 export async function POST(peticion: Request) {
   const auth = await requireKontroliaPermission(peticion, []);
@@ -102,7 +116,16 @@ export async function POST(peticion: Request) {
  * ponga una frase delante — pasa a menudo y no merece hacer fallar la
  * generación entera.
  */
-function extraerJson(texto: string): { asunto: string; html: string } | null {
+interface PlantillaGenerada {
+  asunto: string;
+  html: string;
+  ctaTexto?: string;
+  ctaUrl?: string;
+  colorPrincipal?: string;
+  pie?: string;
+}
+
+function extraerJson(texto: string): PlantillaGenerada | null {
   const sinCerca = texto
     .replace(/^\s*```(?:json)?/i, "")
     .replace(/```\s*$/, "")
@@ -112,14 +135,27 @@ function extraerJson(texto: string): { asunto: string; html: string } | null {
   if (inicio === -1 || fin <= inicio) return null;
 
   try {
-    const datos = JSON.parse(sinCerca.slice(inicio, fin + 1)) as {
-      asunto?: unknown;
-      html?: unknown;
-    };
+    const datos = JSON.parse(sinCerca.slice(inicio, fin + 1)) as Record<
+      string,
+      unknown
+    >;
     if (typeof datos.asunto !== "string" || typeof datos.html !== "string") {
       return null;
     }
-    return { asunto: datos.asunto, html: datos.html };
+    // Los de diseño son opcionales: si el modelo se los salta, la plantilla
+    // sigue siendo válida y toma los valores por defecto.
+    const texto = (clave: string) =>
+      typeof datos[clave] === "string" && datos[clave]
+        ? (datos[clave] as string)
+        : undefined;
+    return {
+      asunto: datos.asunto,
+      html: datos.html,
+      ctaTexto: texto("ctaTexto"),
+      ctaUrl: texto("ctaUrl"),
+      colorPrincipal: texto("colorPrincipal"),
+      pie: texto("pie"),
+    };
   } catch {
     return null;
   }

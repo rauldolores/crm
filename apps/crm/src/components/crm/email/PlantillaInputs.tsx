@@ -13,6 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { llamarApi } from "../misc/llamarApi";
 import { camposDeFusion, tokenDeCampo } from "./camposDeFusion";
+import {
+  COLOR_PRINCIPAL_POR_DEFECTO,
+  envolverEnPlantilla,
+} from "./plantillaBase";
 import { EditorVisual } from "./EditorVisual";
 
 /**
@@ -40,6 +44,12 @@ export const PlantillaInputs = () => {
 
   const cuerpo = (useWatch({ name: "body_html" }) as string) ?? "";
   const logoUrl = (useWatch({ name: "logo_url" }) as string | null) ?? null;
+  const color =
+    (useWatch({ name: "accent_color" }) as string | null) ??
+    COLOR_PRINCIPAL_POR_DEFECTO;
+  const ctaTexto = (useWatch({ name: "cta_text" }) as string | null) ?? null;
+  const ctaUrl = (useWatch({ name: "cta_url" }) as string | null) ?? null;
+  const pie = (useWatch({ name: "footer_text" }) as string | null) ?? null;
   const [descripcion, setDescripcion] = useState("");
   const [generando, setGenerando] = useState(false);
   const [subiendoLogo, setSubiendoLogo] = useState(false);
@@ -95,13 +105,10 @@ export const PlantillaInputs = () => {
         }),
       });
 
+      // No se inserta en el cuerpo: la plantilla lo coloca sola en la
+      // cabecera, que es donde va en un correo con diseño. Metido en el
+      // cuerpo, cualquier retoque del editor lo movería de sitio.
       setValue("logo_url", subido.src, { shouldDirty: true });
-      const etiqueta = `<img src="${subido.src}" alt="" />`;
-      if (insertarEnEditor.current) {
-        insertarEnEditor.current(etiqueta);
-      } else {
-        setValue("body_html", `${etiqueta}${cuerpo}`, { shouldDirty: true });
-      }
       notify("crm.email_templates.logo_uploaded", { type: "info" });
     } catch (error) {
       notify((error as Error).message, { type: "error" });
@@ -114,22 +121,42 @@ export const PlantillaInputs = () => {
     if (!descripcion.trim()) return;
     setGenerando(true);
     try {
-      const generado = await llamarApi<{ asunto: string; html: string }>(
-        "/api/plantillas/generar",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            descripcion,
-            logoUrl: logoUrl ?? undefined,
-            campos: campos.map((c) => ({
-              clave: c.clave,
-              etiqueta: c.etiqueta,
-            })),
-          }),
-        },
-      );
+      const generado = await llamarApi<{
+        asunto: string;
+        html: string;
+        ctaTexto?: string;
+        ctaUrl?: string;
+        colorPrincipal?: string;
+        pie?: string;
+      }>("/api/plantillas/generar", {
+        method: "POST",
+        body: JSON.stringify({
+          descripcion,
+          logoUrl: logoUrl ?? undefined,
+          campos: campos.map((c) => ({
+            clave: c.clave,
+            etiqueta: c.etiqueta,
+          })),
+        }),
+      });
       setValue("subject", generado.asunto, { shouldDirty: true });
       setValue("body_html", generado.html, { shouldDirty: true });
+      // El diseño solo se pisa si el modelo lo propuso: si se lo salta, se
+      // conserva lo que ya tuviera la plantilla.
+      if (generado.ctaTexto) {
+        setValue("cta_text", generado.ctaTexto, { shouldDirty: true });
+      }
+      if (generado.ctaUrl) {
+        setValue("cta_url", generado.ctaUrl, { shouldDirty: true });
+      }
+      if (generado.colorPrincipal) {
+        setValue("accent_color", generado.colorPrincipal, {
+          shouldDirty: true,
+        });
+      }
+      if (generado.pie) {
+        setValue("footer_text", generado.pie, { shouldDirty: true });
+      }
       notify("crm.email_templates.generated", { type: "info" });
     } catch (error) {
       notify((error as Error).message, { type: "error" });
@@ -138,7 +165,24 @@ export const PlantillaInputs = () => {
     }
   };
 
-  const vistaPrevia = useMemo(() => DOMPurify.sanitize(cuerpo), [cuerpo]);
+  // La vista previa arma el correo con la MISMA función que lo envía, para
+  // que lo que se ve aquí sea lo que llega. Se sanea después de envolver
+  // porque este HTML entra en el DOM de la aplicación.
+  const vistaPrevia = useMemo(
+    () =>
+      DOMPurify.sanitize(
+        envolverEnPlantilla({
+          contenidoHtml: cuerpo,
+          logoUrl,
+          colorPrincipal: color,
+          ctaTexto,
+          ctaUrl,
+          piePersonalizado: pie,
+        }),
+        { WHOLE_DOCUMENT: true },
+      ),
+    [cuerpo, logoUrl, color, ctaTexto, ctaUrl, pie],
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -262,12 +306,43 @@ export const PlantillaInputs = () => {
         })}
       </div>
 
+      <div className="space-y-4">
+        <p className="text-sm font-medium">
+          {translate("crm.email_templates.design")}
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextInput
+            source="cta_text"
+            label="crm.email_templates.fields.cta_text"
+            helperText="crm.email_templates.fields.cta_text_help"
+          />
+          <TextInput
+            source="cta_url"
+            label="crm.email_templates.fields.cta_url"
+            helperText={false}
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextInput
+            source="accent_color"
+            label="crm.email_templates.fields.accent_color"
+            helperText="crm.email_templates.fields.accent_color_help"
+            placeholder={COLOR_PRINCIPAL_POR_DEFECTO}
+          />
+          <TextInput
+            source="footer_text"
+            label="crm.email_templates.fields.footer_text"
+            helperText={false}
+          />
+        </div>
+      </div>
+
       <div className="space-y-2">
         <p className="text-sm font-medium">
           {translate("crm.email_templates.preview")}
         </p>
         <div
-          className="rounded-md border bg-white p-4 text-sm text-black [&_a]:text-blue-700 [&_a]:underline [&_h2]:mb-2 [&_h2]:mt-3 [&_h2]:text-lg [&_h2]:font-semibold [&_img]:max-w-full [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5"
+          className="overflow-hidden rounded-md border"
           dangerouslySetInnerHTML={{ __html: vistaPrevia }}
         />
       </div>
