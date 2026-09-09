@@ -374,6 +374,38 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/email/EditorVisual.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/PlantillaCreate.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/PlantillaEdit.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/PlantillaInputs.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/PlantillaList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/camposDeFusion.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/email/plantillaBase.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/filters/FilterCategory.tsx",
           "type": "registry:component"
         },
@@ -482,6 +514,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/CorreoPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/CreateSheet.tsx",
           "type": "registry:component"
         },
@@ -491,6 +527,10 @@
         },
         {
           "path": "src/components/crm/misc/FormulariosPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/IaPage.tsx",
           "type": "registry:component"
         },
         {
@@ -550,6 +590,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/llamarApi.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/modelosDeIa.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/unsupportedDomains.const.ts",
           "type": "registry:component"
         },
@@ -563,6 +611,10 @@
         },
         {
           "path": "src/components/crm/misc/usePapaParse.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/webhookEvents.ts",
           "type": "registry:component"
         },
         {
@@ -1046,6 +1098,38 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/correo/configuracion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/correo/enviar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/correo/proveedores.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/correo/proveedores.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/correo/valoresDeFusion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/configuracion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/proveedores.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/proveedores.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/imponerDueno.test.ts",
           "type": "registry:lib"
         },
@@ -1062,6 +1146,58 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/mcp/herramientas/actividad.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/automatizaciones.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/catalogos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/consultas.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/consultas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/contactos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/correo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/empresas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/index.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/nucleo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/oportunidades.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/registro.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/soporte.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/mcp/mcpServer.ts",
           "type": "registry:lib"
         },
@@ -1075,10 +1211,6 @@
         },
         {
           "path": "src/lib/server/mcp/validateSql.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "src/lib/server/postmark.ts",
           "type": "registry:lib"
         },
         {
