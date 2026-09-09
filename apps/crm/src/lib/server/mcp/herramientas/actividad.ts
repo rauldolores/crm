@@ -24,13 +24,19 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
     {
       title: "Listar tareas",
       description:
-        "Tareas pendientes o completadas, con el contacto al que pertenecen. Sirve para «qué tengo pendiente» y «qué vence esta semana».",
+        "Tareas de un contacto o del equipo, filtrables por tipo y estado. Responde «qué tengo pendiente», «qué vence esta semana» y «¿hay alguna reunión agendada?» (tipo=meeting). Cada fila trae total_sin_recortar, el número real de tareas que cumplen el filtro aunque la lista venga recortada.",
       inputSchema: z.object({
         estado: z
           .enum(["pendientes", "completadas", "todas"])
           .optional()
           .describe("Por defecto, pendientes."),
         contactoId: z.number().optional(),
+        tipo: z
+          .string()
+          .optional()
+          .describe(
+            "Tipo de tarea: meeting (reunión), call (llamada), demo, follow-up… Los valores exactos salen de ver_configuracion.",
+          ),
         responsableId: z.number().optional(),
         venceAntesDe: z
           .string()
@@ -44,6 +50,7 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
     async (args: {
       estado?: "pendientes" | "completadas" | "todas";
       contactoId?: number;
+      tipo?: string;
       responsableId?: number;
       venceAntesDe?: string;
       soloVencidas?: boolean;
@@ -59,6 +66,10 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
       if (args.contactoId) {
         parametros.push(args.contactoId);
         condiciones.push(`t.contact_id = $${parametros.length}`);
+      }
+      if (args.tipo) {
+        parametros.push(args.tipo);
+        condiciones.push(`t.type = $${parametros.length}`);
       }
       if (args.responsableId) {
         parametros.push(args.responsableId);
@@ -77,7 +88,8 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
         ctx,
         `select t.id, t.text as texto, t.type as tipo, t.due_date as vence,
                 t.done_date as completada, t.contact_id, t.sales_id,
-                c.first_name || ' ' || coalesce(c.last_name,'') as contacto
+                c.first_name || ' ' || coalesce(c.last_name,'') as contacto,
+                count(*) over () as total_sin_recortar
            from tasks t
            left join contacts c on c.id = t.contact_id
           ${condiciones.length ? "where " + condiciones.join(" and ") : ""}
@@ -220,6 +232,47 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
         [args.id, acotarLimite(args.limite)],
       );
     },
+  );
+
+  server.registerTool(
+    "historial_contacto",
+    {
+      title: "Historial de un contacto",
+      description:
+        "Todo lo que ha pasado con un contacto en una sola línea de tiempo: notas, llamadas, correos, reuniones, tareas y tickets, de lo más reciente a lo más antiguo. Responde «¿cuándo fue la última vez que hablamos?» y «¿qué ha pasado con este cliente?» sin pedir cada cosa por separado.",
+      inputSchema: z.object({
+        contactoId: z.number(),
+        limite: z.number().optional(),
+      }),
+      annotations: { readOnlyHint: true },
+    },
+    async (args: { contactoId: number; limite?: number }) =>
+      // Se juntan las tres fuentes en la base y no en el agente: pedirlas por
+      // separado serían tres viajes y él tendría que ordenarlas a mano.
+      responder(
+        ctx,
+        `select fecha, clase, tipo, detalle, id
+           from (
+             select n.date as fecha, 'nota' as clase, n.type as tipo,
+                    n.text as detalle, n.id
+               from contact_notes n where n.contact_id = $1
+             union all
+             select coalesce(t.done_date, t.due_date) as fecha, 'tarea' as clase,
+                    t.type as tipo,
+                    t.text || case when t.done_date is null
+                                   then ' (pendiente)' else ' (hecha)' end,
+                    t.id
+               from tasks t where t.contact_id = $1
+             union all
+             select k.created_at as fecha, 'ticket' as clase, k.status as tipo,
+                    k.subject as detalle, k.id
+               from tickets k where k.contact_id = $1
+           ) historial
+          where fecha is not null
+          order by fecha desc
+          limit $2`,
+        [args.contactoId, acotarLimite(args.limite)],
+      ),
   );
 
   server.registerTool(
