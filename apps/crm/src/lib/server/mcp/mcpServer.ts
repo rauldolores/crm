@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { AuthInfo } from "./auth";
 import { TASK_LIST_HTML, TASK_LIST_UI_URI } from "./taskListUi";
 import { validateReadOnly, validateWrite } from "./validateSql";
+import { registrarHerramientas } from "./herramientas";
 
 // int8 (bigint) llega como string por defecto en pg, para no perder
 // precisión en valores fuera del rango seguro de un number. Los recuentos y
@@ -231,12 +232,21 @@ export function createMcpServer(
 
   const limitado = () => excedeLimite(authInfo.userId);
 
+  // Herramientas acotadas: una por tarea, sin necesidad de pedir el esquema.
+  // Se registran ANTES que las genéricas para que el agente las vea primero
+  // y solo baje a query/mutate cuando ninguna cubra lo que necesita.
+  registrarHerramientas(server, {
+    pool,
+    token: authInfo.token,
+    userId: authInfo.userId,
+  });
+
   server.registerTool(
     "get_schema",
     {
       title: "Get Database Schema",
       description:
-        "Retrieve the database schema for the user's Vinqulia instance including all tables, views, columns, types, and foreign key relationships. Views (like contacts_summary, companies_summary) are read-only and provide pre-joined/aggregated data. Use them for search and list queries.",
+        "ÚLTIMO RECURSO: devuelve el esquema completo de la base (30 tablas, 300+ columnas). Es una respuesta muy grande y lenta. Antes de usarla, comprueba si alguna herramienta concreta cubre lo que necesitas (buscar_contactos, ver_configuracion, buscar_oportunidades…): esas responden en un solo paso y sin esquema. Úsala solo para consultas que ninguna herramienta cubra y que vayas a resolver con query o mutate.",
       annotations: { readOnlyHint: true },
     },
     async () => {
