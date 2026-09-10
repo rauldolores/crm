@@ -154,7 +154,8 @@ export type Deal = {
   category: string;
   stage: string;
   description: string;
-  amount: number;
+  /** Nulo cuando la oportunidad se creó sin importe (API, MCP, formulario público). */
+  amount: number | null;
   created_at: string;
   updated_at: string;
   archived_at?: string;

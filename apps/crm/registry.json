@@ -270,6 +270,22 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/customers/CustomerList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/customers/EtapaDeCliente.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/customers/PanelDeCliente.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/customers/index.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/dashboard/Dashboard.tsx",
           "type": "registry:component"
         },
@@ -1106,6 +1122,18 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/clientes/normalizar.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/clientes/normalizar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/clientes/reconciliar.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/comercialDeLaSesion.ts",
           "type": "registry:lib"
         },
@@ -1167,6 +1195,10 @@
         },
         {
           "path": "src/lib/server/mcp/herramientas/catalogos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/mcp/herramientas/clientes.ts",
           "type": "registry:lib"
         },
         {
