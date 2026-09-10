@@ -591,12 +591,18 @@ export const spanishCrmMessages = {
         due_in_days: "Vence en (días)",
         due_in_days_help: "Déjalo vacío si la tarea no lleva fecha límite.",
         owner: "Responsable",
+        days_before: "Con cuántos días de antelación",
+        days_before_help:
+          "Se revisa una vez al día. La tarea o el correo van al contacto de la empresa con actividad más reciente; una empresa sin contactos no recibe aviso.",
       },
       when: {
         contact_created: "Se crea un contacto",
         deal_created: "Se crea una oportunidad",
         deal_stage: "Una oportunidad llega a una etapa",
         deal_stage_named: "Una oportunidad llega a «%{stage}»",
+        renewal_due: "Se acerca la renovación de un contrato",
+        renewal_due_named:
+          "Faltan %{days} días para que se renueve un contrato",
       },
       then: {
         task: "Crear una tarea",
@@ -652,6 +658,7 @@ export const spanishCrmMessages = {
       entity_contact: "Contacto",
       entity_company: "Empresa",
       entity_deal: "Oportunidad",
+      entity_contract: "Contrato",
       empty: {
         title: "No hay plantillas",
         description:

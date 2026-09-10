@@ -67,6 +67,7 @@ const RECURSOS_PROHIBIDOS = new Set([
 /** Tablas y vistas que pertenecen a una organización. */
 const CON_DUENO = new Set([
   "automations",
+  "automation_runs",
   "companies",
   "companies_summary",
   "contacts",

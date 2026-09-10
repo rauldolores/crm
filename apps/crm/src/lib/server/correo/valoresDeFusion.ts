@@ -3,7 +3,7 @@ import { getServiceClient } from "../supabase-service";
 /**
  * Resuelve los valores reales de los campos de fusión de una plantilla para
  * un contacto concreto: su ficha, la empresa a la que pertenece y, si se
- * indica, la oportunidad de la que salió el envío.
+ * indica, la oportunidad o el contrato de los que salió el envío.
  *
  * Las claves que devuelve son exactamente las de `camposDeFusion` (el
  * catálogo que ve el editor). Si divergieran, el editor ofrecería campos que
@@ -34,10 +34,38 @@ const volcarPersonalizados = (
   }
 };
 
+/** Fechas y dinero como los leería el destinatario, no como los guarda la base. */
+const LOCALE = "es-MX";
+const fechaLegible = (valor: string | null): string | null =>
+  valor
+    ? new Date(`${valor}T00:00:00`).toLocaleDateString(LOCALE, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+const importeLegible = (
+  valor: number | null,
+  moneda: string | null,
+): string | null =>
+  valor === null
+    ? null
+    : valor.toLocaleString(LOCALE, {
+        style: "currency",
+        currency: moneda ?? "MXN",
+      });
+const PERIODICIDAD: Record<string, string> = {
+  monthly: "mensual",
+  quarterly: "trimestral",
+  yearly: "anual",
+  one_time: "pago único",
+};
+
 export async function valoresDeFusion(
   organizacionId: string,
   contactoId: number,
   oportunidadId?: number | null,
+  contratoId?: number | null,
 ): Promise<ValoresYDestino | null> {
   const supabase = getServiceClient();
 
@@ -103,6 +131,32 @@ export async function valoresDeFusion(
       valores["oportunidad.importe"] =
         (oportunidad.amount as number | null) ?? null;
       volcarPersonalizados(valores, "oportunidad", oportunidad as FilaConCampos);
+    }
+  }
+
+  if (contratoId) {
+    const { data: contrato } = await supabase
+      .from("contracts")
+      .select("name, billing_period, amount, currency, started_on, renews_on")
+      .eq("id", contratoId)
+      .eq("organization_id", organizacionId)
+      .maybeSingle();
+
+    if (contrato) {
+      valores["contrato.nombre"] = (contrato.name as string) ?? null;
+      valores["contrato.periodicidad"] =
+        PERIODICIDAD[contrato.billing_period as string] ??
+        (contrato.billing_period as string | null);
+      valores["contrato.importe"] = importeLegible(
+        contrato.amount as number | null,
+        contrato.currency as string | null,
+      );
+      valores["contrato.inicio"] = fechaLegible(
+        contrato.started_on as string | null,
+      );
+      valores["contrato.renueva_el"] = fechaLegible(
+        contrato.renews_on as string | null,
+      );
     }
   }
 

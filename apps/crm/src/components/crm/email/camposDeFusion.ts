@@ -13,7 +13,11 @@ import type { CustomFieldDefinition } from "../types";
  * diagnóstico, un número de póliza…). Ver `camposDeFusion`.
  */
 
-export type EntidadDeFusion = "contacto" | "empresa" | "oportunidad";
+export type EntidadDeFusion =
+  | "contacto"
+  | "empresa"
+  | "oportunidad"
+  | "contrato";
 
 export interface CampoDeFusion {
   /** El token tal cual se escribe: "contacto.nombre". */
@@ -45,10 +49,28 @@ const CAMPOS_FIJOS: CampoDeFusion[] = [
   },
   { clave: "oportunidad.etapa", etiqueta: "Etapa", entidad: "oportunidad" },
   { clave: "oportunidad.importe", etiqueta: "Importe", entidad: "oportunidad" },
+  // Solo se rellenan cuando el correo sale de una renovación de contrato
+  // (módulo Clientes); en cualquier otro envío llegan vacíos.
+  { clave: "contrato.nombre", etiqueta: "Nombre", entidad: "contrato" },
+  {
+    clave: "contrato.periodicidad",
+    etiqueta: "Periodicidad",
+    entidad: "contrato",
+  },
+  { clave: "contrato.importe", etiqueta: "Importe", entidad: "contrato" },
+  { clave: "contrato.inicio", etiqueta: "Inicio", entidad: "contrato" },
+  {
+    clave: "contrato.renueva_el",
+    etiqueta: "Renueva el",
+    entidad: "contrato",
+  },
 ];
 
+/** Los contratos no tienen campos personalizados; el resto sí. */
+type EntidadConPersonalizados = Exclude<EntidadDeFusion, "contrato">;
+
 /** El prefijo del token para los campos personalizados de cada entidad. */
-const PREFIJO_PERSONALIZADO: Record<EntidadDeFusion, string> = {
+const PREFIJO_PERSONALIZADO: Record<EntidadConPersonalizados, string> = {
   contacto: "contacto.campo",
   empresa: "empresa.campo",
   oportunidad: "oportunidad.campo",
@@ -64,7 +86,7 @@ export const camposDeFusion = (personalizados: {
   oportunidad?: CustomFieldDefinition[];
 }): CampoDeFusion[] => {
   const extra = (
-    ["contacto", "empresa", "oportunidad"] as EntidadDeFusion[]
+    ["contacto", "empresa", "oportunidad"] as EntidadConPersonalizados[]
   ).flatMap((entidad) =>
     (personalizados[entidad] ?? []).map((campo) => ({
       clave: `${PREFIJO_PERSONALIZADO[entidad]}.${campo.value}`,

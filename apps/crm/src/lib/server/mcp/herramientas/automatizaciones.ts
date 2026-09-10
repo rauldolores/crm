@@ -41,17 +41,27 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
     {
       title: "Crear una automatización",
       description:
-        "Crea una regla automática. Acciones: create_task (crea una tarea), assign_owner (asigna responsable) o send_email (manda una plantilla). Para send_email pasa plantillaId; para create_task, texto y opcionalmente venceEnDias — sin él la tarea queda sin fecha límite.",
+        "Crea una regla automática. Acciones: create_task (crea una tarea), assign_owner (asigna responsable) o send_email (manda una plantilla). Para send_email pasa plantillaId; para create_task, texto y opcionalmente venceEnDias — sin él la tarea queda sin fecha límite. Con sobre=contracts y cuando=renewal_due la regla actúa diasAntes días antes de que se renueve un contrato activo (módulo Clientes); ahí no vale assign_owner.",
       inputSchema: z.object({
         nombre: z.string(),
-        sobre: z.enum(["contacts", "deals"]).describe("Qué se vigila."),
+        sobre: z
+          .enum(["contacts", "deals", "contracts"])
+          .describe("Qué se vigila."),
         cuando: z
-          .enum(["created", "stage_changed"])
-          .describe("stage_changed solo aplica a deals."),
+          .enum(["created", "stage_changed", "renewal_due"])
+          .describe(
+            "stage_changed solo aplica a deals; renewal_due solo a contracts.",
+          ),
         etapa: z
           .string()
           .optional()
           .describe("Con stage_changed, acota la regla a esta etapa."),
+        diasAntes: z
+          .number()
+          .optional()
+          .describe(
+            "Con renewal_due, cuántos días antes de la renovación. Por defecto 30.",
+          ),
         accion: z.enum(["create_task", "assign_owner", "send_email"]),
         texto: z.string().optional().describe("create_task: qué dice la tarea."),
         tipoDeTarea: z.string().optional(),
@@ -65,9 +75,10 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
     },
     async (args: {
       nombre: string;
-      sobre: "contacts" | "deals";
-      cuando: "created" | "stage_changed";
+      sobre: "contacts" | "deals" | "contracts";
+      cuando: "created" | "stage_changed" | "renewal_due";
       etapa?: string;
+      diasAntes?: number;
       accion: "create_task" | "assign_owner" | "send_email";
       texto?: string;
       tipoDeTarea?: string;
@@ -83,6 +94,13 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
       }
       if (args.accion === "create_task" && !args.texto) {
         return error("Para create_task hace falta el texto de la tarea.");
+      }
+      const esRenovacion = args.cuando === "renewal_due";
+      if (esRenovacion !== (args.sobre === "contracts")) {
+        return error("renewal_due va con sobre=contracts, y solo con él.");
+      }
+      if (esRenovacion && args.accion === "assign_owner") {
+        return error("assign_owner no aplica a una renovación de contrato.");
       }
 
       const parametros: Record<string, unknown> =
@@ -111,7 +129,13 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
           args.nombre,
           args.sobre,
           args.cuando,
-          JSON.stringify(args.etapa ? { stage: args.etapa } : {}),
+          JSON.stringify(
+            esRenovacion
+              ? { daysBefore: args.diasAntes ?? 30 }
+              : args.etapa
+                ? { stage: args.etapa }
+                : {},
+          ),
           args.accion,
           JSON.stringify(parametros),
         ],

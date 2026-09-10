@@ -713,6 +713,73 @@ $$;
 
 grant all on function crm.despachar_webhooks(integer) to service_role;
 
+-- 3. La acción de una regla, común a los dos motores.
+--
+-- create_task y send_email son iguales venga la regla de un contacto, una
+-- oportunidad o un contrato; solo cambia de dónde sale el contacto y qué se
+-- adjunta al correo. assign_owner no está aquí: toca la fila que disparó la
+-- regla y solo tiene sentido en el motor de escrituras.
+create or replace function crm.aplicar_accion_de_automatizacion(
+    regla crm.automations,
+    contacto bigint,
+    oportunidad bigint,
+    contrato bigint,
+    responsable bigint
+) returns void
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  plantilla bigint;
+begin
+  -- Las tareas y los correos cuelgan siempre de un contacto: sin él no hay
+  -- a quién asignar ni a quién escribir, y la regla se salta.
+  if contacto is null then
+    return;
+  end if;
+
+  if regla.action_type = 'create_task' then
+    insert into crm.tasks
+      (organization_id, contact_id, text, type, due_date, sales_id)
+    values (
+      regla.organization_id,
+      contacto,
+      coalesce(nullif(regla.action_params ->> 'text', ''), regla.name),
+      nullif(regla.action_params ->> 'taskType', ''),
+      -- Sin días, la tarea queda SIN vencimiento: no todo lo que genera una
+      -- automatización tiene fecha límite.
+      case
+        when regla.action_params ->> 'dueInDays' ~ '^[0-9]+$'
+        then now() + ((regla.action_params ->> 'dueInDays') || ' days')::interval
+        else null
+      end,
+      responsable
+    );
+
+  elsif regla.action_type = 'send_email' then
+    plantilla := nullif(regla.action_params ->> 'templateId', '')::bigint;
+
+    -- Solo se encola si la plantilla sigue existiendo y activa en esta
+    -- organización: una plantilla borrada o apagada no debe mandar nada.
+    if plantilla is not null
+       and exists (
+         select 1 from crm.email_templates
+          where id = plantilla
+            and organization_id = regla.organization_id
+            and active
+       ) then
+      insert into crm.email_outbox
+        (organization_id, automation_id, template_id, contact_id, deal_id, contract_id)
+      values (regla.organization_id, regla.id, plantilla, contacto, oportunidad, contrato);
+    end if;
+  end if;
+end;
+$$;
+
+revoke all on function crm.aplicar_accion_de_automatizacion(crm.automations, bigint, bigint, bigint, bigint) from public;
+grant all on function crm.aplicar_accion_de_automatizacion(crm.automations, bigint, bigint, bigint, bigint) to service_role;
+
+-- 4. El motor de escrituras, delegando la acción. Mismo comportamiento.
 create or replace function crm.run_automations() returns trigger
     language plpgsql security definer
     set search_path = ''
@@ -721,7 +788,7 @@ declare
   org uuid;
   evento text;
   etapa text;
-  regla record;
+  regla crm.automations;
   contacto bigint;
   responsable bigint;
 begin
@@ -745,81 +812,141 @@ begin
     return null;
   end if;
 
-  -- La etapa se lee ANTES de la consulta y solo donde existe la columna:
-  -- PL/pgSQL prepara la consulta entera, así que una referencia a new.stage
-  -- dentro de ella fallaría en contacts aunque la condición nunca se cumpla.
+  -- La etapa se lee ANTES del bucle y solo donde existe la columna:
+  -- PL/pgSQL prepara cada consulta entera, así que una referencia a
+  -- new.stage fallaría en contacts aunque la condición nunca se cumpla.
   if tg_table_name = 'deals' then
     etapa := new.stage;
   end if;
 
-  -- Todo el motor va protegido: ni una regla mal configurada ni un fallo
-  -- interno pueden tumbar la escritura que lo disparó.
-  begin
-    for regla in
-      select * from crm.automations
-      where organization_id = org
-        and active
-        and trigger_resource = tg_table_name
-        and trigger_event = evento
-        and (
-          evento <> 'stage_changed'
-          or trigger_params ->> 'stage' is null
-          or trigger_params ->> 'stage' = etapa
-        )
-    loop
-      begin
-        if regla.action_type = 'create_task' then
-          -- Las tareas cuelgan siempre de un contacto. En una oportunidad se
-          -- usa su primer contacto; si no tiene ninguno, la regla se salta.
+  for regla in
+    select * from crm.automations
+     where organization_id = org
+       and active
+       and trigger_resource = tg_table_name
+       and trigger_event = evento
+  loop
+    -- Cada regla va protegida: una mal configurada no tumba ni a las demás
+    -- ni a la escritura que las disparó.
+    begin
+      if evento = 'stage_changed'
+         and nullif(regla.trigger_params ->> 'stage', '') is not null
+         and regla.trigger_params ->> 'stage' is distinct from etapa then
+        continue;
+      end if;
+
+      -- En una oportunidad se usa su primer contacto.
+      if tg_table_name = 'contacts' then
+        contacto := new.id;
+      else
+        contacto := new.contact_ids[1];
+      end if;
+
+      if regla.action_type = 'assign_owner' then
+        responsable := nullif(regla.action_params ->> 'salesId', '')::bigint;
+        if responsable is not null then
           if tg_table_name = 'contacts' then
-            contacto := new.id;
+            update crm.contacts set sales_id = responsable where id = new.id;
           else
-            contacto := new.contact_ids[1];
-          end if;
-
-          if contacto is not null then
-            insert into crm.tasks
-              (organization_id, contact_id, text, type, due_date, sales_id)
-            values (
-              org,
-              contacto,
-              coalesce(nullif(regla.action_params ->> 'text', ''), regla.name),
-              nullif(regla.action_params ->> 'taskType', ''),
-              -- Sin dias, la tarea queda SIN vencimiento: no todo lo que
-              -- genera una automatizacion tiene fecha limite, y poner una
-              -- inventada llena el calendario de plazos que nadie pacto.
-              case
-                when regla.action_params ->> 'dueInDays' ~ '^[0-9]+$'
-                then now() + (
-                  (regla.action_params ->> 'dueInDays') || ' days'
-                )::interval
-                else null
-              end,
-              new.sales_id
-            );
-          end if;
-
-        elsif regla.action_type = 'assign_owner' then
-          responsable := nullif(regla.action_params ->> 'salesId', '')::bigint;
-          if responsable is not null then
-            if tg_table_name = 'contacts' then
-              update crm.contacts set sales_id = responsable where id = new.id;
-            else
-              update crm.deals set sales_id = responsable where id = new.id;
-            end if;
+            update crm.deals set sales_id = responsable where id = new.id;
           end if;
         end if;
-      exception when others then
-        null; -- una regla concreta falla, las demás siguen
-      end;
-    end loop;
-  exception when others then
-    null; -- el motor nunca bloquea la escritura original
-  end;
+      else
+        perform crm.aplicar_accion_de_automatizacion(
+          regla,
+          contacto,
+          case when tg_table_name = 'deals' then new.id else null end,
+          null,
+          new.sales_id
+        );
+      end if;
+
+    exception when others then
+      null;
+    end;
+  end loop;
 
   return null;
 end;
 $$;
+
+-- 5. El motor por fecha.
+--
+-- Una regla contracts/renewal_due con daysBefore = N aplica a todo contrato
+-- activo cuya renovación caiga dentro de los próximos N días y sobre el que
+-- esa regla no haya actuado aún para esa fecha. «Dentro de», no «exactamente
+-- a N días»: así un día sin cron no deja renovaciones sin avisar.
+create or replace function crm.ejecutar_automatizaciones_por_fecha() returns integer
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  regla crm.automations;
+  contrato record;
+  contacto bigint;
+  dias integer;
+  disparadas integer := 0;
+begin
+  for regla in
+    select * from crm.automations
+     where active
+       and trigger_resource = 'contracts'
+       and trigger_event = 'renewal_due'
+  loop
+    dias := case
+      when regla.trigger_params ->> 'daysBefore' ~ '^[0-9]+$'
+      then (regla.trigger_params ->> 'daysBefore')::integer
+      else 30
+    end;
+
+    for contrato in
+      select k.id, k.company_id, k.renews_on, k.sales_id
+        from crm.contracts k
+       where k.organization_id = regla.organization_id
+         and k.status = 'active'
+         and k.renews_on is not null
+         and k.renews_on >= current_date
+         and k.renews_on <= current_date + dias
+         and not exists (
+           select 1 from crm.automation_runs r
+            where r.automation_id = regla.id
+              and r.contract_id = k.id
+              and r.due_on = k.renews_on
+         )
+    loop
+      begin
+        -- El contrato es de una empresa; la tarea o el correo van al contacto
+        -- de esa empresa con actividad más reciente. Sin contacto no hay a
+        -- quién avisar, y se deja constancia igual para no reintentarlo cada
+        -- día: cuando se dé de alta un contacto ya será tarde para este
+        -- aviso, pero no para el de la siguiente renovación.
+        select c.id into contacto
+          from crm.contacts c
+         where c.company_id = contrato.company_id
+           and c.organization_id = regla.organization_id
+         order by c.last_seen desc nulls last, c.id
+         limit 1;
+
+        insert into crm.automation_runs
+          (organization_id, automation_id, contract_id, due_on)
+        values (regla.organization_id, regla.id, contrato.id, contrato.renews_on);
+
+        perform crm.aplicar_accion_de_automatizacion(
+          regla, contacto, null, contrato.id, contrato.sales_id
+        );
+        disparadas := disparadas + 1;
+      exception when others then
+        null; -- un contrato falla, los demás siguen
+      end;
+    end loop;
+  end loop;
+
+  return disparadas;
+end;
+$$;
+
+revoke all on function crm.ejecutar_automatizaciones_por_fecha() from public;
+grant all on function crm.ejecutar_automatizaciones_por_fecha() to service_role;
 
 grant all on function crm.run_automations() to authenticated;
 grant all on function crm.run_automations() to service_role;

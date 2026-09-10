@@ -39,6 +39,7 @@ alter table crm.webhook_deliveries enable row level security;
 -- nunca la clave. Ver tambien la lista de recursos prohibidos del puente.
 alter table crm.email_settings enable row level security;
 alter table crm.email_outbox enable row level security;
+alter table crm.automation_runs enable row level security;
 -- Sin politicas, como email_settings: guarda el secreto de despacho.
 alter table crm.internal_settings enable row level security;
 alter table crm.contracts enable row level security;
@@ -332,6 +333,13 @@ create policy "Webhook deliveries are scoped to the organization" on crm.webhook
 -- Cola de correos: solo lectura, para poder ver qué se envió y qué falló.
 -- La escribe el disparador y la gestiona el despachador.
 create policy "Email outbox is scoped to the organization" on crm.email_outbox
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Constancias de automatizaciones por fecha: solo lectura. Escribe
+-- únicamente el motor (security definer); sin política de escritura no hay
+-- forma de falsear una constancia y silenciar una regla.
+create policy "automation_runs_select_own_org" on crm.automation_runs
     for select to authenticated
     using (organization_id = crm.current_organization_id());
 

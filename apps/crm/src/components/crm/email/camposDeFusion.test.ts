@@ -11,6 +11,16 @@ describe("camposDeFusion", () => {
     expect(campos.map((c) => c.clave)).toContain("oportunidad.nombre");
   });
 
+  it("ofrece los campos del contrato para los correos de renovación", () => {
+    // «Tu plan {{contrato.nombre}} se renueva el {{contrato.renueva_el}}» es
+    // el correo que motiva el disparador por fecha del módulo Clientes.
+    const claves = camposDeFusion({}).map((c) => c.clave);
+
+    expect(claves).toContain("contrato.nombre");
+    expect(claves).toContain("contrato.renueva_el");
+    expect(claves).toContain("contrato.importe");
+  });
+
   it("suma los campos personalizados con el prefijo de su entidad", () => {
     // El caso real: el enlace del diagnóstico vive en un campo personalizado
     // del contacto y hay que poder meterlo en el correo.

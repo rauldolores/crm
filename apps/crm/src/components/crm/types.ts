@@ -214,9 +214,10 @@ export type SavedView = {
 export type Automation = {
   name: string;
   active: boolean;
-  trigger_resource: "contacts" | "deals";
-  trigger_event: "created" | "stage_changed";
-  trigger_params: { stage?: string };
+  trigger_resource: "contacts" | "deals" | "contracts";
+  /** renewal_due (contratos) lo evalúa el cron diario, no un disparador. */
+  trigger_event: "created" | "stage_changed" | "renewal_due";
+  trigger_params: { stage?: string; daysBefore?: number };
   action_params: {
     text?: string;
     taskType?: string;
