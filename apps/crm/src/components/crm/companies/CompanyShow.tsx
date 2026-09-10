@@ -21,6 +21,7 @@ import {
 } from "react-router-dom";
 
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 import { ActivityLog } from "../activity/ActivityLog";
 import { Avatar } from "../contacts/Avatar";
 import { TagsList } from "../contacts/TagsList";
@@ -31,6 +32,7 @@ import { MobileBackButton } from "../misc/MobileBackButton";
 import { formatRelativeDate, LOCALE } from "../misc/RelativeDate";
 import { Status } from "../misc/Status";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { TicketsIterator } from "../tickets/TicketsIterator";
 import type { Company, Contact, Deal } from "../types";
 import {
   AdditionalInfo,
@@ -107,6 +109,11 @@ const CompanyShowContent = () => {
 
   if (isPending || !record) return null;
 
+  // "activity" y "contacts" siempre están; "deals" y "tickets" solo cuando
+  // hay algo que mostrar. grid-cols fijo a 3 dejaba una columna vacía o
+  // apretada según cuántas pestañas terminaban montadas.
+  const numTabs = 2 + (record.nb_deals ? 1 : 0) + (record.nb_tickets ? 1 : 0);
+
   return (
     <div className="mt-2 flex pb-2 gap-8">
       <div className="flex-1">
@@ -117,7 +124,16 @@ const CompanyShowContent = () => {
               <h5 className="text-xl ml-2 flex-1">{record.name}</h5>
             </div>
             <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList
+                className={cn(
+                  "grid w-full",
+                  numTabs === 4
+                    ? "grid-cols-4"
+                    : numTabs === 3
+                      ? "grid-cols-3"
+                      : "grid-cols-2",
+                )}
+              >
                 <TabsTrigger value="activity">
                   {translate("crm.common.activity")}
                 </TabsTrigger>
@@ -132,6 +148,13 @@ const CompanyShowContent = () => {
                   <TabsTrigger value="deals">
                     {translate("resources.companies.nb_deals", {
                       smart_count: record.nb_deals ?? 0,
+                    })}
+                  </TabsTrigger>
+                ) : null}
+                {record.nb_tickets ? (
+                  <TabsTrigger value="tickets">
+                    {translate("resources.companies.nb_tickets", {
+                      smart_count: record.nb_tickets ?? 0,
                     })}
                   </TabsTrigger>
                 ) : null}
@@ -174,6 +197,17 @@ const CompanyShowContent = () => {
                     sort={{ field: "name", order: "ASC" }}
                   >
                     <DealsIterator />
+                  </ReferenceManyField>
+                ) : null}
+              </TabsContent>
+              <TabsContent value="tickets">
+                {record.nb_tickets ? (
+                  <ReferenceManyField
+                    reference="tickets"
+                    target="company_id"
+                    sort={{ field: "created_at", order: "DESC" }}
+                  >
+                    <TicketsIterator showContact />
                   </ReferenceManyField>
                 ) : null}
               </TabsContent>

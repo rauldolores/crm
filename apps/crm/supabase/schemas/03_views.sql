@@ -99,11 +99,14 @@ select
     c.logo,
     count(distinct d.id) as nb_deals,
     count(distinct co.id) as nb_contacts,
+    count(distinct tk.id) as nb_tickets,
+    count(distinct tk.id) filter (where tk.status <> 'closed') as nb_tickets_open,
     c.organization_id,
     c.custom_fields
 from crm.companies c
     left join crm.deals d on c.id = d.company_id
     left join crm.contacts co on c.id = co.company_id
+    left join crm.tickets tk on c.id = tk.company_id
 group by c.id;
 
 create or replace view crm.contacts_summary with (security_invoker = on) as
@@ -129,6 +132,8 @@ select
     (jsonb_path_query_array(co.phone_jsonb, '$[*]."number"'))::text as phone_fts,
     c.name as company_name,
     count(distinct t.id) filter (where t.done_date is null) as nb_tasks,
+    count(distinct tk.id) as nb_tickets,
+    count(distinct tk.id) filter (where tk.status <> 'closed') as nb_tickets_open,
     co.organization_id,
     co.custom_fields,
     -- Puntaje de interés (0-100): recencia de actividad (0-40) + volumen de
@@ -155,6 +160,7 @@ from crm.contacts co
     left join crm.companies c on co.company_id = c.id
     left join crm.contact_notes cn on co.id = cn.contact_id
     left join crm.deals d on co.id = any(d.contact_ids) and d.archived_at is null
+    left join crm.tickets tk on co.id = tk.contact_id
 group by co.id, c.name;
 
 -- Módulo Afiliados: negocio referido y comisión devengada por afiliado.

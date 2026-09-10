@@ -5,10 +5,12 @@ import { Separator } from "@/components/ui/separator";
 import {
   InfiniteListBase,
   ShowBase,
+  useListContext,
   useShowContext,
   useTranslate,
 } from "ra-core";
 
+import { AsideSection } from "../misc/AsideSection";
 import { Markdown } from "../misc/Markdown";
 import { NoteCreate } from "../notes/NoteCreate";
 import { NotesIterator } from "../notes/NotesIterator";
@@ -16,6 +18,9 @@ import { formatRelativeDate } from "../misc/RelativeDate";
 import { Status } from "../misc/Status";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
+import { parseTicketSubject } from "./parseTicketSubject";
+import { TicketSubjectTags } from "./TicketSubjectTags";
+import { TicketsIterator } from "./TicketsIterator";
 
 export const TicketShow = () => (
   <ShowBase>
@@ -30,6 +35,8 @@ const TicketShowContent = () => {
 
   if (isPending || !record) return null;
 
+  const { title, tags } = parseTicketSubject(record.subject);
+
   return (
     <div className="mt-2 flex pb-2 gap-8">
       <div className="flex-1">
@@ -39,8 +46,9 @@ const TicketShowContent = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Status status={record.status} statuses={ticketStatuses} />
-                  <h5 className="text-xl">{record.subject}</h5>
+                  <h5 className="text-xl">{title}</h5>
                 </div>
+                <TicketSubjectTags tags={tags} className="mb-1" />
                 {record.created_at && (
                   <p className="text-sm text-muted-foreground">
                     {translate("crm.common.last_activity_with_date", {
@@ -108,6 +116,39 @@ const TicketShowContent = () => {
           </CardContent>
         </Card>
       </div>
+
+      <div className="hidden sm:block w-92 min-w-92">
+        <AsideSection title={translate("resources.tickets.other_from_contact")}>
+          <InfiniteListBase
+            resource="tickets"
+            filter={{ contact_id: record.contact_id, "id@neq": record.id }}
+            sort={{ field: "created_at", order: "DESC" }}
+            perPage={10}
+            disableSyncWithLocation
+            storeKey={false}
+            empty={
+              <p className="text-sm text-muted-foreground">
+                {translate("resources.tickets.no_other_from_contact")}
+              </p>
+            }
+          >
+            <OtherTicketsCount />
+            <TicketsIterator />
+          </InfiniteListBase>
+        </AsideSection>
+      </div>
     </div>
+  );
+};
+
+/** Cuántos tickets más tiene el mismo contacto, antes de listarlos. */
+const OtherTicketsCount = () => {
+  const { total, isPending } = useListContext();
+  const translate = useTranslate();
+  if (isPending || !total) return null;
+  return (
+    <p className="mb-2 text-xs text-muted-foreground">
+      {translate("resources.tickets.other_count", { smart_count: total })}
+    </p>
   );
 };

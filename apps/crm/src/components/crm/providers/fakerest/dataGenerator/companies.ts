@@ -40,6 +40,9 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       state_abbr: address.stateAbbr(),
       nb_contacts: 0,
       nb_deals: 0,
+      // El modo de demostración no tiene recurso de tickets: siempre en 0.
+      nb_tickets: 0,
+      nb_tickets_open: 0,
       // at least 1/3rd of companies for Jane Doe
       sales_id: datatype.number(2) === 0 ? 0 : random.arrayElement(db.sales).id,
       created_at: randomDate().toISOString(),
@@ -52,6 +55,7 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       // Los datos de demostración no traen el módulo Afiliados activo, así
       // que ninguna empresa viene referida por nadie.
       referred_by_affiliate_id: null,
+      lifecycle_stage: null,
     };
   });
 };

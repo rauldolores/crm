@@ -95,6 +95,9 @@ export const generateContacts = (db: Db, size = 500): Required<Contact>[] => {
         .map((tag) => tag.id), // finalize
       sales_id: company.sales_id!,
       nb_tasks: 0,
+      // El modo de demostración no tiene recurso de tickets: siempre en 0.
+      nb_tickets: 0,
+      nb_tickets_open: 0,
       linkedin_url: null,
       custom_fields: {},
       lead_score: random.number({ min: 0, max: 100 }),

@@ -56,6 +56,7 @@ export const spanishCrmMessages = {
       no_contacts: "Sin contactos",
       nb_contacts: "%{smart_count} contacto |||| %{smart_count} contactos",
       nb_deals: "%{smart_count} oportunidad |||| %{smart_count} oportunidades",
+      nb_tickets: "%{smart_count} ticket |||| %{smart_count} tickets",
       sizes: {
         one_employee: "1 empleado",
         two_to_nine_employees: "2-9 empleados",
@@ -365,6 +366,11 @@ export const spanishCrmMessages = {
         title: "No hay tickets",
         description: "Parece que tu lista de tickets está vacía.",
       },
+      open_of_total: "%{open} abiertos de %{total}",
+      other_from_contact: "Otros tickets de este contacto",
+      other_count:
+        "%{smart_count} ticket más de este contacto |||| %{smart_count} tickets más de este contacto",
+      no_other_from_contact: "Este contacto no tiene más tickets.",
     },
     affiliates: {
       name: "Afiliado |||| Afiliados",

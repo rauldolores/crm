@@ -6,6 +6,7 @@ import { ShowButton } from "@/components/admin/show-button";
 
 import { AddTask } from "../tasks/AddTask";
 import { TasksIterator } from "../tasks/TasksIterator";
+import { TicketsIterator } from "../tickets/TicketsIterator";
 import { TagsListEdit } from "./TagsListEdit";
 import { ContactStatusSelector } from "./ContactInputs";
 import { ContactPersonalInfo } from "./ContactPersonalInfo";
@@ -72,21 +73,52 @@ export const ContactAside = ({ link = "edit" }: { link?: "edit" | "show" }) => {
         <AddTask />
       </AsideSection>
 
+      <AsideSection
+        title={translate("resources.tickets.name", { smart_count: 2 })}
+      >
+        {record.nb_tickets ? (
+          <p className="text-xs text-muted-foreground mb-1">
+            {translate("resources.tickets.open_of_total", {
+              open: record.nb_tickets_open ?? 0,
+              total: record.nb_tickets,
+            })}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {translate("resources.tickets.empty.title")}
+          </p>
+        )}
+        <ReferenceManyField
+          target="contact_id"
+          reference="tickets"
+          sort={{ field: "created_at", order: "DESC" }}
+          perPage={5}
+        >
+          <TicketsIterator />
+        </ReferenceManyField>
+      </AsideSection>
+
+      {/*
+        Antes estas acciones solo se mostraban con link="show" (la barra
+        lateral tal como la usa ContactEdit), así que enviar un correo o un
+        WhatsApp solo aparecía después de entrar a editar el contacto — la
+        ficha de solo lectura (ContactShow, el caso normal) se quedaba sin
+        ellas. Se muestran siempre: son consultas, no cambian nada.
+      */}
+      <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">
+        <EnviarCorreoButton />
+        <EnviarWhatsAppButton />
+        <ExportVCardButton />
+        <ContactMergeButton />
+      </div>
+
       {link !== "edit" && (
-        <>
-          <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">
-            <EnviarCorreoButton />
-            <EnviarWhatsAppButton />
-            <ExportVCardButton />
-            <ContactMergeButton />
-          </div>
-          <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">
-            <DeleteButton
-              className="h-6 cursor-pointer hover:bg-destructive/10! text-destructive! border-destructive! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
-              size="sm"
-            />
-          </div>
-        </>
+        <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">
+          <DeleteButton
+            className="h-6 cursor-pointer hover:bg-destructive/10! text-destructive! border-destructive! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
+            size="sm"
+          />
+        </div>
       )}
     </div>
   );

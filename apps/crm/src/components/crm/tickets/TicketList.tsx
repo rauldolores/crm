@@ -18,6 +18,8 @@ import { TopToolbar } from "../layout/TopToolbar";
 import { RelativeDate } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
+import { parseTicketSubject } from "./parseTicketSubject";
+import { TicketSubjectTags } from "./TicketSubjectTags";
 
 const TicketListActions = () => {
   const translate = useTranslate();
@@ -79,6 +81,18 @@ const StatusField = () => {
   );
 };
 
+const SubjectField = () => {
+  const record = useRecordContext<Ticket>();
+  if (!record) return null;
+  const { title, tags } = parseTicketSubject(record.subject);
+  return (
+    <div className="flex max-w-md flex-col gap-1 py-0.5">
+      <span className="font-medium">{title}</span>
+      <TicketSubjectTags tags={tags} />
+    </div>
+  );
+};
+
 export const TicketList = () => {
   const { ticketStatuses } = useConfigurationContext();
   const filters = [
@@ -106,7 +120,9 @@ export const TicketList = () => {
         <DataTable.Col
           source="subject"
           label="resources.tickets.fields.subject"
-        />
+        >
+          <SubjectField />
+        </DataTable.Col>
         <DataTable.Col label="resources.tickets.fields.contact_id">
           <ReferenceField
             source="contact_id"

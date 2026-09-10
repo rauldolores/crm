@@ -88,9 +88,15 @@ export type Company = {
   context_links?: string[];
   nb_contacts?: number;
   nb_deals?: number;
+  /** Tickets asociados a contactos de esta empresa. */
+  nb_tickets?: number;
+  /** De esos, cuántos siguen sin estado "closed". */
+  nb_tickets_open?: number;
   custom_fields?: CustomFieldValues;
   /** Módulo Afiliados: qué afiliado trajo a este cliente (primer toque). */
   referred_by_affiliate_id?: Identifier | null;
+  /** Módulo Clientes: prospecto, cliente activo, en riesgo, perdido. */
+  lifecycle_stage?: string | null;
 } & Pick<RaRecord, "id">;
 
 export type EmailAndType = {
@@ -121,6 +127,10 @@ export type Contact = {
   background: string;
   phone_jsonb: PhoneNumberAndType[];
   nb_tasks?: number;
+  /** Tickets levantados por este contacto. */
+  nb_tickets?: number;
+  /** De esos, cuántos siguen sin estado "closed". */
+  nb_tickets_open?: number;
   company_name?: string;
   custom_fields?: CustomFieldValues;
   lead_score?: number;
@@ -261,6 +271,71 @@ export type EmailTemplate = {
   sales_id?: Identifier | null;
   created_at?: string;
   updated_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Módulo Clientes. `source` y `external_id` dicen de qué sistema vino cada
+ * fila: el CRM no es dueño del catálogo ni de la facturación, solo guarda lo
+ * que necesita para vender más.
+ */
+export type Contract = {
+  company_id: Identifier;
+  name: string;
+  status: "active" | "paused" | "cancelled" | "expired";
+  billing_period?: string | null;
+  amount?: number | null;
+  currency: string;
+  started_on?: string | null;
+  /** Próxima renovación o vencimiento: la fecha sobre la que se avisa. */
+  renews_on?: string | null;
+  ended_on?: string | null;
+  auto_renew: boolean;
+  source: string;
+  external_id?: string | null;
+  notes?: string | null;
+  sales_id?: Identifier | null;
+  created_at?: string;
+  updated_at?: string;
+} & Pick<RaRecord, "id">;
+
+export type Purchase = {
+  company_id: Identifier;
+  contract_id?: Identifier | null;
+  reference?: string | null;
+  purchased_on: string;
+  amount: number;
+  currency: string;
+  status: "paid" | "pending" | "cancelled" | "refunded";
+  source: string;
+  external_id?: string | null;
+  created_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Línea de una compra. `description` y `unit_price` son la foto del momento:
+ * si el producto cambia de nombre o precio, lo vendido no se reescribe.
+ */
+export type PurchaseItem = {
+  purchase_id: Identifier;
+  description: string;
+  product_ref?: string | null;
+  quantity: number;
+  unit_price?: number | null;
+  amount?: number | null;
+} & Pick<RaRecord, "id">;
+
+/** Todo lo que ha hecho un cliente, agregado (vista customer_summary). */
+export type CustomerSummary = {
+  name: string;
+  lifecycle_stage?: string | null;
+  sales_id?: Identifier | null;
+  nb_purchases: number;
+  total_spent: number;
+  first_purchase_on?: string | null;
+  last_purchase_on?: string | null;
+  nb_active_contracts: number;
+  recurring_amount: number;
+  next_renewal_on?: string | null;
 } & Pick<RaRecord, "id">;
 
 /** Webhook saliente de la organización. */
