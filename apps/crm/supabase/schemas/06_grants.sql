@@ -218,3 +218,12 @@ grant usage, select on sequence crm.email_outbox_id_seq to anon, authenticated, 
 grant select, insert, update, delete on table crm.internal_settings to service_role;
 revoke all on table crm.internal_settings from anon;
 revoke all on table crm.internal_settings from authenticated;
+
+-- Módulo Clientes
+grant select, insert, update, delete on table crm.contracts to anon, authenticated, service_role;
+grant usage, select on sequence crm.contracts_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table crm.purchases to anon, authenticated, service_role;
+grant usage, select on sequence crm.purchases_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table crm.purchase_items to anon, authenticated, service_role;
+grant usage, select on sequence crm.purchase_items_id_seq to anon, authenticated, service_role;
+grant select on table crm.customer_summary to anon, authenticated, service_role;

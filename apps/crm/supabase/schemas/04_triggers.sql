@@ -155,3 +155,8 @@ create trigger gestionar_modulo_afiliados_deals
 create or replace trigger conservar_afiliado_de_referencia_companies
     before update on crm.companies
     for each row execute function crm.conservar_afiliado_de_referencia();
+
+-- Módulo Clientes
+create trigger set_contracts_sales_id_trigger
+    before insert on crm.contracts
+    for each row execute function crm.set_sales_id_default();

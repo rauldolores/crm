@@ -1,4 +1,4 @@
-import { Handshake } from "lucide-react";
+import { Handshake, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -19,6 +19,13 @@ export interface ModuleDefinition {
 }
 
 export const MODULE_REGISTRY: ModuleDefinition[] = [
+  {
+    key: "customers",
+    nameKey: "crm.modules.customers.name",
+    descriptionKey: "crm.modules.customers.description",
+    icon: Users,
+    path: "/customer_summary",
+  },
   {
     key: "affiliates",
     nameKey: "crm.modules.affiliates.name",

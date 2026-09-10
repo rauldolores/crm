@@ -3,6 +3,8 @@ import { SortButton } from "@/components/admin/sort-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import { PanelDeCliente } from "../customers/PanelDeCliente";
 import { UserPlus } from "lucide-react";
 import {
   RecordContextProvider,
@@ -107,12 +109,21 @@ const CompanyShowContent = () => {
     navigate(`/companies/${record?.id}/show/${value}`);
   };
 
+  // La pestaña «Cliente» solo existe con el módulo Clientes activo: apagarlo
+  // no borra nada, solo deja de mostrarse.
+  const { modules } = useConfigurationContext();
+  const moduloClientes = Boolean(modules.customers?.active);
+
   if (isPending || !record) return null;
 
   // "activity" y "contacts" siempre están; "deals" y "tickets" solo cuando
   // hay algo que mostrar. grid-cols fijo a 3 dejaba una columna vacía o
   // apretada según cuántas pestañas terminaban montadas.
-  const numTabs = 2 + (record.nb_deals ? 1 : 0) + (record.nb_tickets ? 1 : 0);
+  const numTabs =
+    2 +
+    (record.nb_deals ? 1 : 0) +
+    (record.nb_tickets ? 1 : 0) +
+    (moduloClientes ? 1 : 0);
 
   return (
     <div className="mt-2 flex pb-2 gap-8">
@@ -127,11 +138,13 @@ const CompanyShowContent = () => {
               <TabsList
                 className={cn(
                   "grid w-full",
-                  numTabs === 4
-                    ? "grid-cols-4"
-                    : numTabs === 3
-                      ? "grid-cols-3"
-                      : "grid-cols-2",
+                  numTabs === 5
+                    ? "grid-cols-5"
+                    : numTabs === 4
+                      ? "grid-cols-4"
+                      : numTabs === 3
+                        ? "grid-cols-3"
+                        : "grid-cols-2",
                 )}
               >
                 <TabsTrigger value="activity">
@@ -158,10 +171,20 @@ const CompanyShowContent = () => {
                     })}
                   </TabsTrigger>
                 ) : null}
+                {moduloClientes && (
+                  <TabsTrigger value="customer">
+                    {translate("crm.customers.tab")}
+                  </TabsTrigger>
+                )}
               </TabsList>
               <TabsContent value="activity" className="pt-2">
                 <ActivityLog companyId={record.id} context="company" />
               </TabsContent>
+              {moduloClientes && (
+                <TabsContent value="customer">
+                  <PanelDeCliente empresa={record} />
+                </TabsContent>
+              )}
               <TabsContent value="contacts">
                 {record.nb_contacts ? (
                   <ReferenceManyField

@@ -41,6 +41,9 @@ alter table crm.email_settings enable row level security;
 alter table crm.email_outbox enable row level security;
 -- Sin politicas, como email_settings: guarda el secreto de despacho.
 alter table crm.internal_settings enable row level security;
+alter table crm.contracts enable row level security;
+alter table crm.purchases enable row level security;
+alter table crm.purchase_items enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -331,3 +334,34 @@ create policy "Webhook deliveries are scoped to the organization" on crm.webhook
 create policy "Email outbox is scoped to the organization" on crm.email_outbox
     for select to authenticated
     using (organization_id = crm.current_organization_id());
+
+-- Módulo Clientes
+create policy "Contracts are scoped to the organization" on crm.contracts
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Contracts are created in the organization" on crm.contracts
+    for insert to authenticated with check (organization_id = crm.current_organization_id());
+create policy "Contracts are updated within the organization" on crm.contracts
+    for update to authenticated using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Contracts are deleted within the organization" on crm.contracts
+    for delete to authenticated using (organization_id = crm.current_organization_id());
+
+create policy "Purchases are scoped to the organization" on crm.purchases
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Purchases are created in the organization" on crm.purchases
+    for insert to authenticated with check (organization_id = crm.current_organization_id());
+create policy "Purchases are updated within the organization" on crm.purchases
+    for update to authenticated using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Purchases are deleted within the organization" on crm.purchases
+    for delete to authenticated using (organization_id = crm.current_organization_id());
+
+create policy "Purchase items are scoped to the organization" on crm.purchase_items
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Purchase items are created in the organization" on crm.purchase_items
+    for insert to authenticated with check (organization_id = crm.current_organization_id());
+create policy "Purchase items are updated within the organization" on crm.purchase_items
+    for update to authenticated using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Purchase items are deleted within the organization" on crm.purchase_items
+    for delete to authenticated using (organization_id = crm.current_organization_id());

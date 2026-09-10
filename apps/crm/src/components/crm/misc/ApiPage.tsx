@@ -151,6 +151,35 @@ export const ApiPage = () => {
 
       <Card>
         <CardHeader>
+          <CardTitle>{translate("crm.api.customers.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p>{translate("crm.api.customers.intro")}</p>
+          <Bloque>{`curl -X POST "${origen}/api/clientes/compras" \
+  -H "Authorization: Bearer vnq_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "origen": "mi-erp",
+    "externalId": "FAC-2026-0412",
+    "cliente": { "rfc": "XAXX010101000", "email": "compras@acme.com" },
+    "referencia": "A-412",
+    "fecha": "2026-09-09",
+    "importe": 12500,
+    "estado": "paid",
+    "lineas": [
+      { "descripcion": "Plan Premium anual", "referenciaProducto": "PLAN-PREM", "cantidad": 1, "importe": 12500 }
+    ]
+  }'`}</Bloque>
+          <p>{translate("crm.api.customers.reconciliation")}</p>
+          <p>{translate("crm.api.customers.idempotent")}</p>
+          <p className="text-muted-foreground">
+            {translate("crm.api.customers.contracts")}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>{translate("crm.api.webhooks.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">

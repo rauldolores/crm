@@ -17,6 +17,7 @@ import { OAuthConsentPage } from "@/components/supabase/oauth-consent-page";
 
 import affiliates from "../affiliates";
 import emailTemplates from "../email";
+import customers from "../customers";
 import { AffiliatesConfigPage } from "../affiliates/AffiliatesConfigPage";
 import companies from "../companies";
 import contacts from "../contacts";
@@ -64,6 +65,7 @@ import {
   defaultNoteTypes,
   defaultTaskTypes,
   defaultTicketStatuses,
+  defaultCustomerStages,
   defaultTitle,
 } from "./defaultConfiguration";
 import { i18nProvider as defaulti18nProvider } from "../providers/commons/i18nProvider";
@@ -180,6 +182,7 @@ export const CRM = ({
         dealLossReasons: defaultDealLossReasons,
         noteTypes: defaultNoteTypes,
         ticketStatuses: defaultTicketStatuses,
+        customerStages: defaultCustomerStages,
         modules: defaultModules,
       } satisfies ConfigurationContextValue);
     }
@@ -301,6 +304,10 @@ const DesktopAdmin = (
       <Resource name="tickets" {...tickets} />
       <Resource name="affiliates" {...affiliates} />
       <Resource name="email_templates" {...emailTemplates} />
+      <Resource name="customer_summary" {...customers} />
+      <Resource name="contracts" />
+      <Resource name="purchases" />
+      <Resource name="purchase_items" />
       <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />

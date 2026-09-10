@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registrarActividad } from "./actividad";
 import { registrarAutomatizaciones } from "./automatizaciones";
 import { registrarCatalogos } from "./catalogos";
+import { registrarClientes } from "./clientes";
 import { registrarContactos } from "./contactos";
 import { registrarCorreo } from "./correo";
 import { registrarEmpresas } from "./empresas";
@@ -38,4 +39,5 @@ export function registrarHerramientas(
   registrarSoporte(server, ctx);
   registrarCorreo(server, ctx);
   registrarAutomatizaciones(server, ctx);
+  registrarClientes(server, ctx);
 }

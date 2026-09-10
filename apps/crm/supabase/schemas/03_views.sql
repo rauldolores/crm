@@ -226,3 +226,37 @@ select count(sub.id) as is_initialized
 from (
     select sales.id from crm.sales limit 1
 ) sub;
+
+-- Todo lo que ha hecho un cliente, en una fila por empresa. Es lo que
+-- responde «¿cuánto vale este cliente y qué tiene contratado?» sin recorrer
+-- sus compras una por una.
+create or replace view crm.customer_summary with (security_invoker = on) as
+select
+    c.id,
+    c.organization_id,
+    c.name,
+    c.lifecycle_stage,
+    c.sales_id,
+    coalesce(p.nb_purchases, 0) as nb_purchases,
+    coalesce(p.total_spent, 0) as total_spent,
+    p.first_purchase_on,
+    p.last_purchase_on,
+    coalesce(k.nb_active_contracts, 0) as nb_active_contracts,
+    coalesce(k.recurring_amount, 0) as recurring_amount,
+    k.next_renewal_on
+from crm.companies c
+left join lateral (
+    select count(*) as nb_purchases,
+           sum(amount) as total_spent,
+           min(purchased_on) as first_purchase_on,
+           max(purchased_on) as last_purchase_on
+      from crm.purchases
+     where company_id = c.id and status <> 'cancelled'
+) p on true
+left join lateral (
+    select count(*) as nb_active_contracts,
+           sum(amount) as recurring_amount,
+           min(renews_on) filter (where renews_on is not null) as next_renewal_on
+      from crm.contracts
+     where company_id = c.id and status = 'active'
+) k on true;

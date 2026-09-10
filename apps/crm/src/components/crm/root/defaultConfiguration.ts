@@ -114,6 +114,16 @@ export const defaultTicketStatuses = [
   { value: "closed", label: "Cerrado", color: "#a4e87d" },
 ];
 
+// Etapas del ciclo de vida de un cliente, para el módulo Clientes. Mismo
+// formato {value,label,color} que los estados de contacto y de ticket: se
+// pintan con la misma pastilla.
+export const defaultCustomerStages = [
+  { value: "prospect", label: "Prospecto", color: "#c5c5c5" },
+  { value: "customer", label: "Cliente activo", color: "#a4e87d" },
+  { value: "at-risk", label: "En riesgo", color: "#e8cb7d" },
+  { value: "churned", label: "Perdido", color: "#e88b7d" },
+];
+
 // Sin módulos activos de fábrica: cada organización los prende desde
 // Módulos > Catálogo. El catálogo de módulos DISPONIBLES vive en
 // modules/registry.ts; esto es solo el estado de activación por defecto.
@@ -143,6 +153,7 @@ export const defaultConfiguration: ConfigurationContextValue = {
   noteTypes: defaultNoteTypes,
   taskTypes: defaultTaskTypes,
   ticketStatuses: defaultTicketStatuses,
+  customerStages: defaultCustomerStages,
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,
   lightModeLogo: defaultLightModeLogo,

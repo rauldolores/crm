@@ -88,6 +88,10 @@ const CON_DUENO = new Set([
   "affiliate_commissions",
   "email_templates",
   "email_outbox",
+  "contracts",
+  "purchases",
+  "purchase_items",
+  "customer_summary",
 ]);
 
 /**
@@ -118,6 +122,7 @@ const CON_RESPONSABLE = new Set([
   "tickets",
   "ticket_notes",
   "email_templates",
+  "contracts",
 ]);
 
 /**

@@ -372,6 +372,15 @@ export const spanishCrmMessages = {
         "%{smart_count} ticket más de este contacto |||| %{smart_count} tickets más de este contacto",
       no_other_from_contact: "Este contacto no tiene más tickets.",
     },
+    customer_summary: {
+      name: "Cliente |||| Clientes",
+      forcedCaseName: "Cliente",
+      empty: {
+        title: "Aún no hay clientes",
+        description:
+          "Una empresa pasa a ser cliente cuando registras su primera compra o contrato, a mano desde su ficha o desde tu sistema de facturación.",
+      },
+    },
     affiliates: {
       name: "Afiliado |||| Afiliados",
       forcedCaseName: "Afiliado",
@@ -672,6 +681,58 @@ export const spanishCrmMessages = {
       not_configured:
         "Todavía no has configurado un proveedor de IA. Sin él, las plantillas se escriben a mano.",
     },
+    customers: {
+      tab: "Cliente",
+      stage_none: "Sin etapa",
+      renews_in_days: "en %{smart_count} día |||| en %{smart_count} días",
+      renews_on: "renueva el",
+      contracts: "Contratos y suscripciones",
+      no_contracts: "Sin contratos registrados.",
+      purchases: "Compras",
+      no_purchases: "Sin compras registradas.",
+      new_contract: "Añadir contrato",
+      new_purchase: "Registrar compra",
+      contract_created: "Contrato guardado",
+      purchase_created: "Compra registrada",
+      save_error: "No se pudo guardar",
+      fields: {
+        lifecycle_stage: "Etapa del cliente",
+        total_spent: "Total comprado",
+        nb_purchases: "Compras",
+        recurring_amount: "Recurrente",
+        next_renewal_on: "Próxima renovación",
+        contract_name: "Nombre del contrato o plan",
+        amount: "Importe",
+        billing_period: "Periodicidad",
+        started_on: "Inicio",
+        renews_on: "Renueva o vence el",
+        renews_on_help: "Es la fecha sobre la que avisan las automatizaciones.",
+        status: "Estado",
+        description: "Qué se vendió",
+        description_help:
+          "Se guarda tal cual: si el producto cambia de nombre después, esta compra sigue diciendo lo que fue.",
+        purchased_on: "Fecha",
+        reference: "Folio o referencia",
+      },
+      period: {
+        monthly: "Mensual",
+        quarterly: "Trimestral",
+        yearly: "Anual",
+        one_time: "Pago único",
+      },
+      contract_status: {
+        active: "Activo",
+        paused: "Pausado",
+        cancelled: "Cancelado",
+        expired: "Vencido",
+      },
+      purchase_status: {
+        paid: "Pagada",
+        pending: "Pendiente",
+        cancelled: "Cancelada",
+        refunded: "Reembolsada",
+      },
+    },
     email: {
       title: "Correo saliente",
       intro:
@@ -707,6 +768,11 @@ export const spanishCrmMessages = {
         updated: "Módulo actualizado",
         update_error: "No se pudo actualizar el módulo",
         active_hint: "Activo. Aparece en el menú lateral bajo Módulos.",
+      },
+      customers: {
+        name: "Clientes",
+        description:
+          "Lo que pasa después de la venta: qué ha comprado cada cliente, qué tiene contratado y cuándo le vence. Se alimenta a mano o desde tu sistema de facturación por API.",
       },
       affiliates: {
         name: "Afiliados",
@@ -809,6 +875,17 @@ export const spanishCrmMessages = {
         intro:
           "Para adjuntar un archivo a una nota (contact_notes, deal_notes o ticket_notes), primero súbelo aquí en base64 y usa la respuesta como un elemento del arreglo attachments al crear o editar la nota. Límite: 10 MB por archivo.",
         response: "La respuesta trae el objeto listo para usar:",
+      },
+      customers: {
+        title: "Clientes: compras y contratos",
+        intro:
+          "Con el módulo Clientes activo, tu sistema de facturación, ERP o tienda puede registrar cada venta en el CRM. El catálogo y las facturas siguen viviendo allá; aquí solo se guarda lo necesario para saber qué ha comprado cada cliente y ofrecerle lo siguiente.",
+        reconciliation:
+          "No hace falta conocer los ids del CRM: el cliente se identifica por RFC, por correo o por tu propio identificador (externalId), y el CRM lo resuelve a la empresa correcta. Si no la encuentra responde 422 sin crear nada — nunca da de alta una empresa a ciegas, para no acabar con la misma tres veces.",
+        idempotent:
+          "Reenviar la misma compra (mismo origen + externalId) la actualiza en vez de duplicarla: un reintento o una resincronización no ensucian los datos.",
+        contracts:
+          "Para contratos y suscripciones, POST /api/clientes/contratos con la misma forma (nombre, periodicidad, importe, renuevaEl…). Reenviarlo actualiza el contrato, que es lo que pasa cuando cambia de importe o se renueva.",
       },
       webhooks: {
         title: "Webhooks",
