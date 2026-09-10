@@ -1022,7 +1022,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tickets/TicketSubjectTags.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TicketsIterator.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/tickets/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/parseTicketSubject.ts",
           "type": "registry:component"
         },
         {
