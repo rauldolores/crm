@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-import { acotarLimite, error, responder, texto } from "./nucleo";
+import {
+  acotarLimite,
+  error,
+  responder,
+  texto,
+  validarVencimiento,
+} from "./nucleo";
 import type { RegistradorDeHerramientas } from "./registro";
 
 /**
@@ -110,7 +116,14 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
         contactoId: z.number(),
         texto: z.string().describe("Qué hay que hacer."),
         tipo: z.string().optional().describe("llamada, reunión, correo…"),
-        vence: z.string().optional().describe("Fecha límite, aaaa-mm-dd. Vacío = sin plazo."),
+        vence: z
+          .string()
+          .optional()
+          .describe(
+            "Plazo: aaaa-mm-dd si es solo un día, o aaaa-mm-ddThh:mm con " +
+              "desfase horario (2026-09-11T16:00-06:00) si es una cita a una " +
+              "hora. Vacío = sin plazo.",
+          ),
         responsableId: z.number().optional(),
       }),
     },
@@ -120,20 +133,23 @@ export const registrarActividad: RegistradorDeHerramientas = (server, ctx) => {
       tipo?: string;
       vence?: string;
       responsableId?: number;
-    }) =>
-      responder(
+    }) => {
+      const vence = validarVencimiento(args.vence);
+      if (!vence.ok) return error(vence.motivo);
+      return responder(
         ctx,
         `insert into tasks (contact_id, text, type, due_date, sales_id)
-         values ($1, $2, $3, $4::date, $5)
+         values ($1, $2, $3, $4::timestamptz, $5)
          returning id, text, due_date`,
         [
           args.contactoId,
           args.texto,
           args.tipo ?? null,
-          args.vence ?? null,
+          vence.valor,
           args.responsableId ?? null,
         ],
-      ),
+      );
+    },
   );
 
   server.registerTool(

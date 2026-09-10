@@ -6,6 +6,7 @@ export {
   construirSet,
   LIMITE_MAXIMO,
   LIMITE_POR_DEFECTO,
+  validarVencimiento,
 } from "./consultas";
 
 /**

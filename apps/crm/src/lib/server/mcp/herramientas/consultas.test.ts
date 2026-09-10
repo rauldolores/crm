@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { acotarLimite, construirSet, LIMITE_MAXIMO } from "./consultas";
+import {
+  acotarLimite,
+  construirSet,
+  LIMITE_MAXIMO,
+  validarVencimiento,
+} from "./consultas";
 
 describe("construirSet", () => {
   it("solo incluye los campos que llegaron", () => {
@@ -58,5 +63,37 @@ describe("acotarLimite", () => {
   it("no deja pedir cero ni negativos", () => {
     expect(acotarLimite(0)).toBe(1);
     expect(acotarLimite(-5)).toBe(1);
+  });
+});
+
+describe("validarVencimiento", () => {
+  it("acepta vacío como «sin plazo»", () => {
+    expect(validarVencimiento(undefined)).toEqual({ ok: true, valor: null });
+    expect(validarVencimiento("")).toEqual({ ok: true, valor: null });
+  });
+
+  it("acepta una fecha sola y una fecha con hora y desfase", () => {
+    expect(validarVencimiento("2026-09-11")).toEqual({
+      ok: true,
+      valor: "2026-09-11",
+    });
+    expect(validarVencimiento("2026-09-11T16:00-06:00")).toEqual({
+      ok: true,
+      valor: "2026-09-11T16:00-06:00",
+    });
+    expect(validarVencimiento("2026-09-11T16:00:00Z").ok).toBe(true);
+  });
+
+  it("rechaza una hora sin desfase, que se guardaría como UTC", () => {
+    // «Mañana a las 4» sin zona acabaría a las diez de la mañana en México.
+    const resultado = validarVencimiento("2026-09-11T16:00");
+
+    expect(resultado.ok).toBe(false);
+    if (!resultado.ok) expect(resultado.motivo).toMatch(/desfase/);
+  });
+
+  it("rechaza formatos que Postgres aceptaría pero el agente no debería usar", () => {
+    expect(validarVencimiento("mañana").ok).toBe(false);
+    expect(validarVencimiento("11/09/2026").ok).toBe(false);
   });
 });
