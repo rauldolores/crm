@@ -10,6 +10,11 @@ export const URL_SITIO = (
 
 export const urlAbsoluta = (ruta: string) => URL_SITIO + ruta;
 
+/** La aplicación en producción: a donde mandan los botones de «empezar». */
+export const URL_APP = (
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://crm.kontrolia.io"
+).replace(/\/$/, "");
+
 /** Recorta una descripción para las meta etiquetas sin cortar palabras. */
 export const metaDescripcion = (texto: string, limite = 158) => {
   if (texto.length <= limite) return texto;

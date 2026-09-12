@@ -17,6 +17,7 @@ export function PieDePagina({ enInicio = false }: { enInicio?: boolean }) {
   const enlaces = [
     { href: prefijo + "#solucion", label: "Solución" },
     { href: prefijo + "#casos", label: "Casos de uso" },
+    { href: prefijo + "#precios", label: "Precios" },
     { href: prefijo + "#migracion", label: "Migración" },
     { href: prefijo + "#demo", label: "Demo" },
     { href: prefijo + "#faq", label: "FAQ" },

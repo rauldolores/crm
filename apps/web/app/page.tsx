@@ -33,15 +33,30 @@ import {
   Webhook,
   Workflow,
   Zap,
+  Receipt,
 } from "lucide-react";
 
 import { Contador } from "../components/Contador";
 import { DiagramaProceso } from "../components/DiagramaProceso";
 import { BarraNavegacion } from "../components/BarraNavegacion";
 import { PieDePagina } from "../components/PieDePagina";
-import { CtaDemo, CtaExplorar, Eyebrow, TituloDeSeccion } from "../components/comunes";
-import { MaquetaAplicacion, MarcoDelNavegador, MockupTablero } from "../components/maquetas";
+import {
+  CtaDemo,
+  CtaExplorar,
+  Eyebrow,
+  TituloDeSeccion,
+} from "../components/comunes";
+import {
+  MaquetaAplicacion,
+  MarcoDelNavegador,
+  MockupTablero,
+} from "../components/maquetas";
 import { FormularioDemo } from "../components/FormularioDemo";
+import { Precios } from "../components/Precios";
+import {
+  InteligenciaArtificial,
+  MasAllaDeLaVenta,
+} from "../components/MasAllaDeLaVenta";
 
 const MockupWhatsApp = () => (
   <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -53,7 +68,9 @@ const MockupWhatsApp = () => (
         <p className="text-sm font-semibold text-neutral-800">
           WhatsApp · Ana García
         </p>
-        <p className="text-xs text-neutral-500">Enviado hace 2 h · +34 612 34 56 78</p>
+        <p className="text-xs text-neutral-500">
+          Enviado hace 2 h · +34 612 34 56 78
+        </p>
       </div>
     </div>
     <div className="mt-3 space-y-2">
@@ -92,8 +109,8 @@ const MockupCorreo = () => (
     </p>
     <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-neutral-600">
       Hola Marta, adjunto la propuesta con las condiciones que hablamos:
-      implementación en 4 semanas, soporte incluido durante el primer año y
-      y precios claros por usuario, en pesos mexicanos…
+      implementación en 4 semanas, soporte incluido durante el primer año y y
+      precios claros por usuario, en pesos mexicanos…
     </p>
     <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-brand-50 px-3 py-2 text-xs text-brand-700">
       <Check className="size-3.5" />
@@ -159,7 +176,9 @@ const MockupAutomatizacion = () => (
         >
           <div className="flex items-center gap-2">
             <Zap className="size-3.5 shrink-0 text-brand-600" />
-            <p className="text-xs font-medium text-neutral-700">{regla.cuando}</p>
+            <p className="text-xs font-medium text-neutral-700">
+              {regla.cuando}
+            </p>
           </div>
           <p className="mt-1 text-xs text-neutral-500">{regla.entonces}</p>
         </div>
@@ -172,7 +191,9 @@ const MockupInformes = () => (
   <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
     <div className="flex items-center gap-2">
       <TrendingUp className="size-4 text-brand-600" />
-      <p className="text-sm font-semibold text-neutral-800">Informes del trimestre</p>
+      <p className="text-sm font-semibold text-neutral-800">
+        Informes del trimestre
+      </p>
     </div>
     <div className="mt-4 grid grid-cols-3 gap-2">
       {[
@@ -180,7 +201,10 @@ const MockupInformes = () => (
         { etiqueta: "Ganadas", valor: 18, sufijo: "" },
         { etiqueta: "Conversión", valor: 43, sufijo: " %" },
       ].map((kpi) => (
-        <div key={kpi.etiqueta} className="rounded-xl bg-neutral-50 p-3 text-center ring-1 ring-neutral-200/60">
+        <div
+          key={kpi.etiqueta}
+          className="rounded-xl bg-neutral-50 p-3 text-center ring-1 ring-neutral-200/60"
+        >
           <p className="text-lg font-bold text-neutral-900">
             <Contador valor={kpi.valor} sufijo={kpi.sufijo} />
           </p>
@@ -190,7 +214,11 @@ const MockupInformes = () => (
     </div>
     <div className="mt-4 flex h-28 items-end gap-2">
       {[35, 55, 42, 70, 58, 88, 66, 95].map((alto, i) => (
-        <div key={i} className="flex-1 rounded-t-md bg-brand-200" style={{ height: `${alto}%` }} />
+        <div
+          key={i}
+          className="flex-1 rounded-t-md bg-brand-200"
+          style={{ height: `${alto}%` }}
+        />
       ))}
     </div>
     <div className="mt-1 flex justify-between text-[10px] text-neutral-400">
@@ -234,13 +262,15 @@ const Hero = () => (
         </span>
         <h1 className="mt-5 text-4xl font-semibold leading-[1.08] tracking-tight text-neutral-900 sm:text-5xl lg:text-6xl">
           Tu equipo comercial necesita un sistema.{" "}
-          <span className="text-brand-600">No otro montón de herramientas.</span>
+          <span className="text-brand-600">
+            No otro montón de herramientas.
+          </span>
         </h1>
         <p className="mt-5 max-w-xl text-lg leading-relaxed text-neutral-600">
           Vinqulia centraliza clientes, oportunidades, seguimiento y
           comunicación en un CRM que se adapta a la forma en que trabaja tu
-          empresa. Úsalo como servicio, instálalo en tu propia infraestructura
-          o llévalo más lejos con automatización e IA de Kontrolia.
+          empresa. Úsalo como servicio, instálalo en tu propia infraestructura o
+          llévalo más lejos con automatización e IA de Kontrolia.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <CtaDemo />
@@ -311,7 +341,10 @@ const PROBLEMAS = [
 ];
 
 const Problemas = () => (
-  <section id="problemas" className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24">
+  <section
+    id="problemas"
+    className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24"
+  >
     <div className="mx-auto max-w-7xl px-5 sm:px-8">
       <TituloDeSeccion
         eyebrow="El problema"
@@ -369,17 +402,43 @@ const AntesDespues = () => (
               <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-neutral-600">
                 Antes
               </span>
-              <span className="text-sm text-neutral-500">Cada quien por su lado</span>
+              <span className="text-sm text-neutral-500">
+                Cada quien por su lado
+              </span>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3">
               {[
-                { icono: FileText, texto: "Excel del vendedor A", giro: "-rotate-2" },
-                { icono: FileText, texto: "Excel del vendedor B", giro: "rotate-1" },
-                { icono: MessageCircle, texto: "WhatsApp del celular", giro: "rotate-2" },
-                { icono: Mail, texto: "Correos sin archivar", giro: "-rotate-1" },
-                { icono: Smartphone, texto: "Notas en el teléfono", giro: "rotate-[-1.5deg]" },
-                { icono: Clock, texto: "«Te llamo la semana que viene»", giro: "-rotate-2" },
+                {
+                  icono: FileText,
+                  texto: "Excel del vendedor A",
+                  giro: "-rotate-2",
+                },
+                {
+                  icono: FileText,
+                  texto: "Excel del vendedor B",
+                  giro: "rotate-1",
+                },
+                {
+                  icono: MessageCircle,
+                  texto: "WhatsApp del celular",
+                  giro: "rotate-2",
+                },
+                {
+                  icono: Mail,
+                  texto: "Correos sin archivar",
+                  giro: "-rotate-1",
+                },
+                {
+                  icono: Smartphone,
+                  texto: "Notas en el teléfono",
+                  giro: "rotate-[-1.5deg]",
+                },
+                {
+                  icono: Clock,
+                  texto: "«Te llamo la semana que viene»",
+                  giro: "-rotate-2",
+                },
               ].map((fragmento) => (
                 <span
                   key={fragmento.texto}
@@ -419,9 +478,14 @@ const AntesDespues = () => (
                 { titulo: "Propuesta", color: "bg-sky-400", cuantas: 2 },
                 { titulo: "Ganada", color: "bg-emerald-500", cuantas: 1 },
               ].map((columna) => (
-                <div key={columna.titulo} className="rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-200/60">
+                <div
+                  key={columna.titulo}
+                  className="rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-200/60"
+                >
                   <div className="flex items-center gap-1.5 px-0.5">
-                    <span className={"size-1.5 rounded-full " + columna.color} />
+                    <span
+                      className={"size-1.5 rounded-full " + columna.color}
+                    />
                     <span className="truncate text-[10px] font-semibold text-neutral-600">
                       {columna.titulo}
                     </span>
@@ -448,7 +512,10 @@ const AntesDespues = () => (
                 "Tareas y recordatorios que no dependen de la memoria.",
                 "WhatsApp, correo y formularios dentro del historial.",
               ].map((punto) => (
-                <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+                <li
+                  key={punto}
+                  className="flex items-start gap-2.5 text-sm text-neutral-700"
+                >
                   <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                     <Check className="size-3" />
                   </span>
@@ -481,7 +548,8 @@ const RESULTADOS: {
   {
     icono: CheckSquare,
     titulo: "Saber qué debe hacer cada vendedor hoy",
-    texto: "Tareas con responsable y vencimiento: el seguimiento no depende de la memoria.",
+    texto:
+      "Tareas con responsable y vencimiento: el seguimiento no depende de la memoria.",
   },
   {
     icono: Contact,
@@ -506,12 +574,14 @@ const RESULTADOS: {
   {
     icono: Zap,
     titulo: "Automatizar el trabajo repetitivo",
-    texto: "Reglas «cuando pase X, haz Y» que aplican solas, entre por donde entre el dato.",
+    texto:
+      "Reglas «cuando pase X, haz Y» que aplican solas, entre por donde entre el dato.",
   },
   {
     icono: BarChart3,
     titulo: "Medir el pipeline y la conversión",
-    texto: "Informes de cierre, vendedores y motivos de pérdida, sin hojas aparte.",
+    texto:
+      "Informes de cierre, vendedores y motivos de pérdida, sin hojas aparte.",
   },
 ];
 
@@ -561,8 +631,8 @@ const ComoFunciona = () => (
           </h2>
           <p className="mt-4 leading-relaxed text-neutral-600">
             Arrastras oportunidades entre etapas y el resto del equipo ve lo
-            mismo que tú: qué hay abierto, cuánto vale y qué hay que hacer.
-            El vendedor tiene su plan; la dirección tiene el pipeline.
+            mismo que tú: qué hay abierto, cuánto vale y qué hay que hacer. El
+            vendedor tiene su plan; la dirección tiene el pipeline.
           </p>
           <ul className="mt-6 space-y-3">
             {[
@@ -571,7 +641,10 @@ const ComoFunciona = () => (
               "Importes en tu moneda y motivos de pérdida para aprender de cada cierre.",
               "Tareas y notas dentro de la misma tarjeta, sin cambiar de pantalla.",
             ].map((punto) => (
-              <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+              <li
+                key={punto}
+                className="flex items-start gap-2.5 text-sm text-neutral-700"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="size-3" />
                 </span>
@@ -611,7 +684,10 @@ const ComoFunciona = () => (
               "Formularios públicos como enlace o iframe para tu web, con anti-bots.",
               "El correo entrante (CC a tu buzón Vinqulia) también crea o enriquece la ficha.",
             ].map((punto) => (
-              <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+              <li
+                key={punto}
+                className="flex items-start gap-2.5 text-sm text-neutral-700"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="size-3" />
                 </span>
@@ -642,7 +718,10 @@ const ComoFunciona = () => (
               "Informes de conversión, cierre por vendedor y motivos de pérdida.",
               "Vistas guardadas y compartidas para que todo el equipo filtre igual.",
             ].map((punto) => (
-              <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+              <li
+                key={punto}
+                className="flex items-start gap-2.5 text-sm text-neutral-700"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="size-3" />
                 </span>
@@ -669,7 +748,10 @@ const ComoFunciona = () => (
 /* ------------------------------------------------------------------ */
 
 const Proceso = () => (
-  <section id="proceso" className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24">
+  <section
+    id="proceso"
+    className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24"
+  >
     <div className="mx-auto max-w-7xl px-5 sm:px-8">
       <TituloDeSeccion
         eyebrow="El recorrido"
@@ -855,7 +937,10 @@ const Niveles = () => (
             </p>
             <ul className="mt-4 flex-1 space-y-2">
               {nivel.puntos.map((punto) => (
-                <li key={punto} className="flex items-start gap-2 text-sm text-neutral-700">
+                <li
+                  key={punto}
+                  className="flex items-start gap-2 text-sm text-neutral-700"
+                >
                   <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                   {punto}
                 </li>
@@ -876,9 +961,12 @@ const Niveles = () => (
         ))}
       </div>
       <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-neutral-500">
-        Los precios se manejan en pesos mexicanos (MXN) y se definen según el
-        tamaño del equipo y el alcance del proyecto. Cuéntanos tu caso en la
-        demo y te enviamos una propuesta.
+        El software tiene{" "}
+        <a href="#precios" className="font-medium text-brand-700">
+          planes mensuales por equipo
+        </a>
+        ; la implementación y los desarrollos a medida se cotizan según el
+        alcance. Cuéntanos tu caso en la demo y te enviamos una propuesta.
       </p>
     </div>
   </section>
@@ -899,8 +987,8 @@ const Migracion = () => (
           </h2>
           <p className="mt-4 leading-relaxed text-neutral-600">
             Cambiar de CRM da miedo por todo lo que hay que mover: contactos,
-            empresas, oportunidades, configuraciones. Vinqulia te acompaña en
-            la migración para que no pierdas nada por el camino — y detecta
+            empresas, oportunidades, configuraciones. Vinqulia te acompaña en la
+            migración para que no pierdas nada por el camino — y detecta
             duplicados mientras importa.
           </p>
           <ul className="mt-6 space-y-3">
@@ -910,7 +998,10 @@ const Migracion = () => (
               "Configuración del pipeline y los campos según tu operación.",
               "Puesta en marcha con el equipo de Kontrolia si lo necesitas.",
             ].map((punto) => (
-              <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+              <li
+                key={punto}
+                className="flex items-start gap-2.5 text-sm text-neutral-700"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="size-3" />
                 </span>
@@ -948,10 +1039,17 @@ const Migracion = () => (
               { nombre: "Empresas", cuenta: "186" },
               { nombre: "Oportunidades", cuenta: "74" },
             ].map((fila) => (
-              <div key={fila.nombre} className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2">
+              <div
+                key={fila.nombre}
+                className="flex items-center gap-3 rounded-lg bg-neutral-50 px-3 py-2"
+              >
                 <FileText className="size-4 text-neutral-400" />
-                <span className="flex-1 text-sm text-neutral-700">{fila.nombre}</span>
-                <span className="text-sm font-semibold tabular-nums text-neutral-900">{fila.cuenta}</span>
+                <span className="flex-1 text-sm text-neutral-700">
+                  {fila.nombre}
+                </span>
+                <span className="text-sm font-semibold tabular-nums text-neutral-900">
+                  {fila.cuenta}
+                </span>
                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                   Listo
                 </span>
@@ -1011,8 +1109,12 @@ const Kontrolia = () => (
             <span className="flex size-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
               <punto.icono className="size-5" />
             </span>
-            <h3 className="mt-4 text-sm font-semibold text-neutral-900">{punto.titulo}</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">{punto.texto}</p>
+            <h3 className="mt-4 text-sm font-semibold text-neutral-900">
+              {punto.titulo}
+            </h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-neutral-600">
+              {punto.texto}
+            </p>
           </div>
         ))}
       </div>
@@ -1045,8 +1147,9 @@ const INTEGRACIONES: {
   },
   {
     icono: Mail,
-    nombre: "Postmark",
-    texto: "Correo saliente fiable y captura del correo entrante como nota.",
+    nombre: "Resend, Postmark o SendGrid",
+    texto:
+      "Correo saliente desde tu propio dominio y captura del correo entrante como nota.",
   },
   {
     icono: Globe,
@@ -1061,7 +1164,20 @@ const INTEGRACIONES: {
   {
     icono: Webhook,
     nombre: "API y webhooks",
-    texto: "API REST completa y webhooks firmados para conectar tus sistemas.",
+    texto:
+      "API REST completa, claves de API y webhooks firmados: n8n, Zapier, Make o tu propio servidor.",
+  },
+  {
+    icono: Bot,
+    nombre: "Asistentes de IA (MCP)",
+    texto:
+      "Claude u otro asistente consulta y actualiza tu CRM por conversación.",
+  },
+  {
+    icono: Receipt,
+    nombre: "Facturación, ERP o tienda",
+    texto:
+      "Registran cada venta y contrato en el módulo Clientes, sin conocer los ids del CRM.",
   },
   {
     icono: Database,
@@ -1115,7 +1231,10 @@ const Integraciones = () => (
 /* ------------------------------------------------------------------ */
 
 const Infraestructura = () => (
-  <section id="infraestructura" className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24">
+  <section
+    id="infraestructura"
+    className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24"
+  >
     <div className="mx-auto max-w-7xl px-5 sm:px-8">
       <div className="grid items-center gap-10 lg:grid-cols-2">
         <div>
@@ -1136,7 +1255,10 @@ const Infraestructura = () => (
               "Integración con tus sistemas vía API y webhooks.",
               "Arquitectura preparada para integrar y automatizar procesos.",
             ].map((punto) => (
-              <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+              <li
+                key={punto}
+                className="flex items-start gap-2.5 text-sm text-neutral-700"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="size-3" />
                 </span>
@@ -1183,9 +1305,16 @@ const Infraestructura = () => (
                 texto: "API y webhooks para conectar tus sistemas existentes.",
               },
             ].map((opcion) => (
-              <div key={opcion.titulo} className="rounded-lg border border-neutral-200 p-3">
-                <p className="text-sm font-semibold text-neutral-800">{opcion.titulo}</p>
-                <p className="mt-0.5 text-xs text-neutral-500">{opcion.texto}</p>
+              <div
+                key={opcion.titulo}
+                className="rounded-lg border border-neutral-200 p-3"
+              >
+                <p className="text-sm font-semibold text-neutral-800">
+                  {opcion.titulo}
+                </p>
+                <p className="mt-0.5 text-xs text-neutral-500">
+                  {opcion.texto}
+                </p>
               </div>
             ))}
           </div>
@@ -1210,8 +1339,8 @@ const Demo = () => (
           </h2>
           <p className="mt-4 text-base leading-relaxed text-neutral-600">
             Cuéntanos cómo trabaja actualmente tu equipo y te mostramos cómo
-            podrías llevar ese proceso a Vinqulia: tu pipeline, tus etapas,
-            tus canales.
+            podrías llevar ese proceso a Vinqulia: tu pipeline, tus etapas, tus
+            canales.
           </p>
           <ul className="mt-6 space-y-3">
             {[
@@ -1220,7 +1349,10 @@ const Demo = () => (
               "Una demo pensada para tu operación, no una visita genérica.",
               "Sin compromiso: sal de la llamada con un plan claro.",
             ].map((punto) => (
-              <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+              <li
+                key={punto}
+                className="flex items-start gap-2.5 text-sm text-neutral-700"
+              >
                 <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                   <Check className="size-3" />
                 </span>
@@ -1246,6 +1378,26 @@ const Demo = () => (
 /* ------------------------------------------------------------------ */
 
 const FAQS = [
+  {
+    p: "¿Cuánto cuesta?",
+    r: "Tres planes mensuales en pesos mexicanos: Impulso ($499, hasta 3 usuarios, con 30 días de prueba gratis), Pro ($999, hasta 10 usuarios, con automatizaciones, correo, API e IA) y Max ($1,999, hasta 25 usuarios, con integración y configuración guiada). Enterprise se cotiza a medida. Los detalles están en la sección de precios.",
+  },
+  {
+    p: "¿Hay prueba gratis?",
+    r: "Sí: el plan Impulso incluye 30 días de prueba sin tarjeta. Creas tu cuenta, importas tus contactos y decides después.",
+  },
+  {
+    p: "¿Tiene soporte a clientes y gestión de contratos?",
+    r: "Sí. Los tickets registran cada petición o incidencia con su estado, y el módulo Clientes guarda contratos, renovaciones y compras de cada empresa, con avisos automáticos antes de que venza una renovación.",
+  },
+  {
+    p: "¿Puedo usar Claude u otra IA con mis datos?",
+    r: "Sí. Vinqulia expone un servidor MCP: conectas tu asistente y le pides las cosas en lenguaje natural («¿qué tareas tengo hoy?», «crea una oportunidad con Casa Lola por 900 al mes»). También redacta plantillas de correo con el proveedor de IA que tú elijas.",
+  },
+  {
+    p: "¿Hay documentación?",
+    r: "Sí, dentro de la propia aplicación: un centro de ayuda que explica qué es un CRM, cada pantalla con ejemplos, todas las funciones avanzadas y preguntas frecuentes. Y desde ahí mismo puedes pedir una funcionalidad a medida.",
+  },
   {
     p: "¿Puedo instalar Vinqulia en mis servidores?",
     r: "Sí. La aplicación puede desplegarse en infraestructura propia; lo coordinamos contigo según tu entorno y tus políticas. En el formulario de demo puedes indicar que prefieres instalación propia.",
@@ -1312,7 +1464,9 @@ const FAQ = () => (
                 <Plus className="size-3.5" />
               </span>
             </summary>
-            <p className="mt-3 text-sm leading-relaxed text-neutral-600">{faq.r}</p>
+            <p className="mt-3 text-sm leading-relaxed text-neutral-600">
+              {faq.r}
+            </p>
           </details>
         ))}
       </div>
@@ -1380,8 +1534,11 @@ export default function Pagina() {
         <AntesDespues />
         <Resultados />
         <ComoFunciona />
+        <MasAllaDeLaVenta />
+        <InteligenciaArtificial />
         <Proceso />
         <CasosDeUso />
+        <Precios />
         <Niveles />
         <Migracion />
         <Kontrolia />
