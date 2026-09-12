@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
+import { URL_SITIO } from "../lib/sitio";
 
 export const metadata: Metadata = {
+  // Sin metadataBase, Next advierte y resuelve canonical/Open Graph con rutas
+  // relativas; con él, las URLs de industria salen absolutas.
+  metadataBase: new URL(URL_SITIO),
   title: "Vinqulia | El sistema comercial que se adapta a tu empresa",
   description:
     "Vinqulia centraliza clientes, oportunidades, seguimiento y comunicación en un CRM que se adapta a la forma en que trabaja tu empresa. Úsalo como servicio, instálalo en tu propia infraestructura o llévalo más lejos con automatización e IA de Kontrolia.",

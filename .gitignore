@@ -76,3 +76,6 @@ next-env.d.ts
 
 # Enlace local con Vercel (vercel link); nunca se versiona.
 .vercel
+
+# Caché de Python (scripts de skills)
+__pycache__/

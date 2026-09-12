@@ -32,19 +32,168 @@
   }
 }
 
-/* Fondo con un halo de marca muy sutil, igual que en el CRM. */
+/*
+ * Fondo de la página: dos halos de marca muy suaves (como en el CRM) más una
+ * rejilla técnica apenas perceptible. Cuatro capas de background-image: los
+ * halos se pintan encima de la rejilla.
+ */
 body {
   background-color: var(--color-paper);
   background-image: radial-gradient(
       1100px 520px at 12% -8%,
-      oklch(0.58 0.21 25 / 0.08),
+      oklch(0.58 0.21 25 / 0.09),
       transparent 60%
     ),
     radial-gradient(
-      900px 480px at 100% -4%,
-      oklch(0.52 0.2 24 / 0.06),
+      900px 520px at 100% -4%,
+      oklch(0.52 0.2 24 / 0.07),
       transparent 55%
-    );
-  background-repeat: no-repeat;
+    ),
+    linear-gradient(to right, oklch(0.52 0.2 24 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.52 0.2 24 / 0.05) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    54px 54px,
+    54px 54px;
+  background-repeat: no-repeat, no-repeat, repeat, repeat;
   background-attachment: fixed;
+}
+
+/* ------------------------------------------------------------------ */
+/* Aparición al hacer scroll                                           */
+/* ------------------------------------------------------------------ */
+/*
+ * Animaciones ligadas al scroll, sin JavaScript: animation-timeline: view()
+ * anima según la posición del elemento en el viewport. Donde el navegador no
+ * lo soporta (o el usuario pidió menos movimiento), el bloque @supports no
+ * aplica y el contenido se ve tal cual: mejora progresiva, nunca desaparece.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes aparecer {
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .aparece,
+    .aparece-hijos > * {
+      animation: aparecer linear both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 45%;
+    }
+
+    /* Escalonado: cada hijo entra un poco más tarde que el anterior. */
+    .aparece-hijos > *:nth-child(2) {
+      animation-range: entry 9% entry 49%;
+    }
+    .aparece-hijos > *:nth-child(3) {
+      animation-range: entry 13% entry 53%;
+    }
+    .aparece-hijos > *:nth-child(4) {
+      animation-range: entry 17% entry 57%;
+    }
+    .aparece-hijos > *:nth-child(5) {
+      animation-range: entry 21% entry 61%;
+    }
+    .aparece-hijos > *:nth-child(6) {
+      animation-range: entry 25% entry 65%;
+    }
+    .aparece-hijos > *:nth-child(7) {
+      animation-range: entry 29% entry 69%;
+    }
+    .aparece-hijos > *:nth-child(8) {
+      animation-range: entry 33% entry 73%;
+    }
+    .aparece-hijos > *:nth-child(n + 9) {
+      animation-range: entry 36% entry 76%;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Borde degradado (riqueza visual en las tarjetas)                    */
+/* ------------------------------------------------------------------ */
+/*
+ * Borde de marca de 1px que aparece al pasar el ratón. Se dibuja con un
+ * pseudo-elemento enmascarado para que el interior de la tarjeta quede limpio
+ * (el fondo blanco no se tiñe) y solo se vea el borde.
+ */
+.borde-degradado {
+  position: relative;
+}
+.borde-degradado::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    oklch(0.52 0.2 24 / 0.55),
+    oklch(0.6 0.19 24 / 0.18) 45%,
+    transparent 75%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.borde-degradado:hover::after,
+.borde-degradado:focus-within::after {
+  opacity: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Movimiento decorativo                                                */
+/* ------------------------------------------------------------------ */
+
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -20px, 0) scale(1.05);
+  }
+}
+
+.animar-flotar {
+  animation: flotar 11s ease-in-out infinite;
+}
+
+.animar-flotar-lento {
+  animation: flotar 16s ease-in-out infinite;
+}
+
+/* Trazo que recorre las flechas del diagrama de proceso. */
+@keyframes trazar {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.animar-trazo {
+  animation: trazar 1.4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-flotar,
+  .animar-flotar-lento,
+  .animar-trazo {
+    animation: none !important;
+  }
 }

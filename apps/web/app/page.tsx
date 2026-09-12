@@ -35,330 +35,13 @@ import {
   Zap,
 } from "lucide-react";
 
+import { Contador } from "../components/Contador";
+import { DiagramaProceso } from "../components/DiagramaProceso";
+import { BarraNavegacion } from "../components/BarraNavegacion";
+import { PieDePagina } from "../components/PieDePagina";
+import { CtaDemo, CtaExplorar, Eyebrow, TituloDeSeccion } from "../components/comunes";
+import { MaquetaAplicacion, MarcoDelNavegador, MockupTablero } from "../components/maquetas";
 import { FormularioDemo } from "../components/FormularioDemo";
-
-/* ------------------------------------------------------------------ */
-/* Marca                                                               */
-/* ------------------------------------------------------------------ */
-
-const Logo = ({ small = false }: { small?: boolean }) => (
-  <span className="flex items-center gap-2.5">
-    {/* eslint-disable-next-line @next/next/no-img-element */}
-    <img
-      src="/vinqulia-icon.png"
-      alt="Vinqulia"
-      className={small ? "size-7 rounded-lg" : "size-9 rounded-lg"}
-    />
-    <span
-      className={
-        small
-          ? "text-lg font-bold tracking-tight"
-          : "text-xl font-bold tracking-tight"
-      }
-    >
-      vinq<span className="text-brand-600">u</span>lia
-    </span>
-  </span>
-);
-
-/* ------------------------------------------------------------------ */
-/* CTAs                                                                */
-/* ------------------------------------------------------------------ */
-
-/** CTA comercial principal: lleva al formulario de calificación. */
-const CtaDemo = ({
-  children = "Quiero una demo personalizada",
-  className = "",
-}: {
-  children?: React.ReactNode;
-  className?: string;
-}) => (
-  <a
-    href="#demo"
-    className={
-      "inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:-translate-y-0.5 hover:bg-brand-700 " +
-      className
-    }
-  >
-    {children}
-    <ArrowRight className="size-4" />
-  </a>
-);
-
-/** CTA secundario: para el visitante que prefiere explorar primero. */
-const CtaExplorar = ({
-  children = "Explorar Vinqulia",
-  className = "",
-}: {
-  children?: React.ReactNode;
-  className?: string;
-}) => (
-  <a
-    href="#solucion"
-    className={
-      "inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 " +
-      className
-    }
-  >
-    {children}
-  </a>
-);
-
-/* ------------------------------------------------------------------ */
-/* Cabecera                                                            */
-/* ------------------------------------------------------------------ */
-
-const NAV = [
-  { href: "#problemas", label: "El problema" },
-  { href: "#solucion", label: "La solución" },
-  { href: "#casos", label: "Casos de uso" },
-  { href: "#migracion", label: "Migración" },
-  { href: "#demo", label: "Demo" },
-  { href: "#faq", label: "FAQ" },
-];
-
-const Navbar = () => (
-  <header className="sticky top-0 z-50 border-b border-neutral-200/70 bg-white/80 backdrop-blur-md">
-    <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
-      <a href="#top" className="no-underline">
-        <Logo />
-      </a>
-      <nav className="hidden items-center gap-1 lg:flex">
-        {NAV.map((enlace) => (
-          <a
-            key={enlace.href}
-            href={enlace.href}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-brand-50 hover:text-brand-700"
-          >
-            {enlace.label}
-          </a>
-        ))}
-      </nav>
-      <div className="flex items-center gap-2">
-        <CtaExplorar className="hidden px-4 py-2 sm:inline-flex">
-          Explorar Vinqulia
-        </CtaExplorar>
-        <a
-          href="#demo"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-brand-600/30 transition-all hover:bg-brand-700"
-        >
-          Quiero una demo personalizada
-        </a>
-      </div>
-    </div>
-  </header>
-);
-
-/* ------------------------------------------------------------------ */
-/* Secciones compartidas                                               */
-/* ------------------------------------------------------------------ */
-
-const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">
-    {children}
-  </p>
-);
-
-const TituloDeSeccion = ({
-  eyebrow,
-  titulo,
-  subtitulo,
-}: {
-  eyebrow: string;
-  titulo: string;
-  subtitulo: string;
-}) => (
-  <div className="mx-auto max-w-2xl text-center">
-    <Eyebrow>{eyebrow}</Eyebrow>
-    <h2 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-      {titulo}
-    </h2>
-    <p className="mt-4 text-base leading-relaxed text-neutral-600">{subtitulo}</p>
-  </div>
-);
-
-/* ------------------------------------------------------------------ */
-/* Mockups del producto                                                */
-/* ------------------------------------------------------------------ */
-
-const MarcoDelNavegador = ({ children }: { children: React.ReactNode }) => (
-  <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-2xl shadow-neutral-900/10">
-    <div className="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-3">
-      <span className="size-3 rounded-full bg-neutral-300" />
-      <span className="size-3 rounded-full bg-neutral-300" />
-      <span className="size-3 rounded-full bg-neutral-300" />
-      <span className="ml-3 hidden flex-1 rounded-md bg-white px-3 py-1 text-xs text-neutral-400 ring-1 ring-neutral-200 sm:block">
-        app.vinqulia.com
-      </span>
-    </div>
-    {children}
-  </div>
-);
-
-const AvatarIniciales = ({
-  iniciales,
-  color,
-}: {
-  iniciales: string;
-  color: string;
-}) => (
-  <span
-    className="flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
-    style={{ backgroundColor: color }}
-  >
-    {iniciales}
-  </span>
-);
-
-const TarjetaDeOportunidad = ({
-  nombre,
-  empresa,
-  monto,
-  iniciales,
-  color,
-  etiqueta,
-}: {
-  nombre: string;
-  empresa: string;
-  monto: string;
-  iniciales: string;
-  color: string;
-  etiqueta: string;
-}) => (
-  <div className="rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
-    <div className="flex items-center gap-2">
-      <AvatarIniciales iniciales={iniciales} color={color} />
-      <div className="min-w-0">
-        <p className="truncate text-[13px] font-semibold text-neutral-800">
-          {nombre}
-        </p>
-        <p className="truncate text-xs text-neutral-500">{empresa}</p>
-      </div>
-    </div>
-    <div className="mt-2.5 flex items-center justify-between">
-      <span className="text-[13px] font-bold tabular-nums text-neutral-900">
-        {monto}
-      </span>
-      <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-medium text-brand-700">
-        {etiqueta}
-      </span>
-    </div>
-  </div>
-);
-
-const MockupKanban = () => (
-  <div className="flex h-full flex-col">
-    <div className="flex items-center gap-2 border-b border-neutral-200 px-5 py-3">
-      <Handshake className="size-4 text-brand-600" />
-      <p className="text-sm font-semibold text-neutral-800">Oportunidades</p>
-      <span className="ml-auto rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700">
-        ▲ $128,400 MXN en juego
-      </span>
-    </div>
-    <div className="grid flex-1 grid-cols-4 gap-3 bg-neutral-50/70 p-4">
-      {[
-        {
-          titulo: "Oportunidad",
-          color: "bg-amber-400",
-          tarjetas: [
-            {
-              nombre: "Ana García",
-              empresa: "Grupo Nova",
-              monto: "$24,500",
-              iniciales: "AG",
-              color: "#e2766a",
-              etiqueta: "Nueva",
-            },
-            {
-              nombre: "Luis Pérez",
-              empresa: "Textiles del Norte",
-              monto: "$9,800",
-              iniciales: "LP",
-              color: "#7d6ae2",
-              etiqueta: "Web",
-            },
-          ],
-        },
-        {
-          titulo: "Propuesta enviada",
-          color: "bg-sky-400",
-          tarjetas: [
-            {
-              nombre: "Marta Ruiz",
-              empresa: "Distribuidora Sur",
-              monto: "$31,200",
-              iniciales: "MR",
-              color: "#3f8fd0",
-              etiqueta: "Correo",
-            },
-            {
-              nombre: "Carlos Soto",
-              empresa: "Andina Foods",
-              monto: "$12,000",
-              iniciales: "CS",
-              color: "#4fb59a",
-              etiqueta: "Propuesta",
-            },
-          ],
-        },
-        {
-          titulo: "En negociación",
-          color: "bg-brand-500",
-          tarjetas: [
-            {
-              nombre: "Elena Vidal",
-              empresa: "Innova Retail",
-              monto: "$46,900",
-              iniciales: "EV",
-              color: "#b23b2e",
-              etiqueta: "Caliente",
-            },
-            {
-              nombre: "Pedro Linares",
-              empresa: "Logística RM",
-              monto: "$18,600",
-              iniciales: "PL",
-              color: "#9a7a3f",
-              etiqueta: "Reunión",
-            },
-          ],
-        },
-        {
-          titulo: "Ganada",
-          color: "bg-emerald-500",
-          tarjetas: [
-            {
-              nombre: "Sofía Castro",
-              empresa: "Hábitat Build",
-              monto: "$27,300",
-              iniciales: "SC",
-              color: "#3f8f7a",
-              etiqueta: "Contrato",
-            },
-          ],
-        },
-      ].map((columna) => (
-        <div key={columna.titulo} className="flex flex-col gap-2">
-          <div className="flex items-center gap-1.5 px-1">
-            <span className={`size-2 rounded-full ${columna.color}`} />
-            <p className="truncate text-xs font-semibold text-neutral-700">
-              {columna.titulo}
-            </p>
-            <span className="ml-auto rounded-full bg-neutral-200/70 px-1.5 text-[10px] font-medium text-neutral-600">
-              {columna.tarjetas.length}
-            </span>
-          </div>
-          {columna.tarjetas.map((tarjeta) => (
-            <TarjetaDeOportunidad key={tarjeta.nombre} {...tarjeta} />
-          ))}
-          <div className="flex h-9 items-center justify-center rounded-xl border border-dashed border-neutral-300 text-neutral-400">
-            <Plus className="size-3.5" />
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
 
 const MockupWhatsApp = () => (
   <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm">
@@ -493,12 +176,14 @@ const MockupInformes = () => (
     </div>
     <div className="mt-4 grid grid-cols-3 gap-2">
       {[
-        { etiqueta: "Oportunidades", valor: "42" },
-        { etiqueta: "Ganadas", valor: "18" },
-        { etiqueta: "Conversión", valor: "43 %" },
+        { etiqueta: "Oportunidades", valor: 42, sufijo: "" },
+        { etiqueta: "Ganadas", valor: 18, sufijo: "" },
+        { etiqueta: "Conversión", valor: 43, sufijo: " %" },
       ].map((kpi) => (
         <div key={kpi.etiqueta} className="rounded-xl bg-neutral-50 p-3 text-center ring-1 ring-neutral-200/60">
-          <p className="text-lg font-bold tabular-nums text-neutral-900">{kpi.valor}</p>
+          <p className="text-lg font-bold text-neutral-900">
+            <Contador valor={kpi.valor} sufijo={kpi.sufijo} />
+          </p>
           <p className="text-[11px] text-neutral-500">{kpi.etiqueta}</p>
         </div>
       ))}
@@ -527,7 +212,21 @@ const MockupInformes = () => (
 
 const Hero = () => (
   <section id="top" className="relative overflow-hidden">
-    <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-16 sm:px-8 lg:grid-cols-2 lg:pb-24 lg:pt-24">
+    {/* Halos decorativos: dan profundidad al hero y se mueven muy despacio. */}
+    <div
+      aria-hidden
+      className="animar-flotar pointer-events-none absolute -left-24 top-4 size-[420px] rounded-full bg-brand-300/25 blur-3xl"
+    />
+    <div
+      aria-hidden
+      className="animar-flotar-lento pointer-events-none absolute -right-32 top-40 size-[520px] rounded-full bg-brand-200/35 blur-3xl"
+    />
+    <div
+      aria-hidden
+      className="pointer-events-none absolute left-1/3 top-0 size-[360px] rounded-full bg-amber-100/40 blur-3xl"
+    />
+
+    <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-5 pb-16 pt-16 sm:px-8 lg:grid-cols-2 lg:pb-24 lg:pt-24">
       <div>
         <span className="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
           <Sparkles className="size-3.5" />
@@ -568,45 +267,7 @@ const Hero = () => (
           aria-hidden
           className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-tr from-brand-100 via-brand-50 to-transparent blur-2xl"
         />
-        <MarcoDelNavegador>
-          <div className="flex">
-            <div className="hidden w-44 shrink-0 flex-col gap-1 bg-neutral-900 p-3 sm:flex">
-              <div className="mb-3 flex items-center gap-1.5 px-1.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/vinqulia-icon.png"
-                  alt=""
-                  aria-hidden
-                  className="size-6 rounded-md"
-                />
-                <span className="text-[13px] font-semibold text-white">Vinqulia</span>
-              </div>
-              {[
-                { icono: LayoutDashboard, etiqueta: "Tablero" },
-                { icono: Contact, etiqueta: "Contactos" },
-                { icono: Building2, etiqueta: "Empresas" },
-                { icono: Handshake, etiqueta: "Oportunidades", activo: true },
-                { icono: Users, etiqueta: "Equipo" },
-              ].map((item) => (
-                <span
-                  key={item.etiqueta}
-                  className={
-                    "flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] " +
-                    (item.activo
-                      ? "bg-brand-600 font-medium text-white"
-                      : "text-neutral-400")
-                  }
-                >
-                  <item.icono className="size-3" />
-                  {item.etiqueta}
-                </span>
-              ))}
-            </div>
-            <div className="min-w-0 flex-1">
-              <MockupKanban />
-            </div>
-          </div>
-        </MarcoDelNavegador>
+        <MaquetaAplicacion />
       </div>
     </div>
   </section>
@@ -657,11 +318,11 @@ const Problemas = () => (
         titulo="¿Tu operación comercial se parece a esto?"
         subtitulo="Si reconoces más de una de estas situaciones, no es falta de esfuerzo: es falta de un sistema."
       />
-      <div className="mx-auto mt-12 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="aparece-hijos mx-auto mt-12 grid max-w-5xl gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {PROBLEMAS.map((problema) => (
           <div
             key={problema.titulo}
-            className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+            className="borde-degradado rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
           >
             <AlertTriangle className="size-5 text-amber-500" />
             <p className="mt-3 text-sm font-semibold text-neutral-900">
@@ -686,6 +347,126 @@ const Problemas = () => (
 /* ------------------------------------------------------------------ */
 /* Resultados                                                          */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* Antes y después                                                     */
+/* ------------------------------------------------------------------ */
+
+const AntesDespues = () => (
+  <section className="py-16 lg:py-24">
+    <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <TituloDeSeccion
+        eyebrow="Antes y después"
+        titulo="Del caos de herramientas sueltas a un solo proceso"
+        subtitulo="No se trata de trabajar más: se trata de que la información deje de estar repartida y el seguimiento deje de depender de la memoria."
+      />
+
+      <div className="relative mt-12">
+        <div className="grid items-stretch gap-6 lg:grid-cols-2">
+          {/* ANTES */}
+          <div className="aparece rounded-3xl border border-neutral-200 bg-neutral-100/70 p-6 sm:p-8">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-neutral-200 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                Antes
+              </span>
+              <span className="text-sm text-neutral-500">Cada quien por su lado</span>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {[
+                { icono: FileText, texto: "Excel del vendedor A", giro: "-rotate-2" },
+                { icono: FileText, texto: "Excel del vendedor B", giro: "rotate-1" },
+                { icono: MessageCircle, texto: "WhatsApp del celular", giro: "rotate-2" },
+                { icono: Mail, texto: "Correos sin archivar", giro: "-rotate-1" },
+                { icono: Smartphone, texto: "Notas en el teléfono", giro: "rotate-[-1.5deg]" },
+                { icono: Clock, texto: "«Te llamo la semana que viene»", giro: "-rotate-2" },
+              ].map((fragmento) => (
+                <span
+                  key={fragmento.texto}
+                  className={
+                    "inline-flex items-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-white/70 px-3 py-2 text-xs text-neutral-500 " +
+                    fragmento.giro
+                  }
+                >
+                  <fragmento.icono className="size-3.5 text-neutral-400" />
+                  {fragmento.texto}
+                </span>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber-600" />
+              <p className="text-sm text-amber-900">
+                Preguntar «¿cómo vamos?» significa juntar seis versiones
+                distintas de la misma respuesta.
+              </p>
+            </div>
+          </div>
+
+          {/* DESPUÉS */}
+          <div className="aparece rounded-3xl border border-brand-200 bg-white p-6 shadow-xl shadow-brand-600/5 sm:p-8">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-brand-600 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-white">
+                Con Vinqulia
+              </span>
+              <span className="text-sm text-neutral-500">Un solo lugar</span>
+            </div>
+
+            {/* Mini tablero limpio */}
+            <div className="mt-6 grid grid-cols-3 gap-2">
+              {[
+                { titulo: "Oportunidad", color: "bg-amber-400", cuantas: 2 },
+                { titulo: "Propuesta", color: "bg-sky-400", cuantas: 2 },
+                { titulo: "Ganada", color: "bg-emerald-500", cuantas: 1 },
+              ].map((columna) => (
+                <div key={columna.titulo} className="rounded-xl bg-neutral-50/80 p-2 ring-1 ring-neutral-200/60">
+                  <div className="flex items-center gap-1.5 px-0.5">
+                    <span className={"size-1.5 rounded-full " + columna.color} />
+                    <span className="truncate text-[10px] font-semibold text-neutral-600">
+                      {columna.titulo}
+                    </span>
+                  </div>
+                  <div className="mt-2 space-y-1.5">
+                    {Array.from({ length: columna.cuantas }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="rounded-md border border-neutral-200 bg-white p-1.5 shadow-sm"
+                      >
+                        <span className="block h-1.5 w-3/4 rounded-full bg-neutral-200" />
+                        <span className="mt-1 block h-1.5 w-1/2 rounded-full bg-brand-200" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <ul className="mt-6 space-y-2.5">
+              {[
+                "Contactos y empresas en una sola base, sin duplicados.",
+                "Cada oportunidad con su etapa, su importe y su responsable.",
+                "Tareas y recordatorios que no dependen de la memoria.",
+                "WhatsApp, correo y formularios dentro del historial.",
+              ].map((punto) => (
+                <li key={punto} className="flex items-start gap-2.5 text-sm text-neutral-700">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    <Check className="size-3" />
+                  </span>
+                  {punto}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Flecha central (solo en pantallas anchas) */}
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 hidden size-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200 bg-white shadow-lg lg:flex">
+          <ArrowRight className="size-5 text-brand-600" />
+        </div>
+      </div>
+    </div>
+  </section>
+);
 
 const RESULTADOS: {
   icono: React.ElementType;
@@ -742,11 +523,11 @@ const Resultados = () => (
         titulo="Con Vinqulia puedes…"
         subtitulo="Cada función existe para sostener uno de estos resultados. Primero el resultado, después el cómo."
       />
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="aparece-hijos mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {RESULTADOS.map((resultado) => (
           <div
             key={resultado.titulo}
-            className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-md"
+            className="borde-degradado group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-md"
           >
             <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 transition-colors group-hover:bg-brand-600 group-hover:text-white">
               <resultado.icono className="size-5" />
@@ -800,7 +581,7 @@ const ComoFunciona = () => (
           </ul>
         </div>
         <MarcoDelNavegador>
-          <MockupKanban />
+          <MockupTablero />
         </MarcoDelNavegador>
       </div>
 
@@ -883,6 +664,29 @@ const ComoFunciona = () => (
 /* Casos de uso                                                         */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/* El recorrido del lead (diagrama)                                    */
+/* ------------------------------------------------------------------ */
+
+const Proceso = () => (
+  <section id="proceso" className="border-y border-neutral-200/70 bg-white/60 py-16 lg:py-24">
+    <div className="mx-auto max-w-7xl px-5 sm:px-8">
+      <TituloDeSeccion
+        eyebrow="El recorrido"
+        titulo="Cómo fluye tu proceso comercial, de principio a fin"
+        subtitulo="Desde que entra un lead hasta que se cierra y se mide, sin saltos entre herramientas ni datos que se quedan por el camino."
+      />
+      <div className="aparece mt-12">
+        <DiagramaProceso />
+      </div>
+      <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-neutral-500">
+        Cada paso deja rastro: quién lo tocó, cuándo y en qué quedó. Eso es lo
+        que convierte una lista de contactos en un proceso comercial.
+      </p>
+    </div>
+  </section>
+);
+
 const CASOS: {
   icono: React.ElementType;
   titulo: string;
@@ -941,11 +745,11 @@ const CasosDeUso = () => (
         titulo="¿Cuál es tu punto de partida?"
         subtitulo="Da igual de dónde vengas: Excel, WhatsApp, otro CRM o nada. Hay una forma de empezar."
       />
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="aparece-hijos mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {CASOS.map((caso) => (
           <div
             key={caso.titulo}
-            className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-md"
+            className="borde-degradado flex flex-col rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-brand-200 hover:shadow-md"
           >
             <span className="flex size-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
               <caso.icono className="size-5" />
@@ -1029,12 +833,12 @@ const Niveles = () => (
         titulo="Tres formas de empezar, una sola plataforma"
         subtitulo="No tienes que comprar todo de golpe: empieza con lo que necesitas hoy y crece después sin cambiar de proveedor."
       />
-      <div className="mx-auto mt-12 grid max-w-5xl gap-4 md:grid-cols-3">
+      <div className="aparece-hijos mx-auto mt-12 grid max-w-5xl gap-4 md:grid-cols-3">
         {NIVELES.map((nivel) => (
           <div
             key={nivel.nombre}
             className={
-              "flex flex-col rounded-2xl border bg-white p-6 shadow-sm " +
+              "borde-degradado flex flex-col rounded-2xl border bg-white p-6 shadow-sm " +
               (nivel.destacado
                 ? "border-brand-300 ring-2 ring-brand-200"
                 : "border-neutral-200")
@@ -1198,9 +1002,12 @@ const Kontrolia = () => (
         titulo="Vinqulia resuelve tu operación comercial. Kontrolia puede llevarla más lejos."
         subtitulo="Cuando tu empresa crezca, no tendrás que cambiar de proveedor: evolucionas dentro del mismo ecosistema."
       />
-      <div className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="aparece-hijos mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {KONTROLIA_PUNTOS.map((punto) => (
-          <div key={punto.titulo} className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div
+            key={punto.titulo}
+            className="borde-degradado rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm"
+          >
             <span className="flex size-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
               <punto.icono className="size-5" />
             </span>
@@ -1281,11 +1088,11 @@ const Integraciones = () => (
         titulo="Se conecta con las herramientas que ya usas… y con las que vengan"
         subtitulo="Vinqulia no te pide abandonar tu infraestructura: se apoya en ella y se integra con ella."
       />
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="aparece-hijos mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {INTEGRACIONES.map((integracion) => (
           <div
             key={integracion.nombre}
-            className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:border-brand-200 hover:shadow-md"
+            className="borde-degradado rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm transition-all hover:border-brand-200 hover:shadow-md"
           >
             <span className="flex size-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-700">
               <integracion.icono className="size-5" />
@@ -1395,7 +1202,7 @@ const Infraestructura = () => (
 const Demo = () => (
   <section id="demo" className="py-16 lg:py-24">
     <div className="mx-auto max-w-7xl px-5 sm:px-8">
-      <div className="grid items-start gap-10 lg:grid-cols-2">
+      <div className="aparece grid items-start gap-10 lg:grid-cols-2">
         <div className="lg:sticky lg:top-24">
           <Eyebrow>Demo personalizada</Eyebrow>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
@@ -1493,11 +1300,11 @@ const FAQ = () => (
         titulo="Las dudas que resuelven antes de decidir"
         subtitulo=""
       />
-      <div className="mt-10 space-y-3">
+      <div className="aparece-hijos mt-10 space-y-3">
         {FAQS.map((faq) => (
           <details
             key={faq.p}
-            className="group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm open:shadow-md"
+            className="borde-degradado group rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm open:shadow-md"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-neutral-900 [&::-webkit-details-marker]:hidden">
               {faq.p}
@@ -1522,11 +1329,11 @@ const CtaFinal = () => (
     <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 px-6 py-16 text-center shadow-2xl shadow-brand-900/30 sm:px-12 lg:py-20">
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-20 -top-20 size-72 rounded-full bg-white/10 blur-3xl"
+        className="animar-flotar pointer-events-none absolute -right-20 -top-20 size-72 rounded-full bg-white/10 blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -bottom-24 left-16 size-56 rounded-full bg-white/5 blur-2xl"
+        className="animar-flotar-lento pointer-events-none absolute -bottom-24 left-16 size-56 rounded-full bg-white/5 blur-2xl"
       />
       <div className="relative">
         <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand-100">
@@ -1560,50 +1367,20 @@ const CtaFinal = () => (
 );
 
 /* ------------------------------------------------------------------ */
-/* Footer                                                              */
-/* ------------------------------------------------------------------ */
-
-const Footer = () => (
-  <footer className="border-t border-neutral-200/70 bg-white/60">
-    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-5 py-10 sm:flex-row sm:px-8">
-      <Logo small />
-      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-neutral-600">
-        {NAV.map((enlace) => (
-          <a key={enlace.href} href={enlace.href} className="transition-colors hover:text-brand-700">
-            {enlace.label}
-          </a>
-        ))}
-      </nav>
-      <p className="text-sm text-neutral-400">
-        © {new Date().getFullYear()} Vinqulia · Parte de Kontrolia
-      </p>
-    </div>
-    <div className="border-t border-neutral-100 px-5 py-5 sm:px-8">
-      <p className="mx-auto max-w-7xl text-center text-xs leading-relaxed text-neutral-400">
-        Buscas: CRM con WhatsApp · CRM instalable en servidores propios · CRM
-        personalizable para tu empresa · CRM para pymes y equipos comerciales ·
-        Alternativa a HubSpot, Pipedrive o Zoho CRM.
-      </p>
-      <p className="mx-auto mt-2 max-w-7xl text-center text-xs leading-relaxed text-neutral-400">
-        Hecho en 🇲🇽 México con amor ❤️
-      </p>
-    </div>
-  </footer>
-);
-
-/* ------------------------------------------------------------------ */
 /* Página                                                              */
 /* ------------------------------------------------------------------ */
 
 export default function Pagina() {
   return (
     <>
-      <Navbar />
+      <BarraNavegacion enInicio />
       <main>
         <Hero />
         <Problemas />
+        <AntesDespues />
         <Resultados />
         <ComoFunciona />
+        <Proceso />
         <CasosDeUso />
         <Niveles />
         <Migracion />
@@ -1614,7 +1391,7 @@ export default function Pagina() {
         <FAQ />
         <CtaFinal />
       </main>
-      <Footer />
+      <PieDePagina enInicio />
     </>
   );
 }
