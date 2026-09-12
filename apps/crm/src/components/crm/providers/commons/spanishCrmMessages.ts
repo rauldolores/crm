@@ -614,6 +614,92 @@ export const spanishCrmMessages = {
         email_named: "Enviar el correo de la plantilla «%{name}»",
       },
     },
+    billing: {
+      title: "Plan y facturación",
+      intro:
+        "Tu plan, lo que llevas consumido y los planes disponibles. Los cobros se hacen en Stripe; aquí nunca se guardan datos de tarjetas.",
+      your_plan: "Tu plan",
+      plan_named: "Plan %{plan}",
+      current_plan: "Tu plan actual",
+      plans_title: "Planes disponibles",
+      loading_plans: "Cargando planes…",
+      no_plans: "Esta aplicación no tiene planes publicados.",
+      checking: "Consultando tu plan…",
+      retry: "Volver a comprobar",
+      choose_plan: "Elegir este plan",
+      free_plan_hint:
+        "Se asigna automáticamente o lo asigna un administrador de KontrolIA Auth.",
+      ask_admin:
+        "Solo un administrador de tu organización puede cambiar de plan.",
+      trial_days:
+        "%{smart_count} día de prueba |||| %{smart_count} días de prueba",
+      unlimited: "sin límite",
+      open_portal: "Gestionar suscripción",
+      update_payment_method: "Actualizar método de pago",
+      manual_subscription:
+        "Suscripción asignada a mano: para cambiarla, habla con quien administra KontrolIA Auth.",
+      not_required: "Esta aplicación no exige plan para tu organización.",
+      self_hosted:
+        "Esta instalación no usa planes: funciona por cuenta propia, sin límites de consumo ni cobros.",
+      no_subscription: "Tu organización no tiene ningún plan asignado.",
+      renews_on: "se renueva el %{date}",
+      ends_on: "termina el %{date}",
+      usage_title: "Consumo",
+      usage_of: "%{used} de %{limit} %{period}",
+      usage_unlimited: "%{used} · sin límite",
+      no_limits: "Tu plan no tiene límites de consumo.",
+      status: {
+        trialing: "En periodo de prueba",
+        active: "Activo",
+        past_due: "Pago pendiente",
+        canceled: "Cancelado",
+        expired: "Vencido",
+      },
+      blocked: {
+        no_subscription: {
+          title: "Elige un plan para empezar",
+          text: "Tu organización todavía no tiene un plan para esta aplicación. Elige uno para continuar.",
+        },
+        past_due: {
+          title: "Actualiza tu método de pago",
+          text: "El último cobro de tu plan %{plan} no se pudo realizar. Actualiza tu tarjeta para recuperar el acceso.",
+        },
+        canceled: {
+          title: "Tu plan terminó",
+          text: "La suscripción al plan %{plan} se canceló. Elige un plan para volver a entrar.",
+        },
+        expired: {
+          title: "Tu plan terminó",
+          text: "La suscripción al plan %{plan} venció. Elige un plan para volver a entrar.",
+        },
+        seats: {
+          title: "Tu organización no tiene cupo para más usuarios",
+          text: "%{detail} Pide a un administrador que amplíe el plan, o que libere un lugar.",
+        },
+      },
+      return: {
+        checking: "Confirmando tu pago… puede tardar unos segundos.",
+        ok_title: "¡Listo! Ya tienes el plan %{plan}",
+        ok_text: "Tu organización ya puede usar todo lo que incluye.",
+        enter: "Entrar",
+        pending_title: "Tu pago está en camino",
+        pending_text:
+          "Stripe nos avisará en unos segundos. Si ya pagaste, vuelve a comprobar; si no, tu plan aparecerá en cuanto llegue la confirmación.",
+      },
+      errors: {
+        generic: "No se pudo completar la operación. Inténtalo de nuevo.",
+        unreachable:
+          "No se pudo consultar tu plan en KontrolIA Auth. Revisa tu conexión e inténtalo de nuevo.",
+        forbidden:
+          "Solo un owner o admin de la organización puede administrar la suscripción.",
+        bad_return_url:
+          "La dirección de retorno del pago no está autorizada. Configura la URL de esta aplicación en KontrolIA Auth.",
+        already_subscribed:
+          "Tu organización ya tiene ese plan. Para cambiarlo usa «Gestionar suscripción».",
+        no_stripe:
+          "Esta instalación no tiene pagos en línea configurados. Contacta a quien administra KontrolIA Auth.",
+      },
+    },
     email_templates: {
       title: "Plantillas de correo",
       action: {

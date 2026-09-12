@@ -51,6 +51,12 @@ const getBaseAuthProvider = () =>
 // and the current sale in the local storage. They are cleared on logout.
 const IS_INITIALIZED_CACHE_KEY = "RaStore.auth.is_initialized";
 const CURRENT_SALE_CACHE_KEY = "RaStore.auth.current_sale";
+/**
+ * Mensaje del servidor cuando el plan no tiene cupo para un usuario más. Lo
+ * lee la guardia de plan para explicar por qué no se entra: sin esto, la
+ * persona vería la app vacía y sin ficha, sin saber por qué.
+ */
+export const LIMITE_DE_USUARIOS_KEY = "vinqulia.limite_de_usuarios";
 
 function getLocalStorage(): Storage | null {
   if (typeof window !== "undefined" && window.localStorage) {
@@ -114,11 +120,17 @@ const getSale = async () => {
   }).catch(() => null);
 
   if (respuesta?.ok) {
+    storage?.removeItem(LIMITE_DE_USUARIOS_KEY);
     const { sale } = await respuesta.json();
     if (sale) {
       storage?.setItem(CURRENT_SALE_CACHE_KEY, JSON.stringify(sale));
       return sale;
     }
+  } else if (respuesta?.status === 402) {
+    const { message } = (await respuesta.json().catch(() => ({}))) as {
+      message?: string;
+    };
+    storage?.setItem(LIMITE_DE_USUARIOS_KEY, message ?? "");
   }
 
   // maybeSingle y no single: sin ficha todavía (el aprovisionamiento falló o

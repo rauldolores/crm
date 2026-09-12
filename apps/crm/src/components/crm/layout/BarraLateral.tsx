@@ -14,6 +14,9 @@ import { Link, useLocation } from "react-router";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
 import { MODULE_REGISTRY } from "../modules/registry";
+import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
+import { FacturacionPage } from "../facturacion/FacturacionPage";
+import { useDerechos } from "../facturacion/useDerechos";
 
 /**
  * Navegación principal de Vinqulia, en una barra lateral.
@@ -63,6 +66,7 @@ export const BarraLateral = () => {
   const translate = useTranslate();
   const { darkModeLogo, title, modules } = useConfigurationContext();
   const { pathname } = useLocation();
+  const { derechos } = useDerechos();
 
   // Un ítem por módulo ACTIVO, en el orden del catálogo. Un módulo apagado
   // simplemente no aparece — no hace falta más para "activar/desactivar sin
@@ -204,6 +208,21 @@ export const BarraLateral = () => {
         )}
 
         <div className="mt-auto border-t border-sidebar-border pt-4">
+          {/* Consumo del plan, siempre a la vista: es lo que evita que el
+              límite sorprenda a mitad de una importación. */}
+          {derechos?.subscription && (
+            <Link
+              to={FacturacionPage.path}
+              className="mb-4 flex flex-col gap-2 rounded-lg px-2 py-2 text-sidebar-foreground no-underline hover:bg-sidebar-accent"
+            >
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                {translate("crm.billing.plan_named", {
+                  plan: derechos.subscription.planName,
+                })}
+              </span>
+              <ConsumoDelPlan usage={derechos.usage} compacto />
+            </Link>
+          )}
           <div className="flex items-center gap-2 px-2 text-xs text-sidebar-foreground/50">
             <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />
             <span className="truncate">{title} · CRM</span>

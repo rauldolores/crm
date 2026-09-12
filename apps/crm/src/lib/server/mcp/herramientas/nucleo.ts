@@ -106,6 +106,21 @@ export const filas = (datos: unknown[]): Resultado =>
       : JSON.stringify(datos),
   );
 
+/**
+ * Organización activa del token, para los límites del plan: el contador de
+ * KontrolIA Auth se lleva por organización, no por usuario.
+ */
+export const organizacionDelContexto = (
+  ctx: ContextoDeHerramienta,
+): string | null => {
+  try {
+    const claims = decodeJwt(ctx.token) as { organization_id?: string };
+    return claims.organization_id ?? null;
+  } catch {
+    return null;
+  }
+};
+
 /** Ejecuta y devuelve las filas, o el error, en el formato del MCP. */
 export async function responder<T = Record<string, unknown>>(
   ctx: ContextoDeHerramienta,

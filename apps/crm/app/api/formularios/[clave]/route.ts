@@ -1,3 +1,8 @@
+import {
+  contarUso,
+  exigirCupo,
+  LIMITE_CONTACTOS,
+} from "@/lib/server/kontrolia-auth/consumo";
 import { getServiceClient } from "@/lib/server/supabase-service";
 
 /**
@@ -230,6 +235,25 @@ export async function POST(peticion: Request, { params }: Contexto) {
       ).data
     : null;
 
+  // Límite del plan: un formulario público no debe seguir registrando
+  // contactos que la organización ya no tiene cupo para tener. Al visitante
+  // se le responde con un mensaje genérico; el detalle es para el dueño del
+  // CRM, que lo verá en su pantalla de plan.
+  if (!contactoExistente) {
+    const sinCupo = await exigirCupo(
+      formulario.organization_id,
+      LIMITE_CONTACTOS,
+    );
+    if (sinCupo) {
+      return Response.json(
+        {
+          message: "Este formulario no puede recibir más registros por ahora.",
+        },
+        { status: 503 },
+      );
+    }
+  }
+
   const contacto =
     contactoExistente ??
     (
@@ -254,6 +278,9 @@ export async function POST(peticion: Request, { params }: Contexto) {
       { message: "No se pudo registrar el contacto." },
       { status: 500 },
     );
+  }
+  if (!contactoExistente) {
+    await contarUso(formulario.organization_id, LIMITE_CONTACTOS, contacto.id);
   }
 
   if (esTicket) {

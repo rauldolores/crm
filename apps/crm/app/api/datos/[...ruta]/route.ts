@@ -2,7 +2,20 @@ import { afiliadoDeLaSesion } from "@/lib/server/afiliadoDeLaSesion";
 import { autenticarPuente } from "@/lib/server/autenticarPuente";
 import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
 import { imponerDueno } from "@/lib/server/imponerDueno";
+import {
+  contarUso,
+  exigirCupo,
+  LIMITE_CONTACTOS,
+  LIMITE_EMBUDOS,
+  limitesConfigurados,
+} from "@/lib/server/kontrolia-auth/consumo";
+import {
+  contactosNuevos,
+  embudosNuevos,
+  idsDe,
+} from "@/lib/server/limitesDelPuente";
 import { restringirAPropios } from "@/lib/server/restringirAPropios";
+import { getServiceClient } from "@/lib/server/supabase-service";
 
 /**
  * Puente entre el navegador (o una integración externa) y la base de datos
@@ -37,6 +50,11 @@ import { restringirAPropios } from "@/lib/server/restringirAPropios";
  * mecanismo que CON_DUENO, mismo archivo. Una clave de API nunca es
  * afiliado (no representa a un usuario), así que integraciones como la de
  * diagnóstico de Kontrolia no se ven afectadas.
+ *
+ * Límites del plan (KontrolIA Auth): como todo alta pasa por aquí, es donde
+ * se comprueba el cupo antes de crear contactos o embudos y donde se cuenta
+ * después, con el id de lo creado para que un reintento no cuente doble.
+ * Ver limitesDelPuente.ts (qué se cuenta) y consumo.ts (quién lo reporta).
  */
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
@@ -234,12 +252,36 @@ async function reenviar(peticion: Request, ruta: string[]) {
     }
   }
 
+  // Límites del plan: qué va a crear esta escritura, si es que crea algo
+  // cobrable, y si el plan de la organización tiene cupo para ello.
+  const alta = await altaCobrable(
+    peticion.method,
+    recurso,
+    cuerpo,
+    organizacionId,
+    cabeceras.get("prefer"),
+  );
+  if (alta) {
+    const sinCupo = await exigirCupo(organizacionId, alta.clave, alta.cantidad);
+    if (sinCupo) return sinCupo;
+    // Para contar con el id de cada fila creada hace falta que PostgREST
+    // devuelva las filas. Si el cliente no lo pidió, se pide igual y se le
+    // devuelve la respuesta vacía que esperaba.
+    if (alta.clave === LIMITE_CONTACTOS && !alta.pidioRepresentacion) {
+      cabeceras.set("prefer", preferConRepresentacion(cabeceras.get("prefer")));
+    }
+  }
+
   const destino = `${SUPABASE_URL}/${ruta.join("/")}?${parametros.toString()}`;
   const respuesta = await fetch(destino, {
     method: peticion.method,
     headers: cabeceras,
     body: cuerpo,
   });
+
+  if (alta && respuesta.ok) {
+    return contarYResponder(respuesta, alta, organizacionId);
+  }
 
   // Se conservan las cabeceras: el data provider lee `content-range` para
   // paginar. Se quitan las de codificación porque el cuerpo ya viene
@@ -249,6 +291,99 @@ async function reenviar(peticion: Request, ruta: string[]) {
   cabecerasRespuesta.delete("content-length");
 
   return new Response(respuesta.body, {
+    status: respuesta.status,
+    statusText: respuesta.statusText,
+    headers: cabecerasRespuesta,
+  });
+}
+
+interface AltaCobrable {
+  clave: string;
+  cantidad: number;
+  /** Ids ya conocidos (embudos); los contactos se leen de la respuesta. */
+  ids: (string | number)[];
+  pidioRepresentacion: boolean;
+}
+
+/**
+ * Qué límite toca esta escritura y cuántas unidades, o null si ninguno.
+ * Solo se molesta en mirar cuando el servidor está configurado para
+ * reportar consumo; si no, el puente se comporta exactamente como antes.
+ */
+async function altaCobrable(
+  metodo: string,
+  recurso: string,
+  cuerpo: string | undefined,
+  organizacionId: string,
+  prefer: string | null,
+): Promise<AltaCobrable | null> {
+  if (!limitesConfigurados() || !cuerpo) return null;
+
+  if (metodo === "POST" && recurso === "contacts") {
+    const cantidad = contactosNuevos(cuerpo);
+    return cantidad > 0
+      ? {
+          clave: LIMITE_CONTACTOS,
+          cantidad,
+          ids: [],
+          pidioRepresentacion: /return=representation/.test(prefer ?? ""),
+        }
+      : null;
+  }
+
+  if (
+    (metodo === "POST" || metodo === "PATCH") &&
+    recurso === "configuration"
+  ) {
+    const { data } = await getServiceClient()
+      .from("configuration")
+      .select("config")
+      .eq("organization_id", organizacionId)
+      .maybeSingle();
+    const nuevos = embudosNuevos(cuerpo, data?.config);
+    return nuevos.length > 0
+      ? {
+          clave: LIMITE_EMBUDOS,
+          cantidad: nuevos.length,
+          // El embudo no tiene id propio: su valor dentro de la organización
+          // es lo que lo identifica, y lo que hace idempotente el conteo.
+          ids: nuevos.map((valor) => `${organizacionId}:${valor}`),
+          pidioRepresentacion: true,
+        }
+      : null;
+  }
+
+  return null;
+}
+
+/** Añade `return=representation` a la cabecera Prefer, conservando el resto. */
+const preferConRepresentacion = (prefer: string | null): string => {
+  const partes = (prefer ?? "")
+    .split(",")
+    .map((parte) => parte.trim())
+    .filter((parte) => parte && !parte.startsWith("return="));
+  return [...partes, "return=representation"].join(",");
+};
+
+/**
+ * Cuenta lo creado y devuelve la respuesta al cliente. Los contactos se
+ * cuentan por el id que devolvió PostgREST; si el cliente no había pedido
+ * las filas, se le devuelve el cuerpo vacío que esperaba.
+ */
+async function contarYResponder(
+  respuesta: Response,
+  alta: AltaCobrable,
+  organizacionId: string,
+): Promise<Response> {
+  const cabecerasRespuesta = new Headers(respuesta.headers);
+  cabecerasRespuesta.delete("content-encoding");
+  cabecerasRespuesta.delete("content-length");
+
+  const texto = await respuesta.text();
+  const ids = alta.ids.length > 0 ? alta.ids : idsDe(texto);
+  await Promise.all(ids.map((id) => contarUso(organizacionId, alta.clave, id)));
+
+  return new Response(alta.pidioRepresentacion ? texto : null, {
     status: respuesta.status,
     statusText: respuesta.statusText,
     headers: cabecerasRespuesta,

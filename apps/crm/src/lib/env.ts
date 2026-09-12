@@ -25,6 +25,12 @@ export const env = {
   kontroliaOAuthClientId:
     process.env.NEXT_PUBLIC_KONTROLIA_OAUTH_CLIENT_ID ?? "",
   /**
+   * Slug de esta aplicación en el catálogo de KontrolIA Auth. Es lo que
+   * identifica sus planes, sus permisos y sus límites de consumo.
+   */
+  kontroliaApplicationSlug:
+    process.env.NEXT_PUBLIC_KONTROLIA_APPLICATION_SLUG || "crm",
+  /**
    * Nombre propio para la cookie de sesión del CRM. El CRM comparte proyecto
    * de Supabase con KontrolIA Auth, así que ambos derivarían por defecto el
    * mismo nombre de cookie (`sb-<ref>-auth-token`); como auth-server la fija

@@ -1,5 +1,6 @@
 import {
   Blocks,
+  CreditCard,
   FileText,
   Globe,
   Mail,
@@ -26,6 +27,8 @@ import { FormulariosPage } from "../misc/FormulariosPage";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { CorreoPage } from "../misc/CorreoPage";
 import { IaPage } from "../misc/IaPage";
+import { FacturacionPage } from "../facturacion/FacturacionPage";
+import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
 
 /**
  * Cabecera superior del escritorio.
@@ -80,6 +83,7 @@ const Header = () => {
             <CanAccess resource="configuration" action="edit">
               <IaMenu />
             </CanAccess>
+            <FacturacionMenu />
             <ImportFromJsonMenuItem />
           </UserMenu>
         </div>
@@ -227,6 +231,29 @@ const PlantillasMenu = () => {
       <Link to="/email_templates" className="flex items-center gap-2">
         <FileText />
         {translate("crm.email_templates.title")}
+      </Link>
+    </DropdownMenuItem>
+  );
+};
+
+/**
+ * Plan y facturación. Visible para todo el mundo: cualquiera puede ver el
+ * plan y el consumo; comprar o abrir el portal solo lo puede un owner/admin
+ * de la organización, y esos botones ya se esconden dentro.
+ */
+const FacturacionMenu = () => {
+  const translate = useTranslate();
+  const userMenuContext = useUserMenu();
+  if (!userMenuContext) {
+    throw new Error("<FacturacionMenu> must be used inside <UserMenu>");
+  }
+  // Instalación por cuenta propia, sin KontrolIA Auth: no hay planes.
+  if (!facturacionDisponible()) return null;
+  return (
+    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+      <Link to={FacturacionPage.path} className="flex items-center gap-2">
+        <CreditCard />
+        {translate("crm.billing.title")}
       </Link>
     </DropdownMenuItem>
   );

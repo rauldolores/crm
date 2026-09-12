@@ -1,4 +1,9 @@
 import { env } from "@/lib/env";
+import {
+  contarUso,
+  exigirCupo,
+  LIMITE_USUARIOS,
+} from "@/lib/server/kontrolia-auth/consumo";
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 import { getServiceClient } from "@/lib/server/supabase-service";
 
@@ -15,6 +20,10 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  *   servicio, imponiendo la organización del token.
  *
  * Idempotente: los miembros que ya tienen ficha se ignoran.
+ *
+ * Cada ficha nueva cuenta como un usuario del plan, igual que en
+ * /api/crm/aprovisionar. Si no hay cupo para todos, no se crea ninguna: se
+ * devuelve cuántos quedaron fuera para que la interfaz lo explique.
  */
 export async function POST(peticion: Request) {
   const auth = await requireKontroliaPermission(peticion, []);
@@ -69,26 +78,44 @@ export async function POST(peticion: Request) {
     return Response.json({ total: miembros.length, agregados: 0 });
   }
 
-  const { error } = await supabase.from("sales").upsert(
-    sinFicha.map((miembro) => {
-      // KontrolIA Auth guarda el nombre completo en un solo campo; el CRM lo
-      // separa en dos. Se parte por el primer espacio, como en aprovisionar.
-      const [primerNombre, ...resto] = (miembro.name ?? "").trim().split(/\s+/);
-      return {
-        organization_id: organizacionId,
-        user_id: miembro.userId,
-        email: miembro.email,
-        first_name: primerNombre || "Pendiente",
-        last_name: resto.join(" "),
-        administrator: false,
-      };
-    }),
-    { onConflict: "organization_id,user_id", ignoreDuplicates: true },
+  const sinCupo = await exigirCupo(
+    organizacionId,
+    LIMITE_USUARIOS,
+    sinFicha.length,
   );
+  if (sinCupo) return sinCupo;
+
+  const { data: creadas, error } = await supabase
+    .from("sales")
+    .upsert(
+      sinFicha.map((miembro) => {
+        // KontrolIA Auth guarda el nombre completo en un solo campo; el CRM lo
+        // separa en dos. Se parte por el primer espacio, como en aprovisionar.
+        const [primerNombre, ...resto] = (miembro.name ?? "")
+          .trim()
+          .split(/\s+/);
+        return {
+          organization_id: organizacionId,
+          user_id: miembro.userId,
+          email: miembro.email,
+          first_name: primerNombre || "Pendiente",
+          last_name: resto.join(" "),
+          administrator: false,
+        };
+      }),
+      { onConflict: "organization_id,user_id", ignoreDuplicates: true },
+    )
+    .select("id");
 
   if (error) {
     return Response.json({ message: error.message }, { status: 500 });
   }
+
+  await Promise.all(
+    (creadas ?? []).map((ficha) =>
+      contarUso(organizacionId, LIMITE_USUARIOS, ficha.id),
+    ),
+  );
 
   return Response.json({ total: miembros.length, agregados: sinFicha.length });
 }

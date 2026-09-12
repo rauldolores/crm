@@ -25,6 +25,10 @@ import { Dashboard } from "../dashboard/Dashboard";
 import { MobileDashboard } from "../dashboard/MobileDashboard";
 import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
+import { EligeTuPlanPage } from "../facturacion/EligeTuPlanPage";
+import { FacturacionPage } from "../facturacion/FacturacionPage";
+import { RetornoDePagoPage } from "../facturacion/RetornoDePagoPage";
+import { olvidarDerechos } from "../facturacion/useDerechos";
 import tickets from "../tickets";
 import { Layout } from "../layout/Layout";
 import { MobileLayout } from "../layout/MobileLayout";
@@ -231,6 +235,7 @@ export const CRM = ({
         } catch {
           // Ignore
         }
+        olvidarDerechos();
         return authProvider.logout(params);
       },
     }),
@@ -277,6 +282,8 @@ const DesktopAdmin = (
           element={<ForgotPasswordPage />}
         />
         <Route path={OAuthConsentPage.path} element={<OAuthConsentPage />} />
+        <Route path={EligeTuPlanPage.path} element={<EligeTuPlanPage />} />
+        <Route path={RetornoDePagoPage.path} element={<RetornoDePagoPage />} />
       </CustomRoutes>
 
       <CustomRoutes>
@@ -293,6 +300,7 @@ const DesktopAdmin = (
         <Route path={CatalogoPage.path} element={<CatalogoPage />} />
         <Route path={CorreoPage.path} element={<CorreoPage />} />
         <Route path={IaPage.path} element={<IaPage />} />
+        <Route path={FacturacionPage.path} element={<FacturacionPage />} />
         <Route
           path={AffiliatesConfigPage.path}
           element={<AffiliatesConfigPage />}
@@ -363,6 +371,11 @@ const MobileAdmin = (
             element={<ForgotPasswordPage />}
           />
           <Route path={OAuthConsentPage.path} element={<OAuthConsentPage />} />
+          <Route path={EligeTuPlanPage.path} element={<EligeTuPlanPage />} />
+          <Route
+            path={RetornoDePagoPage.path}
+            element={<RetornoDePagoPage />}
+          />
         </CustomRoutes>
         <CustomRoutes>
           <Route
@@ -379,6 +392,7 @@ const MobileAdmin = (
           />
           <Route path={InformesPage.path} element={<InformesPage />} />
           <Route path={FormulariosPage.path} element={<FormulariosPage />} />
+          <Route path={FacturacionPage.path} element={<FacturacionPage />} />
         </CustomRoutes>
         <Resource
           name="contacts"

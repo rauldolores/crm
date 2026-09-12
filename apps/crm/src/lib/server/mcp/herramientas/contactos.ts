@@ -1,6 +1,20 @@
 import { z } from "zod";
 
-import { acotarLimite, construirSet, error, responder, texto } from "./nucleo";
+import {
+  contarUso,
+  exigirCupo,
+  LIMITE_CONTACTOS,
+} from "@/lib/server/kontrolia-auth/consumo";
+import {
+  acotarLimite,
+  construirSet,
+  ejecutar,
+  error,
+  filas,
+  organizacionDelContexto,
+  responder,
+  texto,
+} from "./nucleo";
 import type { RegistradorDeHerramientas } from "./registro";
 
 /**
@@ -149,7 +163,18 @@ export const registrarContactos: RegistradorDeHerramientas = (server, ctx) => {
       estado?: string;
       responsableId?: number;
     }) => {
-      return responder(
+      // Límite del plan: se comprueba antes y se cuenta después, con el id
+      // del contacto creado, igual que en el puente /api/datos.
+      const organizacion = organizacionDelContexto(ctx);
+      if (organizacion) {
+        const sinCupo = await exigirCupo(organizacion, LIMITE_CONTACTOS);
+        if (sinCupo) {
+          const { message } = (await sinCupo.json()) as { message: string };
+          return error(message);
+        }
+      }
+
+      const resultado = await ejecutar<{ id: number }>(
         ctx,
         `insert into contacts
            (first_name, last_name, title, company_id, status, sales_id,
@@ -172,6 +197,12 @@ export const registrarContactos: RegistradorDeHerramientas = (server, ctx) => {
           args.telefono ?? null,
         ],
       );
+      if (!resultado.ok) return error(resultado.error);
+
+      if (organizacion && resultado.filas[0]) {
+        await contarUso(organizacion, LIMITE_CONTACTOS, resultado.filas[0].id);
+      }
+      return filas(resultado.filas);
     },
   );
 

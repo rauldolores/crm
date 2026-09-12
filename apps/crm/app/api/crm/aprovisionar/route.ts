@@ -1,3 +1,8 @@
+import {
+  contarUso,
+  exigirCupo,
+  LIMITE_USUARIOS,
+} from "@/lib/server/kontrolia-auth/consumo";
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 import { getServiceClient } from "@/lib/server/supabase-service";
 
@@ -12,6 +17,10 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * la clave de servicio: dentro de la base, `auth.uid()` y el claim
  * `organization_id` estan vacios, asi que una funcion no puede saber a quien ni
  * a que empresa esta aprovisionando.
+ *
+ * Límite de usuarios del plan: la ficha nueva es lo que se cuenta como un
+ * usuario más de la organización. Sin cupo responde 402 y no crea la ficha;
+ * quien ya la tiene entra siempre, aunque el plan haya bajado después.
  */
 export async function POST(peticion: Request) {
   const auth = await requireKontroliaPermission(peticion, []);
@@ -46,6 +55,9 @@ export async function POST(peticion: Request) {
     .select("id", { count: "exact", head: true })
     .eq("organization_id", organizacionId);
 
+  const sinCupo = await exigirCupo(organizacionId, LIMITE_USUARIOS);
+  if (sinCupo) return sinCupo;
+
   const datos = (await peticion.json().catch(() => ({}))) as {
     email?: string;
     first_name?: string;
@@ -68,6 +80,8 @@ export async function POST(peticion: Request) {
   if (error) {
     return Response.json({ message: error.message }, { status: 500 });
   }
+
+  await contarUso(organizacionId, LIMITE_USUARIOS, nuevaFicha.id);
 
   return Response.json({ sale: nuevaFicha });
 }
