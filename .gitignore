@@ -73,3 +73,6 @@ __screenshots__/
 # Next.js
 .next/
 next-env.d.ts
+
+# Enlace local con Vercel (vercel link); nunca se versiona.
+.vercel

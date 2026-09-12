@@ -422,6 +422,38 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturacion/ConsumoDelPlan.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/EligeTuPlanPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/FacturacionPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/GuardiaDePlan.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/PlanesDisponibles.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/RetornoDePagoPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/formato.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturacion/useDerechos.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/filters/FilterCategory.tsx",
           "type": "registry:component"
         },
@@ -1098,6 +1130,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/kontrolia-auth/facturacion.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/kontrolia-auth/oauth.ts",
           "type": "registry:lib"
         },
@@ -1175,6 +1211,18 @@
         },
         {
           "path": "src/lib/server/imponerDueno.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/kontrolia-auth/consumo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/limitesDelPuente.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/limitesDelPuente.ts",
           "type": "registry:lib"
         },
         {
