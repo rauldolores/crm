@@ -4,8 +4,12 @@ import {
   ChartColumn,
   CheckSquare,
   Contact,
+  CreditCard,
+  FileText,
   Handshake,
+  Import,
   LayoutDashboard,
+  Settings,
   Ticket,
   Users,
 } from "lucide-react";
@@ -13,10 +17,12 @@ import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
+import { ImportPage } from "../misc/ImportPage";
 import { MODULE_REGISTRY } from "../modules/registry";
 import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { useDerechos } from "../facturacion/useDerechos";
+import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
 
 /**
  * Navegación principal de Vinqulia, en una barra lateral.
@@ -61,6 +67,60 @@ const EnlaceDeSeccion = ({
     <span className="truncate">{seccion.etiqueta}</span>
   </Link>
 );
+
+/**
+ * Un grupo con su encabezado ("Principal", "Módulos", "Herramientas...").
+ * No pinta nada si no tiene secciones — así un grupo dinámico (los módulos
+ * activos, por ejemplo) desaparece entero en vez de dejar un título huérfano.
+ */
+const GrupoDeSecciones = ({
+  titulo,
+  secciones,
+  estaActiva,
+  esPrimero = false,
+}: {
+  titulo: string;
+  secciones: Seccion[];
+  estaActiva: (ruta: string) => boolean;
+  /** El primer grupo no lleva el margen superior que separa a los demás. */
+  esPrimero?: boolean;
+}) => {
+  if (secciones.length === 0) return null;
+  return (
+    <>
+      <p
+        className={[
+          "px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground",
+          esPrimero ? "" : "mt-4",
+        ].join(" ")}
+      >
+        {titulo}
+      </p>
+      <nav className="flex flex-col gap-1">
+        {secciones.map((seccion) =>
+          seccion.recurso ? (
+            <CanAccess
+              key={seccion.ruta}
+              resource={seccion.recurso}
+              action="list"
+            >
+              <EnlaceDeSeccion
+                seccion={seccion}
+                activa={estaActiva(seccion.ruta)}
+              />
+            </CanAccess>
+          ) : (
+            <EnlaceDeSeccion
+              key={seccion.ruta}
+              seccion={seccion}
+              activa={estaActiva(seccion.ruta)}
+            />
+          ),
+        )}
+      </nav>
+    </>
+  );
+};
 
 export const BarraLateral = () => {
   const translate = useTranslate();
@@ -129,6 +189,24 @@ export const BarraLateral = () => {
     },
   ];
 
+  // Herramientas de uso ocasional, no de trabajo diario: plantillas y
+  // carga masiva. Ninguna exige permiso de "configuration" —quien puede ver
+  // plantillas o importar datos hoy sigue pudiendo verlo, solo que ya no
+  // mezclado con lo personal dentro del menú del avatar.
+  const seccionesDeHerramientas: Seccion[] = [
+    {
+      etiqueta: translate("crm.email_templates.title"),
+      ruta: "/email_templates",
+      Icono: FileText,
+      recurso: "email_templates",
+    },
+    {
+      etiqueta: translate("crm.header.import_data"),
+      ruta: ImportPage.path,
+      Icono: Import,
+    },
+  ];
+
   // La raíz solo se marca activa en coincidencia exacta: de otro modo lo
   // estaría siempre, porque toda ruta empieza por "/".
   const estaActiva = (ruta: string) =>
@@ -151,59 +229,44 @@ export const BarraLateral = () => {
           </span>
         </Link>
 
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Principal
-        </p>
-
-        <nav className="flex flex-col gap-1">
-          {secciones.map((seccion) =>
-            seccion.recurso ? (
-              <CanAccess
-                key={seccion.ruta}
-                resource={seccion.recurso}
-                action="list"
-              >
-                <EnlaceDeSeccion
-                  seccion={seccion}
-                  activa={estaActiva(seccion.ruta)}
-                />
-              </CanAccess>
-            ) : (
-              <EnlaceDeSeccion
-                key={seccion.ruta}
-                seccion={seccion}
-                activa={estaActiva(seccion.ruta)}
-              />
-            ),
-          )}
-        </nav>
-
-        {seccionesDeModulos.length > 0 && (
-          <>
-            <p className="mt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {translate("crm.modules.title")}
-            </p>
-            <nav className="flex flex-col gap-1">
-              {seccionesDeModulos.map((seccion) => (
-                <CanAccess
-                  key={seccion.ruta}
-                  resource={seccion.recurso}
-                  action="list"
-                >
-                  <EnlaceDeSeccion
-                    seccion={seccion}
-                    activa={estaActiva(seccion.ruta)}
-                  />
-                </CanAccess>
-              ))}
-            </nav>
-          </>
-        )}
+        <GrupoDeSecciones
+          titulo="Principal"
+          secciones={secciones}
+          estaActiva={estaActiva}
+          esPrimero
+        />
+        <GrupoDeSecciones
+          titulo={translate("crm.modules.title")}
+          secciones={seccionesDeModulos}
+          estaActiva={estaActiva}
+        />
+        <GrupoDeSecciones
+          titulo={translate("crm.settings.sections.tools")}
+          secciones={seccionesDeHerramientas}
+          estaActiva={estaActiva}
+        />
 
         <div className="mt-auto border-t border-sidebar-border pt-4">
+          {/* Ajustes: la única puerta a la administración de la
+              organización (automatizaciones, formularios, API, módulos,
+              correo, IA viven todas ahí dentro). Antes se repartían sueltas
+              en el menú del avatar, junto a lo personal; aquí quedan
+              agrupadas y solo las ve quien puede editar la configuración. */}
+          <CanAccess resource="configuration" action="edit">
+            <Link
+              to="/settings"
+              className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <Settings className="size-4 shrink-0" />
+              {translate("crm.settings.title")}
+            </Link>
+          </CanAccess>
+
           {/* Consumo del plan, siempre a la vista: es lo que evita que el
-              límite sorprenda a mitad de una importación. */}
-          {derechos?.subscription && (
+              límite sorprenda a mitad de una importación. Sin suscripción
+              todavía (nada que consumir) queda un enlace de texto plano, para
+              que "Plan y facturación" nunca se quede sin una entrada. */}
+          {derechos?.subscription ? (
             <Link
               to={FacturacionPage.path}
               className="mb-4 flex flex-col gap-2 rounded-lg px-2 py-2 text-sidebar-foreground no-underline hover:bg-sidebar-accent"
@@ -217,6 +280,16 @@ export const BarraLateral = () => {
               </span>
               <ConsumoDelPlan usage={derechos.usage} compacto />
             </Link>
+          ) : (
+            facturacionDisponible() && (
+              <Link
+                to={FacturacionPage.path}
+                className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              >
+                <CreditCard className="size-4 shrink-0" />
+                {translate("crm.billing.title")}
+              </Link>
+            )
           )}
           <div className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
             <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />

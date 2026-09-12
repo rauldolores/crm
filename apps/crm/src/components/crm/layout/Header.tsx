@@ -1,34 +1,11 @@
-import {
-  Blocks,
-  CreditCard,
-  FileText,
-  Globe,
-  Mail,
-  Sparkles,
-  Import,
-  Settings,
-  User,
-  Users,
-  Webhook,
-  Zap,
-} from "lucide-react";
-import { CanAccess, useTranslate, useUserMenu } from "ra-core";
+import { User } from "lucide-react";
+import { useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { ThemeModeToggle } from "@/components/admin/theme-mode-toggle";
 import { SelectorDeOrganizacion } from "./SelectorDeOrganizacion";
 import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-
-import { ImportPage } from "../misc/ImportPage";
-import { ApiPage } from "../misc/ApiPage";
-import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
-import { FormulariosPage } from "../misc/FormulariosPage";
-import { CatalogoPage } from "../modules/CatalogoPage";
-import { CorreoPage } from "../misc/CorreoPage";
-import { IaPage } from "../misc/IaPage";
-import { FacturacionPage } from "../facturacion/FacturacionPage";
-import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
 
 /**
  * Cabecera superior del escritorio.
@@ -38,9 +15,18 @@ import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
  * proyecta su rastro de navegación (el componente Breadcrumb usa un portal);
  * a la derecha, lo contextual: organización, tema, refresco y perfil.
  *
- * Ojo con envolverla en un contenedor con `grow`: dentro de la columna flex
- * del layout absorbía todo el alto libre y dejaba un hueco enorme sobre el
- * contenido de todas las pantallas.
+ * El menú del avatar solo lleva Perfil (y Cerrar sesión, que pone
+ * <UserMenu> solo): es lo único que es sobre LA PERSONA que inició sesión.
+ * Antes vivían aquí también Usuarios, Ajustes, Automatizaciones, Formularios,
+ * API, Módulos, Correo, Plantillas, IA, Plan y facturación e Importar — una
+ * lista plana de 11 destinos casi todos sobre LA ORGANIZACIÓN, no sobre la
+ * persona, mezclados con lo personal y sin ningún orden. Usuarios y
+ * Plantillas ya estaban duplicados con la barra lateral. Ahora cada uno vive
+ * donde corresponde: Usuarios, Plantillas e Importar en la barra lateral
+ * junto a los demás recursos; Automatizaciones, Formularios, API, Módulos,
+ * Correo e IA dentro de Ajustes (un solo destino de la barra lateral); Plan y
+ * facturación en el pie de la barra lateral, junto al consumo del plan. Ver
+ * BarraLateral.tsx y HerramientasDeAdministracion.tsx.
  */
 const Header = () => {
   return (
@@ -56,55 +42,10 @@ const Header = () => {
           <RefreshButton />
           <UserMenu>
             <ProfileMenu />
-            <CanAccess resource="sales" action="list">
-              <UsersMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <SettingsMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <AutomatizacionesMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <FormulariosMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <ApiMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <ModulosMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <CorreoMenu />
-            </CanAccess>
-            <CanAccess resource="email_templates" action="list">
-              <PlantillasMenu />
-            </CanAccess>
-            <CanAccess resource="configuration" action="edit">
-              <IaMenu />
-            </CanAccess>
-            <FacturacionMenu />
-            <ImportFromJsonMenuItem />
           </UserMenu>
         </div>
       </div>
     </header>
-  );
-};
-
-const UsersMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<UsersMenu> must be used inside <UserMenu?");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to="/sales" className="flex items-center gap-2">
-        <Users />
-        {translate("resources.sales.name", { smart_count: 2 })}
-      </Link>
-    </DropdownMenuItem>
   );
 };
 
@@ -119,173 +60,6 @@ const ProfileMenu = () => {
       <Link to="/profile" className="flex items-center gap-2">
         <User />
         {translate("crm.profile.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const SettingsMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<SettingsMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to="/settings" className="flex items-center gap-2">
-        <Settings />
-        {translate("crm.settings.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const AutomatizacionesMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<AutomatizacionesMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={AutomatizacionesPage.path} className="flex items-center gap-2">
-        <Zap />
-        {translate("crm.automations.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const FormulariosMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<FormulariosMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={FormulariosPage.path} className="flex items-center gap-2">
-        <Globe />
-        {translate("crm.public_forms.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const ApiMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<ApiMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={ApiPage.path} className="flex items-center gap-2">
-        <Webhook />
-        {translate("crm.api.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const ModulosMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<ModulosMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={CatalogoPage.path} className="flex items-center gap-2">
-        <Blocks />
-        {translate("crm.modules.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const CorreoMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<CorreoMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={CorreoPage.path} className="flex items-center gap-2">
-        <Mail />
-        {translate("crm.email.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const PlantillasMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<PlantillasMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to="/email_templates" className="flex items-center gap-2">
-        <FileText />
-        {translate("crm.email_templates.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-/**
- * Plan y facturación. Visible para todo el mundo: cualquiera puede ver el
- * plan y el consumo; comprar o abrir el portal solo lo puede un owner/admin
- * de la organización, y esos botones ya se esconden dentro.
- */
-const FacturacionMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<FacturacionMenu> must be used inside <UserMenu>");
-  }
-  // Instalación por cuenta propia, sin KontrolIA Auth: no hay planes.
-  if (!facturacionDisponible()) return null;
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={FacturacionPage.path} className="flex items-center gap-2">
-        <CreditCard />
-        {translate("crm.billing.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const IaMenu = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<IaMenu> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={IaPage.path} className="flex items-center gap-2">
-        <Sparkles />
-        {translate("crm.ai.title")}
-      </Link>
-    </DropdownMenuItem>
-  );
-};
-
-const ImportFromJsonMenuItem = () => {
-  const translate = useTranslate();
-  const userMenuContext = useUserMenu();
-  if (!userMenuContext) {
-    throw new Error("<ImportFromJsonMenuItem> must be used inside <UserMenu>");
-  }
-  return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to={ImportPage.path} className="flex items-center gap-2">
-        <Import />
-        {translate("crm.header.import_data")}
       </Link>
     </DropdownMenuItem>
   );

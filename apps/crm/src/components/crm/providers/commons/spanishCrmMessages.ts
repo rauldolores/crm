@@ -1181,6 +1181,7 @@ export const spanishCrmMessages = {
       title: "Ajustes",
       sections: {
         custom_fields: "Campos personalizados",
+        tools: "Herramientas",
       },
       custom_fields: {
         help: "Agrega los datos propios de tu negocio a contactos, empresas y oportunidades: una inmobiliaria puede guardar «Superficie», una escuela «Grado». Para el tipo «Lista de opciones», escribe las opciones separadas por comas.",

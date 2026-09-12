@@ -32,8 +32,14 @@ import type {
   CustomFieldType,
   DealPipeline,
 } from "../types";
+import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
 
 const SECTIONS = [
+  {
+    id: "tools",
+    label: "crm.settings.sections.tools",
+    fallback: "Tools",
+  },
   {
     id: "companies",
     label: "resources.companies.name",
@@ -332,6 +338,18 @@ const SettingsFormFields = () => {
 
       {/* Main content */}
       <div className="flex-1 min-w-0 max-w-2xl space-y-6">
+        {/* Herramientas: páginas que viven fuera de este formulario (son su
+            propio recurso, no un campo de "configuration"), así que aquí
+            solo se enlazan en vez de editarse. */}
+        <Card id="tools">
+          <CardContent className="space-y-4">
+            <h2 className="text-xl font-semibold text-muted-foreground">
+              {translate("crm.settings.sections.tools")}
+            </h2>
+            <HerramientasDeAdministracion />
+          </CardContent>
+        </Card>
+
         {/* Companies */}
         <Card id="companies">
           <CardContent className="space-y-4">
