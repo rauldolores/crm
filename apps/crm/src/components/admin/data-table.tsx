@@ -112,7 +112,11 @@ export function DataTable<RecordType extends RaRecord = RaRecord>(
       empty={<DataTableEmpty />}
       {...rest}
     >
-      <div className={cn("rounded-md border", className)}>
+      {/* Misma tarjeta que el resto de listas: fondo de tarjeta sobre el papel,
+          radio y borde iguales a los de Card. */}
+      <div
+        className={cn("overflow-hidden rounded-xl border bg-card", className)}
+      >
         <Table>
           <DataTableRenderContext.Provider value="header">
             <DataTableHead>{columns}</DataTableHead>
