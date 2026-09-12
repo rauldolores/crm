@@ -47,6 +47,7 @@ export const ToggleFilterButton = ({
       className={cn(
         "cursor-pointer",
         "flex flex-row items-center justify-between gap-2 px-2.5 w-full",
+        isSelected && "bg-accent text-accent-foreground hover:bg-accent/80",
         className,
       )}
       size={size}

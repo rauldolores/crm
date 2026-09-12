@@ -12,7 +12,10 @@ const ColoredBadge = (props: any) => {
       {...props}
       style={{ backgroundColor: record.color, border: 0 }}
       variant="outline"
-      className={cn("text-black font-normal", props.className)}
+      className={cn(
+        "rounded-full border-transparent text-black font-normal",
+        props.className,
+      )}
     >
       {record.name}
     </Badge>

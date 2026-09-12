@@ -384,7 +384,7 @@ function DataTableHeadCell<
               <Button
                 variant="ghost"
                 size="sm"
-                className="-ml-3 -mr-3 h-8 data-[state=open]:bg-accent cursor-pointer"
+                className="-ml-3 -mr-3 h-8 text-xs font-semibold tracking-wider text-muted-foreground uppercase hover:text-foreground data-[state=open]:bg-accent cursor-pointer"
                 data-field={source}
                 onClick={handleSort}
               >
@@ -397,9 +397,9 @@ function DataTableHeadCell<
                 )}
                 {sort.field === source ? (
                   sort.order === "ASC" ? (
-                    <ArrowDownAZ className="ml-2 h-6 w-6" />
+                    <ArrowDownAZ className="ml-1 size-3.5" />
                   ) : (
-                    <ArrowUpZA className="ml-2 h-6 w-6" />
+                    <ArrowUpZA className="ml-1 size-3.5" />
                   )
                 ) : null}
                 {headerClassName?.includes("text-right") ? (
