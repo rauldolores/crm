@@ -1194,6 +1194,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/exigirCupoDeUsuario.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/ia/configuracion.ts",
           "type": "registry:lib"
         },

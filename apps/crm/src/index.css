@@ -1,11 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/plus-jakarta-sans";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Fuente de display: solo títulos de página y cifras grandes. Da voz propia
+     a la app sin tocar la lectura del cuerpo, que sigue en Inter. */
+  --font-display:
+    "Plus Jakarta Sans Variable", "Inter Variable", ui-sans-serif, system-ui,
+    sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -51,9 +57,16 @@
  * lateral; ahora es el color primario, así los botones, enlaces, el foco y los
  * avisos comparten la misma voz. Los neutros dejan de ser grises puros para no
  * pelear con el carmesí.
+ *
+ * Dirección "Papel": superficies planas separadas solo por bordes (sin sombras
+ * ni halos) y barra lateral clara, sobre el mismo papel que el contenido. Así
+ * el carmesí significa una sola cosa en pantalla: acción o selección.
  */
 :root {
   --radius: 0.75rem;
+  /* Altura de fila de las tablas. "Cómoda" por defecto; una lista puede pasar
+     a "compacta" con la clase .densidad-compacta en un contenedor. */
+  --row-h: 2.875rem;
   --background: oklch(0.985 0.004 24);
   --foreground: oklch(0.19 0.014 25);
   --card: oklch(1 0 0);
@@ -80,17 +93,18 @@
   --chart-3: oklch(0.7 0.13 70);
   --chart-4: oklch(0.55 0.16 260);
   --chart-5: oklch(0.66 0.17 330);
-  /* Barra lateral: fondo oscuro con un matiz cálido y el carmesí de marca como
-     color de selección. El fondo no es rojo saturado a propósito: la barra
-     está siempre en pantalla, y un rojo pleno a ese tamaño cansa la vista. */
-  --sidebar: oklch(0.17 0.016 24);
-  --sidebar-foreground: oklch(0.96 0.006 24);
-  --sidebar-primary: oklch(0.58 0.2 24);
-  --sidebar-primary-foreground: oklch(0.99 0.005 24);
-  --sidebar-accent: oklch(0.25 0.02 24);
-  --sidebar-accent-foreground: oklch(0.97 0.006 24);
-  --sidebar-border: oklch(0.31 0.02 24);
-  --sidebar-ring: oklch(0.58 0.2 24);
+  /* Barra lateral clara: el mismo papel que el fondo, separada por un borde.
+     La sección activa se marca con el carmesí suave de --accent (fondo) y el
+     carmesí profundo (texto), no con un bloque rojo pleno: la barra está
+     siempre en pantalla y el rojo a ese tamaño cansa la vista. */
+  --sidebar: oklch(0.985 0.004 24);
+  --sidebar-foreground: oklch(0.32 0.02 24);
+  --sidebar-primary: oklch(0.945 0.018 24);
+  --sidebar-primary-foreground: oklch(0.44 0.16 24);
+  --sidebar-accent: oklch(0.955 0.008 24);
+  --sidebar-accent-foreground: oklch(0.19 0.014 25);
+  --sidebar-border: oklch(0.915 0.006 24);
+  --sidebar-ring: oklch(0.58 0.19 24);
   --avatar-0: oklch(0.85 0.08 240);
   --avatar-1: oklch(0.88 0.1 340);
   --avatar-2: oklch(0.85 0.07 180);
@@ -128,11 +142,11 @@
   --chart-3: oklch(0.74 0.12 70);
   --chart-4: oklch(0.6 0.15 260);
   --chart-5: oklch(0.7 0.16 330);
-  --sidebar: oklch(0.15 0.014 24);
-  --sidebar-foreground: oklch(0.955 0.005 24);
-  --sidebar-primary: oklch(0.6 0.19 24);
-  --sidebar-primary-foreground: oklch(0.98 0.005 24);
-  --sidebar-accent: oklch(0.24 0.018 24);
+  --sidebar: oklch(0.15 0.006 24);
+  --sidebar-foreground: oklch(0.78 0.01 24);
+  --sidebar-primary: oklch(0.27 0.03 24);
+  --sidebar-primary-foreground: oklch(0.86 0.09 24);
+  --sidebar-accent: oklch(0.21 0.01 24);
   --sidebar-accent-foreground: oklch(0.955 0.005 24);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.62 0.17 24);
@@ -201,20 +215,12 @@ input[type="time"] {
 
 body {
   font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  /* Un halo de marca muy sutil sobre el fondo: da profundidad sin competir con
-     el contenido. Se mantiene fijo para que no parpadee al hacer scroll. */
+  /* Papel liso: sin halos ni degradados, la profundidad la dan los bordes. */
   background-color: var(--background);
-  background-image:
-    radial-gradient(
-      1100px 520px at 12% -8%,
-      oklch(0.58 0.21 25 / 0.07),
-      transparent 60%
-    ),
-    radial-gradient(
-      900px 480px at 100% -4%,
-      oklch(0.52 0.2 24 / 0.05),
-      transparent 55%
-    );
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+}
+
+/* Densidad compacta para listas largas: un contenedor con esta clase encoge
+   las filas de sus tablas sin tocar el resto de la página. */
+.densidad-compacta {
+  --row-h: 2.125rem;
 }

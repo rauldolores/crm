@@ -61,7 +61,7 @@ export const DashboardStats = () => {
                 {s.icono}
               </span>
               <div className="min-w-0">
-                <p className="text-2xl font-semibold leading-none tracking-tight tabular-nums">
+                <p className="font-display text-2xl font-semibold leading-none tracking-tight tabular-nums">
                   {s.pendiente ? "—" : formatter.format(s.total ?? 0)}
                 </p>
                 <p className="mt-1.5 truncate text-sm text-muted-foreground">

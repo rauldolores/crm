@@ -48,7 +48,7 @@ const EnlaceDeSeccion = ({
     className={[
       "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline transition-all",
       activa
-        ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground shadow-lg shadow-black/25 ring-1 ring-inset ring-white/15"
+        ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground"
         : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
     ].join(" ")}
   >
@@ -135,14 +135,7 @@ export const BarraLateral = () => {
     ruta === "/" ? pathname === "/" : pathname.startsWith(ruta);
 
   return (
-    <aside className="relative hidden w-60 shrink-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground md:flex">
-      {/* Halo de marca en la parte superior: da profundidad a la barra sin
-          competir con la navegación. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-sidebar-primary/20 to-transparent"
-      />
-
+    <aside className="relative hidden w-60 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
       <div className="relative flex flex-1 flex-col gap-1 p-3">
         <Link
           to="/"
@@ -151,9 +144,9 @@ export const BarraLateral = () => {
           <img
             src={darkModeLogo}
             alt={title}
-            className="size-9 rounded-lg ring-1 ring-sidebar-primary/30 transition-opacity group-hover:opacity-90"
+            className="size-9 rounded-lg transition-opacity group-hover:opacity-90"
           />
-          <span className="text-base font-semibold tracking-tight">
+          <span className="font-display text-base font-semibold tracking-tight text-foreground">
             {title}
           </span>
         </Link>
