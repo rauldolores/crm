@@ -12,6 +12,7 @@ import {
 import { CtaBanda, Eyebrow, Migas, TituloDeSeccion } from "../comunes";
 import { MaquetaAplicacion } from "../maquetas";
 import type { Industria } from "../../content/industrias/tipos";
+import { URL_APP } from "../../lib/sitio";
 
 /**
  * Plantilla de una página de industria.
@@ -72,18 +73,21 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <a
-                  href="#demo"
+                  href={URL_APP}
                   className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:-translate-y-0.5 hover:bg-brand-700"
                 >
-                  {industria.hero.ctaPrincipal}
+                  Regístrate gratis
                   <ArrowRight className="size-4" />
                 </a>
                 <a
-                  href="#casos"
+                  href="#demo"
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
                 >
-                  Ver casos de uso
+                  {industria.hero.ctaPrincipal}
                 </a>
+                <span className="basis-full text-sm text-neutral-500 sm:basis-auto">
+                  30 días gratis · sin tarjeta
+                </span>
               </div>
             </div>
 
@@ -143,7 +147,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
           />
           <ol className="mx-auto mt-12 max-w-3xl">
             {industria.dia.momentos.map((momento, indice) => (
-              <li key={momento.hora} className="aparece relative flex gap-5 pb-8">
+              <li
+                key={momento.hora}
+                className="aparece relative flex gap-5 pb-8"
+              >
                 {/* Línea de tiempo */}
                 <div className="flex flex-col items-center">
                   <span className="flex size-12 shrink-0 items-center justify-center rounded-full border border-brand-200 bg-brand-50 text-xs font-bold text-brand-700">
@@ -185,17 +192,19 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
             <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left">
               <thead>
                 <tr>
-                  {["Problema real", "Cómo lo resuelve Vinqulia", "Beneficio"].map(
-                    (columna) => (
-                      <th
-                        key={columna}
-                        scope="col"
-                        className="border-b border-neutral-200 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-neutral-400"
-                      >
-                        {columna}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "Problema real",
+                    "Cómo lo resuelve Vinqulia",
+                    "Beneficio",
+                  ].map((columna) => (
+                    <th
+                      key={columna}
+                      scope="col"
+                      className="border-b border-neutral-200 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-neutral-400"
+                    >
+                      {columna}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -269,7 +278,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
               </span>
               <ul className="mt-5 space-y-3">
                 {industria.casoPractico.inicial.map((linea) => (
-                  <li key={linea} className="flex items-start gap-2.5 text-sm text-neutral-600">
+                  <li
+                    key={linea}
+                    className="flex items-start gap-2.5 text-sm text-neutral-600"
+                  >
                     <X className="mt-0.5 size-4 shrink-0 text-neutral-400" />
                     {linea}
                   </li>
@@ -282,7 +294,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
               </span>
               <ul className="mt-5 space-y-3">
                 {industria.casoPractico.conVinqulia.map((linea) => (
-                  <li key={linea} className="flex items-start gap-2.5 text-sm text-neutral-700">
+                  <li
+                    key={linea}
+                    className="flex items-start gap-2.5 text-sm text-neutral-700"
+                  >
                     <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                     {linea}
                   </li>
@@ -315,7 +330,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
               </p>
               <ul className="mt-4 space-y-3">
                 {industria.paraQuien.si.map((linea) => (
-                  <li key={linea} className="flex items-start gap-2.5 text-sm text-neutral-700">
+                  <li
+                    key={linea}
+                    className="flex items-start gap-2.5 text-sm text-neutral-700"
+                  >
                     <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                       <Check className="size-3" />
                     </span>
@@ -331,7 +349,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
               </p>
               <ul className="mt-4 space-y-3">
                 {industria.paraQuien.no.map((linea) => (
-                  <li key={linea} className="flex items-start gap-2.5 text-sm text-neutral-600">
+                  <li
+                    key={linea}
+                    className="flex items-start gap-2.5 text-sm text-neutral-600"
+                  >
                     <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
                       <X className="size-3" />
                     </span>
@@ -389,7 +410,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
               </p>
               <ul className="mt-4 space-y-3">
                 {industria.comparacion.tradicional.map((linea) => (
-                  <li key={linea} className="flex items-start gap-2.5 text-sm text-neutral-600">
+                  <li
+                    key={linea}
+                    className="flex items-start gap-2.5 text-sm text-neutral-600"
+                  >
                     <X className="mt-0.5 size-4 shrink-0 text-neutral-400" />
                     {linea}
                   </li>
@@ -402,7 +426,10 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
               </p>
               <ul className="mt-4 space-y-3">
                 {industria.comparacion.conVinqulia.map((linea) => (
-                  <li key={linea} className="flex items-start gap-2.5 text-sm text-neutral-700">
+                  <li
+                    key={linea}
+                    className="flex items-start gap-2.5 text-sm text-neutral-700"
+                  >
                     <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
                     {linea}
                   </li>
@@ -451,7 +478,9 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
         <div className="mx-auto max-w-3xl px-5 sm:px-8">
           <TituloDeSeccion
             eyebrow="Preguntas frecuentes"
-            titulo={"Preguntas frecuentes sobre " + industria.nombre.toLowerCase()}
+            titulo={
+              "Preguntas frecuentes sobre " + industria.nombre.toLowerCase()
+            }
             subtitulo=""
           />
           <div className="aparece-hijos mt-10 space-y-3">
@@ -490,9 +519,8 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
             <p className="mt-3 text-sm leading-relaxed text-neutral-600">
               Estas capacidades no forman parte del producto actual. Las
               listamos porque son las peticiones más frecuentes de esta
-              industria y algunas pueden abordarse como integración o
-              desarrollo a medida; no las presentamos como funcionalidades
-              existentes.
+              industria y algunas pueden abordarse como integración o desarrollo
+              a medida; no las presentamos como funcionalidades existentes.
             </p>
           </div>
           <div className="aparece-hijos mt-8 space-y-3">
@@ -529,8 +557,8 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-neutral-600">
               La demo se prepara sobre tu operación real: cuántas personas
-              venden, por dónde llegan los clientes y qué siguen usando hoy.
-              Son cuatro datos para empezar.
+              venden, por dónde llegan los clientes y qué siguen usando hoy. Son
+              cuatro datos para empezar.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <a

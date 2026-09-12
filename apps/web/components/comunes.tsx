@@ -1,5 +1,7 @@
 import { ArrowRight, ChevronRight } from "lucide-react";
 
+import { URL_APP } from "../lib/sitio";
+
 /**
  * Piezas compartidas por la landing y las páginas de industria.
  *
@@ -48,13 +50,47 @@ export const TituloDeSeccion = ({
     <h2 className="mt-3 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
       {titulo}
     </h2>
-    <p className="mt-4 text-base leading-relaxed text-neutral-600">{subtitulo}</p>
+    <p className="mt-4 text-base leading-relaxed text-neutral-600">
+      {subtitulo}
+    </p>
   </div>
 );
 
-/** CTA comercial principal: lleva al formulario de calificación. */
+/**
+ * CTA principal: registrarse en la aplicación. El plan Impulso da 30 días
+ * gratis sin tarjeta, así que el camino corto es probarlo, no pedir una
+ * demo. La demo queda como CTA secundario para quien necesita hablar antes
+ * (infraestructura propia, SSO, implementación guiada).
+ */
+export const CtaRegistro = ({
+  children = "Regístrate gratis",
+  className = "",
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) => (
+  <a
+    href={URL_APP}
+    className={
+      "inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:-translate-y-0.5 hover:bg-brand-700 " +
+      className
+    }
+  >
+    {children}
+    <ArrowRight className="size-4" />
+  </a>
+);
+
+/** Lo que quita el miedo a pulsar «Regístrate»: va siempre junto al botón. */
+export const NotaDePrueba = ({ className = "" }: { className?: string }) => (
+  <span className={"text-sm text-neutral-500 " + className}>
+    30 días gratis · sin tarjeta
+  </span>
+);
+
+/** CTA secundario: lleva al formulario de calificación para una demo. */
 export const CtaDemo = ({
-  children = "Quiero una demo personalizada",
+  children = "Ver una demo",
   className = "",
   href = "#demo",
 }: {
@@ -65,12 +101,11 @@ export const CtaDemo = ({
   <a
     href={href}
     className={
-      "inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:-translate-y-0.5 hover:bg-brand-700 " +
+      "inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50 " +
       className
     }
   >
     {children}
-    <ArrowRight className="size-4" />
   </a>
 );
 
@@ -129,19 +164,22 @@ export const CtaBanda = ({
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="#demo"
+            href={URL_APP}
             className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-lg transition-all hover:-translate-y-0.5"
           >
-            {boton}
+            Regístrate gratis
             <ArrowRight className="size-4" />
           </a>
           <a
-            href="#solucion"
+            href="#demo"
             className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
           >
-            Ver cómo funciona
+            {boton}
           </a>
         </div>
+        <p className="mt-4 text-sm text-brand-100">
+          30 días gratis · sin tarjeta
+        </p>
       </div>
     </div>
   </section>

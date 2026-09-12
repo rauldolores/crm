@@ -42,8 +42,9 @@ import { BarraNavegacion } from "../components/BarraNavegacion";
 import { PieDePagina } from "../components/PieDePagina";
 import {
   CtaDemo,
-  CtaExplorar,
+  CtaRegistro,
   Eyebrow,
+  NotaDePrueba,
   TituloDeSeccion,
 } from "../components/comunes";
 import {
@@ -53,6 +54,7 @@ import {
 } from "../components/maquetas";
 import { FormularioDemo } from "../components/FormularioDemo";
 import { Precios } from "../components/Precios";
+import { URL_APP } from "../lib/sitio";
 import {
   InteligenciaArtificial,
   MasAllaDeLaVenta,
@@ -273,8 +275,9 @@ const Hero = () => (
           llévalo más lejos con automatización e IA de Kontrolia.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <CtaDemo />
-          <CtaExplorar />
+          <CtaRegistro>Regístrate gratis</CtaRegistro>
+          <CtaDemo>Ver una demo</CtaDemo>
+          <NotaDePrueba className="basis-full sm:basis-auto" />
         </div>
         <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-neutral-500">
           <span className="flex items-center gap-1.5">
@@ -947,11 +950,11 @@ const Niveles = () => (
               ))}
             </ul>
             <a
-              href="#demo"
+              href={nivel.nombre === "Vinqulia" ? URL_APP : "#demo"}
               className="mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl border border-neutral-300 px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
             >
               {nivel.nombre === "Vinqulia"
-                ? "Quiero configurarlo"
+                ? "Empezar gratis, 30 días"
                 : nivel.nombre === "Vinqulia + Implementación"
                   ? "Quiero implementación"
                   : "Quiero automatización e IA"}
@@ -1494,25 +1497,26 @@ const CtaFinal = () => (
           Siguiente paso
         </p>
         <h2 className="mx-auto mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          ¿Quieres saber cómo funcionaría Vinqulia en tu empresa?
+          Pruébalo con tus clientes de verdad, hoy
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-brand-50/90">
-          Cuéntanos cómo gestionas actualmente tus ventas y te mostramos cómo
-          podrías centralizar, automatizar y mejorar tu operación comercial.
+          Crea tu cuenta, importa tus contactos y en veinte minutos tienes el
+          CRM andando. Treinta días gratis, sin tarjeta. Y si prefieres que te
+          lo enseñemos sobre tu operación, pide una demo.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="#demo"
+            href={URL_APP}
             className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-700 shadow-lg transition-all hover:-translate-y-0.5"
           >
-            Quiero una demo personalizada
+            Regístrate gratis
             <ArrowRight className="size-4" />
           </a>
           <a
-            href="#solucion"
+            href="#demo"
             className="inline-flex items-center gap-2 rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10"
           >
-            Explorar Vinqulia
+            Ver una demo
           </a>
         </div>
       </div>

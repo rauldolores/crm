@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { INDUSTRIAS } from "../content/industrias";
-import { CtaDemo, CtaExplorar, Logo } from "./comunes";
+import { CtaDemo, CtaRegistro, Logo } from "./comunes";
 import { MenuIndustrias } from "./MenuIndustrias";
 
 /**
@@ -50,18 +50,15 @@ export function BarraNavegacion({ enInicio = false }: { enInicio?: boolean }) {
         </nav>
 
         <div className="flex items-center gap-2">
-          <CtaExplorar
-            className="hidden px-4 py-2 sm:inline-flex"
-            href={prefijo + "#solucion"}
-          >
-            Explorar Vinqulia
-          </CtaExplorar>
           <CtaDemo
+            className="hidden px-4 py-2 sm:inline-flex"
             href={prefijo + "#demo"}
-            className="rounded-lg px-4 py-2 shadow-sm"
           >
-            Quiero una demo
+            Ver una demo
           </CtaDemo>
+          <CtaRegistro className="rounded-lg px-4 py-2 shadow-sm">
+            Regístrate gratis
+          </CtaRegistro>
         </div>
       </div>
     </header>
