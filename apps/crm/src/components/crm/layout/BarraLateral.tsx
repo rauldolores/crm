@@ -3,6 +3,7 @@ import {
   Building2,
   ChartColumn,
   CheckSquare,
+  CircleHelp,
   Contact,
   CreditCard,
   FileText,
@@ -18,6 +19,7 @@ import { Link, useLocation } from "react-router";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
 import { ImportPage } from "../misc/ImportPage";
+import { AyudaPage } from "../ayuda/AyudaPage";
 import { MODULE_REGISTRY } from "../modules/registry";
 import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
@@ -247,6 +249,21 @@ export const BarraLateral = () => {
         />
 
         <div className="mt-auto border-t border-sidebar-border pt-4">
+          {/* Ayuda: para todo el mundo, antes que Ajustes. Es lo primero que
+              busca quien acaba de entrar y no sabe qué es un CRM. */}
+          <Link
+            to={AyudaPage.path}
+            className={[
+              "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline transition-colors",
+              estaActiva(AyudaPage.path)
+                ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground"
+                : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+            ].join(" ")}
+          >
+            <CircleHelp className="size-4 shrink-0" />
+            Ayuda
+          </Link>
+
           {/* Ajustes: la única puerta a la administración de la
               organización (automatizaciones, formularios, API, módulos,
               correo, IA viven todas ahí dentro). Antes se repartían sueltas

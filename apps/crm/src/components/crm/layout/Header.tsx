@@ -6,6 +6,7 @@ import { ThemeModeToggle } from "@/components/admin/theme-mode-toggle";
 import { SelectorDeOrganizacion } from "./SelectorDeOrganizacion";
 import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { BotonDeAyuda } from "../ayuda/BotonDeAyuda";
 
 /**
  * Cabecera superior del escritorio.
@@ -38,6 +39,7 @@ const Header = () => {
         />
         <div className="flex items-center">
           <SelectorDeOrganizacion />
+          <BotonDeAyuda />
           <ThemeModeToggle />
           <RefreshButton />
           <UserMenu>

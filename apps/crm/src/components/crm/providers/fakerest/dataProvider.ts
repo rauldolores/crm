@@ -296,6 +296,9 @@ export const createDataProvider = ({
     contactarPlanEnterprise: async (_nombre: string, _mensaje: string) => {
       return;
     },
+    solicitarFuncionalidad: async (_nombre: string, _mensaje: string) => {
+      return;
+    },
     getConfiguration: async (): Promise<ConfigurationContextValue> => {
       const { data } = await baseDataProvider.getOne("configuration", {
         id: 1,

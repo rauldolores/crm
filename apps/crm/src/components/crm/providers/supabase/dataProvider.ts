@@ -399,6 +399,19 @@ const getDataProviderWithCustomMethods = () => {
         throw new Error(cuerpo.message || "No se pudo enviar el mensaje");
       }
     },
+    // Misma bandeja comercial que el plan Enterprise, con otro asunto: una
+    // petición de funcionalidad desde el centro de ayuda.
+    async solicitarFuncionalidad(nombre: string, mensaje: string) {
+      const respuesta = await llamarApiDelCrm("/api/facturacion/enterprise", {
+        nombre,
+        mensaje,
+        tipo: "funcionalidad",
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudo enviar la solicitud");
+      }
+    },
     async getConfiguration(): Promise<ConfigurationContextValue> {
       return leerConfiguracion();
     },

@@ -25,6 +25,7 @@ import { Dashboard } from "../dashboard/Dashboard";
 import { MobileDashboard } from "../dashboard/MobileDashboard";
 import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
+import { AyudaPage } from "../ayuda/AyudaPage";
 import { EligeTuPlanPage } from "../facturacion/EligeTuPlanPage";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { RetornoDePagoPage } from "../facturacion/RetornoDePagoPage";
@@ -297,6 +298,7 @@ const DesktopAdmin = (
         />
         <Route path={InformesPage.path} element={<InformesPage />} />
         <Route path={FormulariosPage.path} element={<FormulariosPage />} />
+        <Route path={AyudaPage.path} element={<AyudaPage />} />
         <Route path={CatalogoPage.path} element={<CatalogoPage />} />
         <Route path={CorreoPage.path} element={<CorreoPage />} />
         <Route path={IaPage.path} element={<IaPage />} />
@@ -392,6 +394,7 @@ const MobileAdmin = (
           />
           <Route path={InformesPage.path} element={<InformesPage />} />
           <Route path={FormulariosPage.path} element={<FormulariosPage />} />
+          <Route path={AyudaPage.path} element={<AyudaPage />} />
           <Route path={FacturacionPage.path} element={<FacturacionPage />} />
         </CustomRoutes>
         <Resource

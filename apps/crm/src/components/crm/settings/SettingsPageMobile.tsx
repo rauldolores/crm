@@ -11,7 +11,16 @@ import {
   ItemSeparator,
 } from "@/components/ui/item";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Check, Copy, LogOut, Moon, Smartphone, Sun } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  CircleHelp,
+  Copy,
+  LogOut,
+  Moon,
+  Smartphone,
+  Sun,
+} from "lucide-react";
 import {
   Form,
   Translate,
@@ -24,6 +33,7 @@ import {
   useTranslate,
 } from "ra-core";
 import { useCallback, useState } from "react";
+import { Link } from "react-router";
 import {
   Tooltip,
   TooltipContent,
@@ -36,6 +46,7 @@ import MobileHeader from "../layout/MobileHeader";
 import ImageEditorField from "../misc/ImageEditorField";
 import type { CrmDataProvider } from "../providers/types";
 import type { SalesFormData } from "../types";
+import { AyudaPage } from "../ayuda/AyudaPage";
 
 export const SettingsPageMobile = () => {
   const translate = useTranslate();
@@ -58,6 +69,7 @@ export const SettingsPageMobile = () => {
             <PreferencesSection />
             <InboundEmailSection />
             <McpServerSection />
+            <AyudaSection />
           </div>
 
           <div className="mt-auto pt-6 space-y-3 mb-4">
@@ -301,6 +313,26 @@ const InboundEmailSection = () => {
     </div>
   );
 };
+
+/** Acceso a la ayuda desde el móvil, donde no hay barra lateral ni «?». */
+const AyudaSection = () => (
+  <div>
+    <SectionLabel>Ayuda</SectionLabel>
+    <ItemGroup className="rounded-lg border overflow-hidden">
+      <Item size="sm" asChild>
+        <Link to={AyudaPage.path} className="no-underline">
+          <ItemContent className="flex-row items-center gap-3">
+            <CircleHelp className="size-5 text-muted-foreground" />
+            <ItemTitle>Ayuda y documentación</ItemTitle>
+          </ItemContent>
+          <ItemActions>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </ItemActions>
+        </Link>
+      </Item>
+    </ItemGroup>
+  </div>
+);
 
 const McpServerSection = () => {
   const translate = useTranslate();

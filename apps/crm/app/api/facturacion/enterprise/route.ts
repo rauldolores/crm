@@ -25,10 +25,14 @@ export async function POST(peticion: Request) {
   const cuerpo = (await peticion.json().catch(() => null)) as {
     nombre?: string;
     mensaje?: string;
+    tipo?: string;
   } | null;
 
   const nombre = (cuerpo?.nombre ?? "").trim().slice(0, MAX_NOMBRE);
   const mensaje = (cuerpo?.mensaje ?? "").trim().slice(0, MAX_MENSAJE);
+  // El centro de ayuda reutiliza esta ruta para «pide una funcionalidad»:
+  // mismo destinatario, distinto asunto para que ventas lo distinga.
+  const esSolicitudDeFuncionalidad = cuerpo?.tipo === "funcionalidad";
 
   if (!nombre || !mensaje) {
     return Response.json(
@@ -51,9 +55,13 @@ export async function POST(peticion: Request) {
 
   const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
     para: CORREO_DE_VENTAS,
-    asunto: `Plan Enterprise — ${nombre}`,
+    asunto: esSolicitudDeFuncionalidad
+      ? `Solicitud de funcionalidad — ${nombre}`
+      : `Plan Enterprise — ${nombre}`,
     textoPlano: [
-      `${nombre} pidió que lo contactemos sobre el plan Enterprise.`,
+      esSolicitudDeFuncionalidad
+        ? `${nombre} pidió una funcionalidad a medida desde el centro de ayuda.`
+        : `${nombre} pidió que lo contactemos sobre el plan Enterprise.`,
       correoDeQuienPide ? `Correo: ${correoDeQuienPide}` : null,
       `Organización (id): ${organizacionId}`,
       "",
