@@ -80,7 +80,7 @@ const CompanyContactInputs = () => {
   const translate = useTranslate();
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">
+      <h6 className="border-b pb-2 font-display text-base font-semibold tracking-tight">
         {translate("resources.companies.field_categories.contact", {
           _: "Company info",
         })}
@@ -105,7 +105,7 @@ const CompanyContextInputs = () => {
   }));
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">
+      <h6 className="border-b pb-2 font-display text-base font-semibold tracking-tight">
         {translate("resources.companies.field_categories.context", {
           _: "Context",
         })}
@@ -128,7 +128,7 @@ const CompanyAddressInputs = () => {
   const translate = useTranslate();
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">
+      <h6 className="border-b pb-2 font-display text-base font-semibold tracking-tight">
         {translate("resources.companies.field_categories.address", {
           _: "Address",
         })}
@@ -146,7 +146,7 @@ const CompanyAdditionalInformationInputs = () => {
   const translate = useTranslate();
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">
+      <h6 className="border-b pb-2 font-display text-base font-semibold tracking-tight">
         {translate("resources.companies.field_categories.additional_info", {
           _: "Additional information",
         })}

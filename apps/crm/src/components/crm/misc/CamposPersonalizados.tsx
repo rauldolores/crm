@@ -79,7 +79,7 @@ export const CamposPersonalizadosInput = ({
 
   return (
     <div className="flex flex-col gap-4">
-      <h6 className="text-lg font-semibold">
+      <h6 className="border-b pb-2 font-display text-base font-semibold tracking-tight">
         {translate("crm.custom_fields.title")}
       </h6>
       {campos.map((campo) => (

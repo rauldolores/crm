@@ -44,13 +44,15 @@ export const ContactBackgroundInfo = () => {
         </span>{" "}
       </div>
 
-      <div className="text-muted-foreground md:py-0.5">
-        <span className="text-sm">
-          {translate("resources.contacts.background.last_activity_on", {
-            date: formattedLastSeen,
-          })}
-        </span>
-      </div>
+      {formattedLastSeen && (
+        <div className="text-muted-foreground md:py-0.5">
+          <span className="text-sm">
+            {translate("resources.contacts.background.last_activity_on", {
+              date: formattedLastSeen,
+            })}
+          </span>
+        </div>
+      )}
 
       <div className="inline-flex text-muted-foreground text-sm md:py-0.5">
         {translate(

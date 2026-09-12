@@ -247,8 +247,8 @@ const ContactShowContent = () => {
           <CardContent>
             <div className="flex">
               <Avatar />
-              <div className="ml-2 flex-1">
-                <h5 className="text-xl font-semibold">
+              <div className="ml-3 flex-1">
+                <h5 className="font-display text-2xl font-semibold tracking-tight">
                   <RecordRepresentation />
                 </h5>
                 <div className="inline-flex text-sm text-muted-foreground">
