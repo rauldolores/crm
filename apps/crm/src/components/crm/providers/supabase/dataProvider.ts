@@ -389,6 +389,16 @@ const getDataProviderWithCustomMethods = () => {
         );
       }
     },
+    async contactarPlanEnterprise(nombre: string, mensaje: string) {
+      const respuesta = await llamarApiDelCrm("/api/facturacion/enterprise", {
+        nombre,
+        mensaje,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudo enviar el mensaje");
+      }
+    },
     async getConfiguration(): Promise<ConfigurationContextValue> {
       return leerConfiguracion();
     },

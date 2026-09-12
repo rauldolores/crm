@@ -696,6 +696,34 @@ export const spanishCrmMessages = {
         unreachable:
           "No se pudo consultar tu plan en KontrolIA Auth. Revisa tu conexión e inténtalo de nuevo.",
       },
+      enterprise: {
+        name: "Plan Enterprise",
+        tagline: "Te generamos la cotización a tu medida",
+        custom_quote: "A tu medida",
+        side_by_side: "Trabajamos hombro con hombro",
+        features: {
+          infrastructure: "Infraestructura propia",
+          sso: "SSO",
+          integrations: "Integraciones",
+          custom_deploys: "Despliegues personalizados",
+          sla: "SLA",
+          large_teams: "Grandes equipos",
+          custom_projects: "Proyectos particulares",
+        },
+        action: "Quiero ser contactado",
+        dialog_title: "Plan Enterprise",
+        dialog_description:
+          "Cuéntanos de tu proyecto y te contactamos para armar una propuesta a tu medida.",
+        name_field: "Tu nombre",
+        message_field: "Cuéntanos de tu proyecto",
+        message_placeholder:
+          "Infraestructura, integraciones, equipo, plazos… lo que nos ayude a entender qué necesitas.",
+        cancel: "Cancelar",
+        send: "Enviar",
+        sending: "Enviando...",
+        success: "Listo, en breve te contactamos",
+        error: "No se pudo enviar tu mensaje",
+      },
     },
     email_templates: {
       title: "Plantillas de correo",

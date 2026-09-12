@@ -291,6 +291,11 @@ export const createDataProvider = ({
         },
       });
     },
+    // Modo demostración: no hay servidor real que envíe nada, así que solo
+    // se simula el éxito — no hay una bandeja de ventas real a la que llegue.
+    contactarPlanEnterprise: async (_nombre: string, _mensaje: string) => {
+      return;
+    },
     getConfiguration: async (): Promise<ConfigurationContextValue> => {
       const { data } = await baseDataProvider.getOne("configuration", {
         id: 1,
