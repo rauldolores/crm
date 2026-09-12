@@ -20,6 +20,7 @@ import { ArrayInput } from "@/components/admin/array-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 
 import { isLinkedinUrl } from "../misc/isLinkedInUrl";
+import { formatLocalizedDate } from "../misc/RelativeDate";
 import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { StatusSelector } from "../notes";
 import type { Sale, Contact } from "../types";
@@ -244,6 +245,7 @@ export const ContactStatusSelector = () => {
   const record = useRecordContext<Contact>();
   const [update] = useUpdate<Contact>();
   const notify = useNotify();
+  const translate = useTranslate();
   if (!record) return null;
 
   const handleStatusChange = (nextStatus: string) => {
@@ -275,13 +277,43 @@ export const ContactStatusSelector = () => {
     );
   };
 
+  // La temperatura se calcula sola con la actividad; lo que fija una persona
+  // manda 14 días y luego vuelve a ser automática. Se dice aquí para que
+  // nadie se pregunte quién marcó «caliente» ni por qué se enfrió.
+  const esTemperatura =
+    !record.status || ["cold", "warm", "hot"].includes(record.status);
+  const vuelveAutomatico =
+    !record.status_is_automatic && esTemperatura && record.status_set_at
+      ? formatLocalizedDate(
+          new Date(
+            new Date(record.status_set_at).getTime() +
+              DIAS_DE_ESTADO_MANUAL * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        )
+      : null;
+
   return (
-    <div className="[&_button]:w-auto">
+    <div className="flex flex-col gap-1.5 [&_button]:w-auto">
       <StatusSelector
         status={record?.status}
         setStatus={handleStatusChange}
         triggerClassName="w-full"
       />
+      {record.status_is_automatic === true && (
+        <p className="text-xs text-muted-foreground">
+          {translate("resources.contacts.status_auto.automatic")}
+        </p>
+      )}
+      {vuelveAutomatico && (
+        <p className="text-xs text-muted-foreground">
+          {translate("resources.contacts.status_auto.manual_until", {
+            date: vuelveAutomatico,
+          })}
+        </p>
+      )}
     </div>
   );
 };
+
+/** Días que manda un estado fijado a mano antes de volver a calcularse. */
+const DIAS_DE_ESTADO_MANUAL = 14;

@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import type { Contact, ContactNote } from "../types";
 import { DashboardActivityLog } from "./DashboardActivityLog";
+import { TicketsAbiertos } from "./TicketsAbiertos";
 import { DashboardStepper } from "./DashboardStepper";
 import { Welcome } from "./Welcome";
 import MobileHeader from "../layout/MobileHeader";
@@ -84,6 +85,7 @@ export const MobileDashboard = () => {
     <Wrapper>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-1">
         {env.isDemo ? <Welcome /> : null}
+        <TicketsAbiertos />
         <DashboardActivityLog />
       </div>
     </Wrapper>

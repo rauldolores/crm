@@ -55,6 +55,11 @@ create or replace trigger "20_contact_saved"
     before insert or update on crm.contacts
     for each row execute function crm.handle_contact_saved();
 
+-- Sella cuándo una persona fija el estado del contacto (ver contacts_summary)
+create or replace trigger on_crm_contacts_status_set
+    before insert or update of status on crm.contacts
+    for each row execute function crm.stamp_contact_status_set_at();
+
 -- Update contact.last_seen when a contact note is created
 create or replace trigger on_public_contact_notes_created_or_updated
     after insert on crm.contact_notes

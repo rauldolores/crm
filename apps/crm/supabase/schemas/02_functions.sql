@@ -180,6 +180,22 @@ begin
 end;
 $$;
 
+CREATE OR REPLACE FUNCTION "crm"."stamp_contact_status_set_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+begin
+  if tg_op = 'INSERT' then
+    if new.status is not null and new.status_set_at is null then
+      new.status_set_at := now();
+    end if;
+  elsif new.status is distinct from old.status then
+    new.status_set_at := now();
+  end if;
+  return new;
+end;
+$$;
+
 CREATE OR REPLACE FUNCTION "crm"."handle_contact_note_created_or_updated"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''

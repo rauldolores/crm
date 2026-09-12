@@ -61,6 +61,9 @@ create table crm.contacts (
     last_seen timestamp with time zone,
     has_newsletter boolean,
     status text,
+    -- Cuándo una persona fijó el estado a mano: la vista contacts_summary lo
+    -- respeta 14 días y después la temperatura vuelve a calcularse sola.
+    status_set_at timestamp with time zone,
     tags bigint[],
     company_id bigint,
     sales_id bigint,

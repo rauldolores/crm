@@ -101,6 +101,11 @@ export const generateContacts = (db: Db, size = 500): Required<Contact>[] => {
       linkedin_url: null,
       custom_fields: {},
       lead_score: random.number({ min: 0, max: 100 }),
+      // En demo la temperatura viene fija del generador: sin vista que la
+      // calcule, se presenta como automática y sin sello manual.
+      last_activity: last_seen,
+      status_is_automatic: true,
+      status_set_at: "",
     };
   });
 };

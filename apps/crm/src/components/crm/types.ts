@@ -134,6 +134,12 @@ export type Contact = {
   company_name?: string;
   custom_fields?: CustomFieldValues;
   lead_score?: number;
+  /** Última nota, tarea hecha, oportunidad tocada o ticket (contacts_summary). */
+  last_activity?: string;
+  /** true si la temperatura la puso el puntaje y no una persona. */
+  status_is_automatic?: boolean;
+  /** Cuándo alguien fijó el estado a mano; manda 14 días. */
+  status_set_at?: string;
 } & Pick<RaRecord, "id">;
 
 export type ContactNote = {

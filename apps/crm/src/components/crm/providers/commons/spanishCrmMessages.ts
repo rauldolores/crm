@@ -99,6 +99,12 @@ export const spanishCrmMessages = {
         sales_id: "Responsable de venta",
         lead_score: "Puntaje",
       },
+      status_auto: {
+        automatic:
+          "Se calcula solo con la actividad: notas, tareas hechas y oportunidades abiertas. Si lo cambias, tu elección manda 14 días.",
+        manual_until:
+          "Fijado a mano. Vuelve a calcularse solo a partir del %{date}.",
+      },
       lead_score: {
         label: "Puntaje: %{score}",
         hot: "Caliente",
@@ -1091,6 +1097,10 @@ export const spanishCrmMessages = {
         "Aún no hay importes en las oportunidades. Pon un importe a una oportunidad y aquí verás la previsión por mes.",
       deals_pipeline: "Embudo de oportunidades",
       latest_activity: "Actividad reciente",
+      open_tickets: "Tickets abiertos",
+      open_tickets_empty:
+        "No hay tickets abiertos. Ningún cliente espera respuesta.",
+      open_tickets_all: "Ver los %{total} tickets abiertos",
       latest_activity_error: "Error al cargar la actividad reciente",
       latest_notes: "Mis últimas notas",
       latest_notes_added_ago: "añadida %{timeAgo}",

@@ -93,9 +93,9 @@ export const PRIMEROS_PASOS: Grupo = {
               "«Quiere probar masa madre. Mandar muestras.»",
             ],
             [
-              "Estado del contacto",
-              "Qué tan cerca está de comprar: frío, templado, caliente, con contrato. Se cambia desde una nota.",
-              "Caliente.",
+              "Temperatura del contacto",
+              "Qué tan cerca está de comprar: frío, templado o caliente. Se calcula sola con la actividad (notas, tareas hechas, oportunidades abiertas) y se enfría si dejas de hablar con él. Puedes fijarla a mano y manda 14 días. «Con contrato» es aparte: lo pones tú y no caduca.",
+              "Caliente: hablaste con él esta semana y hay una venta abierta.",
             ],
             [
               "Etiqueta",
@@ -182,7 +182,8 @@ export const PANTALLAS: Grupo = {
           tipo: "lista",
           items: [
             "Las tres cifras de arriba: contactos, empresas y oportunidades que tienes. Pulsa cualquiera para ir a su lista.",
-            "Contactos calientes: los tuyos con estado «caliente», es decir, los que están a punto de comprar. Si está vacío, cambia el estado de un contacto desde una nota (Mostrar opciones).",
+            "Contactos calientes: los tuyos con temperatura «caliente», que se calcula sola: actividad esta semana y una oportunidad abierta. Si está vacío, es que no hay nadie así ahora mismo; también puedes marcar uno a mano desde una nota (Mostrar opciones).",
+            "Tickets abiertos: los últimos sin cerrar, con quién los levantó. Un ticket abierto es un cliente esperando.",
             "Ingresos previstos por oportunidades: por mes, lo ganado (suma completa), lo pendiente (ponderado por etapa: una oportunidad en negociación cuenta más que una recién creada) y lo perdido. Necesita que las oportunidades tengan importe.",
             "Próximas tareas: las tuyas, agrupadas por hoy, esta semana y más adelante. Puedes marcarlas hechas desde aquí.",
             "Actividad reciente: qué ha hecho el equipo (notas, contactos nuevos, oportunidades) en orden cronológico.",
@@ -226,7 +227,7 @@ export const PANTALLAS: Grupo = {
           tipo: "lista",
           items: [
             "Selección múltiple: marca varias casillas para etiquetar, exportar o borrar de golpe. Con Mayús pulsada seleccionas un rango.",
-            "Puntaje: el CRM calcula un puntaje de interés a partir de la actividad, y lo muestra como frío, tibio o caliente.",
+            "Temperatura y puntaje: el CRM calcula un puntaje de interés (0-100) con la actividad reciente, las interacciones y si hay una oportunidad abierta, y de ahí sale la temperatura: caliente (70 o más), templado (40 o más) o frío. Se enfría sola si dejas de hablar con el contacto. Si tú la fijas desde una nota, tu elección manda 14 días y luego vuelve a calcularse; «con contrato» lo pones tú y no caduca.",
             "Duplicados: al crear o importar un contacto con el mismo correo o un nombre parecido, avisa antes. Si ya tienes dos, «Fusionar con otro contacto» los junta sin perder notas ni tareas.",
             "Etiquetas: crea las que quieras con su color; sirven para filtrar y para acciones masivas.",
           ],

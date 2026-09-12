@@ -25,9 +25,9 @@ export const PREGUNTAS_FRECUENTES: Pregunta[] = [
     seccion: "panel",
   },
   {
-    pregunta: "¿Cómo cambio el estado de un contacto a «caliente»?",
+    pregunta: "¿Cómo se pone «caliente» un contacto?",
     respuesta:
-      "Desde la ficha del contacto: escribe una nota, pulsa «Mostrar opciones» y elige el estado. Se guarda con la nota, así queda constancia de por qué cambió.",
+      "Solo, con la actividad: si hablaste con él esta semana y hay una oportunidad abierta, el CRM lo marca caliente; si pasan semanas sin notas ni tareas, se enfría. No hace falta acordarse de actualizarlo. Si quieres forzarlo, desde la ficha (o desde una nota con «Mostrar opciones») lo fijas a mano y tu elección manda 14 días.",
     seccion: "contactos",
   },
   {
