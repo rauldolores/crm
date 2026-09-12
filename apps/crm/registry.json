@@ -94,6 +94,38 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/ayuda/AyudaPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/BotonDeAyuda.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/SolicitarFuncionalidad.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/contenido.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/faq.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/guias-avanzadas.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/guias-basicas.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/ayuda/tipos.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/companies/AutocompleteCompanyInput.tsx",
           "type": "registry:component"
         },

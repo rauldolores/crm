@@ -86,8 +86,13 @@ const SubjectField = () => {
   if (!record) return null;
   const { title, tags } = parseTicketSubject(record.subject);
   return (
-    <div className="flex max-w-md flex-col gap-1 py-0.5">
-      <span className="font-medium">{title}</span>
+    // La celda de tabla lleva whitespace-nowrap: sin este bloque con ancho
+    // fijo y truncado, un asunto largo se salía de la columna y pisaba la de
+    // Contacto. El texto completo queda en el title al pasar el ratón.
+    <div className="flex w-[28rem] max-w-full min-w-0 flex-col gap-1 py-0.5 whitespace-normal">
+      <span className="truncate font-medium" title={title}>
+        {title}
+      </span>
       <TicketSubjectTags tags={tags} />
     </div>
   );
