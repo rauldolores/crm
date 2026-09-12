@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import type { KontroliaAccess } from "@/lib/kontrolia-auth/facturacion";
 
+import { SelectorDeOrganizacion } from "../layout/SelectorDeOrganizacion";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { LIMITE_DE_USUARIOS_KEY } from "../providers/supabase/authProvider";
 import { MOTIVO_USUARIOS, RUTA_ELIGE_TU_PLAN } from "./GuardiaDePlan";
@@ -45,6 +46,10 @@ const MOTIVOS: Record<
  * motivo, ofrece los planes y, si el problema es un cobro fallido, la puerta
  * al portal para actualizar la tarjeta. Fuera del layout: sin plan no hay
  * barra lateral ni nada que navegar.
+ *
+ * Sí lleva el selector de organización: quien pertenece a varias no debe
+ * quedarse atrapado en la que no tiene plan, sin forma de volver a las que
+ * sí lo tienen.
  */
 export const EligeTuPlanPage = () => {
   const translate = useTranslate();
@@ -104,17 +109,20 @@ export const EligeTuPlanPage = () => {
             <img src={darkModeLogo} alt={title} className="size-8 rounded-lg" />
             <span className="font-semibold">{title}</span>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              olvidarDerechos();
-              logout();
-            }}
-          >
-            <LogOut className="h-4 w-4" />
-            {translate("ra.auth.logout")}
-          </Button>
+          <div className="flex items-center gap-1">
+            <SelectorDeOrganizacion />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                olvidarDerechos();
+                logout();
+              }}
+            >
+              <LogOut className="h-4 w-4" />
+              {translate("ra.auth.logout")}
+            </Button>
+          </div>
         </header>
 
         {cargando && !derechos ? (

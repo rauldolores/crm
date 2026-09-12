@@ -159,6 +159,8 @@ export function clearAuthCache() {
   const storage = getLocalStorage();
   storage?.removeItem(IS_INITIALIZED_CACHE_KEY);
   storage?.removeItem(CURRENT_SALE_CACHE_KEY);
+  // El aviso de «sin cupo de usuarios» era de la organización anterior.
+  storage?.removeItem(LIMITE_DE_USUARIOS_KEY);
 }
 
 export const getAuthProvider = (): AuthProvider => {
