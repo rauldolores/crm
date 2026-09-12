@@ -1,6 +1,7 @@
 import { LOCALE } from "../misc/RelativeDate";
 import { ResponsiveBar } from "@nivo/bar";
 import { format, startOfMonth } from "date-fns";
+import { es } from "date-fns/locale";
 import { TrendingUp } from "lucide-react";
 import { useGetList, useTranslate } from "ra-core";
 import { memo, useMemo } from "react";
@@ -49,7 +50,7 @@ export const DealsChart = memo(() => {
 
     const amountByMonth = Object.keys(dealsByMonth).map((month) => {
       return {
-        date: format(month, "MMM"),
+        date: format(month, "MMM", { locale: es }),
         won: dealsByMonth[month]
           .filter((deal: Deal) => deal.stage === "won")
           .reduce((acc: number, deal: Deal) => {
@@ -84,6 +85,10 @@ export const DealsChart = memo(() => {
     },
     { min: 0, max: 0 },
   );
+  // Sin importes no hay nada que dibujar: mejor decirlo que pintar dos ejes
+  // en blanco alrededor de una línea en cero.
+  const sinDatos = range.min === 0 && range.max === 0;
+
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-3 mb-4">
@@ -94,110 +99,118 @@ export const DealsChart = memo(() => {
           {translate("crm.dashboard.deals_chart")}
         </h2>
       </div>
-      <div className="h-[400px]">
-        <ResponsiveBar
-          data={months}
-          indexBy="date"
-          keys={["won", "pending", "lost"]}
-          colors={["#61cdbb", "#97e3d5", "#e25c3b"]}
-          margin={{ top: 30, right: 50, bottom: 30, left: 0 }}
-          padding={0.3}
-          valueScale={{
-            type: "linear",
-            min: range.min * 1.2,
-            max: range.max * 1.2,
-          }}
-          indexScale={{ type: "band", round: true }}
-          enableGridX={true}
-          enableGridY={false}
-          enableLabel={false}
-          tooltip={({ value, indexValue }) => (
-            <div className="p-2 bg-secondary rounded shadow inline-flex items-center gap-1 text-secondary-foreground">
-              <strong>{indexValue}: </strong>&nbsp;{value > 0 ? "+" : ""}
-              {value.toLocaleString(LOCALE, {
-                style: "currency",
-                currency,
-              })}
-            </div>
-          )}
-          axisTop={{
-            tickSize: 0,
-            tickPadding: 12,
-            style: {
-              ticks: {
-                text: {
-                  fill: "var(--color-muted-foreground)",
+      {sinDatos ? (
+        <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+          <p className="max-w-sm">
+            {translate("crm.dashboard.deals_chart_empty")}
+          </p>
+        </div>
+      ) : (
+        <div className="h-[400px]">
+          <ResponsiveBar
+            data={months}
+            indexBy="date"
+            keys={["won", "pending", "lost"]}
+            colors={["#2f9e8f", "#9fd8cd", "#d9573f"]}
+            margin={{ top: 30, right: 50, bottom: 30, left: 0 }}
+            padding={0.3}
+            valueScale={{
+              type: "linear",
+              min: range.min * 1.2,
+              max: range.max * 1.2,
+            }}
+            indexScale={{ type: "band", round: true }}
+            enableGridX={true}
+            enableGridY={false}
+            enableLabel={false}
+            tooltip={({ value, indexValue }) => (
+              <div className="p-2 bg-secondary rounded shadow inline-flex items-center gap-1 text-secondary-foreground">
+                <strong>{indexValue}: </strong>&nbsp;{value > 0 ? "+" : ""}
+                {value.toLocaleString(LOCALE, {
+                  style: "currency",
+                  currency,
+                })}
+              </div>
+            )}
+            axisTop={{
+              tickSize: 0,
+              tickPadding: 12,
+              style: {
+                ticks: {
+                  text: {
+                    fill: "var(--color-muted-foreground)",
+                  },
+                },
+                legend: {
+                  text: {
+                    fill: "var(--color-muted-foreground)",
+                  },
                 },
               },
-              legend: {
-                text: {
-                  fill: "var(--color-muted-foreground)",
+            }}
+            axisBottom={{
+              legendPosition: "middle",
+              legendOffset: 50,
+              tickSize: 0,
+              tickPadding: 12,
+              style: {
+                ticks: {
+                  text: {
+                    fill: "var(--color-muted-foreground)",
+                  },
+                },
+                legend: {
+                  text: {
+                    fill: "var(--color-muted-foreground)",
+                  },
                 },
               },
-            },
-          }}
-          axisBottom={{
-            legendPosition: "middle",
-            legendOffset: 50,
-            tickSize: 0,
-            tickPadding: 12,
-            style: {
-              ticks: {
-                text: {
-                  fill: "var(--color-muted-foreground)",
+            }}
+            axisLeft={null}
+            axisRight={{
+              format: (v: any) => `${Math.abs(v / 1000)}k`,
+              tickValues: 8,
+              style: {
+                ticks: {
+                  text: {
+                    fill: "var(--color-muted-foreground)",
+                  },
+                },
+                legend: {
+                  text: {
+                    fill: "var(--color-muted-foreground)",
+                  },
                 },
               },
-              legend: {
-                text: {
-                  fill: "var(--color-muted-foreground)",
+            }}
+            markers={
+              [
+                {
+                  axis: "y",
+                  value: 0,
+                  lineStyle: { strokeOpacity: 0 },
+                  textStyle: { fill: "#2f9e8f" },
+                  legend: wonLabel,
+                  legendPosition: "top-left",
+                  legendOrientation: "vertical",
                 },
-              },
-            },
-          }}
-          axisLeft={null}
-          axisRight={{
-            format: (v: any) => `${Math.abs(v / 1000)}k`,
-            tickValues: 8,
-            style: {
-              ticks: {
-                text: {
-                  fill: "var(--color-muted-foreground)",
+                {
+                  axis: "y",
+                  value: 0,
+                  lineStyle: {
+                    stroke: "#d9573f",
+                    strokeWidth: 1,
+                  },
+                  textStyle: { fill: "#d9573f" },
+                  legend: lostLabel,
+                  legendPosition: "bottom-left",
+                  legendOrientation: "vertical",
                 },
-              },
-              legend: {
-                text: {
-                  fill: "var(--color-muted-foreground)",
-                },
-              },
-            },
-          }}
-          markers={
-            [
-              {
-                axis: "y",
-                value: 0,
-                lineStyle: { strokeOpacity: 0 },
-                textStyle: { fill: "#2ebca6" },
-                legend: wonLabel,
-                legendPosition: "top-left",
-                legendOrientation: "vertical",
-              },
-              {
-                axis: "y",
-                value: 0,
-                lineStyle: {
-                  stroke: "#f47560",
-                  strokeWidth: 1,
-                },
-                textStyle: { fill: "#e25c3b" },
-                legend: lostLabel,
-                legendPosition: "bottom-left",
-                legendOrientation: "vertical",
-              },
-            ] as any
-          }
-        />
-      </div>
+              ] as any
+            }
+          />
+        </div>
+      )}
     </div>
   );
 });

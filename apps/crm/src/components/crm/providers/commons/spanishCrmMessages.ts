@@ -255,6 +255,7 @@ export const spanishCrmMessages = {
         pipeline: "Embudo",
         loss_reason: "Motivo de pérdida",
       },
+      no_amount: "Sin importe",
       action: {
         back_to_deal: "Volver a la oportunidad",
         create: "Crear oportunidad",
@@ -1058,6 +1059,8 @@ export const spanishCrmMessages = {
     },
     dashboard: {
       deals_chart: "Ingresos previstos por oportunidades",
+      deals_chart_empty:
+        "Aún no hay importes en las oportunidades. Pon un importe a una oportunidad y aquí verás la previsión por mes.",
       deals_pipeline: "Embudo de oportunidades",
       latest_activity: "Actividad reciente",
       latest_activity_error: "Error al cargar la actividad reciente",

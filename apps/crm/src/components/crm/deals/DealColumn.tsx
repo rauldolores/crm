@@ -17,17 +17,20 @@ export const DealColumn = ({
   const { dealStages, currency } = useConfigurationContext();
   return (
     <div className="flex-1 pb-8">
-      <div className="flex flex-col items-center">
-        <h3 className="text-base font-medium">
+      <div className="flex flex-col items-center gap-0.5">
+        <h3 className="flex items-center gap-1.5 text-sm font-medium">
           {findDealLabel(dealStages, stage)}
+          <span className="rounded-full bg-muted px-1.5 text-xs font-normal text-muted-foreground tabular-nums">
+            {deals.length}
+          </span>
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs text-muted-foreground tabular-nums">
           {totalAmount.toLocaleString(LOCALE, {
             notation: "compact",
             style: "currency",
             currency,
             currencyDisplay: "narrowSymbol",
-            minimumSignificantDigits: 3,
+            maximumFractionDigits: 0,
           })}
         </p>
       </div>
@@ -36,8 +39,12 @@ export const DealColumn = ({
           <div
             ref={droppableProvided.innerRef}
             {...droppableProvided.droppableProps}
-            className={`flex flex-col rounded-2xl mt-2 gap-2 ${
-              snapshot.isDraggingOver ? "bg-muted" : ""
+            className={`mt-3 flex min-h-24 flex-col gap-2 rounded-xl p-1 transition-colors ${
+              snapshot.isDraggingOver
+                ? "bg-accent"
+                : deals.length === 0
+                  ? "border border-dashed"
+                  : ""
             }`}
           >
             {deals.map((deal, index) => (

@@ -18,7 +18,7 @@ const urlDelRecurso = (recurso: unknown): string =>
 export const defaultDarkModeLogo = urlDelRecurso(darkModeLogo);
 export const defaultLightModeLogo = urlDelRecurso(lightModeLogo);
 
-export const defaultCurrency = "USD";
+export const defaultCurrency = "EUR";
 
 export const defaultTitle = "Vinqulia";
 
