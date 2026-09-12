@@ -438,6 +438,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturacion/PlanEnterpriseCard.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturacion/PlanesDisponibles.tsx",
           "type": "registry:component"
         },
