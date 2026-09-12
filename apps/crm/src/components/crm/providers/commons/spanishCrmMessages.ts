@@ -690,14 +690,6 @@ export const spanishCrmMessages = {
         generic: "No se pudo completar la operación. Inténtalo de nuevo.",
         unreachable:
           "No se pudo consultar tu plan en KontrolIA Auth. Revisa tu conexión e inténtalo de nuevo.",
-        forbidden:
-          "Solo un owner o admin de la organización puede administrar la suscripción.",
-        bad_return_url:
-          "La dirección de retorno del pago no está autorizada. Configura la URL de esta aplicación en KontrolIA Auth.",
-        already_subscribed:
-          "Tu organización ya tiene ese plan. Para cambiarlo usa «Gestionar suscripción».",
-        no_stripe:
-          "Esta instalación no tiene pagos en línea configurados. Contacta a quien administra KontrolIA Auth.",
       },
     },
     email_templates: {

@@ -1,6 +1,7 @@
 import { requirePermission } from "@kontrolia/auth/server";
 
 import { kontroliaAuthConfig } from "@/lib/kontrolia-auth/config";
+import { exigirCupoDeUsuario } from "./exigirCupoDeUsuario";
 import { getServiceClient } from "./supabase-service";
 
 /**
@@ -88,10 +89,19 @@ export async function verificarTenencia(
   return null;
 }
 
+export interface OpcionesDeAutorizacion {
+  /**
+   * No exigir cupo de usuarios del plan. Solo para /api/crm/aprovisionar,
+   * que es quien crea la ficha y ya lo comprueba por su cuenta.
+   */
+  sinCupoDeUsuario?: boolean;
+}
+
 export async function requireKontroliaPermission(
   peticion: Request,
   permiso: string | string[],
   tenencia?: ComprobacionDeTenencia | ComprobacionDeTenencia[],
+  opciones: OpcionesDeAutorizacion = {},
 ): Promise<ResultadoDeAutorizacion> {
   let claims: Record<string, unknown>;
 
@@ -125,6 +135,16 @@ export async function requireKontroliaPermission(
 
   const errorDeTenencia = await verificarTenencia(organizacionId, tenencia);
   if (errorDeTenencia) return { ok: false, response: errorDeTenencia };
+
+  // Cupo de usuarios del plan: sin ficha y sin cupo no se entra por ninguna
+  // puerta, no solo por la pantalla. Ver exigirCupoDeUsuario.
+  if (!opciones.sinCupoDeUsuario) {
+    const sinCupo = await exigirCupoDeUsuario(
+      organizacionId,
+      String(claims.sub ?? "") || null,
+    );
+    if (sinCupo) return { ok: false, response: sinCupo };
+  }
 
   return {
     ok: true,

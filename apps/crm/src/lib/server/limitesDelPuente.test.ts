@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { contactosNuevos, embudosNuevos, idsDe } from "./limitesDelPuente";
+import {
+  contactosNuevos,
+  embudosNuevos,
+  embudosQuitados,
+  idsDe,
+} from "./limitesDelPuente";
 
 describe("contactosNuevos", () => {
   it("cuenta uno para un alta simple y todos para una importación", () => {
@@ -65,6 +70,21 @@ describe("embudosNuevos", () => {
 
     expect(embudosNuevos(cuerpo, {})).toEqual(["ventas"]);
     expect(embudosNuevos(cuerpo, null)).toEqual(["ventas"]);
+  });
+
+  it("detecta los embudos que se quitaron, que liberan cupo", () => {
+    const cuerpo = JSON.stringify({
+      config: { dealPipelines: [{ value: "ventas" }] },
+    });
+
+    expect(embudosQuitados(cuerpo, guardado)).toEqual(["soporte"]);
+    expect(embudosNuevos(cuerpo, guardado)).toEqual([]);
+  });
+
+  it("una escritura sin embudos ni añade ni quita", () => {
+    const cuerpo = JSON.stringify({ config: { currency: "MXN" } });
+
+    expect(embudosQuitados(cuerpo, guardado)).toEqual([]);
   });
 
   it("no cuenta nada si la escritura no trae embudos", () => {

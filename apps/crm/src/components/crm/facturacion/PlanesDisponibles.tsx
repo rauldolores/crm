@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { env } from "@/lib/env";
 import {
-  ErrorDeFacturacion,
   esAdministradorDeLaOrganizacion,
   getPlans,
   openBillingPortal,
@@ -52,23 +51,19 @@ export const irAlPortal = async (
   }
 };
 
+/**
+ * El SDK lanza un Error con el texto que devolvió auth-server (ya en
+ * español y concreto: «Solo un owner o admin…», «La URL de retorno no está
+ * autorizada…», «ya tiene ese plan», «sin Stripe»). Se muestra tal cual; el
+ * genérico queda para un fallo sin texto (red caída).
+ */
 const mensajeDeError = (
   error: unknown,
   translate: (clave: string) => string,
-): string => {
-  if (error instanceof ErrorDeFacturacion) {
-    const porCodigo: Record<number, string> = {
-      403: "crm.billing.errors.forbidden",
-      400: "crm.billing.errors.bad_return_url",
-      409: "crm.billing.errors.already_subscribed",
-      503: "crm.billing.errors.no_stripe",
-    };
-    const clave = porCodigo[error.status];
-    if (clave) return translate(clave);
-    return error.message;
-  }
-  return translate("crm.billing.errors.generic");
-};
+): string =>
+  error instanceof Error && error.message
+    ? error.message
+    : translate("crm.billing.errors.generic");
 
 /**
  * La rejilla de planes: precio, características, cuál es el actual, y el

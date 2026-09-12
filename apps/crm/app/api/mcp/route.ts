@@ -5,6 +5,9 @@ import {
   getResourceMetadataUrl,
   validateToken,
 } from "@/lib/server/mcp/auth";
+import { decodeJwt } from "jose";
+
+import { exigirCupoDeUsuario } from "@/lib/server/exigirCupoDeUsuario";
 import { CORS_HEADERS, withCors } from "@/lib/server/mcp/cors";
 import { createMcpServer } from "@/lib/server/mcp/mcpServer";
 
@@ -25,6 +28,15 @@ import { createMcpServer } from "@/lib/server/mcp/mcpServer";
  */
 export const runtime = "nodejs";
 
+const organizacionDelToken = (token: string): string | null => {
+  try {
+    const claims = decodeJwt(token) as { organization_id?: string };
+    return claims.organization_id ?? null;
+  } catch {
+    return null;
+  }
+};
+
 async function manejar(peticion: Request): Promise<Response> {
   const authInfo = await validateToken(peticion);
   if (!authInfo) {
@@ -37,6 +49,14 @@ async function manejar(peticion: Request): Promise<Response> {
         },
       }),
     );
+  }
+
+  // Cupo de usuarios del plan: quien no tiene ficha ni cupo tampoco entra
+  // por aquí (ver exigirCupoDeUsuario).
+  const organizacionId = organizacionDelToken(authInfo.token);
+  if (organizacionId) {
+    const sinCupo = await exigirCupoDeUsuario(organizacionId, authInfo.userId);
+    if (sinCupo) return withCors(sinCupo);
   }
 
   const server = createMcpServer(authInfo, getBaseUrl(peticion));

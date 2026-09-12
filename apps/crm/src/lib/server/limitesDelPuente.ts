@@ -59,13 +59,34 @@ export const embudosNuevos = (
   cuerpo: string,
   configActual: unknown,
 ): string[] => {
-  const [fila] = filasDe(cuerpo);
-  const enviados = fila
-    ? valoresDeEmbudos((fila as ConfiguracionConEmbudos).config)
-    : [];
-  if (enviados.length === 0) return [];
+  const enviados = embudosEnviados(cuerpo);
+  if (enviados === null) return [];
   const existentes = new Set(
     valoresDeEmbudos(configActual as ConfiguracionConEmbudos["config"]),
   );
   return enviados.filter((valor) => !existentes.has(valor));
+};
+
+/**
+ * Embudos guardados que la escritura ya no trae: se borraron y liberan
+ * cupo. Una escritura sin `dealPipelines` no quita ninguno.
+ */
+export const embudosQuitados = (
+  cuerpo: string,
+  configActual: unknown,
+): string[] => {
+  const enviados = embudosEnviados(cuerpo);
+  if (enviados === null) return [];
+  const conservados = new Set(enviados);
+  return valoresDeEmbudos(
+    configActual as ConfiguracionConEmbudos["config"],
+  ).filter((valor) => !conservados.has(valor));
+};
+
+/** Los embudos del cuerpo, o null si la escritura no toca `dealPipelines`. */
+const embudosEnviados = (cuerpo: string): string[] | null => {
+  const [fila] = filasDe(cuerpo);
+  const config = fila ? (fila as ConfiguracionConEmbudos).config : null;
+  if (!config || !Array.isArray(config.dealPipelines)) return null;
+  return valoresDeEmbudos(config);
 };

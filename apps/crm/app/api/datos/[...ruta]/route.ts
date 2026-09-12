@@ -5,6 +5,7 @@ import { imponerDueno } from "@/lib/server/imponerDueno";
 import {
   contarUso,
   exigirCupo,
+  liberarUso,
   LIMITE_CONTACTOS,
   LIMITE_EMBUDOS,
   limitesConfigurados,
@@ -12,6 +13,7 @@ import {
 import {
   contactosNuevos,
   embudosNuevos,
+  embudosQuitados,
   idsDe,
 } from "@/lib/server/limitesDelPuente";
 import { restringirAPropios } from "@/lib/server/restringirAPropios";
@@ -51,10 +53,11 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * afiliado (no representa a un usuario), así que integraciones como la de
  * diagnóstico de Kontrolia no se ven afectadas.
  *
- * Límites del plan (KontrolIA Auth): como todo alta pasa por aquí, es donde
- * se comprueba el cupo antes de crear contactos o embudos y donde se cuenta
- * después, con el id de lo creado para que un reintento no cuente doble.
- * Ver limitesDelPuente.ts (qué se cuenta) y consumo.ts (quién lo reporta).
+ * Límites del plan (KontrolIA Auth): como todo alta y toda baja pasan por
+ * aquí, es donde se comprueba el cupo antes de crear contactos o embudos,
+ * donde se cuenta después (con el id de lo creado, para que un reintento no
+ * cuente doble) y donde se libera al borrar. Ver limitesDelPuente.ts (qué
+ * se cuenta) y consumo.ts (quién lo reporta).
  */
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(
@@ -264,12 +267,16 @@ async function reenviar(peticion: Request, ruta: string[]) {
   if (alta) {
     const sinCupo = await exigirCupo(organizacionId, alta.clave, alta.cantidad);
     if (sinCupo) return sinCupo;
-    // Para contar con el id de cada fila creada hace falta que PostgREST
-    // devuelva las filas. Si el cliente no lo pidió, se pide igual y se le
-    // devuelve la respuesta vacía que esperaba.
-    if (alta.clave === LIMITE_CONTACTOS && !alta.pidioRepresentacion) {
-      cabeceras.set("prefer", preferConRepresentacion(cabeceras.get("prefer")));
-    }
+  }
+  // Para contar (o liberar) con el id de cada fila hace falta que PostgREST
+  // devuelva las filas. Si el cliente no lo pidió, se pide igual y se le
+  // devuelve la respuesta vacía que esperaba.
+  const baja = bajaCobrable(peticion.method, recurso, cabeceras.get("prefer"));
+  if (
+    (alta?.clave === LIMITE_CONTACTOS && !alta.pidioRepresentacion) ||
+    (baja && !baja.pidioRepresentacion)
+  ) {
+    cabeceras.set("prefer", preferConRepresentacion(cabeceras.get("prefer")));
   }
 
   const destino = `${SUPABASE_URL}/${ruta.join("/")}?${parametros.toString()}`;
@@ -281,6 +288,9 @@ async function reenviar(peticion: Request, ruta: string[]) {
 
   if (alta && respuesta.ok) {
     return contarYResponder(respuesta, alta, organizacionId);
+  }
+  if (baja && respuesta.ok) {
+    return liberarYResponder(respuesta, baja, organizacionId);
   }
 
   // Se conservan las cabeceras: el data provider lee `content-range` para
@@ -299,9 +309,18 @@ async function reenviar(peticion: Request, ruta: string[]) {
 
 interface AltaCobrable {
   clave: string;
+  /** Unidades que se crean (0 si la escritura solo quita). */
   cantidad: number;
   /** Ids ya conocidos (embudos); los contactos se leen de la respuesta. */
   ids: (string | number)[];
+  /** Ids que la escritura libera (embudos quitados). */
+  liberados: (string | number)[];
+  pidioRepresentacion: boolean;
+}
+
+/** Escritura que devuelve cupo: borrar contactos. */
+interface BajaCobrable {
+  clave: string;
   pidioRepresentacion: boolean;
 }
 
@@ -326,6 +345,7 @@ async function altaCobrable(
           clave: LIMITE_CONTACTOS,
           cantidad,
           ids: [],
+          liberados: [],
           pidioRepresentacion: /return=representation/.test(prefer ?? ""),
         }
       : null;
@@ -341,20 +361,35 @@ async function altaCobrable(
       .eq("organization_id", organizacionId)
       .maybeSingle();
     const nuevos = embudosNuevos(cuerpo, data?.config);
-    return nuevos.length > 0
-      ? {
-          clave: LIMITE_EMBUDOS,
-          cantidad: nuevos.length,
-          // El embudo no tiene id propio: su valor dentro de la organización
-          // es lo que lo identifica, y lo que hace idempotente el conteo.
-          ids: nuevos.map((valor) => `${organizacionId}:${valor}`),
-          pidioRepresentacion: true,
-        }
-      : null;
+    const quitados = embudosQuitados(cuerpo, data?.config);
+    if (nuevos.length === 0 && quitados.length === 0) return null;
+    // El embudo no tiene id propio: su valor dentro de la organización es lo
+    // que lo identifica, y lo que hace idempotente el conteo.
+    const idDe = (valor: string) => `${organizacionId}:${valor}`;
+    return {
+      clave: LIMITE_EMBUDOS,
+      cantidad: nuevos.length,
+      ids: nuevos.map(idDe),
+      liberados: quitados.map(idDe),
+      pidioRepresentacion: true,
+    };
   }
 
   return null;
 }
+
+/** Un DELETE de contactos devuelve cupo por cada fila borrada. */
+const bajaCobrable = (
+  metodo: string,
+  recurso: string,
+  prefer: string | null,
+): BajaCobrable | null =>
+  limitesConfigurados() && metodo === "DELETE" && recurso === "contacts"
+    ? {
+        clave: LIMITE_CONTACTOS,
+        pidioRepresentacion: /return=representation/.test(prefer ?? ""),
+      }
+    : null;
 
 /** Añade `return=representation` a la cabecera Prefer, conservando el resto. */
 const preferConRepresentacion = (prefer: string | null): string => {
@@ -381,9 +416,34 @@ async function contarYResponder(
 
   const texto = await respuesta.text();
   const ids = alta.ids.length > 0 ? alta.ids : idsDe(texto);
-  await Promise.all(ids.map((id) => contarUso(organizacionId, alta.clave, id)));
+  await Promise.all([
+    ...ids.map((id) => contarUso(organizacionId, alta.clave, id)),
+    ...alta.liberados.map((id) => liberarUso(organizacionId, alta.clave, id)),
+  ]);
 
   return new Response(alta.pidioRepresentacion ? texto : null, {
+    status: respuesta.status,
+    statusText: respuesta.statusText,
+    headers: cabecerasRespuesta,
+  });
+}
+
+/** Libera el cupo de lo borrado, por el id de cada fila que devolvió PostgREST. */
+async function liberarYResponder(
+  respuesta: Response,
+  baja: BajaCobrable,
+  organizacionId: string,
+): Promise<Response> {
+  const cabecerasRespuesta = new Headers(respuesta.headers);
+  cabecerasRespuesta.delete("content-encoding");
+  cabecerasRespuesta.delete("content-length");
+
+  const texto = await respuesta.text();
+  await Promise.all(
+    idsDe(texto).map((id) => liberarUso(organizacionId, baja.clave, id)),
+  );
+
+  return new Response(baja.pidioRepresentacion ? texto : null, {
     status: respuesta.status,
     statusText: respuesta.statusText,
     headers: cabecerasRespuesta,

@@ -23,7 +23,9 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * quien ya la tiene entra siempre, aunque el plan haya bajado después.
  */
 export async function POST(peticion: Request) {
-  const auth = await requireKontroliaPermission(peticion, []);
+  const auth = await requireKontroliaPermission(peticion, [], undefined, {
+    sinCupoDeUsuario: true,
+  });
   if (!auth.ok) return auth.response;
 
   const { organizacionId, usuarioId } = auth.sesion;
