@@ -55,7 +55,7 @@ export const DashboardStats = () => {
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {stats.map((s) => (
         <Link key={s.ruta} to={s.ruta} className="group no-underline">
-          <Card className="h-full gap-0 overflow-hidden py-0 transition-all group-hover:-translate-y-0.5 group-hover:shadow-md">
+          <Card className="h-full gap-0 overflow-hidden py-0 transition-colors group-hover:border-primary/40">
             <div className="flex items-center gap-3 p-4">
               <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                 {s.icono}

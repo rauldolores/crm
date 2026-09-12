@@ -1,8 +1,7 @@
-import { AuthProvider, useAuth } from "@kontrolia/react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { kontroliaAuthConfig } from "@/lib/kontrolia-auth/config";
+import { getKontroliaClient } from "@/lib/kontrolia-auth/client";
 import {
   OAUTH_CLIENT_ID,
   OAUTH_CODE_VERIFIER_STORAGE_KEY,
@@ -16,14 +15,22 @@ import {
  * autorización y redirige a KontrolIA Auth, que es la única pantalla de acceso
  * del ecosistema. El registro, los usuarios, los roles y las organizaciones
  * viven allí, no aquí.
+ *
+ * Usa el cliente singleton (getKontroliaClient) en lugar de <AuthProvider>:
+ * ese componente crea SU PROPIA instancia de @kontrolia/auth, y
+ * buildOAuthServerAuthorizeUrl no necesita nada de lo que <AuthProvider>
+ * añade (usuario, organización, roles) — es solo criptografía PKCE local.
+ * Una instancia de más del cliente de auth es exactamente lo que
+ * GoTrueClient advierte como riesgoso cuando comparte cookie de sesión con
+ * el resto de la app (ver KontroliaClient.refresh(), que documenta el mismo
+ * problema de raíz).
  */
 const Contenido = () => {
-  const auth = useAuth();
   const [error, setError] = useState<string | null>(null);
   const yaSeInicio = useRef(false);
 
   useEffect(() => {
-    if (auth.isLoading || yaSeInicio.current) return;
+    if (yaSeInicio.current) return;
 
     if (!OAUTH_CLIENT_ID) {
       setError(
@@ -32,16 +39,23 @@ const Contenido = () => {
       return;
     }
 
+    const cliente = getKontroliaClient();
+    if (!cliente) {
+      setError("KontrolIA Auth no está configurado en esta instalación.");
+      return;
+    }
+
     yaSeInicio.current = true;
 
     (async () => {
       try {
-        const { url, codeVerifier } = await auth.buildOAuthServerAuthorizeUrl({
-          clientId: OAUTH_CLIENT_ID,
-          redirectUri: oauthRedirectUri(),
-          state:
-            new URLSearchParams(window.location.search).get("destino") || "/",
-        });
+        const { url, codeVerifier } =
+          await cliente.buildOAuthServerAuthorizeUrl({
+            clientId: OAUTH_CLIENT_ID,
+            redirectUri: oauthRedirectUri(),
+            state:
+              new URLSearchParams(window.location.search).get("destino") || "/",
+          });
         sessionStorage.setItem(OAUTH_CODE_VERIFIER_STORAGE_KEY, codeVerifier);
         window.location.href = url;
       } catch (e) {
@@ -52,7 +66,7 @@ const Contenido = () => {
         );
       }
     })();
-  }, [auth, auth.isLoading]);
+  }, []);
 
   if (error) {
     return (
@@ -78,10 +92,6 @@ const Contenido = () => {
   );
 };
 
-export const OAuthLoginPage = () => (
-  <AuthProvider config={kontroliaAuthConfig}>
-    <Contenido />
-  </AuthProvider>
-);
+export const OAuthLoginPage = () => <Contenido />;
 
 OAuthLoginPage.path = "/oauth/login";

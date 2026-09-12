@@ -151,7 +151,7 @@ export const BarraLateral = () => {
           </span>
         </Link>
 
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Principal
         </p>
 
@@ -180,7 +180,7 @@ export const BarraLateral = () => {
 
         {seccionesDeModulos.length > 0 && (
           <>
-            <p className="mt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+            <p className="mt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               {translate("crm.modules.title")}
             </p>
             <nav className="flex flex-col gap-1">
@@ -208,15 +208,17 @@ export const BarraLateral = () => {
               to={FacturacionPage.path}
               className="mb-4 flex flex-col gap-2 rounded-lg px-2 py-2 text-sidebar-foreground no-underline hover:bg-sidebar-accent"
             >
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {translate("crm.billing.plan_named", {
-                  plan: derechos.subscription.planName,
+                  // El nombre del plan ya suele venir como «Plan Impulso»:
+                  // sin esto se leería «Plan Plan Impulso».
+                  plan: derechos.subscription.planName.replace(/^plan\s+/i, ""),
                 })}
               </span>
               <ConsumoDelPlan usage={derechos.usage} compacto />
             </Link>
           )}
-          <div className="flex items-center gap-2 px-2 text-xs text-sidebar-foreground/50">
+          <div className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
             <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />
             <span className="truncate">{title} · CRM</span>
           </div>

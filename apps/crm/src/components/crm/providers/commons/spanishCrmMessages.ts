@@ -685,6 +685,10 @@ export const spanishCrmMessages = {
         pending_title: "Tu pago está en camino",
         pending_text:
           "Stripe nos avisará en unos segundos. Si ya pagaste, vuelve a comprobar; si no, tu plan aparecerá en cuanto llegue la confirmación.",
+        session_lost_title: "Perdimos tu sesión al comprobar",
+        session_lost_text:
+          "Tu pago no se pierde por esto: solo hace falta refrescar la página para retomar la sesión y ver tu plan.",
+        reload: "Refrescar la página",
       },
       errors: {
         generic: "No se pudo completar la operación. Inténtalo de nuevo.",

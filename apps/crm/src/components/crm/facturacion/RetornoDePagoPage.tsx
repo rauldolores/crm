@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { useTranslate } from "ra-core";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
@@ -21,39 +21,59 @@ const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
  * Adonde vuelve la persona desde Stripe tras pagar. Volver aquí NO prueba
- * que pagó: la suscripción llega por webhook un instante después. Se
- * refresca el token (permisos del plan nuevo) y se vuelve a preguntar unas
- * cuantas veces antes de dar el resultado.
+ * que pagó: la suscripción llega por webhook un instante después, así que se
+ * pregunta unas cuantas veces antes de dar el resultado.
+ *
+ * El refresco del token pasa UNA sola vez, no en cada intento. Repetirlo en
+ * cada vuelta forzaba varias rotaciones del refresh token en pocos segundos,
+ * justo la ventana en la que puede chocar con el refresco automático del
+ * propio SDK y dejar la sesión de este cliente invalidada a mitad de camino
+ * (GoTrue responde 400 "already used" al segundo, y @supabase/auth-js borra
+ * la sesión local ante ese error). getEntitlements ya usa el token vigente
+ * por su cuenta — no necesita que se lo fuerce.
+ *
+ * Si eso pasa igual, se nota aquí: `getToken()` empieza a devolver null. En
+ * ese caso no tiene sentido seguir reintentando la misma pregunta contra un
+ * cliente sin sesión — se ofrece refrescar la página en vez de un botón que
+ * repetiría el mismo fallo para siempre.
  */
 export const RetornoDePagoPage = () => {
   const translate = useTranslate();
   const navigate = useNavigate();
   const { title, darkModeLogo } = useConfigurationContext();
-  const [estado, setEstado] = useState<"comprobando" | "ok" | "pendiente">(
-    "comprobando",
-  );
+  const [estado, setEstado] = useState<
+    "comprobando" | "ok" | "pendiente" | "sin_sesion"
+  >("comprobando");
   const [derechos, setDerechos] = useState<KontroliaEntitlements | null>(null);
 
   const comprobar = useCallback(async () => {
     setEstado("comprobando");
     const cliente = getKontroliaClient();
-    const refrescar = () => cliente?.refresh().catch(() => undefined);
-    const preguntar = () =>
-      getEntitlements(env.kontroliaApplicationSlug).catch(() => null);
+    await cliente?.refresh().catch(() => undefined);
 
-    await refrescar();
-    let e = await preguntar();
-    for (let i = 0; i < INTENTOS && e?.access !== "ok"; i++) {
-      await esperar(ESPERA_MS);
-      await refrescar();
-      e = await preguntar();
+    let e: KontroliaEntitlements | null = null;
+    let sinSesion = false;
+
+    for (let intento = 0; intento <= INTENTOS; intento++) {
+      if (intento > 0) await esperar(ESPERA_MS);
+
+      const token = await cliente?.getToken().catch(() => null);
+      if (!token) {
+        sinSesion = true;
+        break;
+      }
+
+      e = await getEntitlements(env.kontroliaApplicationSlug).catch(() => null);
+      if (e?.access === "ok") break;
     }
 
     setDerechos(e);
     // Lo cacheado en la app es de antes del pago.
     olvidarDerechos();
     void recargarDerechos();
-    setEstado(e?.access === "ok" ? "ok" : "pendiente");
+    setEstado(
+      sinSesion ? "sin_sesion" : e?.access === "ok" ? "ok" : "pendiente",
+    );
   }, []);
 
   useEffect(() => {
@@ -85,6 +105,26 @@ export const RetornoDePagoPage = () => {
             </p>
             <Button onClick={() => navigate("/", { replace: true })}>
               {translate("crm.billing.return.enter")}
+            </Button>
+          </>
+        ) : estado === "sin_sesion" ? (
+          <>
+            <AlertTriangle className="h-10 w-10 text-amber-500" />
+            <h1 className="text-2xl font-semibold">
+              {translate("crm.billing.return.session_lost_title")}
+            </h1>
+            <p className="text-muted-foreground">
+              {translate("crm.billing.return.session_lost_text")}
+            </p>
+            {/*
+              Un botón "reintentar" aquí repetiría exactamente el mismo
+              fallo: este cliente ya no tiene sesión. Recargar crea uno
+              nuevo que lee la cookie tal como está ahora mismo, que sigue
+              siendo válida — solo la copia en memoria de este cliente se
+              quedó atrás.
+            */}
+            <Button onClick={() => window.location.reload()}>
+              {translate("crm.billing.return.reload")}
             </Button>
           </>
         ) : (

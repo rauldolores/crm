@@ -1,8 +1,7 @@
-import { AuthProvider, useAuth } from "@kontrolia/react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { kontroliaAuthConfig } from "@/lib/kontrolia-auth/config";
+import { getKontroliaClient } from "@/lib/kontrolia-auth/client";
 import {
   OAUTH_CLIENT_ID,
   OAUTH_CODE_VERIFIER_STORAGE_KEY,
@@ -16,6 +15,13 @@ import {
  * Se monta desde el punto de entrada de la aplicación en lugar de como una
  * ruta más, porque el CRM enruta por hash y el `redirect_uri` de OAuth es una
  * ruta normal: el router de ra-core nunca llegaría a verla.
+ *
+ * Usa el cliente singleton (getKontroliaClient) en lugar de <AuthProvider>:
+ * ese componente crea SU PROPIA instancia de @kontrolia/auth sobre la misma
+ * cookie de sesión que usa el resto de la app, algo que GoTrueClient advierte
+ * explícitamente como riesgoso ("Multiple GoTrueClient instances detected in
+ * the same browser context... under the same storage key"). Aquí no hace
+ * falta: exchangeOAuthServerCode es autosuficiente.
  */
 /**
  * Marca a nivel de modulo, no `useRef`.
@@ -28,7 +34,6 @@ import {
 let codigoYaCanjeado = false;
 
 const Contenido = () => {
-  const auth = useAuth();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,8 +65,14 @@ const Contenido = () => {
         return;
       }
 
+      const cliente = getKontroliaClient();
+      if (!cliente) {
+        setError("KontrolIA Auth no está configurado en esta instalación.");
+        return;
+      }
+
       try {
-        await auth.exchangeOAuthServerCode({
+        await cliente.exchangeOAuthServerCode({
           clientId: OAUTH_CLIENT_ID,
           redirectUri: oauthRedirectUri(),
           code,
@@ -87,7 +98,7 @@ const Contenido = () => {
     };
 
     procesar();
-  }, [auth]);
+  }, []);
 
   if (error) {
     return (
@@ -114,10 +125,6 @@ const Contenido = () => {
   );
 };
 
-export const OAuthCallbackPage = () => (
-  <AuthProvider config={kontroliaAuthConfig}>
-    <Contenido />
-  </AuthProvider>
-);
+export const OAuthCallbackPage = () => <Contenido />;
 
 OAuthCallbackPage.path = "/oauth/callback";

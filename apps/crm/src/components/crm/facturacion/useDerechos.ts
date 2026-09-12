@@ -34,6 +34,32 @@ const publicar = (nuevo: EstadoDeDerechos) => {
   oyentes.forEach((oyente) => oyente(estado));
 };
 
+/**
+ * Reintentos automáticos tras un fallo, con espera creciente.
+ *
+ * Antes, un solo fallo (un hipo de red, una sesión que aún no terminó de
+ * asentarse al volver de un pago) dejaba `error` puesto para siempre: el
+ * efecto de `useDerechos` solo pide de nuevo cuando `!estado.error`, así que
+ * nadie volvía a preguntar. Como `GuardiaDePlan` deja pasar cuando no hay
+ * derechos («un fallo del proveedor de planes no debe dejar a nadie
+ * fuera»), ese primer fallo desactivaba el bloqueo por el resto de la
+ * pestaña, no solo hasta que se resolviera. Con reintentos programados aquí
+ * mismo, cualquiera que dependa de `recargarDerechos` se autocura sin tener
+ * que saber que existe este problema.
+ */
+const REINTENTOS_MAXIMOS = 4;
+const ESPERAS_MS = [3000, 8000, 20000, 45000];
+
+let intentosFallidosSeguidos = 0;
+let reintentoProgramado: ReturnType<typeof setTimeout> | null = null;
+
+const cancelarReintentoProgramado = () => {
+  if (reintentoProgramado) {
+    clearTimeout(reintentoProgramado);
+    reintentoProgramado = null;
+  }
+};
+
 /** Vuelve a pedir los derechos. Concurrente-seguro: una sola petición a la vez. */
 export const recargarDerechos = (): Promise<void> => {
   if (peticionEnVuelo) return peticionEnVuelo;
@@ -41,16 +67,30 @@ export const recargarDerechos = (): Promise<void> => {
     publicar({ derechos: null, cargando: false, error: null });
     return Promise.resolve();
   }
+  cancelarReintentoProgramado();
   publicar({ ...estado, cargando: true });
   peticionEnVuelo = getEntitlements(env.kontroliaApplicationSlug)
-    .then((derechos) => publicar({ derechos, cargando: false, error: null }))
-    .catch((error: unknown) =>
+    .then((derechos) => {
+      intentosFallidosSeguidos = 0;
+      publicar({ derechos, cargando: false, error: null });
+    })
+    .catch((error: unknown) => {
       publicar({
         ...estado,
         cargando: false,
         error: error instanceof Error ? error.message : "Sin respuesta",
-      }),
-    )
+      });
+      if (intentosFallidosSeguidos < REINTENTOS_MAXIMOS) {
+        const espera =
+          ESPERAS_MS[intentosFallidosSeguidos] ??
+          ESPERAS_MS[ESPERAS_MS.length - 1];
+        intentosFallidosSeguidos += 1;
+        reintentoProgramado = setTimeout(() => {
+          reintentoProgramado = null;
+          void recargarDerechos();
+        }, espera);
+      }
+    })
     .finally(() => {
       peticionEnVuelo = null;
     });
@@ -59,6 +99,8 @@ export const recargarDerechos = (): Promise<void> => {
 
 /** Al cerrar sesión o cambiar de organización lo cacheado deja de valer. */
 export const olvidarDerechos = () => {
+  cancelarReintentoProgramado();
+  intentosFallidosSeguidos = 0;
   publicar({ derechos: null, cargando: false, error: null });
 };
 
