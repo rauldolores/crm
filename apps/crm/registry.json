@@ -922,6 +922,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/settings/HerramientasDeAdministracion.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/settings/ProfilePage.tsx",
           "type": "registry:component"
         },
