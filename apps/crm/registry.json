@@ -94,6 +94,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/autorizacion/GuardiaDeAplicacion.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/autorizacion/SinAccesoPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/ayuda/AyudaPage.tsx",
           "type": "registry:component"
         },
@@ -355,6 +363,10 @@
         },
         {
           "path": "src/components/crm/dashboard/TasksList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/dashboard/TicketsAbiertos.tsx",
           "type": "registry:component"
         },
         {
@@ -1347,6 +1359,10 @@
         },
         {
           "path": "src/lib/server/mcp/validateSql.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/requireKontroliaPermission.test.ts",
           "type": "registry:lib"
         },
         {
