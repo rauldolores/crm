@@ -4,6 +4,7 @@ import { Notification } from "@/components/admin/notification";
 import { Error } from "@/components/admin/error";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { GuardiaDeAplicacion } from "../autorizacion/GuardiaDeAplicacion";
 import { GuardiaDePlan } from "../facturacion/GuardiaDePlan";
 import { useConfigurationLoader } from "../root/useConfigurationLoader";
 import Header from "./Header";
@@ -13,6 +14,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
   useConfigurationLoader();
   return (
     <div className="flex min-h-screen">
+      <GuardiaDeAplicacion />
       <GuardiaDePlan />
       <BarraLateral />
       <div className="flex min-w-0 flex-1 flex-col">

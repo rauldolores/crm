@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 
+import { RUTA_SIN_ACCESO } from "../autorizacion/GuardiaDeAplicacion";
 import { LIMITE_DE_USUARIOS_KEY } from "../providers/supabase/authProvider";
 import { useDerechos } from "./useDerechos";
 
@@ -41,7 +42,10 @@ export const GuardiaDePlan = () => {
   useEffect(() => {
     if (
       pathname.startsWith(RUTA_FACTURACION) ||
-      pathname === RUTA_ELIGE_TU_PLAN
+      pathname === RUTA_ELIGE_TU_PLAN ||
+      // Si GuardiaDeAplicacion ya mandó aquí, el plan no importa: sin acceso
+      // a la aplicación no hay nada que un plan pueda arreglar.
+      pathname === RUTA_SIN_ACCESO
     ) {
       return;
     }

@@ -26,6 +26,7 @@ import { MobileDashboard } from "../dashboard/MobileDashboard";
 import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
+import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
 import { EligeTuPlanPage } from "../facturacion/EligeTuPlanPage";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { RetornoDePagoPage } from "../facturacion/RetornoDePagoPage";
@@ -285,6 +286,7 @@ const DesktopAdmin = (
         <Route path={OAuthConsentPage.path} element={<OAuthConsentPage />} />
         <Route path={EligeTuPlanPage.path} element={<EligeTuPlanPage />} />
         <Route path={RetornoDePagoPage.path} element={<RetornoDePagoPage />} />
+        <Route path={SinAccesoPage.path} element={<SinAccesoPage />} />
       </CustomRoutes>
 
       <CustomRoutes>
@@ -378,6 +380,7 @@ const MobileAdmin = (
             path={RetornoDePagoPage.path}
             element={<RetornoDePagoPage />}
           />
+          <Route path={SinAccesoPage.path} element={<SinAccesoPage />} />
         </CustomRoutes>
         <CustomRoutes>
           <Route

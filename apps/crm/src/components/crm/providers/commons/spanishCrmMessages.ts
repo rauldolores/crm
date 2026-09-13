@@ -1217,6 +1217,11 @@ export const spanishCrmMessages = {
     navigation: {
       label: "Navegación del CRM",
     },
+    access: {
+      denied_title: "No tienes acceso a esta aplicación",
+      denied_text:
+        "Tu cuenta de KontrolIA Auth es válida, pero esta organización no tiene %{app} contratado, o tu cuenta no tiene un rol asignado ahí. Si perteneces a otra organización, cámbiate arriba; si no, pide a quien la administre que te dé acceso.",
+    },
     profile: {
       inbound: {
         description:

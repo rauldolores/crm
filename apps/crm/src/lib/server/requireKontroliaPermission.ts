@@ -1,5 +1,6 @@
 import { requirePermission } from "@kontrolia/auth/server";
 
+import { env } from "@/lib/env";
 import { kontroliaAuthConfig } from "@/lib/kontrolia-auth/config";
 import { exigirCupoDeUsuario } from "./exigirCupoDeUsuario";
 import { getServiceClient } from "./supabase-service";
@@ -133,6 +134,43 @@ export async function requireKontroliaPermission(
     };
   }
 
+  // El permiso que pide cada ruta (`permiso`, arriba) puede venir vacío —
+  // `[]` significa "no comprueba nada" para el checker del SDK— y varias
+  // rutas de este CRM lo dejaban así, confiando en que una sesión válida ya
+  // implicaba acceso a esta aplicación. No lo implica: KontrolIA Auth es
+  // compartido por todo el ecosistema (Faqturia, el CRM, lo que venga
+  // después), así que cualquier persona con cuenta en cualquier
+  // organización de ese proyecto trae un `organization_id` válido, tenga o
+  // no el CRM contratado esa organización. Lo que de verdad distingue "esta
+  // organización usa el CRM" es que el claim `permissions` traiga alguna
+  // clave con el prefijo de esta aplicación (`crm.…`) — se comprueba aquí
+  // una sola vez, para que a ninguna ruta se le pueda olvidar, sea cual sea
+  // el permiso concreto que pida.
+  //
+  // `is_platform_admin` es aparte: lo pone el propio hook de KontrolIA Auth
+  // (kontrolia_auth.platform_admins) para el personal de soporte/operación
+  // que necesita entrar a cualquier organización de cualquier aplicación, y
+  // vive fuera del espacio de permisos por app a propósito — ningún catálogo
+  // de la aplicación puede otorgarlo. Sin este caso, esa cuenta se quedaría
+  // fuera aunque KontrolIA Auth diga que tiene acceso a todo.
+  const permisos = Array.isArray(claims.permissions)
+    ? (claims.permissions as string[])
+    : [];
+  const prefijoDeLaApp = `${env.kontroliaApplicationSlug}.`;
+  const esAdminDeLaPlataforma = claims.is_platform_admin === true;
+  if (
+    !esAdminDeLaPlataforma &&
+    !permisos.some((clave) => clave.startsWith(prefijoDeLaApp))
+  ) {
+    return {
+      ok: false,
+      response: respuestaDeError(
+        403,
+        "Tu cuenta no tiene acceso a Vinqulia. Pídele a quien administra tu organización en KontrolIA Auth que te asigne un rol de esta aplicación.",
+      ),
+    };
+  }
+
   const errorDeTenencia = await verificarTenencia(organizacionId, tenencia);
   if (errorDeTenencia) return { ok: false, response: errorDeTenencia };
 
@@ -152,9 +190,7 @@ export async function requireKontroliaPermission(
       usuarioId: String(claims.sub ?? ""),
       organizacionId,
       roles: Array.isArray(claims.roles) ? (claims.roles as string[]) : [],
-      permisos: Array.isArray(claims.permissions)
-        ? (claims.permissions as string[])
-        : [],
+      permisos,
     },
   };
 }

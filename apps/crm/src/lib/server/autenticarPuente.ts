@@ -48,9 +48,11 @@ export async function autenticarPuente(
     };
   }
 
-  // El permiso fino por recurso llegará cuando se declare en cada ruta; aquí
-  // se exige sesión con organización activa, que es lo que decide qué datos
-  // son visibles.
+  // El permiso fino por recurso queda por declarar en cada ruta; lo que
+  // requireKontroliaPermission ya exige sin excepción, pase lo que pase
+  // aquí, es que el token traiga algún permiso de esta aplicación — ver el
+  // comentario ahí sobre por qué una sesión válida en KontrolIA Auth no
+  // basta por sí sola.
   const auth = await requireKontroliaPermission(peticion, []);
   if (!auth.ok) return { ok: false, response: auth.response };
   return {
