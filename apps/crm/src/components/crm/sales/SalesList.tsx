@@ -1,17 +1,41 @@
 import { useRecordContext, useTranslate } from "ra-core";
+import { useEffect, useState } from "react";
 import { DataTable } from "@/components/admin/data-table";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SearchInput } from "@/components/admin/search-input";
 import { Badge } from "@/components/ui/badge";
+import { esAdministradorDeLaOrganizacion } from "@/lib/kontrolia-auth/facturacion";
 
 import { TopToolbar } from "../layout/TopToolbar";
+import { InvitarUsuarioButton } from "./InvitarUsuarioButton";
 
-const SalesListActions = () => (
-  <TopToolbar>
-    <ExportButton />
-  </TopToolbar>
-);
+/**
+ * El botón de invitar solo se ofrece a Owner/Admin: auth-server ya lo exige
+ * del lado del servidor en /api/invitations (igual que con Stripe en
+ * facturación), así que esto solo evita mostrar un botón que iba a
+ * responder 403.
+ */
+const SalesListActions = () => {
+  const [puedeInvitar, setPuedeInvitar] = useState(false);
+
+  useEffect(() => {
+    let cancelado = false;
+    void esAdministradorDeLaOrganizacion().then((puede) => {
+      if (!cancelado) setPuedeInvitar(puede);
+    });
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  return (
+    <TopToolbar>
+      {puedeInvitar && <InvitarUsuarioButton />}
+      <ExportButton />
+    </TopToolbar>
+  );
+};
 
 const filters = [<SearchInput source="q" alwaysOn />];
 

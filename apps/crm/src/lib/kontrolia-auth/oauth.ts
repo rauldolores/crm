@@ -21,6 +21,28 @@ export const OAUTH_CLIENT_ID =
  */
 export const OAUTH_CODE_VERIFIER_STORAGE_KEY = "kontrolia_oauth_code_verifier";
 
+/**
+ * A dónde volver dentro del CRM una vez completado el acceso (la ruta que
+ * pedía `RedireccionAlAcceso` antes de salir). Va en sessionStorage y no en
+ * el query string de `/oauth/login`, porque ese viaje ahora pasa primero por
+ * la pantalla de acceso centralizada (`{AUTH}/login?...`), que vuelve al
+ * origen desnudo — sin el query string original — y sessionStorage sí
+ * sobrevive ese viaje de ida y vuelta entre dominios.
+ */
+export const OAUTH_DESTINO_STORAGE_KEY = "kontrolia_oauth_destino";
+
+/**
+ * Si ya se intentó la pantalla de acceso centralizada en este intento de
+ * inicio de sesión. La primera vez que no hay sesión, `/oauth/login` manda
+ * ahí (para que aparezca "Crear cuenta"); si se vuelve sin sesión todavía
+ * —quien inició sesión o se registró ahí ya tiene cookie de GoTrue—, esta
+ * marca hace que la segunda pasada siga con el flujo PKCE de siempre en vez
+ * de mandar otra vez a la misma pantalla y quedar en un ciclo. Se limpia al
+ * cerrar sesión, para que el próximo acceso vuelva a pasar por ahí.
+ */
+export const OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY =
+  "kontrolia_oauth_login_centralizado_intentado";
+
 /** Ruta que inicia el acceso. */
 export const OAUTH_LOGIN_PATH = "/oauth/login";
 

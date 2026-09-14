@@ -731,6 +731,24 @@ export const spanishCrmMessages = {
         error: "No se pudo enviar tu mensaje",
       },
     },
+    team: {
+      invite_action: "Invitar",
+      dialog_title: "Invitar a tu organización",
+      dialog_description:
+        "Se le enviará un correo de invitación con el rol que elijas.",
+      email_field: "Correo electrónico",
+      role_field: "Rol",
+      role_placeholder: "Elige un rol",
+      loading_roles: "Cargando roles…",
+      no_roles: "Tu organización todavía no tiene roles para invitar.",
+      cancel: "Cancelar",
+      send: "Enviar invitación",
+      sending: "Enviando…",
+      success: "Invitación enviada",
+      error: "No se pudo enviar la invitación",
+      error_loading_roles: "No se pudieron cargar los roles de tu organización",
+      no_organization: "Tu cuenta no tiene una organización activa.",
+    },
     email_templates: {
       title: "Plantillas de correo",
       action: {

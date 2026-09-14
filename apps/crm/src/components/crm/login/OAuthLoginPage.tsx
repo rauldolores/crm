@@ -1,20 +1,24 @@
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { env } from "@/lib/env";
 import { getKontroliaClient } from "@/lib/kontrolia-auth/client";
 import {
   OAUTH_CLIENT_ID,
   OAUTH_CODE_VERIFIER_STORAGE_KEY,
+  OAUTH_DESTINO_STORAGE_KEY,
+  OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY,
   oauthRedirectUri,
 } from "@/lib/kontrolia-auth/oauth";
 
 /**
- * Inicio del flujo OAuth 2.1 (Authorization Code + PKCE).
- *
- * Vinqulia no pide credenciales nunca: solo construye la URL de
- * autorización y redirige a KontrolIA Auth, que es la única pantalla de acceso
- * del ecosistema. El registro, los usuarios, los roles y las organizaciones
- * viven allí, no aquí.
+ * Inicio del flujo de acceso: primero pasa por la pantalla centralizada de
+ * KontrolIA Auth (`{AUTH}/login?app=...&redirect_to=...`), la única que debe
+ * mostrar "Iniciar sesión"/"Crear cuenta" — este CRM no monta login ni
+ * registro propios. Si se vuelve aquí sin sesión todavía, es porque quien
+ * accedió o se registró ahí ya tiene cookie de GoTrue en el dominio de
+ * KontrolIA Auth, y entonces se completa con el flujo PKCE de siempre, que
+ * ya no necesita pedir credenciales.
  *
  * Usa el cliente singleton (getKontroliaClient) en lugar de <AuthProvider>:
  * ese componente crea SU PROPIA instancia de @kontrolia/auth, y
@@ -25,6 +29,21 @@ import {
  * el resto de la app (ver KontroliaClient.refresh(), que documenta el mismo
  * problema de raíz).
  */
+
+/**
+ * `destino` viaja en sessionStorage y no en el query string de esta ruta:
+ * el viaje de ida y vuelta a la pantalla centralizada pasa por otro origen
+ * y vuelve al origen desnudo, sin el query string original.
+ */
+const iniciarAccesoCentralizado = (destino: string) => {
+  sessionStorage.setItem(OAUTH_DESTINO_STORAGE_KEY, destino);
+  sessionStorage.setItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY, "1");
+  const url = new URL("/login", env.kontroliaAuthServerUrl);
+  url.searchParams.set("app", env.kontroliaApplicationSlug);
+  url.searchParams.set("redirect_to", window.location.origin);
+  window.location.href = url.toString();
+};
+
 const Contenido = () => {
   const [error, setError] = useState<string | null>(null);
   const yaSeInicio = useRef(false);
@@ -45,16 +64,27 @@ const Contenido = () => {
       return;
     }
 
+    const destino =
+      new URLSearchParams(window.location.search).get("destino") || "/";
+
+    if (!sessionStorage.getItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY)) {
+      iniciarAccesoCentralizado(destino);
+      return;
+    }
+
     yaSeInicio.current = true;
 
     (async () => {
       try {
+        const destinoGuardado =
+          sessionStorage.getItem(OAUTH_DESTINO_STORAGE_KEY) || destino;
+        sessionStorage.removeItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY);
+        sessionStorage.removeItem(OAUTH_DESTINO_STORAGE_KEY);
         const { url, codeVerifier } =
           await cliente.buildOAuthServerAuthorizeUrl({
             clientId: OAUTH_CLIENT_ID,
             redirectUri: oauthRedirectUri(),
-            state:
-              new URLSearchParams(window.location.search).get("destino") || "/",
+            state: destinoGuardado,
           });
         sessionStorage.setItem(OAUTH_CODE_VERIFIER_STORAGE_KEY, codeVerifier);
         window.location.href = url;
