@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { INDUSTRIAS } from "../content/industrias";
 import { CtaDemo, CtaRegistro, Logo } from "./comunes";
+import { URL_APP } from "../lib/sitio";
 import { MenuIndustrias } from "./MenuIndustrias";
 
 /**
@@ -50,6 +51,14 @@ export function BarraNavegacion({ enInicio = false }: { enInicio?: boolean }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Quien ya es cliente entra desde aquí: la web no tiene login
+              propio, la sesión vive en la aplicación. */}
+          <a
+            href={URL_APP}
+            className="hidden px-3 py-2 text-sm font-medium text-neutral-700 no-underline transition-colors hover:text-neutral-900 md:inline-flex"
+          >
+            Entrar
+          </a>
           <CtaDemo
             className="hidden px-4 py-2 sm:inline-flex"
             href={prefijo + "#demo"}

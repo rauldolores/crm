@@ -27,7 +27,7 @@ export const MarcoDelNavegador = ({
       <span className="size-3 rounded-full bg-neutral-300" />
       <span className="size-3 rounded-full bg-neutral-300" />
       <span className="ml-3 hidden flex-1 rounded-md bg-white px-3 py-1 text-xs text-neutral-400 ring-1 ring-neutral-200 sm:block">
-        app.vinqulia.com
+        panel.vinqulia.com
       </span>
     </div>
     {children}

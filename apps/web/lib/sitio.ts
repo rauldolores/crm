@@ -12,7 +12,7 @@ export const urlAbsoluta = (ruta: string) => URL_SITIO + ruta;
 
 /** La aplicación en producción: a donde mandan los botones de «empezar». */
 export const URL_APP = (
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://crm.kontrolia.io"
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://panel.vinqulia.com"
 ).replace(/\/$/, "");
 
 /** Recorta una descripción para las meta etiquetas sin cortar palabras. */
