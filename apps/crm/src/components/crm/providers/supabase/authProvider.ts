@@ -6,10 +6,7 @@ import {
   getKontroliaClient,
   logoutKontroliaAuth,
 } from "@/lib/kontrolia-auth/client";
-import {
-  OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY,
-  OAUTH_LOGIN_PATH,
-} from "@/lib/kontrolia-auth/oauth";
+import { OAUTH_LOGIN_PATH } from "@/lib/kontrolia-auth/oauth";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { canAccess } from "../commons/canAccess";
 import { getSupabaseClient } from "./supabase";
@@ -202,10 +199,6 @@ export const getAuthProvider = (): AuthProvider => {
     logout: async (params) => {
       clearAuthCache();
       if (isKontroliaAuthConfigured()) {
-        // Para que el próximo acceso vuelva a pasar por la pantalla
-        // centralizada (y no salte directo al flujo PKCE, que asumiría que
-        // ya se intentó y podría toparse con una cookie de otra cuenta).
-        sessionStorage.removeItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY);
         await logoutKontroliaAuth();
         return;
       }

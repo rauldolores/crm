@@ -6,19 +6,22 @@ import { getKontroliaClient } from "@/lib/kontrolia-auth/client";
 import {
   OAUTH_CLIENT_ID,
   OAUTH_CODE_VERIFIER_STORAGE_KEY,
-  OAUTH_DESTINO_STORAGE_KEY,
-  OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY,
   oauthRedirectUri,
 } from "@/lib/kontrolia-auth/oauth";
 
 /**
- * Inicio del flujo de acceso: primero pasa por la pantalla centralizada de
- * KontrolIA Auth (`{AUTH}/login?app=...&redirect_to=...`), la única que debe
- * mostrar "Iniciar sesión"/"Crear cuenta" — este CRM no monta login ni
- * registro propios. Si se vuelve aquí sin sesión todavía, es porque quien
- * accedió o se registró ahí ya tiene cookie de GoTrue en el dominio de
- * KontrolIA Auth, y entonces se completa con el flujo PKCE de siempre, que
- * ya no necesita pedir credenciales.
+ * Inicio del flujo OAuth 2.1 (Authorization Code + PKCE) directo: construye
+ * la URL de autorización y redirige al endpoint de autorización de Supabase
+ * Auth (`{SUPABASE_URL}/auth/v1/oauth/authorize`), NUNCA a la pantalla
+ * `{AUTH}/login` hospedada por el auth-server.
+ *
+ * Esta app vive en un dominio distinto al del auth-server
+ * (panel.vinqulia.com vs. auth.kontrolia.io): pasar por su pantalla de login
+ * le da sesión de GoTrue a ESE dominio, pero esa cookie no la comparte
+ * ningún navegador con este — así que rebotar por ahí nunca le da sesión a
+ * esta app. Lo que sí funciona en cualquier dominio es el intercambio del
+ * código de autorización en /oauth/callback (ver OAuthCallbackPage.tsx):
+ * ese paso no depende de cookies compartidas.
  *
  * Usa el cliente singleton (getKontroliaClient) en lugar de <AuthProvider>:
  * ese componente crea SU PROPIA instancia de @kontrolia/auth, y
@@ -30,18 +33,12 @@ import {
  * problema de raíz).
  */
 
-/**
- * `destino` viaja en sessionStorage y no en el query string de esta ruta:
- * el viaje de ida y vuelta a la pantalla centralizada pasa por otro origen
- * y vuelve al origen desnudo, sin el query string original.
- */
-const iniciarAccesoCentralizado = (destino: string) => {
-  sessionStorage.setItem(OAUTH_DESTINO_STORAGE_KEY, destino);
-  sessionStorage.setItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY, "1");
-  const url = new URL("/login", env.kontroliaAuthServerUrl);
+/** Enlace a la pantalla de registro hospedada por el auth-server. */
+const urlDeRegistro = () => {
+  const url = new URL("/register", env.kontroliaAuthServerUrl);
   url.searchParams.set("app", env.kontroliaApplicationSlug);
   url.searchParams.set("redirect_to", window.location.origin);
-  window.location.href = url.toString();
+  return url.toString();
 };
 
 const Contenido = () => {
@@ -64,27 +61,16 @@ const Contenido = () => {
       return;
     }
 
-    const destino =
-      new URLSearchParams(window.location.search).get("destino") || "/";
-
-    if (!sessionStorage.getItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY)) {
-      iniciarAccesoCentralizado(destino);
-      return;
-    }
-
     yaSeInicio.current = true;
 
     (async () => {
       try {
-        const destinoGuardado =
-          sessionStorage.getItem(OAUTH_DESTINO_STORAGE_KEY) || destino;
-        sessionStorage.removeItem(OAUTH_LOGIN_CENTRALIZADO_INTENTADO_KEY);
-        sessionStorage.removeItem(OAUTH_DESTINO_STORAGE_KEY);
         const { url, codeVerifier } =
           await cliente.buildOAuthServerAuthorizeUrl({
             clientId: OAUTH_CLIENT_ID,
             redirectUri: oauthRedirectUri(),
-            state: destinoGuardado,
+            state:
+              new URLSearchParams(window.location.search).get("destino") || "/",
           });
         sessionStorage.setItem(OAUTH_CODE_VERIFIER_STORAGE_KEY, codeVerifier);
         window.location.href = url;
@@ -106,7 +92,13 @@ const Contenido = () => {
           <h1 className="text-xl font-semibold mb-2">
             No se pudo iniciar sesión
           </h1>
-          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-sm text-muted-foreground mb-4">{error}</p>
+          <a
+            className="text-sm underline hover:no-underline"
+            href={urlDeRegistro()}
+          >
+            Crear cuenta
+          </a>
         </div>
       </div>
     );
@@ -118,6 +110,12 @@ const Contenido = () => {
       <p className="text-sm text-muted-foreground">
         Redirigiendo a KontrolIA Auth…
       </p>
+      <a
+        className="text-xs text-muted-foreground underline hover:no-underline"
+        href={urlDeRegistro()}
+      >
+        Crear cuenta
+      </a>
     </div>
   );
 };
