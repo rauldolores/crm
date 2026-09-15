@@ -9,13 +9,26 @@
  */
 import { createKontroliaClient, type KontroliaClient } from "@kontrolia/auth";
 import { isKontroliaAuthConfigured, kontroliaAuthConfig } from "./config";
+import { OAUTH_CLIENT_ID } from "./oauth";
+import { instalarRefrescoOAuth } from "./refrescoOAuth";
 
 let cliente: KontroliaClient | null = null;
 
 export function getKontroliaClient(): KontroliaClient | null {
   if (typeof window === "undefined") return null;
   if (!isKontroliaAuthConfigured()) return null;
-  if (!cliente) cliente = createKontroliaClient(kontroliaAuthConfig);
+  if (!cliente) {
+    cliente = createKontroliaClient(kontroliaAuthConfig);
+    // La sesión viene del servidor OAuth y solo se refresca con client_id:
+    // ver refrescoOAuth.ts. Sin esto, cada refresco borraba la sesión.
+    if (OAUTH_CLIENT_ID) {
+      instalarRefrescoOAuth(cliente, {
+        supabaseUrl: kontroliaAuthConfig.supabaseUrl,
+        supabaseAnonKey: kontroliaAuthConfig.supabaseAnonKey,
+        clientId: OAUTH_CLIENT_ID,
+      });
+    }
+  }
   return cliente;
 }
 
