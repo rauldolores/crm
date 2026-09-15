@@ -33,7 +33,11 @@ import {
  * problema de raíz).
  */
 
-/** Enlace a la pantalla de registro hospedada por el auth-server. */
+/**
+ * Enlace a la pantalla de registro hospedada por el auth-server. Lee
+ * window, así que solo puede calcularse en el cliente: Next prerenderiza
+ * esta página en el build y ahí window no existe.
+ */
 const urlDeRegistro = () => {
   const url = new URL("/register", env.kontroliaAuthServerUrl);
   url.searchParams.set("app", env.kontroliaApplicationSlug);
@@ -43,10 +47,13 @@ const urlDeRegistro = () => {
 
 const Contenido = () => {
   const [error, setError] = useState<string | null>(null);
+  const [registro, setRegistro] = useState<string | null>(null);
   const yaSeInicio = useRef(false);
 
   useEffect(() => {
     if (yaSeInicio.current) return;
+
+    if (env.kontroliaAuthServerUrl) setRegistro(urlDeRegistro());
 
     if (!OAUTH_CLIENT_ID) {
       setError(
@@ -93,12 +100,11 @@ const Contenido = () => {
             No se pudo iniciar sesión
           </h1>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          <a
-            className="text-sm underline hover:no-underline"
-            href={urlDeRegistro()}
-          >
-            Crear cuenta
-          </a>
+          {registro && (
+            <a className="text-sm underline hover:no-underline" href={registro}>
+              Crear cuenta
+            </a>
+          )}
         </div>
       </div>
     );
@@ -110,12 +116,14 @@ const Contenido = () => {
       <p className="text-sm text-muted-foreground">
         Redirigiendo a KontrolIA Auth…
       </p>
-      <a
-        className="text-xs text-muted-foreground underline hover:no-underline"
-        href={urlDeRegistro()}
-      >
-        Crear cuenta
-      </a>
+      {registro && (
+        <a
+          className="text-xs text-muted-foreground underline hover:no-underline"
+          href={registro}
+        >
+          Crear cuenta
+        </a>
+      )}
     </div>
   );
 };
