@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Building2, Check } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -9,7 +9,7 @@ import {
   equivalenteMensual,
   formatearPrecio,
 } from "../content/planes";
-import { DESDE } from "../content/enterprise";
+import { DESDE, IMPLEMENTACION_BASE } from "../content/enterprise";
 import { URL_APP } from "../lib/sitio";
 import { TituloDeSeccion } from "./comunes";
 
@@ -26,6 +26,10 @@ export const Precios = () => {
   const [intervalo, setIntervalo] = useState<Intervalo>("mes");
   const anual = intervalo === "año";
   const hayAnual = PLANES.some((plan) => plan.precioAnual !== null);
+  // Enterprise no es una columna más: no tiene precio mensual ni botón de
+  // compra, así que va en una banda ancha debajo, con sus condiciones.
+  const conPrecio = PLANES.filter((plan) => plan.precioMensual !== null);
+  const enterprise = PLANES.find((plan) => plan.precioMensual === null);
 
   return (
     <section id="precios" className="py-16 lg:py-24">
@@ -65,8 +69,8 @@ export const Precios = () => {
             ))}
           </div>
         )}
-        <div className="aparece-hijos mx-auto mt-8 grid max-w-6xl gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {PLANES.map((plan) => (
+        <div className="aparece-hijos mx-auto mt-8 grid max-w-6xl gap-4 md:grid-cols-3">
+          {conPrecio.map((plan) => (
             <div
               key={plan.slug}
               className={
@@ -90,21 +94,7 @@ export const Precios = () => {
                 {plan.para}
               </p>
               <div className="mt-5">
-                {plan.precioMensual === null ? (
-                  <>
-                    <p className="flex items-baseline gap-1">
-                      <span className="text-sm text-neutral-500">desde</span>
-                      <span className="text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
-                        {formatearPrecio(DESDE.nube)}
-                      </span>
-                      <span className="text-sm text-neutral-500">/ año</span>
-                    </p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      licencia anual · en tus servidores desde{" "}
-                      {formatearPrecio(DESDE.onpremise)}
-                    </p>
-                  </>
-                ) : anual && plan.precioAnual !== null ? (
+                {anual && plan.precioAnual !== null ? (
                   <>
                     <p className="flex flex-wrap items-baseline gap-x-1">
                       <span className="text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
@@ -125,7 +115,7 @@ export const Precios = () => {
                 ) : (
                   <p className="flex items-baseline gap-1">
                     <span className="text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
-                      {formatearPrecio(plan.precioMensual)}
+                      {formatearPrecio(plan.precioMensual ?? 0)}
                     </span>
                     <span className="text-sm text-neutral-500">/ mes</span>
                   </p>
@@ -148,33 +138,74 @@ export const Precios = () => {
                   </li>
                 ))}
               </ul>
-              {plan.precioMensual === null ? (
+              <a
+                href={URL_APP}
+                className={
+                  "mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors " +
+                  (plan.destacado
+                    ? "bg-brand-600 text-white shadow-lg shadow-brand-600/30 hover:bg-brand-700"
+                    : "border border-neutral-300 text-neutral-700 hover:bg-neutral-50")
+                }
+              >
+                {plan.diasDePrueba > 0
+                  ? "Empezar gratis"
+                  : "Elegir " + plan.nombre}
+                <ArrowRight className="size-4" />
+              </a>
+            </div>
+          ))}
+        </div>
+
+        {enterprise && (
+          <div className="aparece mx-auto mt-4 max-w-6xl rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm lg:p-8">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1.4fr)_auto] lg:items-center">
+              <div>
+                <h3 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
+                  <Building2 className="size-5 text-brand-600" />
+                  {enterprise.nombre}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+                  {enterprise.para} Licencia anual, no mensual.
+                </p>
+                <p className="mt-5 flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="text-sm text-neutral-500">desde</span>
+                  <span className="text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
+                    {formatearPrecio(DESDE.nube)}
+                  </span>
+                  <span className="text-sm text-neutral-500">MXN / año</span>
+                </p>
+                <p className="mt-1 text-xs text-neutral-500">
+                  Nube dedicada · en tus servidores desde{" "}
+                  {formatearPrecio(DESDE.onpremise)} · implementación desde{" "}
+                  {formatearPrecio(IMPLEMENTACION_BASE)}, una vez
+                </p>
+              </div>
+              <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
+                {enterprise.incluye.map((punto) => (
+                  <li
+                    key={punto}
+                    className="flex items-start gap-2 text-sm text-neutral-700"
+                  >
+                    <Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                    {punto}
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col items-start gap-2 lg:items-center">
                 <a
-                  href={plan.enlace ?? "#demo"}
-                  className="mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl border border-neutral-900 bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+                  href={enterprise.enlace ?? "#demo"}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-neutral-900 bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
                 >
                   Hablemos
                   <ArrowRight className="size-4" />
                 </a>
-              ) : (
-                <a
-                  href={URL_APP}
-                  className={
-                    "mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors " +
-                    (plan.destacado
-                      ? "bg-brand-600 text-white shadow-lg shadow-brand-600/30 hover:bg-brand-700"
-                      : "border border-neutral-300 text-neutral-700 hover:bg-neutral-50")
-                  }
-                >
-                  {plan.diasDePrueba > 0
-                    ? "Empezar gratis"
-                    : "Elegir " + plan.nombre}
-                  <ArrowRight className="size-4" />
-                </a>
-              )}
+                <span className="text-xs text-neutral-500 lg:text-center">
+                  Ver qué incluye y estimar tu inversión
+                </span>
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+        )}
         <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-neutral-500">
           Precios en MXN más impuestos, con pago mensual o anual. El cobro se
           hace por Stripe desde la propia aplicación; puedes subir o bajar de
