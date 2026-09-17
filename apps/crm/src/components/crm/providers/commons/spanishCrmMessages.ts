@@ -811,6 +811,104 @@ export const spanishCrmMessages = {
       error_loading: "No se pudieron cargar tus organizaciones.",
       back: "Volver a la aplicación",
     },
+    quotes: {
+      section_title: "Cotizaciones",
+      new: "Nueva cotización",
+      edit_title: "Editar %{number}",
+      empty:
+        "Sin cotizaciones. Crea una para mandarle al cliente un documento que pueda aceptar desde su correo.",
+      from_template: "Desde plantilla",
+      choose_template: "Elige una plantilla…",
+      fields: {
+        title: "Título",
+        valid_until: "Válida hasta",
+        currency: "Moneda",
+        contract_period: "Al aceptarse",
+        contract_period_help:
+          "Con periodicidad, al aceptarse nace un contrato que se renueva; sin ella, una compra puntual (módulo Clientes).",
+        items: "Líneas",
+        description: "Concepto",
+        quantity: "Cant.",
+        unit_price: "Precio",
+        discount_pct: "Desc. %",
+        tax_rate: "IVA %",
+        notes: "Alcance y condiciones",
+        notes_help:
+          "Va debajo de las líneas en el documento: qué incluye, qué no, forma de pago, plazos.",
+      },
+      period: {
+        none: "Compra puntual",
+        monthly: "Contrato mensual",
+        quarterly: "Contrato trimestral",
+        yearly: "Contrato anual",
+      },
+      subtotal: "Subtotal",
+      tax: "IVA",
+      total: "Total",
+      no_lines: "Añade al menos una línea con concepto.",
+      created: "Cotización creada",
+      updated: "Cotización actualizada",
+      deleted: "Cotización eliminada",
+      save_error: "No se pudo guardar la cotización",
+      status: {
+        draft: "Borrador",
+        sent: "Enviada",
+        viewed: "Vista",
+        accepted: "Aceptada",
+        rejected: "Rechazada",
+        expired: "Vencida",
+      },
+      valid_until_short: "vence %{date}",
+      viewed_on: "vista el %{date}",
+      accepted_by: "aceptó %{name}",
+      actions: "Acciones",
+      view: "Ver como el cliente",
+      copy_link: "Copiar enlace",
+      link_copied: "Enlace copiado",
+      send: "Enviar",
+      resend: "Reenviar",
+      send_title: "Enviar %{number}",
+      send_description:
+        "El cliente recibe un correo con el enlace para verla y aceptarla. Al abrirlo, la cotización pasa a «Vista».",
+      send_to: "Enviar a",
+      send_to_placeholder: "Vacío = el correo del contacto de la oportunidad",
+      send_template: "Plantilla de correo",
+      send_template_default: "Correo estándar (sin plantilla)",
+      send_message: "Mensaje",
+      send_message_placeholder:
+        "Opcional. Un par de líneas para acompañar la cotización.",
+      sent_to: "Enviada a %{email}",
+      send_error: "No se pudo enviar",
+      mark_accepted: "Marcar aceptada (acordado por otro medio)",
+      mark_rejected: "Marcar rechazada",
+      marked_accepted: "Cotización aceptada",
+      marked_rejected: "Cotización rechazada",
+      settings: {
+        title: "Cotizaciones",
+        intro:
+          "Quién emite las cotizaciones, el IVA por defecto y las plantillas con líneas y condiciones listas para usar.",
+        issuer: "Emisor",
+        issuer_help:
+          "Lo que aparece en la cabecera del documento que ve el cliente.",
+        issuer_name: "Nombre comercial o razón social",
+        issuer_tax_id: "RFC",
+        issuer_address: "Dirección",
+        issuer_email: "Correo",
+        issuer_phone: "Teléfono",
+        issuer_logo: "URL del logo",
+        tax_rate: "IVA por defecto (%)",
+        templates: "Plantillas",
+        templates_help:
+          "Al crear una cotización puedes partir de una plantilla: rellena título, líneas, condiciones y vigencia.",
+        new_template: "Nueva plantilla",
+        template_name: "Nombre de la plantilla",
+        template_valid_days: "Vigencia (días)",
+        no_templates: "Sin plantillas todavía.",
+        saved: "Guardado",
+        save_error: "No se pudo guardar",
+        delete_template: "Eliminar plantilla",
+      },
+    },
     email_templates: {
       title: "Plantillas de correo",
       action: {
@@ -856,6 +954,7 @@ export const spanishCrmMessages = {
       entity_company: "Empresa",
       entity_deal: "Oportunidad",
       entity_contract: "Contrato",
+      entity_quote: "Cotización",
       empty: {
         title: "No hay plantillas",
         description:
@@ -1090,6 +1189,15 @@ export const spanishCrmMessages = {
           "Reenviar la misma compra (mismo origen + externalId) la actualiza en vez de duplicarla: un reintento o una resincronización no ensucian los datos.",
         contracts:
           "Para contratos y suscripciones, POST /api/clientes/contratos con la misma forma (nombre, periodicidad, importe, renuevaEl…). Reenviarlo actualiza el contrato, que es lo que pasa cuando cambia de importe o se renueva.",
+      },
+      quotes: {
+        title: "Cotizaciones",
+        intro:
+          "Las cotizaciones y sus líneas se leen y escriben como cualquier otro recurso (quotes, quote_items). Los totales los calcula el CRM: manda las líneas con cantidad, precio, descuento e IVA, y subtotal, tax_total y total salen solos. El folio (COT-2026-0001) también.",
+        webhook:
+          "Para facturar al aceptarse, suscribe un webhook a quotes.updated y actúa cuando status pase a accepted: el cuerpo trae la cotización completa, y sus líneas se leen de quote_items. Así la factura la emite tu sistema con sus propios productos y CFDI; el CRM no factura.",
+        public_link:
+          "public_token es el enlace que ve el cliente (/cotizacion/<token>): trátalo como un secreto, porque quien lo tenga puede aceptar la cotización.",
       },
       webhooks: {
         title: "Webhooks",

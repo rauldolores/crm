@@ -7,6 +7,8 @@ import type {
   DealStage,
   LabeledValue,
   NoteStatus,
+  QuoteIssuer,
+  QuoteTemplate,
 } from "../types";
 import { defaultConfiguration } from "./defaultConfiguration";
 
@@ -57,6 +59,12 @@ export interface ConfigurationContextValue {
   dealCustomFields: CustomFieldDefinition[];
   /** Módulos activables por organización, indexados por clave (ver modules/registry.ts). */
   modules: Record<string, ModuleConfig>;
+  /** IVA por defecto de las líneas de cotización, en porcentaje. */
+  quoteTaxRate: number;
+  /** Plantillas de cotización de la organización (líneas y condiciones). */
+  quoteTemplates: QuoteTemplate[];
+  /** Cabecera del documento: nombre comercial, RFC, dirección, logo. */
+  quoteIssuer: QuoteIssuer;
 }
 
 export const useConfigurationContext = () => {

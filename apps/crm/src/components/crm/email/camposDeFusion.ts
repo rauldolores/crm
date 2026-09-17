@@ -17,7 +17,8 @@ export type EntidadDeFusion =
   | "contacto"
   | "empresa"
   | "oportunidad"
-  | "contrato";
+  | "contrato"
+  | "cotizacion";
 
 export interface CampoDeFusion {
   /** El token tal cual se escribe: "contacto.nombre". */
@@ -64,10 +65,27 @@ const CAMPOS_FIJOS: CampoDeFusion[] = [
     etiqueta: "Renueva el",
     entidad: "contrato",
   },
+  // Solo se rellenan al enviar una cotización desde la oportunidad.
+  { clave: "cotizacion.numero", etiqueta: "Folio", entidad: "cotizacion" },
+  { clave: "cotizacion.titulo", etiqueta: "Título", entidad: "cotizacion" },
+  { clave: "cotizacion.total", etiqueta: "Total", entidad: "cotizacion" },
+  {
+    clave: "cotizacion.vigencia",
+    etiqueta: "Vigente hasta",
+    entidad: "cotizacion",
+  },
+  {
+    clave: "cotizacion.enlace",
+    etiqueta: "Enlace para verla y aceptarla",
+    entidad: "cotizacion",
+  },
 ];
 
 /** Los contratos no tienen campos personalizados; el resto sí. */
-type EntidadConPersonalizados = Exclude<EntidadDeFusion, "contrato">;
+type EntidadConPersonalizados = Exclude<
+  EntidadDeFusion,
+  "contrato" | "cotizacion"
+>;
 
 /** El prefijo del token para los campos personalizados de cada entidad. */
 const PREFIJO_PERSONALIZADO: Record<EntidadConPersonalizados, string> = {

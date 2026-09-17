@@ -1126,3 +1126,69 @@ $$;
 
 grant all on function crm.conservar_afiliado_de_referencia() to authenticated;
 grant all on function crm.conservar_afiliado_de_referencia() to service_role;
+
+-- Cotizaciones: folio por organización y año, totales y organización de las líneas.
+create or replace function crm.next_quote_number(org uuid) returns text
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  anio integer := extract(year from now())::integer;
+  siguiente integer;
+begin
+  insert into crm.quote_sequences (organization_id, year, last_number)
+  values (org, anio, 1)
+  on conflict (organization_id, year)
+    do update set last_number = crm.quote_sequences.last_number + 1
+  returning last_number into siguiente;
+  return 'COT-' || anio || '-' || lpad(siguiente::text, 4, '0');
+end;
+$$;
+
+revoke all on function crm.next_quote_number(uuid) from public;
+grant all on function crm.next_quote_number(uuid) to authenticated, service_role;
+
+create or replace function crm.set_quote_number() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+begin
+  if new.number is null then
+    new.number := crm.next_quote_number(new.organization_id);
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function crm.recalcular_totales_de_cotizacion() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  cotizacion bigint := coalesce(new.quote_id, old.quote_id);
+begin
+  update crm.quotes q
+     set subtotal = t.subtotal,
+         tax_total = t.tax_total,
+         total = t.subtotal + t.tax_total,
+         updated_at = now()
+    from (
+      select coalesce(sum(amount), 0) as subtotal,
+             coalesce(sum(round(amount * tax_rate / 100, 2)), 0) as tax_total
+        from crm.quote_items
+       where quote_id = cotizacion
+    ) t
+   where q.id = cotizacion;
+  return null;
+end;
+$$;
+
+create or replace function crm.set_quote_item_organization() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+begin
+  select organization_id into new.organization_id from crm.quotes where id = new.quote_id;
+  return new;
+end;
+$$;

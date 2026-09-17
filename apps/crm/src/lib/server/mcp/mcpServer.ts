@@ -239,6 +239,7 @@ export function createMcpServer(
     pool,
     token: authInfo.token,
     userId: authInfo.userId,
+    baseUrl: crmBaseUrl,
   });
 
   server.registerTool(

@@ -180,6 +180,22 @@ export const ApiPage = () => {
 
       <Card>
         <CardHeader>
+          <CardTitle>{translate("crm.api.quotes.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm">
+          <p>{translate("crm.api.quotes.intro")}</p>
+          <Bloque>{`curl "${origen}/api/datos/rest/v1/quotes?status=eq.accepted&select=id,number,title,total,currency,company_id,accepted_at"   -H "Authorization: Bearer vnq_..."   -H "Accept-Profile: crm"
+
+curl "${origen}/api/datos/rest/v1/quote_items?quote_id=eq.12&order=position"   -H "Authorization: Bearer vnq_..."   -H "Accept-Profile: crm"`}</Bloque>
+          <p>{translate("crm.api.quotes.webhook")}</p>
+          <p className="text-muted-foreground">
+            {translate("crm.api.quotes.public_link")}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>{translate("crm.api.webhooks.title")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">

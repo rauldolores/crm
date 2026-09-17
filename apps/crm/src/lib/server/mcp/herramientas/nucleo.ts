@@ -35,6 +35,8 @@ export interface ContextoDeHerramienta {
   token: string;
   /** Para el registro de auditoría. */
   userId: string;
+  /** Origen público del CRM (https://…), para armar enlaces que salen de él. */
+  baseUrl?: string;
 }
 
 export type Resultado =

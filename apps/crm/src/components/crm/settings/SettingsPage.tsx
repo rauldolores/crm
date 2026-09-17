@@ -199,6 +199,11 @@ const transformFormValues = (data: Record<string, any>) => {
       // módulos están activos cada vez que se guardan Ajustes. Se activan y
       // desactivan solo desde Módulos > Catálogo.
       modules: data.modules,
+      // Igual que `modules`: las cotizaciones se configuran en su propia
+      // pantalla y aquí solo se conservan.
+      quoteTaxRate: data.quoteTaxRate,
+      quoteTemplates: data.quoteTemplates,
+      quoteIssuer: data.quoteIssuer,
       currency: data.currency,
       companySectors: ensureValues(data.companySectors),
       dealCategories: ensureValues(data.dealCategories),
@@ -254,6 +259,9 @@ const SettingsForm = () => {
   const defaultValues = useMemo(
     () => ({
       modules: config.modules,
+      quoteTaxRate: config.quoteTaxRate,
+      quoteTemplates: config.quoteTemplates,
+      quoteIssuer: config.quoteIssuer,
       currency: config.currency,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
@@ -532,7 +540,13 @@ const SettingsFormFields = () => {
               type="button"
               variant="ghost"
               onClick={() =>
-                reset({ ...defaultConfiguration, modules: config.modules })
+                reset({
+                  ...defaultConfiguration,
+                  modules: config.modules,
+                  quoteTaxRate: config.quoteTaxRate,
+                  quoteTemplates: config.quoteTemplates,
+                  quoteIssuer: config.quoteIssuer,
+                })
               }
             >
               <RotateCcw className="h-4 w-4 mr-1" />

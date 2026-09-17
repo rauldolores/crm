@@ -373,3 +373,32 @@ create policy "Purchase items are updated within the organization" on crm.purcha
     with check (organization_id = crm.current_organization_id());
 create policy "Purchase items are deleted within the organization" on crm.purchase_items
     for delete to authenticated using (organization_id = crm.current_organization_id());
+
+-- Cotizaciones
+alter table crm.quotes enable row level security;
+alter table crm.quote_items enable row level security;
+alter table crm.quote_sequences enable row level security;
+
+create policy "Quotes are scoped to the organization" on crm.quotes
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Quotes are created in the organization" on crm.quotes
+    for insert to authenticated with check (organization_id = crm.current_organization_id());
+create policy "Quotes are updated within the organization" on crm.quotes
+    for update to authenticated using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Quotes are deleted within the organization" on crm.quotes
+    for delete to authenticated using (organization_id = crm.current_organization_id());
+
+create policy "Quote items are scoped to the organization" on crm.quote_items
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Quote items are created in the organization" on crm.quote_items
+    for insert to authenticated with check (
+      exists (select 1 from crm.quotes q where q.id = quote_id and q.organization_id = crm.current_organization_id())
+    );
+create policy "Quote items are updated within the organization" on crm.quote_items
+    for update to authenticated using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Quote items are deleted within the organization" on crm.quote_items
+    for delete to authenticated using (organization_id = crm.current_organization_id());
+
+-- Las secuencias solo las toca la función (security definer): sin políticas.

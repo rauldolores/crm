@@ -522,3 +522,89 @@ export interface ContactGender {
   label: string;
   icon: ComponentType<{ className?: string }>;
 }
+
+/**
+ * Cotización: el documento comercial que sale de una oportunidad. Las líneas
+ * llevan su propio precio e IVA; los totales los calcula la base con cada
+ * cambio de líneas, así que aquí son de solo lectura.
+ */
+export type QuoteStatus =
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "accepted"
+  | "rejected"
+  | "expired";
+
+export type QuoteContractPeriod = "monthly" | "quarterly" | "yearly";
+
+export type Quote = {
+  organization_id?: string;
+  number: string;
+  deal_id: Identifier | null;
+  company_id: Identifier | null;
+  contact_id: Identifier | null;
+  title: string;
+  status: QuoteStatus;
+  currency: string;
+  valid_until: string | null;
+  notes: string | null;
+  subtotal: number;
+  tax_total: number;
+  total: number;
+  /** Con periodicidad, al aceptarse nace un contrato; sin ella, una compra. */
+  contract_period: QuoteContractPeriod | null;
+  public_token: string;
+  sent_at: string | null;
+  viewed_at: string | null;
+  accepted_at: string | null;
+  accepted_by_name: string | null;
+  accepted_by_email: string | null;
+  rejected_at: string | null;
+  rejection_reason: string | null;
+  sales_id: Identifier | null;
+  created_at: string;
+  updated_at: string;
+} & Pick<RaRecord, "id">;
+
+export type QuoteItem = {
+  quote_id: Identifier;
+  position: number;
+  description: string;
+  product_ref: string | null;
+  quantity: number;
+  unit_price: number;
+  discount_pct: number;
+  tax_rate: number;
+  /** Calculado por la base: cantidad × precio × (1 − descuento). */
+  amount: number;
+} & Pick<RaRecord, "id">;
+
+/** Quién emite las cotizaciones: lo que va en la cabecera del documento. */
+export interface QuoteIssuer {
+  name: string;
+  tax_id?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  logo_url?: string;
+}
+
+/** Una plantilla de cotización: líneas y condiciones que se rellenan solas. */
+export interface QuoteTemplateItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  discount_pct?: number;
+  tax_rate?: number;
+}
+
+export interface QuoteTemplate {
+  key: string;
+  name: string;
+  title: string;
+  notes?: string;
+  contract_period?: QuoteContractPeriod | null;
+  valid_days?: number;
+  items: QuoteTemplateItem[];
+}

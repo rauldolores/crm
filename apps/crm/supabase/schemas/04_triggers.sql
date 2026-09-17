@@ -165,3 +165,27 @@ create or replace trigger conservar_afiliado_de_referencia_companies
 create trigger set_contracts_sales_id_trigger
     before insert on crm.contracts
     for each row execute function crm.set_sales_id_default();
+
+-- Cotizaciones
+create trigger set_quote_number_trigger
+    before insert on crm.quotes
+    for each row execute function crm.set_quote_number();
+
+
+create trigger recalcular_totales_de_cotizacion_trigger
+    after insert or update or delete on crm.quote_items
+    for each row execute function crm.recalcular_totales_de_cotizacion();
+
+
+create trigger set_quote_item_organization_trigger
+    before insert on crm.quote_items
+    for each row execute function crm.set_quote_item_organization();
+
+create trigger set_quote_sales_id_trigger
+    before insert on crm.quotes
+    for each row execute function crm.set_sales_id_default();
+
+-- Webhooks: quotes.created / updated / deleted, como el resto de recursos.
+create trigger notify_webhooks_quotes
+    after insert or update or delete on crm.quotes
+    for each row execute function crm.notify_webhooks();

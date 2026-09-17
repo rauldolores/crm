@@ -83,6 +83,8 @@ const RECURSOS_PROHIBIDOS = new Set([
   // y ni siquiera tiene organization_id: sin esta linea el puente la
   // serviria ENTERA a cualquiera que la pidiese.
   "internal_settings",
+  // Folios de cotización: los asigna la base; nadie los edita a mano.
+  "quote_sequences",
 ]);
 
 /** Tablas y vistas que pertenecen a una organización. */
@@ -114,6 +116,8 @@ const CON_DUENO = new Set([
   "purchases",
   "purchase_items",
   "customer_summary",
+  "quotes",
+  "quote_items",
 ]);
 
 /**
@@ -145,6 +149,7 @@ const CON_RESPONSABLE = new Set([
   "ticket_notes",
   "email_templates",
   "contracts",
+  "quotes",
 ]);
 
 /**

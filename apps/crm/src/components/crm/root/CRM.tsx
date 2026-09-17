@@ -25,6 +25,7 @@ import { Dashboard } from "../dashboard/Dashboard";
 import { MobileDashboard } from "../dashboard/MobileDashboard";
 import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
+import { CotizacionesPage } from "../cotizaciones/CotizacionesPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
 import { OrganizacionesPage } from "../organizaciones/OrganizacionesPage";
@@ -73,6 +74,7 @@ import {
   defaultTaskTypes,
   defaultTicketStatuses,
   defaultCustomerStages,
+  defaultQuoteTaxRate,
   defaultTitle,
 } from "./defaultConfiguration";
 import { i18nProvider as defaulti18nProvider } from "../providers/commons/i18nProvider";
@@ -191,6 +193,9 @@ export const CRM = ({
         ticketStatuses: defaultTicketStatuses,
         customerStages: defaultCustomerStages,
         modules: defaultModules,
+        quoteTaxRate: defaultQuoteTaxRate,
+        quoteTemplates: [],
+        quoteIssuer: { name: "" },
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -310,6 +315,7 @@ const DesktopAdmin = (
         <Route path={CorreoPage.path} element={<CorreoPage />} />
         <Route path={IaPage.path} element={<IaPage />} />
         <Route path={FacturacionPage.path} element={<FacturacionPage />} />
+        <Route path={CotizacionesPage.path} element={<CotizacionesPage />} />
         <Route
           path={AffiliatesConfigPage.path}
           element={<AffiliatesConfigPage />}
@@ -325,6 +331,8 @@ const DesktopAdmin = (
       <Resource name="contracts" />
       <Resource name="purchases" />
       <Resource name="purchase_items" />
+      <Resource name="quotes" />
+      <Resource name="quote_items" />
       <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />

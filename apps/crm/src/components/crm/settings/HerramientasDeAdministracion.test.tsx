@@ -45,6 +45,7 @@ describe("HerramientasDeAdministracion", () => {
       "Catálogo de módulos": "/modulos/catalogo",
       "Correo saliente": "/correo",
       "Inteligencia artificial": "/inteligencia-artificial",
+      Cotizaciones: "/cotizaciones",
     };
 
     for (const [titulo, ruta] of Object.entries(destinos)) {

@@ -229,3 +229,12 @@ grant usage, select on sequence crm.purchases_id_seq to anon, authenticated, ser
 grant select, insert, update, delete on table crm.purchase_items to anon, authenticated, service_role;
 grant usage, select on sequence crm.purchase_items_id_seq to anon, authenticated, service_role;
 grant select on table crm.customer_summary to anon, authenticated, service_role;
+
+-- Cotizaciones. quote_sequences solo la toca la función de folio.
+grant select, insert, update, delete on table crm.quotes to anon, authenticated, service_role;
+grant usage, select on sequence crm.quotes_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table crm.quote_items to anon, authenticated, service_role;
+grant usage, select on sequence crm.quote_items_id_seq to anon, authenticated, service_role;
+grant select, insert, update, delete on table crm.quote_sequences to service_role;
+revoke all on table crm.quote_sequences from anon;
+revoke all on table crm.quote_sequences from authenticated;

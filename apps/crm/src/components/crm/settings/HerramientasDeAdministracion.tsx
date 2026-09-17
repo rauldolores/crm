@@ -1,4 +1,12 @@
-import { Blocks, Globe, Mail, Sparkles, Webhook, Zap } from "lucide-react";
+import {
+  Blocks,
+  Globe,
+  Mail,
+  ReceiptText,
+  Sparkles,
+  Webhook,
+  Zap,
+} from "lucide-react";
 import { useTranslate } from "ra-core";
 import type { ComponentType } from "react";
 import { Link } from "react-router";
@@ -11,6 +19,7 @@ import { CorreoPage } from "../misc/CorreoPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import { IaPage } from "../misc/IaPage";
 import { CatalogoPage } from "../modules/CatalogoPage";
+import { CotizacionesPage } from "../cotizaciones/CotizacionesPage";
 
 interface Herramienta {
   titulo: string;
@@ -71,6 +80,12 @@ export const HerramientasDeAdministracion = () => {
       descripcion: translate("crm.ai.intro"),
       ruta: IaPage.path,
       Icono: Sparkles,
+    },
+    {
+      titulo: translate("crm.quotes.settings.title"),
+      descripcion: translate("crm.quotes.settings.intro"),
+      ruta: CotizacionesPage.path,
+      Icono: ReceiptText,
     },
   ];
 

@@ -16,6 +16,7 @@ export const RECURSOS_NOTIFICABLES = [
   "deal_notes",
   "tickets",
   "ticket_notes",
+  "quotes",
 ] as const;
 
 export type RecursoNotificable = (typeof RECURSOS_NOTIFICABLES)[number];

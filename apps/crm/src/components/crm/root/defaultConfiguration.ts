@@ -141,6 +141,9 @@ export const defaultTaskTypes = [
   { value: "call", label: "Llamada" },
 ];
 
+// IVA general en México. Cada organización lo ajusta desde Cotizaciones.
+export const defaultQuoteTaxRate = 16;
+
 export const defaultConfiguration: ConfigurationContextValue = {
   companySectors: defaultCompanySectors,
   currency: defaultCurrency,
@@ -163,4 +166,7 @@ export const defaultConfiguration: ConfigurationContextValue = {
   companyCustomFields: [],
   dealCustomFields: [],
   modules: defaultModules,
+  quoteTaxRate: defaultQuoteTaxRate,
+  quoteTemplates: [],
+  quoteIssuer: { name: "" },
 };
