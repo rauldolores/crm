@@ -38,8 +38,9 @@ import type { QuoteIssuer, QuoteTemplate } from "../types";
  * el cambio, cuidando de no pisar el resto.
  */
 
+// Sin opción de valor vacío: el selector no la admite. «Compra puntual» es
+// el hueco (emptyText) y se guarda como null.
 const PERIODOS = [
-  { id: "", name: "crm.quotes.period.none" },
   { id: "monthly", name: "crm.quotes.period.monthly" },
   { id: "quarterly", name: "crm.quotes.period.quarterly" },
   { id: "yearly", name: "crm.quotes.period.yearly" },
@@ -351,9 +352,16 @@ const EditorDePlantilla = ({
               source="contract_period"
               label="crm.quotes.fields.contract_period"
               choices={PERIODOS}
+              emptyText="crm.quotes.period.none"
               helperText="crm.quotes.fields.contract_period_help"
             />
-            <ArrayInput source="items" label="crm.quotes.fields.items">
+            {/* El iterador exige un recurso: fuera de una pantalla de recurso
+                (Ajustes) no hay ninguno en contexto. */}
+            <ArrayInput
+              source="items"
+              label="crm.quotes.fields.items"
+              resource="quote_items"
+            >
               <SimpleFormIterator inline disableReordering>
                 <TextInput
                   source="description"

@@ -48,8 +48,9 @@ import { calcularTotales, venceEn, type LineaEditable } from "./totales";
  * condiciones, periodicidad, vigencia y líneas de una vez.
  */
 
+// Sin opción de valor vacío: el selector no la admite. «Compra puntual» es
+// el hueco (emptyText) y se guarda como null.
 const PERIODOS = [
-  { id: "", name: "crm.quotes.period.none" },
   { id: "monthly", name: "crm.quotes.period.monthly" },
   { id: "quarterly", name: "crm.quotes.period.quarterly" },
   { id: "yearly", name: "crm.quotes.period.yearly" },
@@ -119,7 +120,10 @@ const AplicarPlantilla = () => {
         {translate("crm.quotes.from_template")}
       </Label>
       <Select onValueChange={aplicar}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger
+          className="w-full"
+          aria-label={translate("crm.quotes.from_template")}
+        >
           <SelectValue placeholder={translate("crm.quotes.choose_template")} />
         </SelectTrigger>
         <SelectContent>
@@ -322,11 +326,18 @@ export const EditorDeCotizacion = ({
                 source="contract_period"
                 label="crm.quotes.fields.contract_period"
                 choices={PERIODOS}
+                emptyText="crm.quotes.period.none"
                 helperText="crm.quotes.fields.contract_period_help"
               />
             </div>
 
-            <ArrayInput source="items" label="crm.quotes.fields.items">
+            {/* El iterador exige un recurso: fuera de una pantalla de recurso
+                (Ajustes) no hay ninguno en contexto. */}
+            <ArrayInput
+              source="items"
+              label="crm.quotes.fields.items"
+              resource="quote_items"
+            >
               <SimpleFormIterator inline disableReordering>
                 <TextInput
                   source="description"
