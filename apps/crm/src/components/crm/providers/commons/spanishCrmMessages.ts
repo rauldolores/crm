@@ -865,6 +865,7 @@ export const spanishCrmMessages = {
       view: "Ver como el cliente",
       copy_link: "Copiar enlace",
       link_copied: "Enlace copiado",
+      download_pdf: "Descargar PDF",
       send: "Enviar",
       resend: "Reenviar",
       send_title: "Enviar %{number}",

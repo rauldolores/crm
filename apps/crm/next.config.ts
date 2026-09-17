@@ -12,6 +12,9 @@ import type { NextConfig } from "next";
  */
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Genera PDFs en el servidor con dependencias nativas de Node (fontkit,
+  // yoga); empaquetarlo lo rompe. Se carga tal cual desde node_modules.
+  serverExternalPackages: ["@react-pdf/renderer"],
 };
 
 export default nextConfig;

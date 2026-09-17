@@ -1,6 +1,12 @@
 "use client";
 
-import { CheckCircle2, Loader2, Printer, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Download,
+  Loader2,
+  Printer,
+  XCircle,
+} from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -72,10 +78,18 @@ export const AccionesDeCotizacion = ({
   };
 
   const imprimir = (
-    <Button type="button" variant="outline" onClick={() => window.print()}>
-      <Printer className="h-4 w-4" />
-      Imprimir o guardar en PDF
-    </Button>
+    <>
+      <Button type="button" variant="outline" asChild>
+        <a href={`/cotizacion/${token}/pdf`}>
+          <Download className="h-4 w-4" />
+          Descargar PDF
+        </a>
+      </Button>
+      <Button type="button" variant="ghost" onClick={() => window.print()}>
+        <Printer className="h-4 w-4" />
+        Imprimir
+      </Button>
+    </>
   );
 
   if (estadoActual === "accepted") {
@@ -85,7 +99,7 @@ export const AccionesDeCotizacion = ({
           <CheckCircle2 className="h-5 w-5" />
           Cotización aceptada. Gracias; nos ponemos en marcha.
         </p>
-        <div>{imprimir}</div>
+        <div className="flex flex-wrap gap-2">{imprimir}</div>
       </div>
     );
   }

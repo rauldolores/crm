@@ -29,6 +29,7 @@
     "@kontrolia/auth": "^2.4.0",
     "@kontrolia/react": "^1.5.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "@react-pdf/renderer": "4.9.0",
     "@nivo/bar": "^0.99.0",
     "@radix-ui/react-accordion": "^1.2.13",
     "@radix-ui/react-avatar": "^1.1.12",

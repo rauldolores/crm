@@ -1,5 +1,6 @@
 import {
   Copy,
+  Download,
   ExternalLink,
   FileText,
   Loader2,
@@ -286,6 +287,12 @@ const FilaDeCotizacion = ({
           <DropdownMenuItem onClick={copiarEnlace}>
             <Copy className="h-4 w-4" />
             {translate("crm.quotes.copy_link")}
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <a href={`${enlaceDe(cotizacion)}/pdf`}>
+              <Download className="h-4 w-4" />
+              {translate("crm.quotes.download_pdf")}
+            </a>
           </DropdownMenuItem>
           {esBorrador && (
             <DropdownMenuItem onClick={() => alEditar(lineas ?? [])}>
