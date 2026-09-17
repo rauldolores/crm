@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 
+import {
+  MODALIDADES,
+  estimar,
+  type Modalidad,
+} from "../../../content/enterprise";
+
 /**
  * Captura de leads del formulario de demo, en dos pasos.
  *
@@ -12,6 +18,12 @@ import { NextResponse } from "next/server";
  *         necesidades, modalidad…). Actualiza la MISMA oportunidad: los datos
  *         que no son campos del CRM se guardan en su descripción; los que sí
  *         existen (p. ej. tamaño de empresa) se escriben en su campo.
+ *
+ * Paso "enterprise": la solicitud de /enterprise, en un solo envío. Crea
+ *         empresa, contacto y oportunidad con la estimación del primer año
+ *         como importe (recalculada aquí, no se confía en la del navegador),
+ *         y una tarea de llamada para el día siguiente. Este formulario ES
+ *         Vinqulia: lo que el prospecto llena cae en el CRM de Kontrolia.
  *
  * Configuración (ver .env.example):
  *   CRM_API_BASE_URL  — base de la API del CRM (local o producción)
@@ -145,6 +157,7 @@ export async function POST(request: Request) {
   try {
     if (paso === "1") return await pasoUno(cuerpo);
     if (paso === "2") return await pasoDos(cuerpo);
+    if (paso === "enterprise") return await pasoEnterprise(cuerpo);
     return NextResponse.json(
       { ok: false, message: "Paso desconocido." },
       { status: 400 },
@@ -312,4 +325,110 @@ async function pasoDos(cuerpo: Record<string, unknown>) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+/** Mañana a las 10:00, hora del centro de México, como ISO con desfase. */
+const mananaALasDiez = () => {
+  const manana = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const fecha = manana.toISOString().split("T")[0];
+  return `${fecha}T10:00:00-06:00`;
+};
+
+const pesos = (n: number) =>
+  new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(n);
+
+async function pasoEnterprise(cuerpo: Record<string, unknown>) {
+  const nombre = limpiar(cuerpo.nombre, 120);
+  const empresa = limpiar(cuerpo.empresa, 120);
+  const email = limpiar(cuerpo.email, 200);
+  const telefono = limpiar(cuerpo.telefono, 50);
+  const sistemaActual = limpiar(cuerpo.sistema_actual, 120);
+  const comentarios = limpiar(cuerpo.comentarios, 2000);
+  const modalidad: Modalidad =
+    cuerpo.modalidad === "onpremise" ? "onpremise" : "nube";
+  const usuarios = Number(cuerpo.usuarios);
+
+  if (!nombre || !empresa || !email || !Number.isFinite(usuarios)) {
+    return NextResponse.json(
+      { ok: false, message: "Faltan datos obligatorios." },
+      { status: 400 },
+    );
+  }
+
+  const estimacion = estimar(modalidad, usuarios);
+  const { first_name, last_name } = separarNombre(nombre);
+
+  const empresaFila = fila(
+    await llamarCRM("companies", "POST", { name: empresa }),
+  );
+  const companyId = Number(empresaFila?.id);
+  if (!companyId) throw new Error("No se pudo crear la empresa.");
+
+  const contactoFila = fila(
+    await llamarCRM("contacts", "POST", {
+      first_name,
+      last_name: last_name || undefined,
+      email_jsonb: [{ email, type: "Work" }],
+      phone_jsonb: telefono ? [{ number: telefono, type: "Work" }] : undefined,
+      company_id: companyId,
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const contactId = Number(contactoFila?.id);
+  if (!contactId) throw new Error("No se pudo crear el contacto.");
+
+  const descripcion = [
+    "Solicitud de propuesta Enterprise",
+    "Canal: vinqulia.com/enterprise",
+    `Contacto: ${nombre}`,
+    `Empresa: ${empresa}`,
+    `Correo: ${email}`,
+    ...(telefono ? [`WhatsApp/teléfono: ${telefono}`] : []),
+    `Modalidad: ${MODALIDADES[modalidad].nombre}`,
+    `Usuarios: ${estimacion.usuarios} (${estimacion.banda.etiqueta.toLowerCase()})`,
+    ...(sistemaActual ? [`Sistema actual: ${sistemaActual}`] : []),
+    "",
+    "Estimación que vio en la página:",
+    `  Licencia anual: ${pesos(estimacion.licenciaAnual)}`,
+    `  Implementación: desde ${pesos(estimacion.implementacion)}`,
+    `  Primer año: ${pesos(estimacion.totalPrimerAnio)}`,
+    ...(comentarios ? ["", "Qué le trae aquí:", comentarios] : []),
+  ].join("\n");
+
+  const dealFila = fila(
+    await llamarCRM("deals", "POST", {
+      name: `VINQULIA - Enterprise — ${empresa}`,
+      company_id: companyId,
+      contact_ids: [contactId],
+      stage: ETAPA,
+      description: descripcion,
+      // La estimación del primer año como importe: así el embudo ya dice
+      // cuánto vale la conversación antes de tenerla.
+      amount: estimacion.totalPrimerAnio,
+      expected_closing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const dealId = Number(dealFila?.id);
+  if (!dealId) throw new Error("No se pudo crear la oportunidad.");
+
+  // La promesa de la página es «te llamamos en menos de un día hábil»: la
+  // tarea es lo que la hace verdad. Si falla, el lead ya está guardado.
+  await llamarCRM("tasks", "POST", {
+    contact_id: contactId,
+    text: `Llamar a ${nombre} (${empresa}): solicitud Enterprise, ${MODALIDADES[modalidad].nombre.toLowerCase()}, ${estimacion.usuarios} usuarios`,
+    type: "call",
+    due_date: mananaALasDiez(),
+    ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+  }).catch((error: unknown) => {
+    console.error("[lead] No se pudo crear la tarea de llamada:", error);
+  });
+
+  return NextResponse.json({ ok: true, leadId: dealId, companyId, contactId });
 }

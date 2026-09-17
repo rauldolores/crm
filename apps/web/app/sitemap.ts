@@ -24,6 +24,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: URL_SITIO + "/enterprise",
+      lastModified: ahora,
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
   ];
 
   for (const industria of INDUSTRIAS) {

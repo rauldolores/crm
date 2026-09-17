@@ -11,6 +11,8 @@
 export interface Plan {
   slug: string;
   nombre: string;
+  /** Adónde lleva el botón cuando el plan no se compra con tarjeta. */
+  enlace?: string;
   /** Una frase: para quién es. */
   para: string;
   /** Precio mensual en MXN; null cuando se cotiza a medida. */
@@ -94,18 +96,19 @@ export const PLANES: Plan[] = [
   {
     slug: "enterprise",
     nombre: "Enterprise",
-    para: "Para quien necesita infraestructura propia, SSO o un proyecto a medida.",
+    enlace: "/enterprise",
+    para: "Para operaciones grandes o que necesitan el dato en casa.",
     precioMensual: null,
     precioAnual: null,
     diasDePrueba: 0,
-    usuarios: "Equipos grandes",
+    usuarios: "De 50 usuarios a ilimitados",
     incluye: [
-      "Infraestructura propia o dedicada",
-      "SSO con tu proveedor de identidad",
-      "Integraciones y desarrollos a medida",
-      "Despliegues personalizados",
+      "Instancia solo para ti: tu base, tu dominio, tus respaldos",
+      "En nuestra nube o instalado en tus servidores",
+      "Todos los módulos, sin límite de contactos ni embudos",
+      "Implementación acompañada y migración de tus datos",
       "SLA y soporte con responsable asignado",
-      "Módulos propios de tu sector",
+      "Integraciones a medida y SSO",
     ],
   },
 ];

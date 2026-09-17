@@ -1271,10 +1271,10 @@ const Infraestructura = () => (
           </ul>
           <div className="mt-8">
             <a
-              href="/?interes=instalacion#demo"
+              href="/enterprise"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-600/30 transition-all hover:-translate-y-0.5 hover:bg-brand-700"
             >
-              Quiero instalarlo en mi infraestructura
+              Ver Enterprise: nube dedicada o en tus servidores
               <ArrowRight className="size-4" />
             </a>
           </div>

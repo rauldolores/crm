@@ -9,6 +9,7 @@ import {
   equivalenteMensual,
   formatearPrecio,
 } from "../content/planes";
+import { DESDE } from "../content/enterprise";
 import { URL_APP } from "../lib/sitio";
 import { TituloDeSeccion } from "./comunes";
 
@@ -90,9 +91,19 @@ export const Precios = () => {
               </p>
               <div className="mt-5">
                 {plan.precioMensual === null ? (
-                  <p className="text-3xl font-semibold tracking-tight text-neutral-900">
-                    A tu medida
-                  </p>
+                  <>
+                    <p className="flex items-baseline gap-1">
+                      <span className="text-sm text-neutral-500">desde</span>
+                      <span className="text-3xl font-semibold tracking-tight text-neutral-900 tabular-nums">
+                        {formatearPrecio(DESDE.nube)}
+                      </span>
+                      <span className="text-sm text-neutral-500">/ año</span>
+                    </p>
+                    <p className="mt-0.5 text-xs text-neutral-500">
+                      licencia anual · en tus servidores desde{" "}
+                      {formatearPrecio(DESDE.onpremise)}
+                    </p>
+                  </>
                 ) : anual && plan.precioAnual !== null ? (
                   <>
                     <p className="flex flex-wrap items-baseline gap-x-1">
@@ -139,10 +150,10 @@ export const Precios = () => {
               </ul>
               {plan.precioMensual === null ? (
                 <a
-                  href="#demo"
-                  className="mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl border border-neutral-300 px-4 py-2.5 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-50"
+                  href={plan.enlace ?? "#demo"}
+                  className="mt-6 inline-flex items-center justify-center gap-1.5 rounded-xl border border-neutral-900 bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
                 >
-                  Pedir una propuesta
+                  Hablemos
                   <ArrowRight className="size-4" />
                 </a>
               ) : (
