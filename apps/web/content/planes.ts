@@ -5,7 +5,7 @@
  * aplicación `crm` (lo que la propia aplicación muestra en Plan y
  * facturación). Ese catálogo exige sesión, así que la web pública no lo
  * consulta en vivo: se copia aquí. Si cambia un precio o un límite allí,
- * hay que reflejarlo aquí. Última sincronización: 2026-09-12.
+ * hay que reflejarlo aquí. Última sincronización: 2026-09-17.
  */
 
 export interface Plan {
@@ -15,6 +15,12 @@ export interface Plan {
   para: string;
   /** Precio mensual en MXN; null cuando se cotiza a medida. */
   precioMensual: number | null;
+  /**
+   * Precio del mismo plan pagando el año entero, en MXN; null si el plan
+   * no tiene opción anual (Enterprise). Es un intervalo de cobro del mismo
+   * plan, no un plan aparte.
+   */
+  precioAnual: number | null;
   diasDePrueba: number;
   usuarios: string;
   /** Lo que incluye, en orden de venta. */
@@ -30,6 +36,7 @@ export const PLANES: Plan[] = [
     nombre: "Impulso",
     para: "Para empezar a ordenar clientes y ventas hoy mismo.",
     precioMensual: 499,
+    precioAnual: 4990,
     diasDePrueba: 30,
     usuarios: "Hasta 3 usuarios",
     incluye: [
@@ -47,6 +54,7 @@ export const PLANES: Plan[] = [
     nombre: "Pro",
     para: "Para equipos que ya venden en serio y quieren que el CRM trabaje solo.",
     precioMensual: 999,
+    precioAnual: 9990,
     diasDePrueba: 0,
     usuarios: "Hasta 10 usuarios",
     incluye: [
@@ -69,6 +77,7 @@ export const PLANES: Plan[] = [
     nombre: "Max",
     para: "Para operaciones grandes o con procesos propios.",
     precioMensual: 1999,
+    precioAnual: 19990,
     diasDePrueba: 0,
     usuarios: "Hasta 25 usuarios",
     incluye: [
@@ -87,6 +96,7 @@ export const PLANES: Plan[] = [
     nombre: "Enterprise",
     para: "Para quien necesita infraestructura propia, SSO o un proyecto a medida.",
     precioMensual: null,
+    precioAnual: null,
     diasDePrueba: 0,
     usuarios: "Equipos grandes",
     incluye: [
@@ -106,3 +116,19 @@ export const formatearPrecio = (precio: number) =>
     currency: MONEDA,
     maximumFractionDigits: 0,
   }).format(precio);
+
+/**
+ * Porcentaje que se ahorra al año frente a doce mensualidades — la misma
+ * fórmula que usa la aplicación. null si el plan no tiene precio anual.
+ */
+export const ahorroAnual = (plan: Plan): number | null =>
+  plan.precioMensual === null || plan.precioAnual === null
+    ? null
+    : Math.max(
+        0,
+        Math.round((1 - plan.precioAnual / (plan.precioMensual * 12)) * 100),
+      );
+
+/** Lo que sale al mes pagando el año entero. */
+export const equivalenteMensual = (plan: Plan): number | null =>
+  plan.precioAnual === null ? null : Math.round(plan.precioAnual / 12);

@@ -966,7 +966,7 @@ const Niveles = () => (
       <p className="mx-auto mt-6 max-w-2xl text-center text-sm text-neutral-500">
         El software tiene{" "}
         <a href="#precios" className="font-medium text-brand-700">
-          planes mensuales por equipo
+          planes por equipo, con pago mensual o anual
         </a>
         ; la implementación y los desarrollos a medida se cotizan según el
         alcance. Cuéntanos tu caso en la demo y te enviamos una propuesta.
@@ -1383,7 +1383,7 @@ const Demo = () => (
 const FAQS = [
   {
     p: "¿Cuánto cuesta?",
-    r: "Tres planes mensuales en pesos mexicanos: Impulso ($499, hasta 3 usuarios, con 30 días de prueba gratis), Pro ($999, hasta 10 usuarios, con automatizaciones, correo, API e IA) y Max ($1,999, hasta 25 usuarios, con integración y configuración guiada). Enterprise se cotiza a medida. Los detalles están en la sección de precios.",
+    r: "Tres planes en pesos mexicanos: Impulso ($499 al mes, hasta 3 usuarios, con 30 días de prueba gratis), Pro ($999 al mes, hasta 10 usuarios, con automatizaciones, correo, API e IA) y Max ($1,999 al mes, hasta 25 usuarios, con integración y configuración guiada). Pagando el año entero ahorras un 17 %. Enterprise se cotiza a medida. Los detalles están en la sección de precios.",
   },
   {
     p: "¿Hay prueba gratis?",
