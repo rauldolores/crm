@@ -711,20 +711,24 @@ export const spanishCrmMessages = {
           "No se pudo consultar tu plan en KontrolIA Auth. Revisa tu conexión e inténtalo de nuevo.",
       },
       enterprise: {
-        name: "Plan Enterprise",
-        tagline: "Te generamos la cotización a tu medida",
-        custom_quote: "A tu medida",
-        side_by_side: "Trabajamos hombro con hombro",
+        name: "Enterprise",
+        tagline: "Para operaciones grandes o que necesitan el dato en casa",
+        // Resumen de apps/web/content/enterprise.ts: si cambian los precios
+        // allí, cambia esto.
+        from: "Desde $79,000 MXN / año",
+        from_detail:
+          "Licencia anual en nube dedicada; en tus servidores desde $99,000. Implementación aparte.",
         features: {
-          infrastructure: "Infraestructura propia",
-          sso: "SSO",
-          integrations: "Integraciones",
-          custom_deploys: "Despliegues personalizados",
-          sla: "SLA",
-          large_teams: "Grandes equipos",
-          custom_projects: "Proyectos particulares",
+          dedicated:
+            "Instancia solo para ti: tu base, tu dominio, tus respaldos",
+          modalities: "En nuestra nube o instalado en tus servidores",
+          unlimited: "Todos los módulos, sin límite de contactos ni embudos",
+          implementation: "Implementación acompañada y migración de tus datos",
+          sla: "SLA y soporte con responsable asignado",
+          integrations: "Integraciones a medida y SSO",
         },
-        action: "Quiero ser contactado",
+        action: "Hablemos",
+        details: "Ver qué incluye y estimar tu inversión",
         dialog_title: "Plan Enterprise",
         dialog_description:
           "Cuéntanos de tu proyecto y te contactamos para armar una propuesta a tu medida.",

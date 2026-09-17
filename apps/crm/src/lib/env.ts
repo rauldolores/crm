@@ -41,6 +41,15 @@ export const env = {
    */
   cookieName: process.env.NEXT_PUBLIC_COOKIE_NAME || "sb-crm-auth-token",
 
+  /**
+   * Sitio público de Vinqulia, donde vive la página de Enterprise con su
+   * calculadora y su formulario. La tarjeta del CRM solo enlaza allí.
+   */
+  sitioUrl: (process.env.NEXT_PUBLIC_SITIO_URL || "https://vinqulia.com").replace(
+    /\/$/,
+    "",
+  ),
+
   /** Opcionales. */
   googleWorkplaceDomain: process.env.NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN || undefined,
   isDemo: process.env.NEXT_PUBLIC_IS_DEMO === "true",

@@ -1,4 +1,4 @@
-import { Building2, Check, CircleX, Send } from "lucide-react";
+import { Building2, Check, CircleX, ExternalLink, Send } from "lucide-react";
 import {
   useDataProvider,
   useGetIdentity,
@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { env } from "@/lib/env";
 
 /**
  * No es un plan de KontrolIA Auth: no tiene precio, no pasa por Stripe, no
@@ -27,15 +28,18 @@ import { Textarea } from "@/components/ui/textarea";
  * reales para el caso que ningún plan de catálogo cubre — infraestructura
  * propia, SSO, integraciones a medida — y en vez de comprar, pide que lo
  * contactemos.
+ *
+ * El «desde» y las modalidades son un resumen: la fuente de los precios, la
+ * calculadora y la explicación completa viven en el sitio público
+ * (apps/web, content/enterprise.ts). Si cambian allí, cambia el texto aquí.
  */
 const CARACTERISTICAS = [
-  "infrastructure",
-  "sso",
-  "integrations",
-  "custom_deploys",
+  "dedicated",
+  "modalities",
+  "unlimited",
+  "implementation",
   "sla",
-  "large_teams",
-  "custom_projects",
+  "integrations",
 ] as const;
 
 export const PlanEnterpriseCard = () => {
@@ -59,11 +63,11 @@ export const PlanEnterpriseCard = () => {
           </div>
 
           <div>
-            <span className="text-lg font-semibold">
-              {translate("crm.billing.enterprise.custom_quote")}
+            <span className="text-2xl font-semibold">
+              {translate("crm.billing.enterprise.from")}
             </span>
             <p className="text-xs text-muted-foreground">
-              {translate("crm.billing.enterprise.side_by_side")}
+              {translate("crm.billing.enterprise.from_detail")}
             </p>
           </div>
 
@@ -78,13 +82,19 @@ export const PlanEnterpriseCard = () => {
             ))}
           </ul>
 
-          <div className="mt-auto pt-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => setOpen(true)}
-            >
+          <div className="mt-auto flex flex-col gap-2 pt-2">
+            <Button className="w-full" onClick={() => setOpen(true)}>
               {translate("crm.billing.enterprise.action")}
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
+              <a
+                href={`${env.sitioUrl}/enterprise`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink className="h-4 w-4" />
+                {translate("crm.billing.enterprise.details")}
+              </a>
             </Button>
           </div>
         </CardContent>
