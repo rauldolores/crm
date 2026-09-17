@@ -4,7 +4,11 @@ vi.mock("@/lib/env", () => ({
   env: { kontroliaApplicationSlug: "crm" },
 }));
 
-import { tienePermisoDeLaApp, tieneAccesoALaApp } from "./GuardiaDeAplicacion";
+import {
+  decidirSinPermiso,
+  tieneAccesoALaApp,
+  tienePermisoDeLaApp,
+} from "./GuardiaDeAplicacion";
 
 describe("tienePermisoDeLaApp", () => {
   it("es falso sin ningún permiso", () => {
@@ -71,5 +75,42 @@ describe("tieneAccesoALaApp", () => {
     expect(
       tieneAccesoALaApp({ permissions: [], is_platform_admin: false }),
     ).toBe(false);
+  });
+});
+
+describe("decidirSinPermiso", () => {
+  // El caso que motiva esto: una organización recién creada desde el CRM
+  // (o una que dejó vencer su plan) no trae permisos crm.* en el token
+  // porque el hook los quita sin plan vigente — pero su sitio es «elige tu
+  // plan», no «sin acceso».
+  it("deja al bloqueo por plan una organización que exige plan y no lo tiene", () => {
+    expect(
+      decidirSinPermiso(
+        { plansRequired: true, access: "no_subscription" },
+        null,
+        true,
+      ),
+    ).toBe("dejar_al_plan");
+    expect(
+      decidirSinPermiso({ plansRequired: true, access: "expired" }, null, true),
+    ).toBe("dejar_al_plan");
+  });
+
+  it("bloquea si la organización tiene plan vigente y aun así no hay permisos: no usa esta app", () => {
+    expect(
+      decidirSinPermiso({ plansRequired: true, access: "ok" }, null, true),
+    ).toBe("sin_acceso");
+    expect(
+      decidirSinPermiso({ plansRequired: false, access: "ok" }, null, true),
+    ).toBe("sin_acceso");
+  });
+
+  it("espera a conocer los derechos antes de decidir", () => {
+    expect(decidirSinPermiso(null, null, true)).toBe("esperar");
+  });
+
+  it("bloquea sin esperar si los derechos no llegan o la instalación no tiene planes", () => {
+    expect(decidirSinPermiso(null, "Sin respuesta", true)).toBe("sin_acceso");
+    expect(decidirSinPermiso(null, null, false)).toBe("sin_acceso");
   });
 });

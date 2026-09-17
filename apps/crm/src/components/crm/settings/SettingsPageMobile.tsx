@@ -1,5 +1,7 @@
 import { env } from "@/lib/env";
 import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
+import { RUTA_ORGANIZACIONES } from "../organizaciones/rutas";
+import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { useTheme } from "@/components/admin/use-theme";
 import { Button } from "@/components/ui/button";
 import {
@@ -213,7 +215,7 @@ const PreferencesSection = () => {
 const OrganizacionRow = () => {
   const { organizaciones, activa, cambiando, cambiar } = useOrganizaciones();
 
-  if (organizaciones.length <= 1) return null;
+  if (!isKontroliaAuthConfigured()) return null;
 
   return (
     <Item size="sm">
@@ -221,6 +223,12 @@ const OrganizacionRow = () => {
         <ItemTitle className="font-normal text-muted-foreground">
           Organización
         </ItemTitle>
+        <Link
+          to={RUTA_ORGANIZACIONES}
+          className="text-xs text-primary underline-offset-4 hover:underline"
+        >
+          Gestionar organizaciones
+        </Link>
       </ItemContent>
       <ItemActions>
         <ToggleGroup

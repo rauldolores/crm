@@ -33,7 +33,14 @@ import {
  * /api/invitations con el token de quien tiene la sesión). El botón que
  * abre este diálogo ya se muestra solo a Owner/Admin — ver SalesList.tsx.
  */
-export const InvitarUsuarioButton = () => {
+interface InvitarUsuarioButtonProps {
+  /** Se llama tras enviar una invitación, para refrescar lo que la liste. */
+  onInvitado?: () => void;
+}
+
+export const InvitarUsuarioButton = ({
+  onInvitado,
+}: InvitarUsuarioButtonProps) => {
   const translate = useTranslate();
   const [open, setOpen] = useState(false);
 
@@ -43,7 +50,11 @@ export const InvitarUsuarioButton = () => {
         <UserPlus />
         {translate("crm.team.invite_action")}
       </Button>
-      <InvitarUsuarioDialog open={open} onClose={() => setOpen(false)} />
+      <InvitarUsuarioDialog
+        open={open}
+        onClose={() => setOpen(false)}
+        onInvitado={onInvitado}
+      />
     </>
   );
 };
@@ -51,9 +62,11 @@ export const InvitarUsuarioButton = () => {
 const InvitarUsuarioDialog = ({
   open,
   onClose,
+  onInvitado,
 }: {
   open: boolean;
   onClose: () => void;
+  onInvitado?: () => void;
 }) => {
   const translate = useTranslate();
   const notify = useNotify();
@@ -108,6 +121,7 @@ const InvitarUsuarioDialog = ({
       await invitarATuOrganizacion({ organizationId, email, roleId });
       notify("crm.team.success", { type: "success" });
       handleClose();
+      onInvitado?.();
     } catch (error) {
       notify(
         error instanceof Error ? error.message : translate("crm.team.error"),

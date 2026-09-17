@@ -1,5 +1,12 @@
-import { Building2, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import {
+  Building2,
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  Settings2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +17,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -22,6 +30,7 @@ import {
   switchKontroliaOrganization,
 } from "@/lib/kontrolia-auth/client";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
+import { RUTA_ORGANIZACIONES } from "../organizaciones/rutas";
 import { clearAuthCache } from "../providers/supabase/authProvider";
 
 interface Organizacion {
@@ -38,8 +47,9 @@ interface Organizacion {
  * lugar de intentar invalidar cada consulta: es más simple y no deja restos de
  * la organización anterior a la vista.
  *
- * No se muestra si la persona pertenece a una sola organización, que es el caso
- * habitual.
+ * Se muestra siempre que haya acceso centralizado, aunque la persona
+ * pertenezca a una sola organización: desde aquí se llega a «gestionar
+ * organizaciones», que es donde se crea una nueva o se invita al equipo.
  */
 /**
  * Datos y cambio de organizacion, separados de la presentacion para que el
@@ -100,8 +110,9 @@ export const SelectorDeOrganizacion = () => {
   const { organizaciones, activa, cambiando, cambiar, nombreActivo } =
     useOrganizaciones();
   const [abierto, setAbierto] = useState(false);
+  const navigate = useNavigate();
 
-  if (organizaciones.length <= 1) return null;
+  if (!isKontroliaAuthConfigured()) return null;
 
   return (
     <Popover open={abierto} onOpenChange={setAbierto}>
@@ -156,6 +167,20 @@ export const SelectorDeOrganizacion = () => {
                   )}
                 </CommandItem>
               ))}
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup>
+              <CommandItem
+                value="gestionar-organizaciones"
+                onSelect={() => {
+                  setAbierto(false);
+                  navigate(RUTA_ORGANIZACIONES);
+                }}
+                className="cursor-pointer gap-2 text-primary"
+              >
+                <Settings2 className="size-4" />
+                Gestionar organizaciones
+              </CommandItem>
             </CommandGroup>
           </CommandList>
         </Command>

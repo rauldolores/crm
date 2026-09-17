@@ -5,6 +5,8 @@ import { useLocation, useNavigate } from "react-router";
 import { env } from "@/lib/env";
 import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
+import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
+import { useDerechos } from "../facturacion/useDerechos";
 
 /** Ruta a la que manda cuando el token no trae acceso a esta app. */
 export const RUTA_SIN_ACCESO = "/sin-acceso";
@@ -36,6 +38,31 @@ export const tieneAccesoALaApp = (claims: ClaimsDeAcceso | null): boolean =>
   claims?.is_platform_admin === true ||
   tienePermisoDeLaApp(claims?.permissions ?? []);
 
+export type DecisionSinPermiso = "esperar" | "sin_acceso" | "dejar_al_plan";
+
+/**
+ * Qué hacer cuando el token no trae ningún permiso de esta app. El token
+ * solo no basta para saber por qué: el hook de KontrolIA Auth quita los
+ * permisos de una app que exige plan cuando la organización no tiene uno
+ * vigente, así que «sin permisos» puede ser «esta organización no usa el
+ * CRM» o «lo usa, pero todavía no ha contratado plan» — y esa segunda
+ * persona debe ir a «elige tu plan» (para contratarlo), no a «sin acceso».
+ * Lo distingue la consulta de derechos: se espera a tenerla antes de
+ * decidir, y si no llega (error, o planes no configurados) se cae al
+ * bloqueo de siempre.
+ */
+export const decidirSinPermiso = (
+  derechos: { plansRequired: boolean; access: string } | null,
+  error: string | null,
+  hayPlanes: boolean = facturacionDisponible(),
+): DecisionSinPermiso => {
+  if (!hayPlanes || error) return "sin_acceso";
+  if (!derechos) return "esperar";
+  return derechos.plansRequired && derechos.access !== "ok"
+    ? "dejar_al_plan"
+    : "sin_acceso";
+};
+
 /**
  * Bloqueo de aplicación: KontrolIA Auth es compartido por todo el
  * ecosistema (Faqturia, el CRM, lo que venga después), así que tener una
@@ -56,6 +83,7 @@ export const tieneAccesoALaApp = (claims: ClaimsDeAcceso | null): boolean =>
 export const GuardiaDeAplicacion = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { derechos, error } = useDerechos();
 
   useEffect(() => {
     if (pathname === RUTA_SIN_ACCESO || !isKontroliaAuthConfigured()) return;
@@ -64,7 +92,9 @@ export const GuardiaDeAplicacion = () => {
     void getKontroliaAccessToken().then((token) => {
       if (cancelado) return;
       const claims = token ? decodeAccessToken(token) : null;
-      if (!tieneAccesoALaApp(claims)) {
+      if (tieneAccesoALaApp(claims)) return;
+      // Sin plan, GuardiaDePlan es quien manda a «elige tu plan».
+      if (decidirSinPermiso(derechos, error) === "sin_acceso") {
         navigate(RUTA_SIN_ACCESO, { replace: true });
       }
     });
@@ -72,7 +102,7 @@ export const GuardiaDeAplicacion = () => {
     return () => {
       cancelado = true;
     };
-  }, [navigate, pathname]);
+  }, [navigate, pathname, derechos, error]);
 
   return null;
 };

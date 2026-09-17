@@ -27,6 +27,7 @@ import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
+import { OrganizacionesPage } from "../organizaciones/OrganizacionesPage";
 import { EligeTuPlanPage } from "../facturacion/EligeTuPlanPage";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { RetornoDePagoPage } from "../facturacion/RetornoDePagoPage";
@@ -287,6 +288,10 @@ const DesktopAdmin = (
         <Route path={EligeTuPlanPage.path} element={<EligeTuPlanPage />} />
         <Route path={RetornoDePagoPage.path} element={<RetornoDePagoPage />} />
         <Route path={SinAccesoPage.path} element={<SinAccesoPage />} />
+        <Route
+          path={OrganizacionesPage.path}
+          element={<OrganizacionesPage />}
+        />
       </CustomRoutes>
 
       <CustomRoutes>
@@ -381,6 +386,10 @@ const MobileAdmin = (
             element={<RetornoDePagoPage />}
           />
           <Route path={SinAccesoPage.path} element={<SinAccesoPage />} />
+          <Route
+            path={OrganizacionesPage.path}
+            element={<OrganizacionesPage />}
+          />
         </CustomRoutes>
         <CustomRoutes>
           <Route
