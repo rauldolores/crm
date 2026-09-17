@@ -5,15 +5,58 @@ import type {
 
 const LOCALE = "es-MX";
 
-/** «$499.00 MXN / mes», o «Gratis» cuando el precio es cero. */
-export const precioDelPlan = (plan: KontroliaPlan): string => {
-  if (plan.priceAmount === 0) return "Gratis";
+/** «$499.00 MXN» a partir de centavos y la moneda del plan. */
+export const importeConMoneda = (
+  centavos: number,
+  currency: string,
+): string => {
+  const moneda = currency.toUpperCase();
   const importe = new Intl.NumberFormat(LOCALE, {
     style: "currency",
-    currency: plan.currency.toUpperCase(),
-  }).format(plan.priceAmount / 100);
-  return `${importe} ${plan.currency.toUpperCase()}`;
+    currency: moneda,
+  }).format(centavos / 100);
+  return `${importe} ${moneda}`;
 };
+
+/** «$499.00 MXN», o «Gratis» cuando el precio es cero. */
+export const precioDelPlan = (plan: KontroliaPlan): string =>
+  plan.priceAmount === 0
+    ? "Gratis"
+    : importeConMoneda(plan.priceAmount, plan.currency);
+
+/** Precio anual del plan, o null si no tiene opción anual. */
+export const precioAnualDelPlan = (plan: KontroliaPlan): string | null =>
+  plan.yearlyPriceAmount === null
+    ? null
+    : importeConMoneda(plan.yearlyPriceAmount, plan.currency);
+
+/** Lo que sale al mes pagando el año: «$415.67 MXN». */
+export const equivalenteMensual = (plan: KontroliaPlan): string | null =>
+  plan.yearlyPriceAmount === null
+    ? null
+    : importeConMoneda(Math.round(plan.yearlyPriceAmount / 12), plan.currency);
+
+/**
+ * Porcentaje que se ahorra al año frente a doce mensualidades — la fórmula
+ * de billing.md, calculada aquí porque el servidor solo da los dos precios.
+ * null si el plan no tiene opción anual; 0 si no hay ahorro.
+ */
+export const ahorroAnual = (plan: KontroliaPlan): number | null => {
+  if (plan.yearlyPriceAmount === null || plan.priceAmount === 0) return null;
+  return Math.max(
+    0,
+    Math.round((1 - plan.yearlyPriceAmount / (plan.priceAmount * 12)) * 100),
+  );
+};
+
+/** Nombre del plan con «(anual)» cuando la suscripción se cobra al año. */
+export const nombreDelPlanConIntervalo = (suscripcion: {
+  planName: string;
+  billingInterval: KontroliaBillingInterval;
+}): string =>
+  suscripcion.billingInterval === "year"
+    ? `${suscripcion.planName} (anual)`
+    : suscripcion.planName;
 
 export const periodoDeCobro = (intervalo: KontroliaBillingInterval): string =>
   ({ month: "al mes", year: "al año", one_time: "pago único" })[intervalo];

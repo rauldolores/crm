@@ -23,6 +23,7 @@ import { AyudaPage } from "../ayuda/AyudaPage";
 import { MODULE_REGISTRY } from "../modules/registry";
 import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
+import { nombreDelPlanConIntervalo } from "../facturacion/formato";
 import { useDerechos } from "../facturacion/useDerechos";
 import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
 
@@ -292,7 +293,9 @@ export const BarraLateral = () => {
                 {translate("crm.billing.plan_named", {
                   // El nombre del plan ya suele venir como «Plan Impulso»:
                   // sin esto se leería «Plan Plan Impulso».
-                  plan: derechos.subscription.planName.replace(/^plan\s+/i, ""),
+                  plan: nombreDelPlanConIntervalo(
+                    derechos.subscription,
+                  ).replace(/^plan\s+/i, ""),
                 })}
               </span>
               <ConsumoDelPlan usage={derechos.usage} compacto />

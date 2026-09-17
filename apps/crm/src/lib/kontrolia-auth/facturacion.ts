@@ -63,16 +63,67 @@ export const getEntitlements = (
 export const getPlanClaims = (): Promise<Record<string, string>> =>
   cliente("getPlanClaims").getPlanClaims();
 
+/** Error de auth-server con su código HTTP, para decidir qué hacer con él. */
+export class ErrorDeFacturacion extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+  }
+}
+
 /**
  * Inicia un Stripe Checkout para un plan de pago y devuelve la URL de la
  * página hospedada: hay que navegar allí. Solo owner/admin de la organización.
+ *
+ * Mismo contrato que `startCheckout` del SDK (POST /api/billing/checkout con
+ * `{ application, plan, interval, successUrl, cancelUrl }`), pero llamado
+ * aquí directamente porque el SDK descarta el código HTTP del error y la
+ * pantalla de precios necesita distinguir un 409 («ya tienes ese plan en
+ * ese intervalo» → portal) de un 400 («sin precio anual»).
  */
-export const startCheckout = (input: {
+export const startCheckout = async (input: {
   applicationSlug: string;
   planSlug: string;
+  interval?: "month" | "year";
   successUrl: string;
   cancelUrl: string;
-}): Promise<{ url: string }> => cliente("startCheckout").startCheckout(input);
+}): Promise<{ url: string }> => {
+  cliente("startCheckout");
+  const token = await getKontroliaAccessToken();
+  if (!token) {
+    throw new ErrorDeFacturacion("startCheckout requiere una sesión iniciada.", 401);
+  }
+  const base = env.kontroliaAuthServerUrl.replace(/\/$/, "");
+  const respuesta = await fetch(`${base}/api/billing/checkout`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      application: input.applicationSlug,
+      plan: input.planSlug,
+      interval: input.interval ?? "month",
+      successUrl: input.successUrl,
+      cancelUrl: input.cancelUrl,
+    }),
+  });
+  const cuerpo = (await respuesta.json().catch(() => ({}))) as {
+    error?: unknown;
+    url?: unknown;
+  };
+  if (!respuesta.ok || typeof cuerpo.url !== "string") {
+    throw new ErrorDeFacturacion(
+      typeof cuerpo.error === "string"
+        ? cuerpo.error
+        : `startCheckout falló (${respuesta.status}).`,
+      respuesta.status,
+    );
+  }
+  return { url: cuerpo.url };
+};
 
 /** URL del portal de Stripe (cambiar plan, tarjeta, cancelar, facturas). */
 export const openBillingPortal = (input: {

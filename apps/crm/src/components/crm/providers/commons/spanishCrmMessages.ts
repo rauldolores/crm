@@ -634,6 +634,14 @@ export const spanishCrmMessages = {
       checking: "Consultando tu plan…",
       retry: "Volver a comprobar",
       choose_plan: "Elegir este plan",
+      interval_monthly: "Mensual",
+      interval_yearly: "Anual",
+      per_year: "al año",
+      yearly_equivalent: "equivale a %{amount} al mes",
+      save_percent: "Ahorra %{percent}%",
+      switch_to_yearly: "Cambiar a anual",
+      switch_to_monthly: "Cambiar a mensual",
+      yearly_suffix: "(anual)",
       free_plan_hint:
         "Se asigna automáticamente o lo asigna un administrador de KontrolIA Auth.",
       ask_admin:
