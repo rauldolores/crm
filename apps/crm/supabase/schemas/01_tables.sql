@@ -422,13 +422,12 @@ create index purchase_items_product_ref_idx on crm.purchase_items (organization_
 -- Idempotencia de la integración: si el sistema de origen reenvía la misma
 -- factura —y lo hará, por un reintento o una resincronización— no debe
 -- duplicarse. Es la diferencia entre una integración que sirve y una que
--- ensucia la base.
+-- ensucia la base. Sin predicado parcial: PostgREST no puede indicarlo en
+-- ON CONFLICT, y los external_id nulos (altas manuales) no chocan entre sí.
 create unique index contracts_source_external_uk
-    on crm.contracts (organization_id, source, external_id)
-    where external_id is not null;
+    on crm.contracts (organization_id, source, external_id);
 create unique index purchases_source_external_uk
-    on crm.purchases (organization_id, source, external_id)
-    where external_id is not null;
+    on crm.purchases (organization_id, source, external_id);
 
 
 create table crm.email_settings (
