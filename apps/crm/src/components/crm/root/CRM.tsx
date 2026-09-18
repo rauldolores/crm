@@ -26,6 +26,7 @@ import { MobileDashboard } from "../dashboard/MobileDashboard";
 import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { CotizacionesPage } from "../cotizaciones/CotizacionesPage";
+import { ListaDeCotizaciones } from "../cotizaciones/ListaDeCotizaciones";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
 import { OrganizacionesPage } from "../organizaciones/OrganizacionesPage";
@@ -331,7 +332,11 @@ const DesktopAdmin = (
       <Resource name="contracts" />
       <Resource name="purchases" />
       <Resource name="purchase_items" />
-      <Resource name="quotes" />
+      <Resource
+        name="quotes"
+        list={ListaDeCotizaciones}
+        recordRepresentation={(record) => record?.number}
+      />
       <Resource name="quote_items" />
       <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />

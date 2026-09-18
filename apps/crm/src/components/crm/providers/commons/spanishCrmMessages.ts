@@ -388,6 +388,30 @@ export const spanishCrmMessages = {
           "Una empresa pasa a ser cliente cuando registras su primera compra o contrato, a mano desde su ficha o desde tu sistema de facturación.",
       },
     },
+    quotes: {
+      name: "Cotización |||| Cotizaciones",
+      forcedCaseName: "Cotización",
+      empty:
+        "Aún no hay cotizaciones. Se crean desde la ficha de una oportunidad.",
+      fields: {
+        number: "Folio",
+        title: "Título",
+        company_id: "Empresa",
+        contact_id: "Contacto",
+        deal_id: "Oportunidad",
+        status: "Estado",
+        total: "Total",
+        sent_at: "Enviada",
+        valid_until: "Vigencia",
+        created_at: "Creada",
+        sales_id: "Responsable",
+      },
+      filters: {
+        from: "Creada desde",
+        to: "Creada hasta",
+      },
+      sent_on: "enviada el %{date}",
+    },
     affiliates: {
       name: "Afiliado |||| Afiliados",
       forcedCaseName: "Afiliado",
@@ -553,6 +577,16 @@ export const spanishCrmMessages = {
         quarter: "Últimos 90 días",
         year: "Último año",
         all: "Todo",
+      },
+      quotes: {
+        title: "Cotizaciones",
+        empty: "No se emitió ninguna cotización en este periodo.",
+        issued: "Emitidas",
+        quoted: "Importe cotizado",
+        accepted: "Importe aceptado",
+        pending: "Pendiente de respuesta",
+        acceptance:
+          "Tasa de aceptación: %{rate} % de las %{count} que ya tuvieron respuesta.",
       },
     },
     public_forms: {
@@ -886,6 +920,13 @@ export const spanishCrmMessages = {
         "Opcional. Un par de líneas para acompañar la cotización.",
       sent_to: "Enviada a %{email}",
       send_error: "No se pudo enviar",
+      list: {
+        pending: "Pendientes de respuesta",
+        accepted: "Aceptadas",
+        acceptance_rate: "Tasa de aceptación",
+        acceptance_rate_help: "Aceptadas entre las que ya tuvieron respuesta",
+        count: "%{smart_count} cotización |||| %{smart_count} cotizaciones",
+      },
       mark_accepted: "Marcar aceptada (acordado por otro medio)",
       mark_rejected: "Marcar rechazada",
       marked_accepted: "Cotización aceptada",

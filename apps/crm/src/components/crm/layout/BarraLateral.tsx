@@ -10,6 +10,7 @@ import {
   Handshake,
   Import,
   LayoutDashboard,
+  ReceiptText,
   Settings,
   Ticket,
   Users,
@@ -167,6 +168,12 @@ export const BarraLateral = () => {
       ruta: "/deals",
       Icono: Handshake,
       recurso: "deals",
+    },
+    {
+      etiqueta: translate("resources.quotes.name", { smart_count: 2 }),
+      ruta: "/quotes",
+      Icono: ReceiptText,
+      recurso: "quotes",
     },
     {
       etiqueta: translate("resources.tasks.name", { smart_count: 2 }),

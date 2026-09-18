@@ -7,6 +7,8 @@ import type {
   DealNote,
   Sale,
   PublicForm,
+  Quote,
+  QuoteItem,
   SavedView,
   Tag,
   Task,
@@ -36,5 +38,7 @@ export interface Db {
   tasks: Task[];
   tickets: Ticket[];
   ticket_notes: TicketNote[];
+  quotes: Quote[];
+  quote_items: QuoteItem[];
   configuration: Array<{ id: number; config: ConfigurationContextValue }>;
 }

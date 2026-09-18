@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Deal, Sale } from "../types";
+import { estadoVisible } from "../cotizaciones/estado";
+import type { Deal, Quote, Sale } from "../types";
 import { LOCALE } from "./RelativeDate";
 
 /**
@@ -32,6 +33,10 @@ export const InformesPage = () => {
     pagination: { page: 1, perPage: 200 },
     sort: { field: "last_name", order: "ASC" },
   });
+  const { data: cotizaciones } = useGetList<Quote>("quotes", {
+    pagination: { page: 1, perPage: 1000 },
+    sort: { field: "created_at", order: "DESC" },
+  });
 
   const embudo =
     dealPipelines.find((candidato) => candidato.value === embudoActivo) ??
@@ -56,6 +61,29 @@ export const InformesPage = () => {
   );
   const cerradas = ganadas.length + perdidas.length;
   const conversion = cerradas > 0 ? (ganadas.length / cerradas) * 100 : null;
+
+  // Las cotizaciones del periodo, acotadas al embudo por su oportunidad
+  // (una sin oportunidad cuenta en cualquier embudo). Se filtran por su
+  // propia fecha, no por la de la oportunidad: lo que se quiere saber es
+  // cuánto se cotizó en estos meses.
+  const cotizacionesDelPeriodo = useMemo(() => {
+    const desde = dias
+      ? new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
+      : null;
+    const delEmbudo = new Set(
+      (oportunidades ?? [])
+        .filter(
+          (oportunidad) => (oportunidad.pipeline ?? "ventas") === embudo?.value,
+        )
+        .map((oportunidad) => String(oportunidad.id)),
+    );
+    return (cotizaciones ?? []).filter((cotizacion) => {
+      if (cotizacion.deal_id && !delEmbudo.has(String(cotizacion.deal_id)))
+        return false;
+      if (!desde) return true;
+      return new Date(cotizacion.created_at) >= desde;
+    });
+  }, [cotizaciones, oportunidades, dias, embudo?.value]);
 
   const periodos = [
     { valor: 90, etiqueta: translate("crm.reports.periods.quarter") },
@@ -125,6 +153,13 @@ export const InformesPage = () => {
               valor={conversion == null ? "—" : `${Math.round(conversion)} %`}
             />
           </div>
+
+          {(cotizaciones ?? []).length > 0 && (
+            <ResumenDeCotizaciones
+              cotizaciones={cotizacionesDelPeriodo}
+              moneda={currency}
+            />
+          )}
 
           <Card>
             <CardHeader>
@@ -242,6 +277,86 @@ const Grafica = ({
         )}
       />
     </div>
+  );
+};
+
+/**
+ * Cuánto se cotizó y cuánto de eso se cerró. Solo aparece cuando la
+ * organización usa cotizaciones: a quien no las usa no le sirve una fila de
+ * ceros. «Emitidas» excluye los borradores, que aún no vio ningún cliente.
+ */
+const ResumenDeCotizaciones = ({
+  cotizaciones,
+  moneda,
+}: {
+  cotizaciones: Quote[];
+  moneda: string;
+}) => {
+  const translate = useTranslate();
+
+  const emitidas = cotizaciones.filter(
+    (cotizacion) => cotizacion.status !== "draft",
+  );
+  const aceptadas = emitidas.filter(
+    (cotizacion) => cotizacion.status === "accepted",
+  );
+  const respondidas = emitidas.filter(
+    (cotizacion) =>
+      cotizacion.status === "accepted" || cotizacion.status === "rejected",
+  ).length;
+  const pendientes = emitidas.filter((cotizacion) => {
+    const estado = estadoVisible(cotizacion);
+    return estado === "sent" || estado === "viewed";
+  });
+  const sumar = (lista: Quote[]) =>
+    lista.reduce((total, cotizacion) => total + Number(cotizacion.total), 0);
+  const importe = (valor: number) =>
+    valor.toLocaleString(LOCALE, {
+      style: "currency",
+      currency: moneda,
+      maximumFractionDigits: 0,
+    });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{translate("crm.reports.quotes.title")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {emitidas.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {translate("crm.reports.quotes.empty")}
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Indicador
+              etiqueta={translate("crm.reports.quotes.issued")}
+              valor={String(emitidas.length)}
+            />
+            <Indicador
+              etiqueta={translate("crm.reports.quotes.quoted")}
+              valor={importe(sumar(emitidas))}
+            />
+            <Indicador
+              etiqueta={translate("crm.reports.quotes.accepted")}
+              valor={importe(sumar(aceptadas))}
+            />
+            <Indicador
+              etiqueta={translate("crm.reports.quotes.pending")}
+              valor={importe(sumar(pendientes))}
+            />
+          </div>
+        )}
+        {respondidas > 0 && (
+          <p className="text-xs text-muted-foreground mt-3">
+            {translate("crm.reports.quotes.acceptance", {
+              rate: Math.round((aceptadas.length / respondidas) * 100),
+              count: respondidas,
+            })}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
