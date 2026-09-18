@@ -103,6 +103,7 @@ const CON_DUENO = new Set([
   "contact_notes",
   "deals",
   "deal_notes",
+  "deal_events",
   "sales",
   "public_forms",
   "saved_views",
@@ -147,7 +148,7 @@ const CON_SOLO_PROPIOS = new Set(["companies", "contacts", "deals"]);
  * peticion.
  */
 /** Tablas con columna `updated_by`, que el disparador de historial lee. */
-const CON_ACTOR = new Set(["tickets"]);
+const CON_ACTOR = new Set(["tickets", "deals"]);
 
 const CON_RESPONSABLE = new Set([
   "companies",

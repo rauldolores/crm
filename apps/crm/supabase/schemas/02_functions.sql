@@ -288,6 +288,42 @@ begin
 end;
 $$;
 
+CREATE OR REPLACE FUNCTION "crm"."log_deal_events"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  actor bigint := new.updated_by;
+begin
+  if tg_op = 'INSERT' then
+    insert into crm.deal_events (organization_id, deal_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, coalesce(actor, new.sales_id), 'created', null, new.stage);
+    return new;
+  end if;
+
+  if new.stage is distinct from old.stage then
+    insert into crm.deal_events (organization_id, deal_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'stage', old.stage, new.stage);
+  end if;
+  if new.amount is distinct from old.amount then
+    insert into crm.deal_events (organization_id, deal_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'amount', old.amount::text, new.amount::text);
+  end if;
+  if new.sales_id is distinct from old.sales_id then
+    insert into crm.deal_events (organization_id, deal_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'sales_id', old.sales_id::text, new.sales_id::text);
+  end if;
+  if old.archived_at is null and new.archived_at is not null then
+    insert into crm.deal_events (organization_id, deal_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'archived', null, new.stage);
+  elsif old.archived_at is not null and new.archived_at is null then
+    insert into crm.deal_events (organization_id, deal_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'unarchived', null, new.stage);
+  end if;
+  return new;
+end;
+$$;
+
 CREATE OR REPLACE FUNCTION "crm"."handle_ticket_note_created"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
@@ -509,6 +545,16 @@ BEGIN
     )
     WHERE id = deal_record.id;
   END LOOP;
+
+  -- 3b. Everything else that points at the loser: tickets, quotes and queued
+  -- emails move to the winner (deleting the loser would cascade over them or
+  -- orphan them); the affiliate profile moves only if the winner has none.
+  UPDATE tickets SET contact_id = winner_id WHERE contact_id = loser_id;
+  UPDATE quotes SET contact_id = winner_id WHERE contact_id = loser_id;
+  UPDATE email_outbox SET contact_id = winner_id WHERE contact_id = loser_id;
+  IF NOT EXISTS (SELECT 1 FROM affiliates WHERE contact_id = winner_id) THEN
+    UPDATE affiliates SET contact_id = winner_id WHERE contact_id = loser_id;
+  END IF;
 
   -- 4. Merge contact data
 

@@ -25,6 +25,7 @@ import { Separator } from "@/components/ui/separator";
 import { CompanyAvatar } from "../companies/CompanyAvatar";
 import { NoteCreate } from "../notes/NoteCreate";
 import { NotesIterator } from "../notes/NotesIterator";
+import { HistorialDeOportunidad } from "./HistorialDeOportunidad";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { ContactList } from "./ContactList";
@@ -188,6 +189,14 @@ const DealShowContent = () => {
           <div className="m-4">
             <Separator className="mb-4" />
             <SeccionDeCotizaciones oportunidad={record} />
+          </div>
+
+          <div className="m-4">
+            <Separator className="mb-4" />
+            <h3 className="mb-2 text-sm font-medium">
+              {translate("resources.deals.history.title")}
+            </h3>
+            <HistorialDeOportunidad dealId={record.id} />
           </div>
 
           <div className="m-4">

@@ -60,6 +60,17 @@ const datos = {
       pipeline: "ventas",
     },
   ],
+  deal_events: [
+    {
+      id: 41,
+      deal_id: 31,
+      sales_id: 0,
+      field: "stage",
+      old_value: "opportunity",
+      new_value: "proposal-sent",
+      created_at: "2026-08-20T12:00:00.000Z",
+    },
+  ],
 };
 
 const Pantalla = () => (
@@ -99,7 +110,13 @@ describe("LineaDeTiempo", () => {
     await expect
       .element(screen.getByText("Oportunidad creada"))
       .toBeInTheDocument();
-    await expect.element(screen.getByText("5 eventos")).toBeInTheDocument();
+    // Un cambio de etapa se lee como «de X a Y», con las etiquetas del embudo.
+    await expect
+      .element(
+        screen.getByText("Licencia Pro — de Oportunidad a Propuesta enviada"),
+      )
+      .toBeInTheDocument();
+    await expect.element(screen.getByText("6 eventos")).toBeInTheDocument();
   });
 
   it("el filtro deja solo la familia elegida", async () => {

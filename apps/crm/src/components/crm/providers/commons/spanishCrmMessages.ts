@@ -25,6 +25,8 @@ export const spanishCrmMessages = {
         sector: "Sector",
         size: "Tamaño",
         tax_identifier: "Identificación fiscal",
+        tax_regime: "Régimen fiscal (para facturar)",
+        cfdi_use: "Uso del CFDI (para facturar)",
         address: "Dirección",
         city: "Ciudad",
         zipcode: "Código postal",
@@ -287,6 +289,19 @@ export const spanishCrmMessages = {
         success: "Oportunidad desarchivada",
       },
       updated: "Oportunidad actualizada",
+      history: {
+        title: "Historial",
+        empty: "Sin cambios registrados.",
+        system: "Sistema",
+        unassigned: "sin responsable",
+        created: "Oportunidad creada en %{stage}",
+        stage: "Etapa: %{from} → %{to}",
+        amount: "Importe: %{from} → %{to}",
+        sales_id: "Responsable: %{to}",
+        won: "Ganada y archivada",
+        archived: "Archivada en %{stage}",
+        unarchived: "Devuelta al tablero",
+      },
       empty: {
         before_create: "antes de crear una oportunidad.",
         description: "Parece que tu lista de oportunidades está vacía.",
@@ -369,6 +384,38 @@ export const spanishCrmMessages = {
         resolution: "Motivo de cierre",
         last_activity_at: "Última actividad",
         closed_at: "Cerrado",
+        due_at: "Vence",
+        first_response_at: "Primera respuesta",
+        deal_id: "Oportunidad relacionada",
+        contract_id: "Contrato relacionado",
+      },
+      sla: {
+        response_pending: "Responder en %{time}",
+        response_overdue: "Sin responder: venció hace %{time}",
+        response_met: "Primera respuesta a tiempo",
+        response_late: "Primera respuesta con %{time} de retraso",
+        due_pending: "Vence en %{time}",
+        due_overdue: "Vencido hace %{time}",
+        due_met: "Resuelto a tiempo",
+        due_late: "Resuelto con %{time} de retraso",
+      },
+      reply: {
+        action: "Responder por correo",
+        title: "Responder al cliente",
+        no_email: "El contacto no tiene correo registrado",
+        success: "Respuesta enviada y guardada en el ticket",
+        error: "No se pudo enviar la respuesta",
+      },
+      merge: {
+        action: "Fusionar",
+        title: "Fusionar tickets",
+        description:
+          "Las notas y el historial del ticket descartado pasan al que conserves; el descartado se cierra como duplicado.",
+        other: "Fusionar con",
+        keep: "Conservar",
+        confirm: "Fusionar",
+        success: "Tickets fusionados",
+        error: "No se pudieron fusionar los tickets",
       },
       action: {
         new: "Nuevo ticket",
@@ -383,6 +430,7 @@ export const spanishCrmMessages = {
         mine: "Mis tickets",
         unassigned: "Sin asignar",
         open: "Solo abiertos",
+        overdue: "Vencidos",
       },
       sources: {
         manual: "Creado a mano",
@@ -442,6 +490,48 @@ export const spanishCrmMessages = {
         title: "Aún no hay clientes",
         description:
           "Una empresa pasa a ser cliente cuando registras su primera compra o contrato, a mano desde su ficha o desde tu sistema de facturación.",
+      },
+    },
+    products: {
+      name: "Producto |||| Productos",
+      forcedCaseName: "Producto",
+      empty:
+        "Aún no hay productos. Conecta tu catálogo en Ajustes → Conectores y sincronízalo.",
+      active: "Activo",
+      inactive: "Ya no está en el catálogo",
+      fields: {
+        name: "Producto",
+        sku: "SKU",
+        unit_price: "Precio",
+        active: "Estado",
+        synced_at: "Sincronizado",
+      },
+    },
+    invoices: {
+      name: "Factura |||| Facturas",
+      forcedCaseName: "Factura",
+      empty:
+        "Aún no hay facturas. Se piden desde una cotización aceptada, en su oportunidad.",
+      download_pdf: "Descargar PDF",
+      download_xml: "Descargar XML",
+      fields: {
+        folio: "Folio",
+        company_id: "Empresa",
+        quote_id: "Cotización",
+        status: "Estado",
+        total: "Total",
+        issued_at: "Fecha",
+        downloads: "Descargas",
+      },
+      filters: {
+        from: "Desde",
+        to: "Hasta",
+      },
+      status: {
+        stamped: "Timbrada",
+        draft: "Sin timbrar",
+        cancelled: "Cancelada",
+        error: "Con error",
       },
     },
     quotes: {
@@ -690,10 +780,15 @@ export const spanishCrmMessages = {
         owner: "Responsable",
         days_after: "Tras cuántos días sin respuesta",
         days_after_help:
-          "Se revisa una vez al día. Cuenta desde que se envió; solo cotizaciones enviadas o vistas que siguen vigentes. Avisa una sola vez por cotización.",
+          "Se revisa cada hora. Cuenta desde que se envió; solo cotizaciones enviadas o vistas que siguen vigentes. Avisa una sola vez por cotización.",
         days_before: "Con cuántos días de antelación",
         days_before_help:
-          "Se revisa una vez al día. La tarea o el correo van al contacto de la empresa con actividad más reciente; una empresa sin contactos no recibe aviso.",
+          "Se revisa cada hora. La tarea o el correo van al contacto de la empresa con actividad más reciente; una empresa sin contactos no recibe aviso.",
+        hours_after: "Tras cuántas horas",
+        hours_after_help:
+          "Se revisa cada hora. Solo tickets abiertos; avisa una sola vez por ticket.",
+        priority: "Solo con prioridad",
+        any_priority: "Cualquier prioridad",
       },
       when: {
         contact_created: "Se crea un contacto",
@@ -706,6 +801,17 @@ export const spanishCrmMessages = {
         quote_unanswered: "Una cotización lleva días sin respuesta",
         quote_unanswered_named:
           "Una cotización lleva %{days} días enviada sin respuesta",
+        ticket_created: "Se crea un ticket",
+        ticket_created_named: "Se crea un ticket con prioridad «%{priority}»",
+        ticket_unanswered: "Un ticket lleva horas sin primera respuesta",
+        ticket_unanswered_named:
+          "Un ticket lleva %{hours} horas sin primera respuesta",
+        ticket_unassigned: "Un ticket lleva horas sin responsable",
+        ticket_unassigned_named:
+          "Un ticket lleva %{hours} horas sin responsable",
+        ticket_overdue: "Un ticket lleva horas vencido",
+        ticket_overdue_named: "Un ticket lleva %{hours} horas vencido",
+        ticket_closed: "Se cierra un ticket",
       },
       then: {
         task: "Crear una tarea",
@@ -858,6 +964,8 @@ export const spanishCrmMessages = {
         task: "Tarea",
         task_done: "Tarea completada",
         deal: "Oportunidad creada",
+        deal_stage: "Cambio de etapa",
+        deal_stage_detail: "de %{from} a %{to}",
         deal_won: "Oportunidad ganada",
         deal_archived: "Oportunidad archivada",
         ticket: "Ticket abierto",
@@ -1011,6 +1119,9 @@ export const spanishCrmMessages = {
         acceptance_rate_help: "Aceptadas entre las que ya tuvieron respuesta",
         count: "%{smart_count} cotización |||| %{smart_count} cotizaciones",
       },
+      pick_product: "Elegir del catálogo",
+      search_product: "Buscar producto por nombre o SKU…",
+      no_products: "Sin productos que coincidan.",
       mark_accepted: "Marcar aceptada (acordado por otro medio)",
       mark_rejected: "Marcar rechazada",
       marked_accepted: "Cotización aceptada",
@@ -1087,6 +1198,7 @@ export const spanishCrmMessages = {
       entity_deal: "Oportunidad",
       entity_contract: "Contrato",
       entity_quote: "Cotización",
+      entity_ticket: "Ticket",
       empty: {
         title: "No hay plantillas",
         description:
@@ -1194,6 +1306,59 @@ export const spanishCrmMessages = {
       test_send: "Enviar prueba",
       test_sent: "Correo de prueba enviado",
     },
+    connectors: {
+      title: "Conectores",
+      intro:
+        "De dónde salen tus productos y quién timbra tus facturas. Tú eliges a cada proveedor y lo conectas con tus propias credenciales; el CRM no guarda nada de eso en su código.",
+      status: {
+        connected: "Conectado",
+        error: "La última llamada falló",
+      },
+      last_sync: "Última sincronización",
+      never_synced: "Todavía no se ha sincronizado.",
+      see_products: "Ver productos",
+      invoicing_hint:
+        "Las facturas se piden desde una cotización aceptada, en su oportunidad.",
+      see_invoices: "Ver facturas",
+      sync_now: "Sincronizar ahora",
+      synced:
+        "%{smart_count} producto sincronizado |||| %{smart_count} productos sincronizados",
+      edit: "Cambiar ajustes",
+      disconnect: "Desconectar",
+      disconnect_confirm:
+        "¿Desconectar este proveedor? Lo ya sincronizado o facturado se conserva; solo dejará de usarse hasta que lo vuelvas a conectar.",
+      disconnected: "Proveedor desconectado",
+      connect: "Conectar",
+      connect_with: "Conectar con %{name}",
+      open_site: "Abrir sitio del proveedor",
+      test_and_save: "Probar y conectar",
+      steps_title: "Cómo conseguir lo que pide %{name}",
+      secret_kept: "Guardada. Escribe una nueva solo si quieres cambiarla.",
+    },
+    invoices: {
+      dialog_title: "Facturar %{number}",
+      dialog_description:
+        "Revisa los datos fiscales del cliente. La factura la timbra tu proveedor de facturación y queda ligada a esta cotización.",
+      fields: {
+        legal_name: "Razón social",
+        rfc: "RFC",
+        zipcode: "Código postal fiscal",
+        tax_regime: "Régimen fiscal",
+        cfdi_use: "Uso del CFDI",
+        payment_form: "Forma de pago",
+        email: "Correo para la factura",
+        email_help:
+          "Opcional. El proveedor le manda la factura a este correo si lo tiene configurado.",
+      },
+      choose_regime: "Elige el régimen fiscal…",
+      payment_form_default: "La habitual del conector",
+      issue: "Facturar",
+      issue_action: "Facturar esta cotización",
+      stamped: "Factura %{folio} timbrada",
+      not_stamped:
+        "La factura se creó pero no se timbró; revísala en tu proveedor.",
+      invoiced_as: "Facturada como %{folio}",
+    },
     modules: {
       title: "Módulos",
       catalog: {
@@ -1203,11 +1368,23 @@ export const spanishCrmMessages = {
         updated: "Módulo actualizado",
         update_error: "No se pudo actualizar el módulo",
         active_hint: "Activo. Aparece en el menú lateral bajo Módulos.",
+        connector_hint:
+          "Funciona con un proveedor conectado; se activa solo al conectarlo en",
       },
       customers: {
         name: "Clientes",
         description:
           "Lo que pasa después de la venta: qué ha comprado cada cliente, qué tiene contratado y cuándo le vence. Se alimenta a mano o desde tu sistema de facturación por API.",
+      },
+      products: {
+        name: "Productos",
+        description:
+          "Tu catálogo de productos y precios, traído de donde ya lo tienes (Shopify…), para elegirlos al armar una cotización.",
+      },
+      invoicing: {
+        name: "Facturas",
+        description:
+          "Las facturas que tu proveedor de facturación (Faqturia…) timbra desde una cotización aceptada, con su PDF y XML.",
       },
       affiliates: {
         name: "Afiliados",
@@ -1514,6 +1691,11 @@ export const spanishCrmMessages = {
         categories: "Categorías",
         categories_help:
           "Para clasificar y filtrar. Los tickets que llegan del agente de voz o de un formulario con «[categoría]» en el asunto caen en la que coincida.",
+        sla: "Plazos de atención (SLA)",
+        sla_help:
+          "Horas objetivo por prioridad, desde que se crea el ticket. La primera respuesta la cuenta la primera nota o correo de una persona del equipo. Vacío = sin plazo. Cambiar la prioridad de un ticket recalcula sus plazos.",
+        sla_first_response: "Primera respuesta (h)",
+        sla_resolution: "Resolución (h)",
       },
       preferences: "Preferencias",
       title: "Ajustes",

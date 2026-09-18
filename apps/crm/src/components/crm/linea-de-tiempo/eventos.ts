@@ -1,5 +1,6 @@
 import {
   Archive,
+  ArrowRightLeft,
   CheckSquare,
   FileText,
   FileCheck,
@@ -41,6 +42,7 @@ const ICONOS_POR_TIPO: Record<string, ComponentType<{ className?: string }>> = {
   task: ListTodo,
   task_done: CheckSquare,
   deal: Handshake,
+  deal_stage: ArrowRightLeft,
   deal_archived: Archive,
   ticket: Ticket,
   ticket_closed: TicketCheck,

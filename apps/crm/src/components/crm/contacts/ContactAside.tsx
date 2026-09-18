@@ -1,10 +1,11 @@
-import { useRecordContext, useTranslate } from "ra-core";
+import { ListBase, useRecordContext, useTranslate } from "ra-core";
 import { EditButton } from "@/components/admin/edit-button";
 import { DeleteButton } from "@/components/admin";
 import { ReferenceManyField } from "@/components/admin/reference-many-field";
 import { ShowButton } from "@/components/admin/show-button";
 
 import { AddTask } from "../tasks/AddTask";
+import { DealsIterator } from "../deals/DealsIterator";
 import { TasksIterator } from "../tasks/TasksIterator";
 import { TicketsIterator } from "../tickets/TicketsIterator";
 import { TagsListEdit } from "./TagsListEdit";
@@ -71,6 +72,24 @@ export const ContactAside = ({ link = "edit" }: { link?: "edit" | "show" }) => {
           <TasksIterator />
         </ReferenceManyField>
         <AddTask />
+      </AsideSection>
+
+      {/* Las oportunidades del contacto no estaban en su ficha: solo se
+          llegaba a ellas desde el tablero o desde la empresa. Las cinco más
+          recientes, archivadas incluidas (una perdida también es historia). */}
+      <AsideSection
+        title={translate("resources.deals.name", { smart_count: 2 })}
+      >
+        <ListBase
+          resource="deals"
+          filter={{ "contact_ids@cs": `{${record.id}}` }}
+          sort={{ field: "updated_at", order: "DESC" }}
+          perPage={5}
+          disableSyncWithLocation
+          storeKey={false}
+        >
+          <DealsIterator />
+        </ListBase>
       </AsideSection>
 
       <AsideSection

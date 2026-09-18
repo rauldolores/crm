@@ -413,6 +413,28 @@ select
 from crm.deals d
     join crm.contacts co on co.id = any (d.contact_ids)
 union all
+-- …cambios de etapa (crm.deal_events): el texto es la etapa nueva y
+-- `status` la anterior, para que la interfaz diga «de X a Y»…
+select
+    ('deal_stage.' || e.id),
+    'deal',
+    'deal_stage',
+    d.id,
+    co.id,
+    d.company_id,
+    e.created_at,
+    e.sales_id,
+    d.name,
+    e.new_value,
+    e.old_value,
+    0,
+    d.amount::numeric,
+    e.organization_id
+from crm.deal_events e
+    join crm.deals d on d.id = e.deal_id
+    join crm.contacts co on co.id = any (d.contact_ids)
+where e.field = 'stage'
+union all
 -- …y archivo (ganada o perdida, según la etapa con la que se archivó).
 select
     ('deal_archived.' || d.id),

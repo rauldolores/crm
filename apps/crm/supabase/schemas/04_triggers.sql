@@ -64,6 +64,11 @@ create or replace trigger on_crm_tickets_log_events
     after insert or update on crm.tickets
     for each row execute function crm.log_ticket_events();
 
+-- Historial de oportunidades: etapa, importe, responsable, archivo.
+create or replace trigger on_crm_deals_log_events
+    after insert or update on crm.deals
+    for each row execute function crm.log_deal_events();
+
 -- Una nota en el ticket cuenta como actividad
 create or replace trigger on_crm_ticket_notes_created
     after insert on crm.ticket_notes

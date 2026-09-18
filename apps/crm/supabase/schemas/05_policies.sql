@@ -32,6 +32,7 @@ alter table crm.favicons_excluded_domains enable row level security;
 alter table crm.tickets enable row level security;
 alter table crm.ticket_notes enable row level security;
 alter table crm.ticket_events enable row level security;
+alter table crm.deal_events enable row level security;
 alter table crm.affiliates enable row level security;
 alter table crm.webhook_deliveries enable row level security;
 -- Sin una sola politica, a proposito: guarda el secreto del proveedor de
@@ -300,6 +301,14 @@ create policy "Ticket events are scoped to the organization" on crm.ticket_event
     for select to authenticated
     using (organization_id = crm.current_organization_id());
 create policy "Ticket events are created in the organization" on crm.ticket_events
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id());
+
+-- Deal Events (solo lectura desde la aplicación; los escribe el disparador)
+create policy "Deal events are scoped to the organization" on crm.deal_events
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Deal events are created in the organization" on crm.deal_events
     for insert to authenticated
     with check (organization_id = crm.current_organization_id());
 

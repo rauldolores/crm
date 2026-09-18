@@ -214,9 +214,12 @@ const Evento = ({ evento }: { evento: EventoDeLaLinea }) => {
       ? (noteTypes.find((tipo) => tipo.value === evento.type)?.label ??
         translate("crm.timeline.events.note"))
       : translate(claveDeEtiqueta(evento));
-  const resumen = evento.title
-    ? [evento.title, resumenDe(evento.text)].filter(Boolean).join(" — ")
-    : resumenDe(evento.text);
+  const cambioDeEtapa = useCambioDeEtapa(evento);
+  const resumen = cambioDeEtapa
+    ? [evento.title, cambioDeEtapa].filter(Boolean).join(" — ")
+    : evento.title
+      ? [evento.title, resumenDe(evento.text)].filter(Boolean).join(" — ")
+      : resumenDe(evento.text);
 
   return (
     <li className="relative py-1.5">
@@ -266,6 +269,22 @@ const Evento = ({ evento }: { evento: EventoDeLaLinea }) => {
   );
 };
 
+/**
+ * «de Contactado a Propuesta»: un cambio de etapa guarda en `status` la
+ * etapa anterior y en `text` la nueva (slugs); aquí se traducen a etiquetas.
+ */
+const useCambioDeEtapa = (evento: EventoDeLaLinea): string | null => {
+  const translate = useTranslate();
+  const { dealStages } = useConfigurationContext();
+  if (evento.type !== "deal_stage") return null;
+  const etiqueta = (slug: string | null) =>
+    dealStages.find((s) => s.value === slug)?.label ?? slug ?? "";
+  return translate("crm.timeline.events.deal_stage_detail", {
+    from: etiqueta(evento.status),
+    to: etiqueta(evento.text),
+  });
+};
+
 /** La nota íntegra, con adjuntos, edición y borrado: el mismo componente de siempre. */
 const DetalleDeNota = ({ id }: { id: string | number }) => {
   const translate = useTranslate();
@@ -291,14 +310,16 @@ const DetalleDeNota = ({ id }: { id: string | number }) => {
 const DetalleDeEvento = ({ evento }: { evento: EventoDeLaLinea }) => {
   const translate = useTranslate();
   const { currency, dealStages } = useConfigurationContext();
+  const cambioDeEtapa = useCambioDeEtapa(evento);
   const enlace =
     evento.kind === "deal"
       ? `/deals/${evento.source_id}/show`
       : evento.kind === "ticket"
         ? `/tickets/${evento.source_id}/show`
         : null;
-  const etapa =
-    evento.kind === "deal"
+  const etapa = cambioDeEtapa
+    ? cambioDeEtapa
+    : evento.kind === "deal"
       ? (dealStages.find((s) => s.value === evento.status)?.label ??
         evento.status)
       : evento.status;
@@ -321,7 +342,7 @@ const DetalleDeEvento = ({ evento }: { evento: EventoDeLaLinea }) => {
           .filter(Boolean)
           .join(" · ")}
       </p>
-      {evento.text && (
+      {evento.text && !cambioDeEtapa && (
         <div className="mt-2">
           <Markdown>{evento.text}</Markdown>
         </div>

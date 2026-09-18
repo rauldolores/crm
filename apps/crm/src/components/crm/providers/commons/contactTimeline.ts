@@ -121,6 +121,16 @@ export async function getContactTimeline(
         porId,
       ),
     ]);
+  const cambiosDeEtapa = await listar<
+    Con<{
+      deal_id: string | number;
+      sales_id?: string | number | null;
+      field: string;
+      old_value?: string | null;
+      new_value?: string | null;
+      created_at: string;
+    }>
+  >(dataProvider, "deal_events", { field: "stage" }, porId);
 
   const eventos: EventoDeLaLinea[] = [
     ...notas.map((n) => filaDeNota(n, companyId)),
@@ -183,6 +193,24 @@ export async function getContactTimeline(
             d.amount ?? null,
           ),
         ];
+        for (const e of cambiosDeEtapa.filter((e) => e.deal_id == d.id)) {
+          filas.push(
+            base(
+              `deal_stage.${e.id}`,
+              "deal",
+              "deal_stage",
+              e,
+              contactId,
+              d.company_id,
+              e.created_at,
+              e.sales_id,
+              d.name,
+              e.new_value ?? null,
+              e.old_value ?? null,
+              d.amount ?? null,
+            ),
+          );
+        }
         if (d.archived_at) {
           filas.push(
             base(

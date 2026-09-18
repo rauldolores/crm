@@ -150,6 +150,32 @@ async function mergeContacts(
           .execute();
       }
 
+      // 4b. Everything else that points at the loser. Without this, deleting
+      // the loser cascaded into its tickets, affiliate profile and queued
+      // emails, and orphaned its quotes (FK "on delete cascade / set null"):
+      // merging two duplicates silently destroyed history.
+      for (const table of ["tickets", "quotes", "email_outbox"] as const) {
+        await trx
+          .updateTable(table)
+          .set({ contact_id: winnerId })
+          .where("contact_id", "=", loserId)
+          .execute();
+      }
+      // One affiliate profile per contact: keep the winner's if it already
+      // has one, otherwise the loser's becomes the winner's.
+      const winnerAffiliate = await trx
+        .selectFrom("affiliates")
+        .select("id")
+        .where("contact_id", "=", winnerId)
+        .executeTakeFirst();
+      if (!winnerAffiliate) {
+        await trx
+          .updateTable("affiliates")
+          .set({ contact_id: winnerId })
+          .where("contact_id", "=", loserId)
+          .execute();
+      }
+
       // 5. Merge and update winner contact
       const mergedData = mergeContactData(winner as Contact, loser as Contact);
       await trx

@@ -198,6 +198,8 @@ grant select, insert, update, delete on table crm.ticket_notes to anon, authenti
 grant usage, select on sequence crm.ticket_notes_id_seq to anon, authenticated, service_role;
 grant select, insert on table crm.ticket_events to anon, authenticated, service_role;
 grant usage, select on sequence crm.ticket_events_id_seq to anon, authenticated, service_role;
+grant select, insert on table crm.deal_events to anon, authenticated, service_role;
+grant usage, select on sequence crm.deal_events_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table crm.api_keys to anon, authenticated, service_role;
 grant usage, select on sequence crm.api_keys_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table crm.affiliates to anon, authenticated, service_role;
@@ -254,13 +256,17 @@ revoke all on sequence crm.connectors_id_seq from anon;
 revoke all on sequence crm.connectors_id_seq from authenticated;
 -- Productos y facturas: solo lectura para la organización; los escribe el
 -- servidor al sincronizar o al facturar.
+-- Primero se quita lo que los default privileges conceden solo (grant
+-- all, truncate incluido) y luego se da solo lectura.
+revoke all on table crm.products from anon;
+revoke all on table crm.products from authenticated;
 grant select on table crm.products to anon, authenticated;
 grant select, insert, update, delete on table crm.products to service_role;
 grant usage, select on sequence crm.products_id_seq to anon, authenticated, service_role;
-revoke insert, update, delete on table crm.products from anon;
-revoke insert, update, delete on table crm.products from authenticated;
+-- Primero se quita lo que los default privileges conceden solo (grant
+-- all, truncate incluido) y luego se da solo lectura.
+revoke all on table crm.invoices from anon;
+revoke all on table crm.invoices from authenticated;
 grant select on table crm.invoices to anon, authenticated;
 grant select, insert, update, delete on table crm.invoices to service_role;
 grant usage, select on sequence crm.invoices_id_seq to anon, authenticated, service_role;
-revoke insert, update, delete on table crm.invoices from anon;
-revoke insert, update, delete on table crm.invoices from authenticated;
