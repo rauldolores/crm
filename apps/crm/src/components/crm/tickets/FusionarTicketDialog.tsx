@@ -138,14 +138,26 @@ const FusionarDialog = ({
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>{translate("resources.tickets.merge.other")}</Label>
+            {/* Los asuntos son largos: el valor elegido se recorta con puntos
+                suspensivos en vez de desbordar el diálogo. */}
             <Select value={otroId} onValueChange={setOtroId}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
+              <SelectTrigger className="w-full [&>span]:min-w-0 [&>span]:overflow-hidden">
+                <SelectValue>
+                  {otro && (
+                    <span className="min-w-0 truncate" title={etiqueta(otro)}>
+                      {etiqueta(otro)}
+                    </span>
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {candidatos.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {etiqueta(c)}
+                  <SelectItem
+                    key={c.id}
+                    value={String(c.id)}
+                    className="max-w-[28rem]"
+                  >
+                    <span className="min-w-0 truncate">{etiqueta(c)}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -157,17 +169,24 @@ const FusionarDialog = ({
               value={conservar}
               onValueChange={(v) => setConservar(v as "este" | "otro")}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-0 items-center gap-2">
                 <RadioGroupItem value="este" id="conservar-este" />
-                <Label htmlFor="conservar-este" className="font-normal">
-                  {etiqueta(ticket)}
+                <Label htmlFor="conservar-este" className="min-w-0 font-normal">
+                  <span className="min-w-0 truncate" title={etiqueta(ticket)}>
+                    {etiqueta(ticket)}
+                  </span>
                 </Label>
               </div>
               {otro && (
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <RadioGroupItem value="otro" id="conservar-otro" />
-                  <Label htmlFor="conservar-otro" className="font-normal">
-                    {etiqueta(otro)}
+                  <Label
+                    htmlFor="conservar-otro"
+                    className="min-w-0 font-normal"
+                  >
+                    <span className="min-w-0 truncate" title={etiqueta(otro)}>
+                      {etiqueta(otro)}
+                    </span>
                   </Label>
                 </div>
               )}
