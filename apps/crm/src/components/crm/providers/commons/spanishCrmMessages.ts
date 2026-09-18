@@ -315,6 +315,11 @@ export const spanishCrmMessages = {
         confirm: "Guardar y mover",
         skip: "Mover sin motivo",
       },
+      board: {
+        show_more_of: "Ver %{count} más de %{total}",
+        truncated:
+          "El tablero muestra %{shown} de %{total} oportunidades abiertas. Filtra por empresa, categoría o responsable para ver el resto.",
+      },
     },
     notes: {
       name: "Nota |||| Notas",

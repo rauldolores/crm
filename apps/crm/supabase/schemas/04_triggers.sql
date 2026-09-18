@@ -64,6 +64,11 @@ create or replace trigger on_crm_tickets_log_events
     after insert or update on crm.tickets
     for each row execute function crm.log_ticket_events();
 
+-- Una oportunidad nueva entra arriba de su etapa y desplaza a las demás.
+create or replace trigger place_new_deal_trigger
+    before insert on crm.deals
+    for each row execute function crm.place_new_deal();
+
 -- Historial de oportunidades: etapa, importe, responsable, archivo.
 create or replace trigger on_crm_deals_log_events
     after insert or update on crm.deals

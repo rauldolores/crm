@@ -717,6 +717,95 @@ $$;
 revoke all on function crm.merge_tickets(bigint, bigint, bigint) from public;
 grant execute on function crm.merge_tickets(bigint, bigint, bigint) to authenticated, service_role;
 
+-- Mover una oportunidad en el tablero en una sola transacción (la llama
+-- /api/oportunidades/mover con la clave de servicio; ver la migración
+-- 20260918210000).
+-- p_index es la posición final de la oportunidad en la etapa de destino
+-- (0 = arriba); se acota al tamaño de la columna, así que «al final» es
+-- cualquier número grande. Solo cuentan las abiertas: las archivadas no
+-- están en el tablero y su índice no significa nada.
+create or replace function crm.move_deal(
+    p_deal_id bigint,
+    p_stage text,
+    p_index integer,
+    p_loss_reason text default null,
+    p_actor bigint default null
+) returns void
+    language plpgsql security definer
+    set search_path = ''
+as $$
+declare
+  d record;
+  n integer;
+  destino integer;
+begin
+  select id, organization_id, pipeline, stage into d
+    from crm.deals where id = p_deal_id for update;
+  if not found then
+    raise exception 'Oportunidad % no encontrada', p_deal_id;
+  end if;
+
+  -- Renumera de 0 en adelante la etapa de origen sin la tarjeta que se
+  -- mueve (y la de destino, si es otra). Cada movimiento deja las columnas
+  -- contiguas aunque vinieran con huecos, repetidos o sin índice (altas por
+  -- API anteriores a crm.place_new_deal), y el orden que ve el usuario es
+  -- exactamente el que se guarda.
+  with ordenadas as (
+    select id,
+           row_number() over (partition by stage order by index nulls last, id) - 1 as pos
+    from crm.deals
+    where organization_id = d.organization_id and pipeline = d.pipeline
+      and stage in (d.stage, p_stage) and archived_at is null and id <> d.id
+  )
+  update crm.deals dl set index = o.pos
+    from ordenadas o
+    where dl.id = o.id and dl.index is distinct from o.pos;
+
+  select count(*) into n from crm.deals
+    where organization_id = d.organization_id and pipeline = d.pipeline
+      and stage = p_stage and archived_at is null and id <> d.id;
+  destino := greatest(0, least(coalesce(p_index, n), n));
+
+  -- Hace sitio en la posición de destino…
+  update crm.deals set index = index + 1
+    where organization_id = d.organization_id and pipeline = d.pipeline
+      and stage = p_stage and archived_at is null and id <> d.id
+      and index >= destino;
+
+  -- …y coloca la tarjeta.
+  update crm.deals
+    set stage = p_stage,
+        index = destino,
+        loss_reason = coalesce(p_loss_reason, loss_reason),
+        updated_by = p_actor,
+        updated_at = now()
+    where id = d.id;
+end;
+$$;
+
+grant execute on function crm.move_deal(bigint, text, integer, text, bigint) to service_role;
+
+-- Una oportunidad nueva entra arriba de su etapa (índice 0) y desplaza a las
+-- demás. Antes lo hacía el navegador con un PATCH por tarjeta, y las creadas
+-- por la API o el asistente se quedaban sin índice.
+create or replace function crm.place_new_deal() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+as $$
+begin
+  if new.index is null then
+    new.index := 0;
+  end if;
+  if new.archived_at is null then
+    update crm.deals set index = index + 1
+      where organization_id = new.organization_id and pipeline = new.pipeline
+        and stage = new.stage and archived_at is null
+        and index >= new.index;
+  end if;
+  return new;
+end;
+$$;
+
 CREATE OR REPLACE FUNCTION "crm"."lowercase_email_jsonb"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO 'crm'
@@ -784,7 +873,9 @@ begin
 
   -- Un UPDATE que deja la fila idéntica no es noticia. Corta el rebote más
   -- típico: el sistema externo reescribe el mismo valor que ya estaba.
-  if tg_op = 'UPDATE' and to_jsonb(old) = to_jsonb(new) then
+  -- Tampoco lo es reordenar una tarjeta del tablero (solo cambia `index`).
+  if tg_op = 'UPDATE'
+     and (to_jsonb(old) - 'index' - 'updated_at') = (to_jsonb(new) - 'index' - 'updated_at') then
     return null;
   end if;
 

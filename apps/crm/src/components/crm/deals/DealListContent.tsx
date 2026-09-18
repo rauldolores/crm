@@ -1,11 +1,6 @@
 import { DragDropContext, type OnDragEndResponder } from "@hello-pangea/dnd";
 import isEqual from "lodash/isEqual";
-import {
-  useDataProvider,
-  useListContext,
-  useTranslate,
-  type DataProvider,
-} from "ra-core";
+import { useDataProvider, useListContext, useTranslate } from "ra-core";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import type { CrmDataProvider } from "../providers/supabase/dataProvider";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { DealColumn } from "./DealColumn";
@@ -40,7 +36,7 @@ export const DealListContent = () => {
     refetch,
     filterValues,
   } = useListContext<Deal>();
-  const dataProvider = useDataProvider();
+  const dataProvider = useDataProvider<CrmDataProvider>();
 
   // Las columnas son las etapas del embudo activo (el del filtro de la
   // lista), no la union de todos los embudos.
@@ -88,15 +84,9 @@ export const DealListContent = () => {
     const sourceStage = source.droppableId;
     const destinationStage = destination.droppableId;
     const sourceDeal = dealsByStage[sourceStage][source.index]!;
-    const destinationDeal = dealsByStage[destinationStage][
-      destination.index
-    ] ?? {
-      stage: destinationStage,
-      index: undefined, // undefined if dropped after the last item
-    };
 
     const aplicar = (motivo?: string) => {
-      // compute local state change synchronously
+      // Primero en pantalla, de forma síncrona…
       setDealsByStage(
         updateDealStageLocal(
           sourceDeal,
@@ -106,12 +96,16 @@ export const DealListContent = () => {
         ),
       );
 
-      // persist the changes
-      updateDealStage(sourceDeal, destinationDeal, dataProvider, motivo).then(
-        () => {
-          refetch();
-        },
-      );
+      // …y luego en los datos. `destination.index` es la posición final de
+      // la tarjeta en su columna (la que devuelve el arrastre); el proveedor
+      // desplaza las demás. Si falla, se recarga y la tarjeta vuelve.
+      dataProvider
+        .moverOportunidad(
+          sourceDeal,
+          { stage: destinationStage, index: destination.index },
+          motivo,
+        )
+        .finally(() => refetch());
     };
 
     // Mover a una etapa de pérdida es el momento natural para preguntar por
@@ -230,130 +224,5 @@ const updateDealStageLocal = (
       [source.stage]: sourceColumn,
       [destination.stage]: destinationColumn,
     };
-  }
-};
-
-const updateDealStage = async (
-  source: Deal,
-  destination: {
-    stage: string;
-    index?: number; // undefined if dropped after the last item
-  },
-  dataProvider: DataProvider,
-  lossReason?: string,
-) => {
-  if (source.stage === destination.stage) {
-    // moving deal inside the same column
-    // Fetch all the deals in this stage (because the list may be filtered, but we need to update even non-filtered deals)
-    const { data: columnDeals } = await dataProvider.getList("deals", {
-      sort: { field: "index", order: "ASC" },
-      pagination: { page: 1, perPage: 100 },
-      filter: { stage: source.stage, pipeline: source.pipeline },
-    });
-    const destinationIndex = destination.index ?? columnDeals.length + 1;
-
-    if (source.index > destinationIndex) {
-      // deal moved up, eg
-      // dest   src
-      //  <------
-      // [4, 7, 23, 5]
-      await Promise.all([
-        // for all deals between destinationIndex and source.index, increase the index
-        ...columnDeals
-          .filter(
-            (deal) =>
-              deal.index >= destinationIndex && deal.index < source.index,
-          )
-          .map((deal) =>
-            dataProvider.update("deals", {
-              id: deal.id,
-              data: { index: deal.index + 1 },
-              previousData: deal,
-            }),
-          ),
-        // for the deal that was moved, update its index
-        dataProvider.update("deals", {
-          id: source.id,
-          data: { index: destinationIndex },
-          previousData: source,
-        }),
-      ]);
-    } else {
-      // deal moved down, e.g
-      // src   dest
-      //  ------>
-      // [4, 7, 23, 5]
-      await Promise.all([
-        // for all deals between source.index and destinationIndex, decrease the index
-        ...columnDeals
-          .filter(
-            (deal) =>
-              deal.index <= destinationIndex && deal.index > source.index,
-          )
-          .map((deal) =>
-            dataProvider.update("deals", {
-              id: deal.id,
-              data: { index: deal.index - 1 },
-              previousData: deal,
-            }),
-          ),
-        // for the deal that was moved, update its index
-        dataProvider.update("deals", {
-          id: source.id,
-          data: { index: destinationIndex },
-          previousData: source,
-        }),
-      ]);
-    }
-  } else {
-    // moving deal across columns
-    // Fetch all the deals in both stages (because the list may be filtered, but we need to update even non-filtered deals)
-    const [{ data: sourceDeals }, { data: destinationDeals }] =
-      await Promise.all([
-        dataProvider.getList("deals", {
-          sort: { field: "index", order: "ASC" },
-          pagination: { page: 1, perPage: 100 },
-          filter: { stage: source.stage, pipeline: source.pipeline },
-        }),
-        dataProvider.getList("deals", {
-          sort: { field: "index", order: "ASC" },
-          pagination: { page: 1, perPage: 100 },
-          filter: { stage: destination.stage, pipeline: source.pipeline },
-        }),
-      ]);
-    const destinationIndex = destination.index ?? destinationDeals.length + 1;
-
-    await Promise.all([
-      // decrease index on the deals after the source index in the source columns
-      ...sourceDeals
-        .filter((deal) => deal.index > source.index)
-        .map((deal) =>
-          dataProvider.update("deals", {
-            id: deal.id,
-            data: { index: deal.index - 1 },
-            previousData: deal,
-          }),
-        ),
-      // increase index on the deals after the destination index in the destination columns
-      ...destinationDeals
-        .filter((deal) => deal.index >= destinationIndex)
-        .map((deal) =>
-          dataProvider.update("deals", {
-            id: deal.id,
-            data: { index: deal.index + 1 },
-            previousData: deal,
-          }),
-        ),
-      // change the dragged deal to take the destination index and column
-      dataProvider.update("deals", {
-        id: source.id,
-        data: {
-          index: destinationIndex,
-          stage: destination.stage,
-          ...(lossReason ? { loss_reason: lossReason } : {}),
-        },
-        previousData: source,
-      }),
-    ]);
   }
 };

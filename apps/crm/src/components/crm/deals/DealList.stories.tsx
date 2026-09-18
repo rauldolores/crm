@@ -92,3 +92,23 @@ export const SinOportunidades = () => (
     </ResourceContextProvider>
   </StoryWrapper>
 );
+
+/**
+ * Un embudo viejo: 75 oportunidades abiertas en la primera etapa. La columna
+ * pinta un tramo y ofrece «Ver más»; la cabecera cuenta las 75.
+ */
+export const EmbudoConMuchasOportunidades = () => (
+  <StoryWrapper
+    configuration={{ dealPipelines: [embudos[1]] }}
+    data={{
+      companies: [{ id: 1, name: "Acme" }] as never,
+      deals: Array.from({ length: 75 }, (_, i) =>
+        buildDeal({ id: i + 1, index: i, name: `Oportunidad ${i + 1}` }),
+      ),
+    }}
+  >
+    <ResourceContextProvider value="deals">
+      <DealList />
+    </ResourceContextProvider>
+  </StoryWrapper>
+);

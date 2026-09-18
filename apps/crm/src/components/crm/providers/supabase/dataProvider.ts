@@ -21,6 +21,7 @@ import type {
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
+import type { DestinoDeOportunidad } from "../commons/moverOportunidad";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient, getUrlDeDatos } from "./supabase";
 
@@ -380,6 +381,24 @@ const getDataProviderWithCustomMethods = () => {
       if (!respuesta.ok) {
         const cuerpo = await respuesta.json().catch(() => ({}));
         throw new Error(cuerpo.message || "No se pudo enviar el correo");
+      }
+    },
+    async moverOportunidad(
+      deal: Deal,
+      destino: DestinoDeOportunidad,
+      motivoDePerdida?: string,
+    ) {
+      // La base desplaza las demás tarjetas en una transacción
+      // (crm.move_deal); ver /api/oportunidades/mover.
+      const respuesta = await llamarApiDelCrm("/api/oportunidades/mover", {
+        dealId: deal.id,
+        stage: destino.stage,
+        index: destino.index ?? null,
+        lossReason: motivoDePerdida ?? null,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudo mover la oportunidad");
       }
     },
     async fusionarTickets(loserId: Identifier, winnerId: Identifier) {

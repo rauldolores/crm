@@ -26,6 +26,11 @@ import { getContactTimeline } from "../commons/contactTimeline";
 import { getCompanyAvatar } from "../commons/getCompanyAvatar";
 import { getContactAvatar } from "../commons/getContactAvatar";
 import { mergeContacts } from "../commons/mergeContacts";
+import {
+  hacerSitioAOportunidadNueva,
+  moverOportunidadEnCliente,
+  type DestinoDeOportunidad,
+} from "../commons/moverOportunidad";
 import type { CrmDataProvider } from "../types";
 import {
   authProvider as defaultAuthProvider,
@@ -271,6 +276,20 @@ export const createDataProvider = ({
     },
     mergeContacts: async (sourceId: Identifier, targetId: Identifier) => {
       return mergeContacts(sourceId, targetId, baseDataProvider);
+    },
+    moverOportunidad: async (
+      deal: Deal,
+      destino: DestinoDeOportunidad,
+      motivoDePerdida?: string,
+    ) => {
+      // Por el proveedor completo (no baseDataProvider): es quien traduce
+      // los filtros de PostgREST (archived_at@is) al dialecto de FakeRest.
+      await moverOportunidadEnCliente(
+        dataProvider,
+        deal,
+        destino,
+        motivoDePerdida,
+      );
     },
     // Modo demostración: no hay servidor real que envíe nada, así que solo
     // se registra la nota, igual que si el usuario la hubiera escrito a mano.
@@ -618,10 +637,13 @@ export const createDataProvider = ({
             },
           };
         },
-        afterCreate: async (result) => {
+        afterCreate: async (result, dataProvider) => {
           await updateCompany(result.data.company_id, (company) => ({
             nb_deals: (company.nb_deals ?? 0) + 1,
           }));
+          // La nueva entra arriba de su etapa (como hace el disparador
+          // crm.place_new_deal con Supabase).
+          await hacerSitioAOportunidadNueva(dataProvider, result.data);
 
           return result;
         },
