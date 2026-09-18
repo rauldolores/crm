@@ -366,15 +366,33 @@ const getDataProviderWithCustomMethods = () => {
 
       return data;
     },
-    async enviarCorreo(contactId: Identifier, asunto: string, texto: string) {
+    async enviarCorreo(
+      contactId: Identifier,
+      asunto: string,
+      texto: string,
+      ticketId?: Identifier,
+    ) {
       const respuesta = await llamarApiDelCrm("/api/correos/enviar", {
         contactId,
         asunto,
         texto,
+        ticketId,
       });
       if (!respuesta.ok) {
         const cuerpo = await respuesta.json().catch(() => ({}));
         throw new Error(cuerpo.message || "No se pudo enviar el correo");
+      }
+    },
+    async fusionarTickets(loserId: Identifier, winnerId: Identifier) {
+      const respuesta = await llamarApiDelCrm("/api/tickets/fusionar", {
+        loserId,
+        winnerId,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(
+          cuerpo.message || "No se pudieron fusionar los tickets",
+        );
       }
     },
     async enviarWhatsapp(contactId: Identifier, mensaje: string) {

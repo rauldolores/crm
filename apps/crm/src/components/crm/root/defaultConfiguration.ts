@@ -162,6 +162,11 @@ export const defaultCustomerStages = [
 // modules/registry.ts; esto es solo el estado de activación por defecto.
 export const defaultModules: ConfigurationContextValue["modules"] = {};
 
+// Sin SLA de fábrica: un plazo que nadie eligió solo pone «vencido» en rojo
+// sobre tickets que nadie prometió atender en ese tiempo. Se activa por
+// prioridad desde Ajustes → Tickets.
+export const defaultTicketSla: ConfigurationContextValue["ticketSla"] = {};
+
 export const defaultTaskTypes = [
   { value: "none", label: "Ninguno" },
   { value: "email", label: "Correo electrónico" },
@@ -191,6 +196,7 @@ export const defaultConfiguration: ConfigurationContextValue = {
   ticketStatuses: defaultTicketStatuses,
   ticketPriorities: defaultTicketPriorities,
   ticketCategories: defaultTicketCategories,
+  ticketSla: defaultTicketSla,
   customerStages: defaultCustomerStages,
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,

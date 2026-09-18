@@ -15,9 +15,13 @@ import { Markdown } from "../misc/Markdown";
 import { NoteCreate } from "../notes/NoteCreate";
 import { NotesIterator } from "../notes/NotesIterator";
 import { formatLocalizedDate, formatRelativeDate } from "../misc/RelativeDate";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
 import { parseTicketSubject } from "./parseTicketSubject";
+import { FusionarTicketButton } from "./FusionarTicketDialog";
 import { HistorialDeTicket } from "./HistorialDeTicket";
+import { ResponderPorCorreoButton } from "./ResponderPorCorreoButton";
+import { SlaDeTicket } from "./SlaDeTicket";
 import {
   SelectorDeEstadoDeTicket,
   SelectorDeResponsableDeTicket,
@@ -38,6 +42,7 @@ export const TicketShow = () => (
 
 const TicketShowContent = () => {
   const translate = useTranslate();
+  const { modules } = useConfigurationContext();
   const { record, isPending } = useShowContext<Ticket>();
 
   if (isPending || !record) return null;
@@ -94,8 +99,13 @@ const TicketShowContent = () => {
                     <ResolucionDeTicket value={record.resolution} />
                   </p>
                 )}
+                <SlaDeTicket ticket={record} className="mt-2 gap-0.5" />
               </div>
-              <EditButton />
+              <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                <ResponderPorCorreoButton ticket={record} />
+                <FusionarTicketButton ticket={record} />
+                <EditButton />
+              </div>
             </div>
 
             {record.description && (
@@ -125,6 +135,32 @@ const TicketShowContent = () => {
                   link="show"
                 />
               </div>
+              {record.deal_id != null && (
+                <div>
+                  <p className="text-muted-foreground mb-1">
+                    {translate("resources.tickets.fields.deal_id")}
+                  </p>
+                  <ReferenceField
+                    source="deal_id"
+                    reference="deals"
+                    link="show"
+                  />
+                </div>
+              )}
+              {record.contract_id != null && modules.customers?.active && (
+                <div>
+                  <p className="text-muted-foreground mb-1">
+                    {translate("resources.tickets.fields.contract_id")}
+                  </p>
+                  {/* Los contratos no tienen ficha propia: se ven en la del
+                      cliente (módulo Clientes). */}
+                  <ReferenceField
+                    source="contract_id"
+                    reference="contracts"
+                    link={false}
+                  />
+                </div>
+              )}
               <div>
                 <p className="text-muted-foreground mb-1">
                   {translate("resources.tickets.fields.status")}

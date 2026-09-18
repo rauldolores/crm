@@ -166,6 +166,10 @@ create trigger run_automations_deals
     after insert or update on crm.deals
     for each row execute function crm.run_automations();
 
+create trigger run_automations_tickets
+    after insert or update on crm.tickets
+    for each row execute function crm.run_automations();
+
 -- Módulo Afiliados: ver crm.gestionar_modulo_afiliados en 02_functions.sql.
 -- Trigger propio (no reusa run_automations) para que el módulo entero pueda
 -- apagarse por organización sin tocar el motor de automatizaciones que usan

@@ -18,7 +18,8 @@ export type EntidadDeFusion =
   | "empresa"
   | "oportunidad"
   | "contrato"
-  | "cotizacion";
+  | "cotizacion"
+  | "ticket";
 
 export interface CampoDeFusion {
   /** El token tal cual se escribe: "contacto.nombre". */
@@ -79,12 +80,21 @@ const CAMPOS_FIJOS: CampoDeFusion[] = [
     etiqueta: "Enlace para verla y aceptarla",
     entidad: "cotizacion",
   },
+  // Solo se rellenan cuando el correo sale de una regla de tickets
+  // («recibimos tu ticket #123», «tu ticket sigue sin responder»…).
+  { clave: "ticket.numero", etiqueta: "Número", entidad: "ticket" },
+  { clave: "ticket.asunto", etiqueta: "Asunto", entidad: "ticket" },
+  { clave: "ticket.estado", etiqueta: "Estado", entidad: "ticket" },
+  { clave: "ticket.prioridad", etiqueta: "Prioridad", entidad: "ticket" },
+  { clave: "ticket.categoria", etiqueta: "Categoría", entidad: "ticket" },
+  { clave: "ticket.creado_el", etiqueta: "Creado el", entidad: "ticket" },
+  { clave: "ticket.vence_el", etiqueta: "Vence el", entidad: "ticket" },
 ];
 
 /** Los contratos no tienen campos personalizados; el resto sí. */
 type EntidadConPersonalizados = Exclude<
   EntidadDeFusion,
-  "contrato" | "cotizacion"
+  "contrato" | "cotizacion" | "ticket"
 >;
 
 /** El prefijo del token para los campos personalizados de cada entidad. */

@@ -41,10 +41,11 @@ const aOpciones = (lista: { value: string; label: string }[]) =>
   lista.map((item) => ({ id: item.value, name: item.label }));
 
 export const TicketInputs = ({ esAlta = false }: { esAlta?: boolean }) => {
-  const { ticketStatuses, ticketPriorities, ticketCategories } =
+  const { ticketStatuses, ticketPriorities, ticketCategories, modules } =
     useConfigurationContext();
   const { control } = useFormContext<Ticket>();
   const status = useWatch({ control, name: "status" });
+  const companyId = useWatch({ control, name: "company_id" });
   useHidratarEmpresaDesdeContacto();
 
   return (
@@ -105,6 +106,37 @@ export const TicketInputs = ({ esAlta = false }: { esAlta?: boolean }) => {
             helperText={false}
           />
         </ReferenceInput>
+      </div>
+      {/* Enlaces: la oportunidad o el contrato de esta misma empresa del
+          que trata el ticket. Se filtran por empresa para no ofrecer los de
+          toda la organización. */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <ReferenceInput
+          source="deal_id"
+          reference="deals"
+          filter={companyId ? { company_id: companyId } : {}}
+          perPage={20}
+        >
+          <AutocompleteInput
+            label="resources.tickets.fields.deal_id"
+            optionText="name"
+            helperText={false}
+          />
+        </ReferenceInput>
+        {modules.customers?.active && (
+          <ReferenceInput
+            source="contract_id"
+            reference="contracts"
+            filter={companyId ? { company_id: companyId } : {}}
+            perPage={20}
+          >
+            <AutocompleteInput
+              label="resources.tickets.fields.contract_id"
+              optionText="name"
+              helperText={false}
+            />
+          </ReferenceInput>
+        )}
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectInput

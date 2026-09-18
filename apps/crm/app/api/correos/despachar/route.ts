@@ -37,6 +37,7 @@ interface FilaDeCola {
   deal_id: number | null;
   contract_id: number | null;
   quote_id: number | null;
+  ticket_id: number | null;
   attempts: number;
 }
 
@@ -69,7 +70,7 @@ export async function POST(peticion: Request) {
   const { data: pendientes } = await supabase
     .from("email_outbox")
     .select(
-      "id, organization_id, template_id, contact_id, deal_id, contract_id, quote_id, attempts",
+      "id, organization_id, template_id, contact_id, deal_id, contract_id, quote_id, ticket_id, attempts",
     )
     .is("sent_at", null)
     .lte("next_attempt_at", new Date().toISOString())
@@ -120,6 +121,7 @@ export async function POST(peticion: Request) {
       fila.contact_id,
       fila.deal_id,
       fila.contract_id,
+      fila.ticket_id,
     );
     if (!resuelto?.correoDelContacto) {
       await fallo("El contacto no tiene correo electrónico registrado.");

@@ -67,6 +67,8 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
                 t.priority as prioridad, t.category as categoria,
                 t.contact_id, t.company_id, t.sales_id, t.created_at,
                 t.last_activity_at as ultima_actividad, t.closed_at as cerrado_el,
+                t.due_at as vence_el, t.first_response_at as primera_respuesta_el,
+                (t.status <> 'closed' and t.due_at < now()) as vencido,
                 c.first_name || ' ' || coalesce(c.last_name,'') as contacto
            from tickets t
            left join contacts c on c.id = t.contact_id

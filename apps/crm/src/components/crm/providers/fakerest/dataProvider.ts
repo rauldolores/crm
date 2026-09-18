@@ -278,14 +278,50 @@ export const createDataProvider = ({
       contactId: Identifier,
       asunto: string,
       texto: string,
+      ticketId?: Identifier,
     ) => {
+      const fecha = new Date().toISOString();
       await baseDataProvider.create("contact_notes", {
         data: {
           contact_id: contactId,
           text: `${asunto}\n\n${texto}`,
           type: "email",
-          date: new Date().toISOString(),
+          date: fecha,
         },
+      });
+      if (ticketId) {
+        await baseDataProvider.create("ticket_notes", {
+          data: {
+            ticket_id: ticketId,
+            text: `[#${ticketId}] ${asunto}\n\n${texto}`,
+            type: "email",
+            date: fecha,
+          },
+        });
+      }
+    },
+    fusionarTickets: async (loserId: Identifier, winnerId: Identifier) => {
+      const { data: notas } = await baseDataProvider.getList("ticket_notes", {
+        filter: { ticket_id: loserId },
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: "id", order: "ASC" },
+      });
+      await Promise.all(
+        notas.map((n) =>
+          baseDataProvider.update("ticket_notes", {
+            id: n.id,
+            data: { ticket_id: winnerId },
+            previousData: n,
+          }),
+        ),
+      );
+      const { data: perdedor } = await baseDataProvider.getOne("tickets", {
+        id: loserId,
+      });
+      await baseDataProvider.update("tickets", {
+        id: loserId,
+        data: { status: "closed", resolution: "duplicate" },
+        previousData: perdedor,
       });
     },
     enviarWhatsapp: async (contactId: Identifier, mensaje: string) => {

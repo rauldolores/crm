@@ -35,6 +35,7 @@ const ENTIDADES = [
   { clave: "oportunidad", etiqueta: "crm.email_templates.entity_deal" },
   { clave: "contrato", etiqueta: "crm.email_templates.entity_contract" },
   { clave: "cotizacion", etiqueta: "crm.email_templates.entity_quote" },
+  { clave: "ticket", etiqueta: "crm.email_templates.entity_ticket" },
 ] as const;
 
 export const PlantillaInputs = () => {

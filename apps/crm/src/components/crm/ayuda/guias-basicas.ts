@@ -351,8 +351,11 @@ export const PANTALLAS: Grupo = {
             "Los tickets pueden llegar solos desde un formulario web de tipo «Ticket de soporte», desde un asistente de IA por MCP o desde el agente de voz; la ficha dice de dónde vino cada uno. Si el asunto trae «[categoría]» delante, se convierte en la categoría real.",
             "Asignar: elige el responsable en la lista o en la ficha, o pulsa «Asignármelo». Selecciona varios y ciérralos o asígnatelos de golpe.",
             "Cerrar pide un motivo (resuelto, duplicado, sin respuesta del cliente…) y una nota opcional; la fecha de cierre queda sellada y se puede reabrir. El historial de la ficha guarda quién cambió el estado, la prioridad, la categoría o el responsable y cuándo.",
-            "Al crear un ticket, si el contacto ya tiene otro abierto, aparece un aviso con el enlace para no duplicarlo.",
-            "Prioridades y categorías se configuran en Ajustes → Tickets.",
+            "Al crear un ticket, si el contacto ya tiene otro abierto, aparece un aviso con el enlace para no duplicarlo. Si aun así hay dos, «Fusionar» junta las notas y el historial en uno y cierra el otro como duplicado.",
+            "Plazos (SLA): en Ajustes → Tickets se fijan, por prioridad, las horas objetivo de primera respuesta y de resolución. Cada ticket muestra «Responder en 2 horas», «Vence en 1 día» o «Vencido hace 3 horas»; el acceso rápido «Vencidos» lista los que se pasaron. La primera respuesta la cuenta la primera nota o correo de alguien del equipo.",
+            "«Responder por correo» escribe al cliente desde la ficha del ticket; el correo lleva «[#123]» en el asunto, queda como nota del ticket y cuenta como primera respuesta.",
+            "Un ticket puede enlazarse a una oportunidad o a un contrato (módulo Clientes) para saber de qué venta o servicio trata.",
+            "Prioridades, categorías y plazos se configuran en Ajustes → Tickets. En Automatizaciones hay reglas para tickets: al crearse (con una prioridad concreta o cualquiera), tras N horas sin responder, sin responsable o vencido, y al cerrarse.",
           ],
         },
         {

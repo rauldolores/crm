@@ -61,11 +61,35 @@ const PERIODICIDAD: Record<string, string> = {
   one_time: "pago único",
 };
 
+const fechaHoraLegible = (valor: string | null): string | null =>
+  valor
+    ? new Date(valor).toLocaleString(LOCALE, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : null;
+
+/** Etiqueta legible de un valor de una lista de Ajustes (o el valor tal cual). */
+const etiquetaDeLista = (
+  lista: unknown,
+  valor: string | null,
+): string | null => {
+  if (!valor) return null;
+  const items = Array.isArray(lista)
+    ? (lista as { value?: string; label?: string }[])
+    : [];
+  return items.find((i) => i.value === valor)?.label ?? valor;
+};
+
 export async function valoresDeFusion(
   organizacionId: string,
   contactoId: number,
   oportunidadId?: number | null,
   contratoId?: number | null,
+  ticketId?: number | null,
 ): Promise<ValoresYDestino | null> {
   const supabase = getServiceClient();
 
@@ -156,6 +180,46 @@ export async function valoresDeFusion(
       );
       valores["contrato.renueva_el"] = fechaLegible(
         contrato.renews_on as string | null,
+      );
+    }
+  }
+
+  if (ticketId) {
+    const { data: ticket } = await supabase
+      .from("tickets")
+      .select("id, subject, status, priority, category, created_at, due_at")
+      .eq("id", ticketId)
+      .eq("organization_id", organizacionId)
+      .maybeSingle();
+
+    if (ticket) {
+      // Estado, prioridad y categoría se guardan como valores («urgent»);
+      // el destinatario debe leer la etiqueta que la organización eligió.
+      const { data: configuracion } = await supabase
+        .from("configuration")
+        .select("config")
+        .eq("organization_id", organizacionId)
+        .maybeSingle();
+      const config = (configuracion?.config ?? {}) as Record<string, unknown>;
+      valores["ticket.numero"] = `#${ticket.id}`;
+      valores["ticket.asunto"] = (ticket.subject as string) ?? null;
+      valores["ticket.estado"] = etiquetaDeLista(
+        config.ticketStatuses,
+        ticket.status as string | null,
+      );
+      valores["ticket.prioridad"] = etiquetaDeLista(
+        config.ticketPriorities,
+        ticket.priority as string | null,
+      );
+      valores["ticket.categoria"] = etiquetaDeLista(
+        config.ticketCategories,
+        ticket.category as string | null,
+      );
+      valores["ticket.creado_el"] = fechaHoraLegible(
+        ticket.created_at as string | null,
+      );
+      valores["ticket.vence_el"] = fechaHoraLegible(
+        ticket.due_at as string | null,
       );
     }
   }

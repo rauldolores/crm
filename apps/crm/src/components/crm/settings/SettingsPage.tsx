@@ -27,6 +27,7 @@ import type {
 } from "../types";
 import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
 import { AjustesDeTickets } from "./AjustesDeTickets";
+import { limpiarSla } from "./limpiarSla";
 import { ColorInput } from "./ColorInput";
 
 const SECTIONS = [
@@ -213,6 +214,7 @@ const transformFormValues = (data: Record<string, any>) => {
       noteTypes: ensureValues(data.noteTypes),
       ticketPriorities: ensureValues(data.ticketPriorities),
       ticketCategories: ensureValues(data.ticketCategories),
+      ticketSla: limpiarSla(data.ticketSla),
       contactCustomFields: aDefiniciones(data.contactCustomFields),
       companyCustomFields: aDefiniciones(data.companyCustomFields),
       dealCustomFields: aDefiniciones(data.dealCustomFields),
@@ -269,6 +271,7 @@ const SettingsForm = () => {
       noteTypes: config.noteTypes,
       ticketPriorities: config.ticketPriorities,
       ticketCategories: config.ticketCategories,
+      ticketSla: config.ticketSla,
       contactCustomFields: aFilasEditables(config.contactCustomFields),
       companyCustomFields: aFilasEditables(config.companyCustomFields),
       dealCustomFields: aFilasEditables(config.dealCustomFields),

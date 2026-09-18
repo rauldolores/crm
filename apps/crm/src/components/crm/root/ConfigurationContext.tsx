@@ -26,6 +26,12 @@ export interface ModuleConfig {
   [clave: string]: unknown;
 }
 
+export interface TicketSlaTarget {
+  firstResponseHours?: number | null;
+  resolutionHours?: number | null;
+}
+export type TicketSla = Record<string, TicketSlaTarget>;
+
 export interface ConfigurationContextValue {
   companySectors: LabeledValue[];
   currency: string;
@@ -52,6 +58,12 @@ export interface ConfigurationContextValue {
   ticketPriorities: NoteStatus[];
   /** Categorías de un ticket (producto, facturación…). */
   ticketCategories: LabeledValue[];
+  /**
+   * SLA por prioridad (clave = value de ticketPriorities), en horas. Vacío o
+   * sin la prioridad = sin plazo. La base lo lee tal cual al crear un ticket
+   * o cambiarle la prioridad (crm.ticket_sla_hours).
+   */
+  ticketSla: TicketSla;
   /** Etapas del ciclo de vida del cliente (módulo Clientes). */
   customerStages: NoteStatus[];
   title: string;

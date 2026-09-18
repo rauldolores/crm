@@ -223,13 +223,28 @@ export type SavedView = {
 export type Automation = {
   name: string;
   active: boolean;
-  trigger_resource: "contacts" | "deals" | "contracts" | "quotes";
+  trigger_resource: "contacts" | "deals" | "contracts" | "quotes" | "tickets";
   /**
-   * renewal_due (contratos) y unanswered (cotizaciones) los evalúa el cron
-   * diario, no un disparador.
+   * renewal_due (contratos), unanswered (cotizaciones) y los de tickets por
+   * horas (unanswered, unassigned, overdue) los evalúa el cron horario, no
+   * un disparador.
    */
-  trigger_event: "created" | "stage_changed" | "renewal_due" | "unanswered";
-  trigger_params: { stage?: string; daysBefore?: number; daysAfter?: number };
+  trigger_event:
+    | "created"
+    | "stage_changed"
+    | "renewal_due"
+    | "unanswered"
+    | "unassigned"
+    | "overdue"
+    | "closed";
+  trigger_params: {
+    stage?: string;
+    daysBefore?: number;
+    daysAfter?: number;
+    hoursAfter?: number;
+    /** Solo tickets creados con esta prioridad (tickets:created). */
+    priority?: string;
+  };
   action_params: {
     text?: string;
     taskType?: string;
@@ -420,6 +435,14 @@ export type Ticket = {
   last_activity_at?: string;
   /** Quién hizo la última modificación; lo sella el puente. */
   updated_by?: Identifier | null;
+  /** SLA (Ajustes → Tickets): plazo de primera respuesta y de resolución. */
+  first_response_due_at?: string | null;
+  due_at?: string | null;
+  /** Primera nota de una persona en el ticket; lo sella la base. */
+  first_response_at?: string | null;
+  /** Oportunidad y contrato relacionados, si los hay. */
+  deal_id?: Identifier | null;
+  contract_id?: Identifier | null;
 } & Pick<RaRecord, "id">;
 
 /** Un cambio en un ticket: quién cambió qué y cuándo (crm.ticket_events). */

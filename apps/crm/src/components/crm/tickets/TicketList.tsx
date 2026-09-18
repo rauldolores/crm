@@ -27,6 +27,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Sale, Ticket } from "../types";
 import { CerrarTicketDialog } from "./CerrarTicketDialog";
 import { parseTicketSubject } from "./parseTicketSubject";
+import { SlaDeTicket } from "./SlaDeTicket";
 import { CategoriaDeTicket, PrioridadDeTicket } from "./TicketBadges";
 import {
   SelectorDeEstadoDeTicket,
@@ -81,6 +82,12 @@ const LastActivityField = () => {
   return <RelativeDate date={fecha} />;
 };
 
+const VencimientoField = () => {
+  const record = useRecordContext<Ticket>();
+  if (!record) return null;
+  return <SlaDeTicket ticket={record} compacto />;
+};
+
 const CreatedField = () => {
   const record = useRecordContext<Ticket>();
   if (!record?.created_at) return null;
@@ -91,9 +98,12 @@ const CreatedField = () => {
   );
 };
 
-/** Accesos rápidos a las dos vistas que más se usan al triar una cola. */
+/** Accesos rápidos a las vistas que más se usan al triar una cola. */
 const FiltrosRapidos = () => {
   const { identity } = useGetIdentity();
+  // Fijo al montar: ToggleFilterButton compara el valor con el filtro activo
+  // para pintarse seleccionado, así que no puede cambiar en cada render.
+  const [ahora] = useState(() => new Date().toISOString());
   return (
     <div className="mb-2 flex flex-wrap gap-1">
       {identity?.id != null && (
@@ -112,6 +122,11 @@ const FiltrosRapidos = () => {
         className="w-auto"
         label="resources.tickets.filters.open"
         value={{ "status@neq": "closed" }}
+      />
+      <ToggleFilterButton
+        className="w-auto"
+        label="resources.tickets.filters.overdue"
+        value={{ "status@neq": "closed", "due_at@lt": ahora }}
       />
     </div>
   );
@@ -271,6 +286,9 @@ export const TicketList = () => {
         </DataTable.Col>
         <DataTable.Col label="resources.tickets.fields.status">
           <SelectorDeEstadoDeTicket />
+        </DataTable.Col>
+        <DataTable.Col source="due_at" label="resources.tickets.fields.due_at">
+          <VencimientoField />
         </DataTable.Col>
         <DataTable.Col
           source="last_activity_at"

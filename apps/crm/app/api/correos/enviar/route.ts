@@ -15,6 +15,10 @@ import {
  * El Reply-To lleva el hash de hilo del contacto (ver `construirResponderA`),
  * así que si el destinatario responde, el webhook de entrada la archiva sola
  * en esta misma ficha en vez de crear un contacto nuevo a partir del remitente.
+ *
+ * Con `ticketId` es una respuesta al cliente desde un ticket: el asunto lleva
+ * «[#id]» para que las respuestas se reconozcan, y el correo queda también
+ * como nota del ticket (lo que sella su primera respuesta para el SLA).
  */
 
 const MAX_ASUNTO = 200;
@@ -40,10 +44,12 @@ export async function POST(peticion: Request) {
     contactId?: number;
     asunto?: string;
     texto?: string;
+    ticketId?: number;
   } | null;
 
   const contactId = cuerpo?.contactId;
-  const asunto = (cuerpo?.asunto ?? "").trim().slice(0, MAX_ASUNTO);
+  const ticketId = cuerpo?.ticketId;
+  let asunto = (cuerpo?.asunto ?? "").trim().slice(0, MAX_ASUNTO);
   const texto = (cuerpo?.texto ?? "").trim().slice(0, MAX_CUERPO);
 
   if (!contactId || !asunto || !texto) {
@@ -82,6 +88,28 @@ export async function POST(peticion: Request) {
     );
   }
 
+  if (ticketId) {
+    const { data: ticket } = await supabase
+      .from("tickets")
+      .select("id, organization_id, contact_id")
+      .eq("id", ticketId)
+      .maybeSingle();
+    if (
+      !ticket ||
+      ticket.organization_id !== organizacionId ||
+      ticket.contact_id !== contacto.id
+    ) {
+      return Response.json(
+        { message: "Ticket no encontrado." },
+        { status: 404 },
+      );
+    }
+    const marca = `[#${ticket.id}]`;
+    if (!asunto.includes(marca)) {
+      asunto = `${marca} ${asunto}`.slice(0, MAX_ASUNTO);
+    }
+  }
+
   const { data: comercial } = await supabase
     .from("sales")
     .select("id")
@@ -116,6 +144,17 @@ export async function POST(peticion: Request) {
     sales_id: comercial?.id ?? contacto.sales_id,
     date: ahora,
   });
+
+  if (ticketId) {
+    await supabase.from("ticket_notes").insert({
+      organization_id: organizacionId,
+      ticket_id: ticketId,
+      text: `${asunto}\n\n${texto}`,
+      type: "email",
+      sales_id: comercial?.id ?? contacto.sales_id,
+      date: ahora,
+    });
+  }
 
   await supabase
     .from("contacts")

@@ -23,6 +23,13 @@ import { Switch } from "@/components/ui/switch";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Automation, EmailTemplate, Sale } from "../types";
+import {
+  admiteAsignarResponsable,
+  describirDisparador,
+  disparadoresDisponibles,
+  esDisparadorPorHoras,
+  parametrosDelDisparador,
+} from "./disparadoresDeAutomatizacion";
 
 /**
  * Automatizaciones: reglas «cuando pase X, haz Y», en lenguaje llano.
@@ -99,7 +106,7 @@ const TarjetaDeRegla = ({
   const notify = useNotify();
   const [update] = useUpdate();
   const [deleteOne] = useDelete();
-  const { dealStages } = useConfigurationContext();
+  const { dealStages, ticketPriorities } = useConfigurationContext();
   const { data: comerciales } = useGetList<Sale>("sales", {
     pagination: { page: 1, perPage: 200 },
     sort: { field: "last_name", order: "ASC" },
@@ -114,28 +121,14 @@ const TarjetaDeRegla = ({
       String(plantilla.id) === String(regla.action_params?.templateId),
   )?.name;
 
-  const etiquetaDeEtapa =
-    dealStages.find((etapa) => etapa.value === regla.trigger_params?.stage)
-      ?.label ?? regla.trigger_params?.stage;
-
-  const cuando =
-    regla.trigger_event === "unanswered"
-      ? translate("crm.automations.when.quote_unanswered_named", {
-          days: regla.trigger_params?.daysAfter ?? 3,
-        })
-      : regla.trigger_event === "renewal_due"
-        ? translate("crm.automations.when.renewal_due_named", {
-            days: regla.trigger_params?.daysBefore ?? 30,
-          })
-        : regla.trigger_event === "stage_changed"
-          ? translate("crm.automations.when.deal_stage_named", {
-              stage: etiquetaDeEtapa ?? "",
-            })
-          : translate(
-              regla.trigger_resource === "contacts"
-                ? "crm.automations.when.contact_created"
-                : "crm.automations.when.deal_created",
-            );
+  const cuando = describirDisparador(regla, translate, {
+    etapa:
+      dealStages.find((etapa) => etapa.value === regla.trigger_params?.stage)
+        ?.label ?? regla.trigger_params?.stage,
+    prioridad: ticketPriorities.find(
+      (p) => p.value === regla.trigger_params?.priority,
+    )?.label,
+  });
 
   const entonces =
     regla.action_type === "send_email"
@@ -215,7 +208,8 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
   const [generacion, setGeneracion] = useState(0);
 
   const guardar = async (valores: FieldValues) => {
-    const [trigger_resource, trigger_event] = String(valores.cuando).split(":");
+    const cuando = String(valores.cuando);
+    const [trigger_resource, trigger_event] = cuando.split(":");
     const esTarea = valores.accion === "create_task";
     const esCorreo = valores.accion === "send_email";
 
@@ -228,14 +222,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
             active: true,
             trigger_resource,
             trigger_event,
-            trigger_params:
-              trigger_event === "unanswered"
-                ? { daysAfter: Number(valores.daysAfter ?? 3) }
-                : trigger_event === "renewal_due"
-                  ? { daysBefore: Number(valores.daysBefore ?? 30) }
-                  : trigger_event === "stage_changed" && valores.stage
-                    ? { stage: valores.stage }
-                    : {},
+            trigger_params: parametrosDelDisparador(cuando, valores),
             action_type: valores.accion,
             action_params: esCorreo
               ? { templateId: valores.templateId }
@@ -273,6 +260,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
         accion: "create_task",
         daysBefore: 30,
         daysAfter: 3,
+        hoursAfter: 4,
       }}
     >
       <div className="flex flex-col gap-4">
@@ -296,34 +284,19 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
 
 /** Los campos que dependen del disparador y de la acción elegidos. */
 const CamposDeLaRegla = () => {
-  const { dealStages, taskTypes, modules } = useConfigurationContext();
+  const { dealStages, taskTypes, ticketPriorities, modules } =
+    useConfigurationContext();
   const cuando = useWatch({ name: "cuando" });
   const accion = useWatch({ name: "accion" });
   const esRenovacion = cuando === "contracts:renewal_due";
   const esCotizacion = cuando === "quotes:unanswered";
 
-  // La renovación de contratos solo existe con el módulo Clientes activo.
-  const disparadores = [
-    { id: "contacts:created", name: "crm.automations.when.contact_created" },
-    { id: "deals:created", name: "crm.automations.when.deal_created" },
-    { id: "deals:stage_changed", name: "crm.automations.when.deal_stage" },
-    ...(modules.customers?.active
-      ? [
-          {
-            id: "contracts:renewal_due",
-            name: "crm.automations.when.renewal_due",
-          },
-        ]
-      : []),
-    { id: "quotes:unanswered", name: "crm.automations.when.quote_unanswered" },
-  ];
-  // Asignar responsable cambia la fila que disparó la regla; un contrato que
-  // se acerca a su renovación no es una fila nueva a la que asignar nadie.
+  const disparadores = disparadoresDisponibles(modules);
   const acciones = [
     { id: "create_task", name: "crm.automations.then.task" },
-    ...(esRenovacion || esCotizacion
-      ? []
-      : [{ id: "assign_owner", name: "crm.automations.then.assign" }]),
+    ...(admiteAsignarResponsable(cuando)
+      ? [{ id: "assign_owner", name: "crm.automations.then.assign" }]
+      : []),
     { id: "send_email", name: "crm.automations.then.email" },
   ];
 
@@ -352,6 +325,26 @@ const CamposDeLaRegla = () => {
           helperText="crm.automations.fields.days_before_help"
           min={0}
           validate={required()}
+        />
+      )}
+      {esDisparadorPorHoras(cuando) && (
+        <NumberInput
+          source="hoursAfter"
+          label="crm.automations.fields.hours_after"
+          helperText="crm.automations.fields.hours_after_help"
+          min={0}
+          validate={required()}
+        />
+      )}
+      {cuando === "tickets:created" && (
+        <SelectInput
+          source="priority"
+          label="crm.automations.fields.priority"
+          choices={ticketPriorities}
+          optionText="label"
+          optionValue="value"
+          emptyText="crm.automations.fields.any_priority"
+          helperText={false}
         />
       )}
       {cuando === "deals:stage_changed" && (

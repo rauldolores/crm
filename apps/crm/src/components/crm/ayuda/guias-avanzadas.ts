@@ -108,7 +108,23 @@ export const AVANZADO: Grupo = {
             ["Una oportunidad llega a la etapa «X»", "Lo mismo"],
             [
               "Faltan N días para que se renueve un contrato (módulo Clientes)",
-              "Crear una tarea o enviar un correo al contacto de esa empresa con actividad más reciente. Se revisa una vez al día y no se repite.",
+              "Crear una tarea o enviar un correo al contacto de esa empresa con actividad más reciente. Se revisa cada hora y no se repite.",
+            ],
+            [
+              "Una cotización lleva N días enviada sin respuesta",
+              "Crear una tarea o enviar un correo de recordatorio. Una sola vez por cotización.",
+            ],
+            [
+              "Se crea un ticket (con cualquier prioridad o con una concreta)",
+              "Crear una tarea · Asignar un responsable · Enviar un correo («recibimos tu ticket #123») con los campos {{ticket.*}}",
+            ],
+            [
+              "Un ticket lleva N horas sin primera respuesta, sin responsable o vencido",
+              "Lo mismo. Se revisa cada hora y avisa una sola vez por ticket.",
+            ],
+            [
+              "Se cierra un ticket",
+              "Crear una tarea o enviar un correo (encuesta, confirmación de cierre)",
             ],
           ],
         },
