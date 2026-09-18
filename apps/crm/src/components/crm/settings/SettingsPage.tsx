@@ -12,6 +12,7 @@ import { ArrayInput } from "@/components/admin/array-input";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
+import { NumberInput } from "@/components/admin/number-input";
 import { TextInput } from "@/components/admin/text-input";
 
 import {
@@ -170,8 +171,15 @@ const aEmbudosGuardables = (embudos: DealPipeline[] | undefined) =>
   (embudos ?? [])
     .filter((embudo) => embudo?.label)
     .map((embudo) => {
-      const stages = (ensureValues(embudo.stages) ??
-        []) as DealPipeline["stages"];
+      const stages = (ensureValues(embudo.stages) ?? []).map((etapa) => {
+        // La probabilidad es opcional: vacía o fuera de 0-100 no se guarda.
+        const { probability, ...resto } =
+          etapa as DealPipeline["stages"][number];
+        const valor = Number(probability);
+        return typeof probability === "number" && Number.isFinite(valor)
+          ? { ...resto, probability: Math.max(0, Math.min(100, valor)) }
+          : resto;
+      }) as DealPipeline["stages"];
       const valores = new Set(stages.map((etapa) => etapa.value));
       return {
         value: embudo.value || toSlug(embudo.label),
@@ -728,9 +736,23 @@ const EditorDeEmbudos = ({ deals }: { deals?: RaRecord[] }) => {
             validate={validarEtapasDelEmbudo(embudo.value)}
           >
             <SimpleFormIterator disableClear>
-              <TextInput source="label" label={false} />
+              <TextInput source="label" label={false} className="flex-1" />
+              <NumberInput
+                source="probability"
+                label={false}
+                helperText={false}
+                min={0}
+                max={100}
+                step={5}
+                placeholder="%"
+                className="w-24"
+                aria-label={translate("crm.settings.deals.probability")}
+              />
             </SimpleFormIterator>
           </ArrayInput>
+          <p className="text-sm text-muted-foreground">
+            {translate("crm.settings.deals.probability_help")}
+          </p>
 
           <h4 className="text-sm font-medium text-muted-foreground">
             {translate("crm.settings.deals.pipeline_statuses")}

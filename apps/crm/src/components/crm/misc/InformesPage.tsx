@@ -9,6 +9,7 @@ import { estadoVisible } from "../cotizaciones/estado";
 import type { Deal, Quote, Sale } from "../types";
 import { InformeDeSoporte } from "./InformeDeSoporte";
 import { Grafica, Indicador } from "./PiezasDeInforme";
+import { Pronostico } from "./Pronostico";
 import { LOCALE } from "./RelativeDate";
 
 /**
@@ -158,6 +159,14 @@ export const InformesPage = () => {
           {(cotizaciones ?? []).length > 0 && (
             <ResumenDeCotizaciones
               cotizaciones={cotizacionesDelPeriodo}
+              moneda={currency}
+            />
+          )}
+
+          {embudo && (
+            <Pronostico
+              oportunidades={oportunidades ?? []}
+              embudo={embudo}
               moneda={currency}
             />
           )}

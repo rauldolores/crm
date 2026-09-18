@@ -569,7 +569,14 @@ export interface LabeledValue {
   label: string;
 }
 
-export type DealStage = LabeledValue;
+export type DealStage = LabeledValue & {
+  /**
+   * Probabilidad de cierre (0-100) de las oportunidades en esta etapa. Sin
+   * valor, el CRM la estima por la posición de la etapa (ver
+   * deals/probabilidad.ts).
+   */
+  probability?: number | null;
+};
 
 /**
  * Un embudo de oportunidades de la organización, con sus propias etapas.

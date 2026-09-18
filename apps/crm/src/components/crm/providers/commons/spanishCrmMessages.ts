@@ -298,6 +298,7 @@ export const spanishCrmMessages = {
         category: "Categoría",
         amount: "Importe",
         expected_closing_date: "Fecha prevista de cierre",
+        probability: "Probabilidad de cierre",
         stage: "Etapa",
         pipeline: "Embudo",
         loss_reason: "Motivo de pérdida",
@@ -328,6 +329,9 @@ export const spanishCrmMessages = {
         success: "Oportunidad desarchivada",
       },
       updated: "Oportunidad actualizada",
+      weighted: "%{amount} ponderado",
+      weighted_help:
+        "Importe × probabilidad de cierre de la etapa (%{probability} %). Se configura en Ajustes → Oportunidades.",
       history: {
         title: "Historial",
         empty: "Sin cambios registrados.",
@@ -783,6 +787,22 @@ export const spanishCrmMessages = {
       lost: "Perdidas",
       conversion: "Conversión",
       by_stage: "Oportunidades por etapa",
+      forecast: {
+        title: "Pronóstico",
+        intro:
+          "Lo que sigue abierto en este embudo, por el mes en que se espera cerrar. Ponderado = importe × probabilidad de cierre de su etapa (Ajustes → Oportunidades).",
+        open: "Abierto",
+        weighted: "Ponderado",
+        open_count: "Oportunidades abiertas",
+        no_date: "Sin fecha prevista o más adelante",
+        by_stage: "Por etapa",
+        stage: "Etapa",
+        count: "Nº",
+        amount: "Importe",
+        probability: "Prob.",
+        weighted_amount: "Ponderado",
+        empty: "No hay oportunidades abiertas en este embudo.",
+      },
       by_owner: "Ventas ganadas por responsable",
       by_loss_reason: "Motivos de pérdida",
       empty: "No hay datos en este periodo.",
@@ -1767,6 +1787,9 @@ export const spanishCrmMessages = {
         remove_pipeline: "Quitar embudo",
         pipeline_in_use:
           "No se puede quitar el embudo «%{name}»: todavía tiene oportunidades.",
+        probability: "Probabilidad de cierre (%)",
+        probability_help:
+          "Probabilidad (0-100) de que una oportunidad en cada etapa acabe ganándose; con ella se calcula el importe ponderado y el pronóstico de Informes. Si la dejas vacía, el CRM la estima por el orden de la etapa (ganadas 100, perdidas 0).",
         lost_stages: "Etapas perdidas",
         lost_stages_help:
           "Marca cuáles significan que la oportunidad se perdió. Al mover una oportunidad a una de ellas, el CRM preguntará el motivo.",

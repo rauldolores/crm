@@ -39,13 +39,17 @@ export const defaultCompanySectors = [
   { value: "utilities", label: "Servicios públicos" },
 ];
 
+// Probabilidad de cierre por etapa: la que se usa para el importe ponderado
+// y el pronóstico mientras la organización no mida la suya. «Aplazada» va
+// después de las etapas de avance, así que sin este valor explícito la
+// estimación por orden le daría la más alta, y es justo al revés.
 export const defaultDealStages = [
-  { value: "opportunity", label: "Oportunidad" },
-  { value: "proposal-sent", label: "Propuesta enviada" },
-  { value: "in-negociation", label: "En negociación" },
+  { value: "opportunity", label: "Oportunidad", probability: 20 },
+  { value: "proposal-sent", label: "Propuesta enviada", probability: 40 },
+  { value: "in-negociation", label: "En negociación", probability: 70 },
   { value: "won", label: "Ganada" },
   { value: "lost", label: "Perdida" },
-  { value: "delayed", label: "Aplazada" },
+  { value: "delayed", label: "Aplazada", probability: 10 },
 ];
 
 export const defaultDealPipelineStatuses = ["won"];

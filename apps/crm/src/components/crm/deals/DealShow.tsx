@@ -32,6 +32,7 @@ import { ContactList } from "./ContactList";
 import { findDealLabel, formatISODateString } from "./dealUtils";
 import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 import { TagsListEdit } from "../contacts/TagsListEdit";
+import { probabilidadDeEtapa } from "./probabilidad";
 import { SeccionDeCotizaciones } from "../cotizaciones/SeccionDeCotizaciones";
 
 export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
@@ -55,10 +56,18 @@ export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
 
 const DealShowContent = () => {
   const translate = useTranslate();
-  const { dealStages, dealCategories, dealLossReasons, currency } =
-    useConfigurationContext();
+  const {
+    dealStages,
+    dealCategories,
+    dealLossReasons,
+    dealPipelines,
+    currency,
+  } = useConfigurationContext();
   const record = useRecordContext<Deal>();
   if (!record) return null;
+  const embudo =
+    dealPipelines.find((candidato) => candidato.value === record.pipeline) ??
+    dealPipelines[0];
 
   return (
     <>
@@ -156,6 +165,17 @@ const DealShowContent = () => {
                 )}
               </span>
             </div>
+
+            {embudo && (
+              <div className="flex flex-col mr-10">
+                <span className="text-xs text-muted-foreground tracking-wide">
+                  {translate("resources.deals.fields.probability")}
+                </span>
+                <span className="text-sm tabular-nums">
+                  {probabilidadDeEtapa(embudo, record.stage)} %
+                </span>
+              </div>
+            )}
           </div>
 
           {!!record.contact_ids?.length && (

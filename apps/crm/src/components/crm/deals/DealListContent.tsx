@@ -129,6 +129,7 @@ export const DealListContent = () => {
           <DealColumn
             stage={stage.value}
             deals={dealsByStage[stage.value]}
+            embudo={embudoActivo}
             key={stage.value}
           />
         ))}

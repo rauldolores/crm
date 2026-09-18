@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 
 import { LOCALE } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Deal } from "../types";
+import type { Deal, DealPipeline } from "../types";
 import { findDealLabel } from "./dealUtils";
 import { DealCard } from "./DealCard";
+import { probabilidadDeEtapa } from "./probabilidad";
 
 /**
  * Tarjetas que se pintan de entrada por columna. Un embudo viejo acumula
@@ -21,13 +22,24 @@ export const TARJETAS_POR_TRAMO = 30;
 export const DealColumn = ({
   stage,
   deals,
+  embudo,
 }: {
   stage: string;
   deals: Deal[];
+  embudo: DealPipeline;
 }) => {
   const translate = useTranslate();
   const totalAmount = deals.reduce((sum, deal) => sum + (deal.amount ?? 0), 0);
   const { dealStages, currency } = useConfigurationContext();
+  const probabilidad = probabilidadDeEtapa(embudo, stage);
+  const importe = (valor: number) =>
+    valor.toLocaleString(LOCALE, {
+      notation: "compact",
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+      maximumFractionDigits: 0,
+    });
   // Cambiar de embudo monta columnas nuevas (van por etapa), así que el
   // tramo visible vuelve solo al primero.
   const [visibles, setVisibles] = useState(TARJETAS_POR_TRAMO);
@@ -45,13 +57,20 @@ export const DealColumn = ({
           </span>
         </h3>
         <p className="text-xs text-muted-foreground tabular-nums">
-          {totalAmount.toLocaleString(LOCALE, {
-            notation: "compact",
-            style: "currency",
-            currency,
-            currencyDisplay: "narrowSymbol",
-            maximumFractionDigits: 0,
-          })}
+          {importe(totalAmount)}
+          {totalAmount > 0 && probabilidad > 0 && probabilidad < 100 && (
+            <span
+              title={translate("resources.deals.weighted_help", {
+                probability: probabilidad,
+              })}
+            >
+              {" · "}
+              {translate("resources.deals.weighted", {
+                amount: importe((totalAmount * probabilidad) / 100),
+                probability: probabilidad,
+              })}
+            </span>
+          )}
         </p>
       </div>
       <Droppable droppableId={stage}>
