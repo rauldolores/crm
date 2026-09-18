@@ -7,6 +7,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  ReceiptText,
   Send,
   Trash2,
 } from "lucide-react";
@@ -48,7 +49,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 
-import type { Deal, EmailTemplate, Quote, QuoteItem } from "../types";
+import { BotonesDeDescarga } from "../facturas/ListaDeFacturas";
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import type { Deal, EmailTemplate, Invoice, Quote, QuoteItem } from "../types";
+import { DialogoDeFactura } from "./DialogoDeFactura";
 import { EditorDeCotizacion } from "./EditorDeCotizacion";
 
 /**
@@ -172,6 +176,9 @@ const FilaDeCotizacion = ({
   const [deleteOne] = useDelete();
   const [enviando, setEnviando] = useState(false);
   const [dialogoDeEnvio, setDialogoDeEnvio] = useState(false);
+  const [dialogoDeFactura, setDialogoDeFactura] = useState(false);
+  const { modules } = useConfigurationContext();
+  const facturacionActiva = modules.invoicing?.active ?? false;
 
   const { data: lineas } = useGetList<QuoteItem>("quote_items", {
     filter: { quote_id: cotizacion.id },
@@ -182,6 +189,21 @@ const FilaDeCotizacion = ({
   const esBorrador = cotizacion.status === "draft";
   const respondida =
     cotizacion.status === "accepted" || cotizacion.status === "rejected";
+  const aceptada = cotizacion.status === "accepted";
+
+  // Con el conector de facturación: la factura de esta cotización, si ya
+  // se pidió. Solo tiene sentido en una aceptada.
+  const { data: facturas, refetch: recargarFacturas } = useGetList<Invoice>(
+    "invoices",
+    {
+      filter: { quote_id: cotizacion.id },
+      pagination: { page: 1, perPage: 5 },
+      sort: { field: "created_at", order: "DESC" },
+    },
+    { enabled: facturacionActiva && aceptada },
+  );
+  const factura =
+    (facturas ?? []).find((f) => f.status === "stamped") ?? facturas?.[0];
 
   const copiarEnlace = async () => {
     await navigator.clipboard.writeText(enlaceDe(cotizacion));
@@ -249,6 +271,21 @@ const FilaDeCotizacion = ({
               })}`
             : ""}
         </div>
+        {factura && (
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+            <ReceiptText className="h-3.5 w-3.5 text-muted-foreground" />
+            <span>
+              {factura.status === "stamped"
+                ? translate("crm.invoices.invoiced_as", {
+                    folio: [factura.serie, factura.folio]
+                      .filter(Boolean)
+                      .join("-"),
+                  })
+                : (factura.error ?? translate("crm.invoices.not_stamped"))}
+            </span>
+            <BotonesDeDescarga factura={factura} compactos />
+          </div>
+        )}
       </div>
 
       {!respondida && (
@@ -300,6 +337,15 @@ const FilaDeCotizacion = ({
               {translate("ra.action.edit")}
             </DropdownMenuItem>
           )}
+          {facturacionActiva && aceptada && factura?.status !== "stamped" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setDialogoDeFactura(true)}>
+                <ReceiptText className="h-4 w-4" />
+                {translate("crm.invoices.issue_action")}
+              </DropdownMenuItem>
+            </>
+          )}
           {!respondida && (
             <>
               <DropdownMenuSeparator />
@@ -322,6 +368,14 @@ const FilaDeCotizacion = ({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {dialogoDeFactura && (
+        <DialogoDeFactura
+          cotizacion={cotizacion}
+          onClose={() => setDialogoDeFactura(false)}
+          onEmitida={() => recargarFacturas()}
+        />
+      )}
 
       {dialogoDeEnvio && (
         <DialogoDeEnvio

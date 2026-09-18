@@ -49,6 +49,8 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       description: lorem.paragraph(),
       revenue: random.arrayElement(["$1M", "$10M", "$100M", "$1B"]),
       tax_identifier: random.alphaNumeric(10),
+      tax_regime: null,
+      cfdi_use: null,
       country: random.arrayElement(["USA", "France", "UK"]),
       context_links: [],
       custom_fields: {},

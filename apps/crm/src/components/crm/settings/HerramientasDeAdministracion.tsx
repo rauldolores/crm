@@ -2,6 +2,7 @@ import {
   Blocks,
   Globe,
   Mail,
+  Plug,
   ReceiptText,
   Sparkles,
   Webhook,
@@ -19,6 +20,7 @@ import { CorreoPage } from "../misc/CorreoPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import { IaPage } from "../misc/IaPage";
 import { CatalogoPage } from "../modules/CatalogoPage";
+import { ConectoresPage } from "../conectores/ConectoresPage";
 import { CotizacionesPage } from "../cotizaciones/CotizacionesPage";
 
 interface Herramienta {
@@ -86,6 +88,12 @@ export const HerramientasDeAdministracion = () => {
       descripcion: translate("crm.quotes.settings.intro"),
       ruta: CotizacionesPage.path,
       Icono: ReceiptText,
+    },
+    {
+      titulo: translate("crm.connectors.title"),
+      descripcion: translate("crm.connectors.intro"),
+      ruta: ConectoresPage.path,
+      Icono: Plug,
     },
   ];
 

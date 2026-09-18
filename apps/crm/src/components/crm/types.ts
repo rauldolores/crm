@@ -84,6 +84,9 @@ export type Company = {
   description: string;
   revenue: string;
   tax_identifier: string;
+  /** Régimen fiscal y uso de CFDI del SAT, para facturar (conectores). */
+  tax_regime?: string | null;
+  cfdi_use?: string | null;
   country: string;
   context_links?: string[];
   nb_contacts?: number;
@@ -595,6 +598,41 @@ export type Quote = {
   sales_id: Identifier | null;
   created_at: string;
   updated_at: string;
+} & Pick<RaRecord, "id">;
+
+/** Un producto del catálogo conectado (Shopify…), espejo de crm.products. */
+export type Product = {
+  organization_id?: string;
+  provider: string;
+  external_id: string;
+  sku: string | null;
+  name: string;
+  description: string | null;
+  unit_price: number;
+  currency: string;
+  active: boolean;
+  image_url: string | null;
+  synced_at: string;
+} & Pick<RaRecord, "id">;
+
+export type InvoiceStatus = "stamped" | "draft" | "cancelled" | "error";
+
+/** Una factura emitida por el proveedor conectado (Faqturia…). */
+export type Invoice = {
+  organization_id?: string;
+  provider: string;
+  quote_id: Identifier | null;
+  company_id: Identifier | null;
+  external_id: string;
+  uuid: string | null;
+  serie: string | null;
+  folio: string | null;
+  status: InvoiceStatus;
+  total: number;
+  currency: string;
+  issued_at: string | null;
+  error: string | null;
+  created_at: string;
 } & Pick<RaRecord, "id">;
 
 export type QuoteItem = {

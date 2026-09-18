@@ -23,6 +23,7 @@ const get = (obj: unknown, path: string) =>
 
 const configuracion: ConfigurationContextValue = {
   ...defaultConfiguration,
+  modules: { products: { active: true } },
   quoteTemplates: [
     {
       key: "enterprise",
@@ -39,9 +40,29 @@ const configuracion: ConfigurationContextValue = {
   ],
 };
 
+const productos = [
+  {
+    id: 1,
+    provider: "shopify",
+    external_id: "1:11",
+    sku: "SIL-01",
+    name: "Silla ergonómica",
+    description: null,
+    unit_price: 2499,
+    currency: "MXN",
+    active: true,
+    image_url: null,
+    synced_at: "2026-09-18T00:00:00Z",
+  },
+];
+
 const Wrapper = ({ children }: { children: React.ReactNode }) => (
   <CoreAdminContext
-    dataProvider={fakeDataProvider({ quotes: [], quote_items: [] })}
+    dataProvider={fakeDataProvider({
+      quotes: [],
+      quote_items: [],
+      products: productos,
+    })}
     store={memoryStore({ [CONFIGURATION_STORE_KEY]: configuracion })}
     i18nProvider={{
       translate: (key, options) => {
@@ -112,5 +133,27 @@ describe("EditorDeCotizacion", () => {
       .toBeInTheDocument();
     // 124,000 + 16 % de IVA
     await expect.element(screen.getByText(/143,840\.00/)).toBeInTheDocument();
+  });
+
+  it("rellena concepto, precio y referencia al elegir un producto del catálogo", async () => {
+    const screen = await render(
+      <EditorDeCotizacion
+        oportunidad={oportunidad}
+        abierto
+        onClose={() => {}}
+        onSaved={() => {}}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    await screen.getByRole("button", { name: "Elegir del catálogo" }).click();
+    await screen.getByRole("button", { name: /Silla ergonómica/ }).click();
+
+    await expect
+      .element(screen.getByLabelText("Concepto"))
+      .toHaveValue("Silla ergonómica");
+    await expect.element(screen.getByLabelText("Precio")).toHaveValue(2499);
+    // 2,499 + 16 % de IVA
+    await expect.element(screen.getByText(/2,898\.84/)).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-import { Handshake, Users } from "lucide-react";
+import { Handshake, Package, ReceiptText, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -16,6 +16,11 @@ export interface ModuleDefinition {
   icon: LucideIcon;
   /** Ruta a la que navega el ítem de esta sección en el menú lateral. */
   path: string;
+  /**
+   * Módulo que funciona con un proveedor externo conectado (Ajustes →
+   * Conectores). Se activa solo al conectarlo y se apaga al desconectarlo.
+   */
+  connector?: "products" | "invoicing";
 }
 
 export const MODULE_REGISTRY: ModuleDefinition[] = [
@@ -32,5 +37,21 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
     descriptionKey: "crm.modules.affiliates.description",
     icon: Handshake,
     path: "/affiliates",
+  },
+  {
+    key: "products",
+    nameKey: "crm.modules.products.name",
+    descriptionKey: "crm.modules.products.description",
+    icon: Package,
+    path: "/products",
+    connector: "products",
+  },
+  {
+    key: "invoicing",
+    nameKey: "crm.modules.invoicing.name",
+    descriptionKey: "crm.modules.invoicing.description",
+    icon: ReceiptText,
+    path: "/invoices",
+    connector: "invoicing",
   },
 ];

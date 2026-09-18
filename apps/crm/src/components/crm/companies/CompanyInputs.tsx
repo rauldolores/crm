@@ -7,6 +7,7 @@ import { ArrayInput } from "@/components/admin/array-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { Separator } from "@/components/ui/separator";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { REGIMENES_FISCALES, USOS_DE_CFDI } from "@/lib/conectores/sat";
 
 import ImageEditorField from "../misc/ImageEditorField";
 import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
@@ -120,6 +121,20 @@ const CompanyContextInputs = () => {
       <SelectInput source="size" choices={translatedSizes} helperText={false} />
       <TextInput source="revenue" helperText={false} />
       <TextInput source="tax_identifier" helperText={false} />
+      <SelectInput
+        source="tax_regime"
+        choices={REGIMENES_FISCALES}
+        optionText="label"
+        optionValue="value"
+        helperText={false}
+      />
+      <SelectInput
+        source="cfdi_use"
+        choices={USOS_DE_CFDI}
+        optionText="label"
+        optionValue="value"
+        helperText={false}
+      />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { useDataProvider, useNotify, useTranslate } from "ra-core";
+import { Link } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
@@ -6,6 +7,7 @@ import {
   useConfigurationContext,
   useConfigurationUpdater,
 } from "../root/ConfigurationContext";
+import { ConectoresPage } from "../conectores/ConectoresPage";
 import type { CrmDataProvider } from "../providers/types";
 import { MODULE_REGISTRY } from "./registry";
 
@@ -70,9 +72,17 @@ export const CatalogoPage = () => {
                 aria-label={translate(modulo.nameKey)}
               />
             </CardHeader>
-            {activo && (
+            {(activo || modulo.connector) && (
               <CardContent className="text-sm text-muted-foreground">
-                {translate("crm.modules.catalog.active_hint")}
+                {activo && translate("crm.modules.catalog.active_hint")}
+                {modulo.connector && (
+                  <p className={activo ? "mt-1" : ""}>
+                    {translate("crm.modules.catalog.connector_hint")}{" "}
+                    <Link to={ConectoresPage.path}>
+                      {translate("crm.connectors.title")}
+                    </Link>
+                  </p>
+                )}
               </CardContent>
             )}
           </Card>

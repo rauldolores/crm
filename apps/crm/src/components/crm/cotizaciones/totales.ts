@@ -8,6 +8,8 @@
 
 export interface LineaEditable {
   description?: string;
+  /** SKU o id externo del producto del catálogo, si la línea salió de uno. */
+  product_ref?: string | null;
   quantity?: number | string | null;
   unit_price?: number | string | null;
   discount_pct?: number | string | null;

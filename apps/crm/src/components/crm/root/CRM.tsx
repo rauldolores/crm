@@ -27,6 +27,9 @@ import deals from "../deals";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { CotizacionesPage } from "../cotizaciones/CotizacionesPage";
 import { ListaDeCotizaciones } from "../cotizaciones/ListaDeCotizaciones";
+import { ConectoresPage } from "../conectores/ConectoresPage";
+import { ListaDeProductos } from "../productos/ListaDeProductos";
+import { ListaDeFacturas } from "../facturas/ListaDeFacturas";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
 import { OrganizacionesPage } from "../organizaciones/OrganizacionesPage";
@@ -321,6 +324,7 @@ const DesktopAdmin = (
         <Route path={IaPage.path} element={<IaPage />} />
         <Route path={FacturacionPage.path} element={<FacturacionPage />} />
         <Route path={CotizacionesPage.path} element={<CotizacionesPage />} />
+        <Route path={ConectoresPage.path} element={<ConectoresPage />} />
         <Route
           path={AffiliatesConfigPage.path}
           element={<AffiliatesConfigPage />}
@@ -342,6 +346,14 @@ const DesktopAdmin = (
         recordRepresentation={(record) => record?.number}
       />
       <Resource name="quote_items" />
+      <Resource name="products" list={ListaDeProductos} />
+      <Resource
+        name="invoices"
+        list={ListaDeFacturas}
+        recordRepresentation={(record) =>
+          [record?.serie, record?.folio].filter(Boolean).join("-")
+        }
+      />
       <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />

@@ -34,6 +34,7 @@ import {
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal, Quote, QuoteItem, QuoteTemplate } from "../types";
+import { SelectorDeProducto } from "./SelectorDeProducto";
 import { calcularTotales, venceEn, type LineaEditable } from "./totales";
 
 /**
@@ -195,6 +196,7 @@ export const EditorDeCotizacion = ({
         notes: cotizacion.notes ?? "",
         items: (lineas ?? []).map((linea) => ({
           description: linea.description,
+          product_ref: linea.product_ref ?? null,
           quantity: Number(linea.quantity),
           unit_price: Number(linea.unit_price),
           discount_pct: Number(linea.discount_pct),
@@ -269,6 +271,7 @@ export const EditorDeCotizacion = ({
               quote_id: idDeCotizacion,
               position: indice,
               description: linea.description,
+              product_ref: linea.product_ref || null,
               quantity: Number(linea.quantity) || 0,
               unit_price: Number(linea.unit_price) || 0,
               discount_pct: Number(linea.discount_pct) || 0,
@@ -339,6 +342,7 @@ export const EditorDeCotizacion = ({
               resource="quote_items"
             >
               <SimpleFormIterator inline disableReordering>
+                <SelectorDeProducto />
                 <TextInput
                   source="description"
                   label="crm.quotes.fields.description"

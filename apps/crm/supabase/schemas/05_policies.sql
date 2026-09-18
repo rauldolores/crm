@@ -392,6 +392,18 @@ create policy "Purchase items are updated within the organization" on crm.purcha
 create policy "Purchase items are deleted within the organization" on crm.purchase_items
     for delete to authenticated using (organization_id = crm.current_organization_id());
 
+-- Conectores: sin políticas, como email_settings — guarda el secreto del
+-- proveedor y solo la lee service_role.
+alter table crm.connectors enable row level security;
+
+-- Productos y facturas: la organización los lee; los escribe el servidor.
+alter table crm.products enable row level security;
+alter table crm.invoices enable row level security;
+create policy "Products are scoped to the organization" on crm.products
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Invoices are scoped to the organization" on crm.invoices
+    for select to authenticated using (organization_id = crm.current_organization_id());
+
 -- Cotizaciones
 alter table crm.quotes enable row level security;
 alter table crm.quote_items enable row level security;
