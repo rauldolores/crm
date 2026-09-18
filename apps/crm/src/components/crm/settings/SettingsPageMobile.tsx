@@ -1,4 +1,3 @@
-import { env } from "@/lib/env";
 import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
 import { RUTA_ORGANIZACIONES } from "../organizaciones/rutas";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
@@ -69,7 +68,6 @@ export const SettingsPageMobile = () => {
           <div className="space-y-6">
             <ProfileSection />
             <PreferencesSection />
-            <InboundEmailSection />
             <McpServerSection />
             <AyudaSection />
           </div>
@@ -298,27 +296,6 @@ const ThemeRow = () => {
         </ToggleGroupItem>
       </ToggleGroup>
     </Item>
-  );
-};
-
-const InboundEmailSection = () => {
-  const translate = useTranslate();
-
-  if (!env.inboundEmail) return null;
-
-  return (
-    <div>
-      <SectionLabel>{translate("crm.profile.inbound.title")}</SectionLabel>
-      <p className="text-sm text-muted-foreground mb-2 px-1">
-        {translate("crm.profile.inbound.description", {
-          _: "You can start sending emails to your server's inbound email address, e.g. by adding it to the Cc: field. Vinqulia will process the emails and add notes to the corresponding contacts.",
-          field: "Cc:",
-        })}
-      </p>
-      <ItemGroup className="rounded-lg border overflow-hidden">
-        <CopyPasteRow value={env.inboundEmail} />
-      </ItemGroup>
-    </div>
   );
 };
 

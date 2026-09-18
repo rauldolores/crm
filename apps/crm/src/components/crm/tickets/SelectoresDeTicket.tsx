@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { UserRound } from "lucide-react";
 import {
   useCreate,
@@ -25,6 +26,18 @@ import { CerrarTicketDialog } from "./CerrarTicketDialog";
 const SIN_ASIGNAR = "__sin_asignar__";
 
 /**
+ * El historial lo escribe la base al modificar el ticket; la lista de
+ * eventos en pantalla no se entera sola, así que se invalida su caché
+ * después de cada cambio.
+ */
+const useRefrescarHistorial = () => {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: ["ticket_events"] });
+  };
+};
+
+/**
  * Estado del ticket editable en línea (lista y ficha). Pasar a «cerrado»
  * abre el diálogo de motivo; el resto de cambios se guardan al momento. La
  * fecha de cierre y el historial los sella la base.
@@ -39,6 +52,7 @@ export const SelectorDeEstadoDeTicket = ({
   const [update, { isPending }] = useUpdate();
   const [create] = useCreate();
   const notify = useNotify();
+  const refrescarHistorial = useRefrescarHistorial();
   const [cerrando, setCerrando] = useState(false);
   if (!record) return null;
 
@@ -47,6 +61,7 @@ export const SelectorDeEstadoDeTicket = ({
       "tickets",
       { id: record.id, data: { status, ...extra }, previousData: record },
       {
+        onSuccess: refrescarHistorial,
         onError: () =>
           notify("resources.tickets.notifications.update_error", {
             type: "error",
@@ -126,6 +141,7 @@ export const SelectorDeResponsableDeTicket = ({
   const translate = useTranslate();
   const { identity } = useGetIdentity();
   const [update, { isPending }] = useUpdate();
+  const refrescarHistorial = useRefrescarHistorial();
   const { data: usuarios } = useGetList<Sale>("sales", {
     pagination: { page: 1, perPage: 100 },
     sort: { field: "first_name", order: "ASC" },
@@ -136,11 +152,11 @@ export const SelectorDeResponsableDeTicket = ({
   const asignar = (valor: string) => {
     const sales_id = valor === SIN_ASIGNAR ? null : Number(valor);
     if (sales_id === (record.sales_id ?? null)) return;
-    update("tickets", {
-      id: record.id,
-      data: { sales_id },
-      previousData: record,
-    });
+    update(
+      "tickets",
+      { id: record.id, data: { sales_id }, previousData: record },
+      { onSuccess: refrescarHistorial },
+    );
   };
 
   const esMio = identity?.id != null && record.sales_id === identity.id;

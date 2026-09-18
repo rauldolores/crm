@@ -118,6 +118,11 @@ begin
       end if;
       new.subject := p.limpio;
     end if;
+    -- El agente de voz escribe «Prioridad: urgent» en la descripción: si no
+    -- vino una prioridad explícita, se toma de ahí.
+    if new.priority = 'normal' and new.description ~* 'prioridad:\s*(low|normal|high|urgent)' then
+      new.priority := lower((regexp_match(new.description, 'prioridad:\s*(low|normal|high|urgent)', 'i'))[1]);
+    end if;
     new.last_activity_at := coalesce(new.last_activity_at, now());
     if new.status = 'closed' then
       new.closed_at := coalesce(new.closed_at, now());
@@ -214,6 +219,10 @@ update crm.tickets t
 update crm.tickets
    set closed_at = coalesce(closed_at, updated_at)
  where status = 'closed';
+
+update crm.tickets
+   set priority = lower((regexp_match(description, 'prioridad:\s*(low|normal|high|urgent)', 'i'))[1])
+ where priority = 'normal' and description ~* 'prioridad:\s*(low|normal|high|urgent)';
 
 drop trigger if exists on_crm_tickets_before_write on crm.tickets;
 create trigger on_crm_tickets_before_write

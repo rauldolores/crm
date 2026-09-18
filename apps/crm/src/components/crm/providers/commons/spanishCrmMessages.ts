@@ -1523,11 +1523,6 @@ export const spanishCrmMessages = {
         "Tu cuenta de KontrolIA Auth es válida, pero esta organización no tiene %{app} contratado, o tu cuenta no tiene un rol asignado ahí. Si perteneces a otra organización, cámbiate arriba; si no, pide a quien la administre que te dé acceso.",
     },
     profile: {
-      inbound: {
-        description:
-          "Puedes empezar a enviar correos a la dirección de entrada de tu servidor, por ejemplo añadiéndola al campo %{field}. Vinqulia los procesará y añadirá notas a los contactos correspondientes.",
-        title: "Correo de entrada",
-      },
       mcp: {
         title: "Servidor MCP",
         description:
