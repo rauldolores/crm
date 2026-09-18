@@ -4,11 +4,13 @@ import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
 import { SearchInput } from "@/components/admin/search-input";
 import { SelectInput } from "@/components/admin/select-input";
+import { ToggleFilterButton } from "@/components/admin/toggle-filter-button";
 
 import { TopToolbar } from "../layout/TopToolbar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { CustomerSummary } from "../types";
 import { EtapaDeCliente } from "./EtapaDeCliente";
+import { RiesgoDeCliente } from "./RiesgoDeCliente";
 
 /**
  * Clientes: cada empresa con lo que ha comprado y lo que tiene contratado.
@@ -57,6 +59,12 @@ const Renovacion = () => {
   );
 };
 
+const Soporte = () => {
+  const record = useRecordContext<CustomerSummary>();
+  if (!record) return null;
+  return <RiesgoDeCliente resumen={record} compacto />;
+};
+
 const CustomerListActions = () => (
   <TopToolbar>
     <ExportButton />
@@ -83,6 +91,13 @@ export const CustomerList = () => {
       sort={{ field: "total_spent", order: "DESC" }}
       perPage={25}
     >
+      <div className="mb-2 flex flex-wrap gap-1">
+        <ToggleFilterButton
+          className="w-auto"
+          label="crm.customers.risk.filter"
+          value={{ at_risk: true }}
+        />
+      </div>
       <DataTable rowClick={(id) => `/companies/${id}/show/customer`}>
         <DataTable.Col source="name" label="resources.companies.fields.name" />
         <DataTable.Col label="crm.customers.fields.lifecycle_stage">
@@ -100,6 +115,9 @@ export const CustomerList = () => {
         </DataTable.Col>
         <DataTable.Col label="crm.customers.fields.next_renewal_on">
           <Renovacion />
+        </DataTable.Col>
+        <DataTable.Col label="crm.customers.fields.support">
+          <Soporte />
         </DataTable.Col>
       </DataTable>
     </List>

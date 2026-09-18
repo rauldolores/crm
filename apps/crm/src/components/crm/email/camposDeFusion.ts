@@ -89,6 +89,11 @@ const CAMPOS_FIJOS: CampoDeFusion[] = [
   { clave: "ticket.categoria", etiqueta: "Categoría", entidad: "ticket" },
   { clave: "ticket.creado_el", etiqueta: "Creado el", entidad: "ticket" },
   { clave: "ticket.vence_el", etiqueta: "Vence el", entidad: "ticket" },
+  {
+    clave: "ticket.encuesta",
+    etiqueta: "Enlace a la encuesta de satisfacción",
+    entidad: "ticket",
+  },
 ];
 
 /** Los contratos no tienen campos personalizados; el resto sí. */

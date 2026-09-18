@@ -21,6 +21,8 @@ import { parseTicketSubject } from "./parseTicketSubject";
 import { FusionarTicketButton } from "./FusionarTicketDialog";
 import { HistorialDeTicket } from "./HistorialDeTicket";
 import { ResponderPorCorreoButton } from "./ResponderPorCorreoButton";
+import { ResumenConIa } from "./ResumenConIa";
+import { SatisfaccionDeTicket } from "./SatisfaccionDeTicket";
 import { SlaDeTicket } from "./SlaDeTicket";
 import {
   SelectorDeEstadoDeTicket,
@@ -113,6 +115,11 @@ const TicketShowContent = () => {
                 <Markdown>{record.description}</Markdown>
               </div>
             )}
+
+            <div className="mb-4 flex flex-col gap-3">
+              <SatisfaccionDeTicket ticket={record} />
+              <ResumenConIa ticket={record} />
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>

@@ -1,4 +1,5 @@
 import { getServiceClient } from "../supabase-service";
+import { enlaceDeEncuesta } from "../tickets/encuesta";
 
 /**
  * Resuelve los valores reales de los campos de fusión de una plantilla para
@@ -90,6 +91,8 @@ export async function valoresDeFusion(
   oportunidadId?: number | null,
   contratoId?: number | null,
   ticketId?: number | null,
+  /** Origen (https://panel…) para armar el enlace de la encuesta del ticket. */
+  origen?: string | null,
 ): Promise<ValoresYDestino | null> {
   const supabase = getServiceClient();
 
@@ -187,7 +190,9 @@ export async function valoresDeFusion(
   if (ticketId) {
     const { data: ticket } = await supabase
       .from("tickets")
-      .select("id, subject, status, priority, category, created_at, due_at")
+      .select(
+        "id, subject, status, priority, category, created_at, due_at, survey_token",
+      )
       .eq("id", ticketId)
       .eq("organization_id", organizacionId)
       .maybeSingle();
@@ -221,6 +226,9 @@ export async function valoresDeFusion(
       valores["ticket.vence_el"] = fechaHoraLegible(
         ticket.due_at as string | null,
       );
+      valores["ticket.encuesta"] = origen
+        ? enlaceDeEncuesta(origen, ticket.survey_token as string)
+        : null;
     }
   }
 

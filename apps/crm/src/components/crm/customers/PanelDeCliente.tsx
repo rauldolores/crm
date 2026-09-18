@@ -35,6 +35,7 @@ import type {
   PurchaseItem,
 } from "../types";
 import { EtapaDeCliente } from "./EtapaDeCliente";
+import { RiesgoDeCliente } from "./RiesgoDeCliente";
 
 /**
  * Pestaña «Cliente» de la ficha de empresa: todo lo que ha hecho con
@@ -116,6 +117,8 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
           <NuevaCompra empresaId={empresa.id} />
         </div>
       </div>
+
+      {resumen && <RiesgoDeCliente resumen={resumen} />}
 
       {resumen && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

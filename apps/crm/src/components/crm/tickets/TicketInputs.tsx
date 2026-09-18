@@ -12,6 +12,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ticketResolutions } from "../root/defaultConfiguration";
 import type { Contact, Sale, Ticket } from "../types";
 import { AvisoDeDuplicados } from "./AvisoDeDuplicados";
+import { SugerirConIaButton } from "./SugerirConIaButton";
 
 /**
  * Al elegir un contacto se rellena la empresa con la suya, ya que un ticket
@@ -80,6 +81,7 @@ export const TicketInputs = ({ esAlta = false }: { esAlta?: boolean }) => {
           />
         </ReferenceInput>
       </div>
+      <SugerirConIaButton />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <SelectInput
           source="priority"

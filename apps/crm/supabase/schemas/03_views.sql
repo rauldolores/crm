@@ -302,7 +302,10 @@ select
     p.last_purchase_on,
     coalesce(k.nb_active_contracts, 0) as nb_active_contracts,
     coalesce(k.recurring_amount, 0) as recurring_amount,
-    k.next_renewal_on
+    k.next_renewal_on,
+    coalesce(t.open_tickets, 0) as open_tickets,
+    coalesce(t.overdue_tickets, 0) as overdue_tickets,
+    (coalesce(t.open_tickets, 0) >= 3 or coalesce(t.overdue_tickets, 0) >= 1) as at_risk
 from crm.companies c
 left join lateral (
     select count(*) as nb_purchases,
@@ -318,7 +321,13 @@ left join lateral (
            min(renews_on) filter (where renews_on is not null) as next_renewal_on
       from crm.contracts
      where company_id = c.id and status = 'active'
-) k on true;
+) k on true
+left join lateral (
+    select count(*) as open_tickets,
+           count(*) filter (where due_at < now()) as overdue_tickets
+      from crm.tickets
+     where company_id = c.id and status <> 'closed'
+) t on true;
 
 -- Línea de tiempo de un contacto: todo lo que le ha pasado, en orden
 -- cronológico y con la misma forma, para pintarlo como una sola lista.

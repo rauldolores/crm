@@ -356,6 +356,8 @@ export const PANTALLAS: Grupo = {
             "«Responder por correo» escribe al cliente desde la ficha del ticket; el correo lleva «[#123]» en el asunto, queda como nota del ticket y cuenta como primera respuesta.",
             "Un ticket puede enlazarse a una oportunidad o a un contrato (módulo Clientes) para saber de qué venta o servicio trata.",
             "Prioridades, categorías y plazos se configuran en Ajustes → Tickets. En Automatizaciones hay reglas para tickets: al crearse (con una prioridad concreta o cualquiera), tras N horas sin responder, sin responsable o vencido, y al cerrarse.",
+            "Encuesta de satisfacción: cada ticket tiene un enlace público con una sola pregunta (¿cómo fue la atención?, de 1 a 5) y un comentario. Se manda con una regla «se cierra un ticket → enviar correo» usando el campo {{ticket.encuesta}} en la plantilla; la respuesta se ve en la ficha y el promedio (CSAT) en Informes.",
+            "Con un proveedor de IA configurado (Ajustes → Inteligencia artificial): al crear un ticket, «Sugerir prioridad y categoría con IA» lee el asunto y la descripción; en la ficha, «Resumen con IA» condensa el hilo en qué pide, qué se hizo y qué falta, y se puede guardar como nota.",
           ],
         },
         {
@@ -397,6 +399,11 @@ export const PANTALLAS: Grupo = {
           tipo: "parrafo",
           texto:
             "Sobre las oportunidades creadas en el periodo que elijas (90 días, un año, todo): cuántas hubo, cuántas se ganaron y perdieron, la tasa de conversión, cuántas hay en cada etapa, las ventas ganadas por responsable y los motivos de pérdida. Los informes solo son tan buenos como los datos: importes puestos y motivos anotados al perder.",
+        },
+        {
+          tipo: "parrafo",
+          texto:
+            "Si usas tickets, debajo aparece el informe de Soporte: tickets creados y cerrados en el periodo, abiertos y vencidos ahora, tiempo medio de primera respuesta y de resolución, porcentaje resuelto dentro del plazo (SLA), satisfacción del cliente (CSAT, de las encuestas respondidas), reaperturas, tickets por categoría y carga abierta por responsable. En Clientes, una empresa con 3 o más tickets abiertos o alguno vencido se marca «en riesgo».",
         },
         {
           tipo: "ejemplo",

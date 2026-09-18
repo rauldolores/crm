@@ -606,7 +606,15 @@ create table crm.tickets (
     first_response_at timestamp with time zone,
     -- Enlaces opcionales: «este ticket es de esta venta / de este contrato».
     deal_id bigint,
-    contract_id bigint
+    contract_id bigint,
+    -- Encuesta de satisfacción (migración 20260918200000): enlace público
+    -- de una pregunta, enviado desde una automatización al cerrar.
+    survey_token text not null default (
+      replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '')
+    ),
+    satisfaction_rating smallint check (satisfaction_rating between 1 and 5),
+    satisfaction_comment text,
+    satisfaction_at timestamp with time zone
 );
 
 create index tickets_organization_id_idx on crm.tickets (organization_id);
@@ -615,6 +623,7 @@ create index tickets_company_id_idx on crm.tickets (company_id);
 create index tickets_last_activity_idx on crm.tickets (organization_id, last_activity_at desc);
 create index tickets_sales_id_idx on crm.tickets (sales_id);
 create index tickets_due_at_idx on crm.tickets (organization_id, due_at) where status <> 'closed';
+create unique index tickets_survey_token_uk on crm.tickets (survey_token);
 
 -- Historial de cambios de un ticket: quién cambió qué y cuándo.
 create table crm.ticket_events (

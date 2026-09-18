@@ -122,6 +122,7 @@ export async function POST(peticion: Request) {
       fila.deal_id,
       fila.contract_id,
       fila.ticket_id,
+      new URL(peticion.url).origin,
     );
     if (!resuelto?.correoDelContacto) {
       await fallo("El contacto no tiene correo electrónico registrado.");

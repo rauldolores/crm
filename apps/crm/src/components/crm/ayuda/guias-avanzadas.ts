@@ -124,7 +124,7 @@ export const AVANZADO: Grupo = {
             ],
             [
               "Se cierra un ticket",
-              "Crear una tarea o enviar un correo (encuesta, confirmación de cierre)",
+              "Crear una tarea o enviar un correo: la encuesta de satisfacción va aquí, con {{ticket.encuesta}} en la plantilla",
             ],
           ],
         },

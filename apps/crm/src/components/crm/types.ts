@@ -365,6 +365,10 @@ export type CustomerSummary = {
   nb_active_contracts: number;
   recurring_amount: number;
   next_renewal_on?: string | null;
+  /** Soporte: tickets abiertos y vencidos; en riesgo = 3+ abiertos o alguno vencido. */
+  open_tickets: number;
+  overdue_tickets: number;
+  at_risk: boolean;
 } & Pick<RaRecord, "id">;
 
 /** Webhook saliente de la organización. */
@@ -443,6 +447,11 @@ export type Ticket = {
   /** Oportunidad y contrato relacionados, si los hay. */
   deal_id?: Identifier | null;
   contract_id?: Identifier | null;
+  /** Encuesta de satisfacción: enlace público y respuesta (1 a 5). */
+  survey_token?: string;
+  satisfaction_rating?: number | null;
+  satisfaction_comment?: string | null;
+  satisfaction_at?: string | null;
 } & Pick<RaRecord, "id">;
 
 /** Un cambio en un ticket: quién cambió qué y cuándo (crm.ticket_events). */
