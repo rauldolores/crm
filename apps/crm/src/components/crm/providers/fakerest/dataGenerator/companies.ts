@@ -57,6 +57,7 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       // Los datos de demostración no traen el módulo Afiliados activo, así
       // que ninguna empresa viene referida por nadie.
       referred_by_affiliate_id: null,
+      tags: [],
       lifecycle_stage: null,
     };
   });

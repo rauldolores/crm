@@ -102,7 +102,8 @@ select
     count(distinct tk.id) as nb_tickets,
     count(distinct tk.id) filter (where tk.status <> 'closed') as nb_tickets_open,
     c.organization_id,
-    c.custom_fields
+    c.custom_fields,
+    c.tags
 from crm.companies c
     left join crm.deals d on c.id = d.company_id
     left join crm.contacts co on c.id = co.company_id

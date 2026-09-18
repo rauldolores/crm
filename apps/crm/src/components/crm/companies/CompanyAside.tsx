@@ -11,6 +11,7 @@ import { formatLocalizedDate } from "../misc/RelativeDate";
 import { AsideSection } from "../misc/AsideSection";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company } from "../types";
+import { TagsListEdit } from "../contacts/TagsListEdit";
 import { CompanyMergeButton } from "./CompanyMergeButton";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
@@ -45,6 +46,12 @@ export const CompanyAside = ({ link = "edit" }: CompanyAsideProps) => {
       <AdditionalInfo record={record} />
 
       <CamposPersonalizadosField entidad="company" />
+
+      <AsideSection
+        title={translate("resources.tags.name", { smart_count: 2 })}
+      >
+        <TagsListEdit resource="companies" />
+      </AsideSection>
 
       {link !== "edit" && (
         <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">

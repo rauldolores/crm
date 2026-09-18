@@ -10,6 +10,7 @@ import { ReferenceManyField } from "@/components/admin/reference-many-field";
 import { Card } from "@/components/ui/card";
 
 import { Avatar as ContactAvatar } from "../contacts/Avatar";
+import { TagsList } from "../contacts/TagsList";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company } from "../types";
 import { CompanyAvatar } from "./CompanyAvatar";
@@ -40,6 +41,13 @@ export const CompanyCard = (props: { record?: Company }) => {
             <h6 className="text-sm font-medium">{record.name}</h6>
             <p className="text-xs text-muted-foreground">{sectorLabel}</p>
           </div>
+          {!!record.tags?.length && (
+            <TagsList
+              resource="companies"
+              max={2}
+              className="justify-center gap-1 [&_[data-slot=badge]]:text-[10px] [&_[data-slot=badge]]:px-1.5 [&_[data-slot=badge]]:py-0"
+            />
+          )}
         </div>
         <div className="flex flex-row w-full justify-between gap-2">
           <div className="flex items-center">

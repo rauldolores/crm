@@ -1,7 +1,13 @@
-import { Building, Truck, Users } from "lucide-react";
-import { FilterLiveForm, useGetIdentity, useTranslate } from "ra-core";
+import { Building, Tag, Truck, Users } from "lucide-react";
+import {
+  FilterLiveForm,
+  useGetIdentity,
+  useGetList,
+  useTranslate,
+} from "ra-core";
 import { ToggleFilterButton } from "@/components/admin/toggle-filter-button";
 import { SearchInput } from "@/components/admin/search-input";
+import { Badge } from "@/components/ui/badge";
 
 import { FilterCategory } from "../filters/FilterCategory";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -12,6 +18,10 @@ export const CompanyListFilter = () => {
   const { identity } = useGetIdentity();
   const { companySectors } = useConfigurationContext();
   const translate = useTranslate();
+  const { data: etiquetas } = useGetList("tags", {
+    pagination: { page: 1, perPage: 10 },
+    sort: { field: "name", order: "ASC" },
+  });
   const translatedSizes = sizes.map((size) => ({
     ...size,
     name: getTranslatedCompanySizeLabel(size, translate),
@@ -60,6 +70,30 @@ export const CompanyListFilter = () => {
           value={{ sales_id: identity?.id }}
         />
       </FilterCategory>
+
+      {!!etiquetas?.length && (
+        <FilterCategory
+          icon={<Tag className="h-4 w-4" />}
+          label="resources.contacts.filters.tags"
+        >
+          {etiquetas.map((etiqueta) => (
+            <ToggleFilterButton
+              className="w-full justify-between"
+              key={etiqueta.id}
+              label={
+                <Badge
+                  variant="secondary"
+                  className="rounded-full border-transparent text-black text-xs font-normal cursor-pointer"
+                  style={{ backgroundColor: etiqueta.color }}
+                >
+                  {etiqueta.name}
+                </Badge>
+              }
+              value={{ "tags@cs": `{${etiqueta.id}}` }}
+            />
+          ))}
+        </FilterCategory>
+      )}
     </div>
   );
 };

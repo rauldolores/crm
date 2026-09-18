@@ -98,6 +98,8 @@ export type Company = {
   custom_fields?: CustomFieldValues;
   /** Módulo Afiliados: qué afiliado trajo a este cliente (primer toque). */
   referred_by_affiliate_id?: Identifier | null;
+  /** Etiquetas (ids de tags), como en contactos. */
+  tags?: number[] | null;
   /** Módulo Clientes: prospecto, cliente activo, en riesgo, perdido. */
   lifecycle_stage?: string | null;
 } & Pick<RaRecord, "id">;
@@ -178,6 +180,8 @@ export type Deal = {
   /** Motivo de pérdida, cuando está en una etapa de pérdida. */
   loss_reason?: string | null;
   custom_fields?: CustomFieldValues;
+  /** Etiquetas (ids de tags), como en contactos. */
+  tags?: number[] | null;
 } & Pick<RaRecord, "id">;
 
 export type DealNote = {

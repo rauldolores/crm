@@ -19,10 +19,22 @@ import {
 import { TagChip } from "../tags/TagChip";
 import { TagCreateModal } from "../tags/TagCreateModal";
 import { useTags } from "../tags/useTags";
-import type { Contact, Tag } from "../types";
+import type { Tag } from "../types";
 
-export const TagsListEdit = () => {
-  const record = useRecordContext<Contact>();
+/** Cualquier fila con etiquetas: contacto, empresa u oportunidad. */
+type ConEtiquetas = { id: Identifier; tags?: number[] | null };
+
+/**
+ * Chips de etiquetas con quitar, añadir de la lista o crear una nueva.
+ * Nació para contactos; `resource` lo lleva a empresas y oportunidades con
+ * el mismo catálogo de etiquetas (crm.tags) y la misma columna `tags`.
+ */
+export const TagsListEdit = ({
+  resource = "contacts",
+}: {
+  resource?: "contacts" | "companies" | "deals";
+}) => {
+  const record = useRecordContext<ConEtiquetas>();
   const [open, setOpen] = useState(false);
   const translate = useTranslate();
 
@@ -31,10 +43,10 @@ export const TagsListEdit = () => {
   });
   const { data: tags, isPending: isPendingRecordTags } = useGetMany<Tag>(
     "tags",
-    { ids: record?.tags },
-    { enabled: record && record.tags && record.tags.length > 0 },
+    { ids: record?.tags ?? [] },
+    { enabled: !!record?.tags?.length },
   );
-  const [update] = useUpdate<Contact>();
+  const [update] = useUpdate<ConEtiquetas>();
 
   const unselectedTags =
     allTags &&
@@ -46,7 +58,7 @@ export const TagsListEdit = () => {
       throw new Error("No contact record found");
     }
     const tags = [...(record.tags ?? []), id];
-    update("contacts", {
+    update(resource, {
       id: record.id,
       data: { tags },
       previousData: record,
@@ -57,8 +69,8 @@ export const TagsListEdit = () => {
     if (!record) {
       throw new Error("No contact record found");
     }
-    const tags = record.tags.filter((tagId) => tagId !== id);
-    await update("contacts", {
+    const tags = (record.tags ?? []).filter((tagId) => tagId !== id);
+    await update(resource, {
       id: record.id,
       data: { tags },
       previousData: record,
@@ -80,10 +92,10 @@ export const TagsListEdit = () => {
       }
 
       await update(
-        "contacts",
+        resource,
         {
           id: record.id,
-          data: { tags: [...record.tags, tag.id] },
+          data: { tags: [...(record.tags ?? []), tag.id] },
           previousData: record,
         },
         {
@@ -93,7 +105,7 @@ export const TagsListEdit = () => {
         },
       );
     },
-    [update, record],
+    [update, record, resource],
   );
 
   if (isPendingRecordTags || isPendingAllTags) return null;

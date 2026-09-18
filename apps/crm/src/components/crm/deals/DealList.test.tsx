@@ -1,6 +1,7 @@
 import { render } from "vitest-browser-react";
 
 import {
+  ConEtiquetas,
   EmbudoConMuchasOportunidades,
   EmbudoVacioEntreVarios,
   SinOportunidades,
@@ -38,6 +39,13 @@ describe("DealList", () => {
     await expect
       .element(screen.getByRole("button", { name: "Ventas" }))
       .not.toBeInTheDocument();
+  });
+
+  it("la tarjeta enseña las etiquetas de la oportunidad", async () => {
+    const screen = await render(<ConEtiquetas />);
+
+    await expect.element(screen.getByText("Con etiqueta")).toBeVisible();
+    await expect.element(screen.getByText("Licitación")).toBeVisible();
   });
 
   it("pinta una columna larga por tramos, contando siempre el total", async () => {

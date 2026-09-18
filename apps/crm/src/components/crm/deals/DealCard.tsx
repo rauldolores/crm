@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { CompanyAvatar } from "../companies/CompanyAvatar";
+import { TagsList } from "../contacts/TagsList";
 import { LOCALE } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
@@ -96,6 +97,13 @@ export const DealCardContent = ({
                 className="block truncate text-xs text-muted-foreground"
               />
             </ReferenceField>
+            {!!deal.tags?.length && (
+              <TagsList
+                resource="deals"
+                max={3}
+                className="gap-1 [&_[data-slot=badge]]:text-[10px] [&_[data-slot=badge]]:px-1.5 [&_[data-slot=badge]]:py-0"
+              />
+            )}
             <div className="flex items-center justify-between gap-2 pt-0.5">
               <span
                 className={

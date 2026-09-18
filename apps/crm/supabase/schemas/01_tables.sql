@@ -46,7 +46,9 @@ create table crm.companies (
     custom_fields jsonb not null default '{}'::jsonb,
     -- Módulo Afiliados: qué afiliado trajo a este cliente. Ver la clave
     -- foránea más abajo.
-    referred_by_affiliate_id bigint
+    referred_by_affiliate_id bigint,
+    -- Etiquetas (ids de crm.tags), como en contactos.
+    tags bigint[]
 );
 
 create index if not exists companies_referred_by_affiliate_id_idx
@@ -119,7 +121,9 @@ create table crm.deals (
     loss_reason text,
     -- Quién hizo el último cambio; lo sella el puente /api/datos y lo lee el
     -- disparador del historial (crm.deal_events). Null desde una clave de API.
-    updated_by bigint
+    updated_by bigint,
+    -- Etiquetas (ids de crm.tags), como en contactos.
+    tags bigint[]
 );
 
 create table crm.deal_notes (
@@ -860,6 +864,9 @@ create index if not exists companies_organization_id_idx on crm.companies (organ
 create index if not exists contacts_organization_id_idx on crm.contacts (organization_id);
 create index if not exists contact_notes_organization_id_idx on crm.contact_notes (organization_id);
 create index if not exists contacts_archived_at_idx on crm.contacts (organization_id, archived_at);
+create index if not exists contacts_tags_idx on crm.contacts using gin (tags);
+create index if not exists companies_tags_idx on crm.companies using gin (tags);
+create index if not exists deals_tags_idx on crm.deals using gin (tags);
 create index if not exists deals_organization_id_idx on crm.deals (organization_id);
 create index if not exists deal_notes_organization_id_idx on crm.deal_notes (organization_id);
 create index if not exists ticket_notes_organization_id_idx on crm.ticket_notes (organization_id);

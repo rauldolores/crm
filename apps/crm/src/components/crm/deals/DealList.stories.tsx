@@ -112,3 +112,22 @@ export const EmbudoConMuchasOportunidades = () => (
     </ResourceContextProvider>
   </StoryWrapper>
 );
+
+/** Una oportunidad etiquetada: la tarjeta del tablero enseña la etiqueta. */
+export const ConEtiquetas = () => (
+  <StoryWrapper
+    configuration={{ dealPipelines: [embudos[1]] }}
+    data={{
+      companies: [{ id: 1, name: "Acme" }] as never,
+      tags: [{ id: 7, name: "Licitación", color: "#fde68a" }] as never,
+      deals: [
+        buildDeal({ id: 1, name: "Con etiqueta", tags: [7] }),
+        buildDeal({ id: 2, name: "Sin etiqueta", index: 1 }),
+      ],
+    }}
+  >
+    <ResourceContextProvider value="deals">
+      <DealList />
+    </ResourceContextProvider>
+  </StoryWrapper>
+);

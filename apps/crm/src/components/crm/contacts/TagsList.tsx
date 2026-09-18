@@ -31,8 +31,13 @@ const MAX_ETIQUETAS_VISIBLES = 5;
 
 export const TagsList = ({
   max = MAX_ETIQUETAS_VISIBLES,
+  resource = "contacts",
+  className,
 }: {
   max?: number;
+  /** Recurso de la fila (contacts, companies, deals). */
+  resource?: string;
+  className?: string;
 }) => {
   const record = useRecordContext();
   if (!record) return null;
@@ -49,8 +54,8 @@ export const TagsList = ({
     // es ofrecérselo por contexto.
     <RecordContextProvider value={{ ...record, tags: visibles }}>
       <ReferenceArrayField
-        className="inline-flex flex-wrap items-center gap-2"
-        resource="contacts"
+        className={cn("inline-flex flex-wrap items-center gap-2", className)}
+        resource={resource}
         source="tags"
         reference="tags"
       >

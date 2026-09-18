@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import type { InputProps } from "ra-core";
-import { useGetIdentity, useListContext, useTranslate } from "ra-core";
+import {
+  useGetIdentity,
+  useGetList,
+  useListContext,
+  useTranslate,
+} from "ra-core";
 import { matchPath, useLocation } from "react-router";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { CreateButton } from "@/components/admin/create-button";
@@ -36,6 +41,12 @@ const DealList = () => {
   const { identity } = useGetIdentity();
   const { dealCategories, dealPipelines } = useConfigurationContext();
   const translate = useTranslate();
+  // Filtro por etiqueta: `tags@cs` espera `{id}` (contención en el arreglo),
+  // así que las opciones llevan ese valor ya formado.
+  const { data: etiquetas } = useGetList("tags", {
+    pagination: { page: 1, perPage: 50 },
+    sort: { field: "name", order: "ASC" },
+  });
 
   if (!identity) return null;
 
@@ -55,6 +66,17 @@ const DealList = () => {
         choices={dealCategories}
         optionText="label"
         optionValue="value"
+      />
+    </WrapperField>,
+    <WrapperField source="tags@cs" label="resources.contacts.filters.tags">
+      <SelectInput
+        source="tags@cs"
+        label={false}
+        emptyText="resources.contacts.filters.tags"
+        choices={(etiquetas ?? []).map((etiqueta) => ({
+          id: `{${etiqueta.id}}`,
+          name: etiqueta.name,
+        }))}
       />
     </WrapperField>,
     <OnlyMineInput source="sales_id" alwaysOn />,

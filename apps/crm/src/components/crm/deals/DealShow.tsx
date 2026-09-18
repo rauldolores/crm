@@ -31,6 +31,7 @@ import type { Deal } from "../types";
 import { ContactList } from "./ContactList";
 import { findDealLabel, formatISODateString } from "./dealUtils";
 import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
+import { TagsListEdit } from "../contacts/TagsListEdit";
 import { SeccionDeCotizaciones } from "../cotizaciones/SeccionDeCotizaciones";
 
 export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
@@ -181,6 +182,15 @@ const DealShowContent = () => {
               <p className="text-sm leading-6">{record.description}</p>
             </div>
           )}
+
+          <div className="m-4">
+            <span className="text-xs text-muted-foreground tracking-wide">
+              {translate("resources.tags.name", { smart_count: 2 })}
+            </span>
+            <div className="mt-1">
+              <TagsListEdit resource="deals" />
+            </div>
+          </div>
 
           <div className="m-4">
             <CamposPersonalizadosField entidad="deal" />
