@@ -1,4 +1,4 @@
-import type { Translate } from "ra-core";
+import type { useTranslate } from "ra-core";
 import type { FieldValues } from "react-hook-form";
 
 import type { ConfigurationContextValue } from "../root/ConfigurationContext";
@@ -79,7 +79,7 @@ export const parametrosDelDisparador = (
 /** La parte «cuando…» de la frase que describe una regla guardada. */
 export const describirDisparador = (
   regla: Automation,
-  translate: Translate,
+  translate: ReturnType<typeof useTranslate>,
   etiquetas: { etapa?: string; prioridad?: string },
 ): string => {
   const clave = `${regla.trigger_resource}:${regla.trigger_event}`;
