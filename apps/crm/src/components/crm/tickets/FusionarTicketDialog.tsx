@@ -58,6 +58,7 @@ export const FusionarTicketButton = ({ ticket }: { ticket: Ticket }) => {
         {translate("resources.tickets.merge.action")}
       </Button>
       <FusionarDialog
+        key={ticket.id}
         open={open}
         onClose={() => setOpen(false)}
         ticket={ticket}

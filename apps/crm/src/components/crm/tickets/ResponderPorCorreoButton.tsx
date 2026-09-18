@@ -53,7 +53,10 @@ export const ResponderPorCorreoButton = ({ ticket }: { ticket: Ticket }) => {
         {translate("resources.tickets.reply.action")}
       </Button>
       {correo && (
+        // La ficha reutiliza el componente al pasar de un ticket a otro: la
+        // clave fuerza un diálogo nuevo (asunto nuevo) por ticket.
         <ResponderDialog
+          key={ticket.id}
           open={open}
           onClose={() => setOpen(false)}
           ticket={ticket}
