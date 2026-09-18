@@ -310,10 +310,15 @@ export async function getContactTimeline(
     }),
   ];
 
+  const busqueda =
+    typeof filter.q === "string" ? filter.q.trim().toLowerCase() : "";
+  const coincide = (valor: string | null | undefined) =>
+    !!valor && valor.toLowerCase().includes(busqueda);
   const filtrados = eventos.filter(
     (e) =>
       (filter.kind == null || e.kind === filter.kind) &&
-      (filter.type == null || e.type === filter.type),
+      (filter.type == null || e.type === filter.type) &&
+      (busqueda === "" || coincide(e.title) || coincide(e.text)),
   );
   const orden = sort?.order === "ASC" ? 1 : -1;
   filtrados.sort((a, b) => orden * a.date.localeCompare(b.date));

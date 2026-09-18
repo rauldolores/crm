@@ -78,20 +78,58 @@ const MAX_RESUMEN = 160;
  */
 export const resumenDe = (texto: string | null | undefined): string => {
   if (!texto) return "";
-  const primera =
-    texto
-      .split(/\r?\n/)
-      .map((linea) =>
-        linea
-          .replace(/^[#>*\-+\s]+/, "")
-          .replace(/[*_`~]/g, "")
-          .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
-          .trim(),
-      )
-      .find((linea) => linea.length > 0) ?? "";
+  const primera = lineasLimpias(texto)[0] ?? "";
   return primera.length > MAX_RESUMEN
     ? `${primera.slice(0, MAX_RESUMEN).trimEnd()}…`
     : primera;
+};
+
+/** Las líneas con contenido de una nota, sin marcas de Markdown. */
+const lineasLimpias = (texto: string): string[] =>
+  texto
+    .split(/\r?\n/)
+    .map((linea) =>
+      linea
+        .replace(/^[#>*\-+\s]+/, "")
+        .replace(/[*_`~]/g, "")
+        .replace(/!?\[([^\]]*)\]\([^)]*\)/g, "$1")
+        .trim(),
+    )
+    .filter((linea) => linea.length > 0);
+
+const CONTEXTO_DEL_FRAGMENTO = 60;
+
+/**
+ * Al buscar, la fila muestra el trozo de la nota donde aparece lo buscado
+ * (con algo de contexto a cada lado) en vez de su primera línea: una
+ * coincidencia en el párrafo tres de una nota larga no serviría de nada si
+ * solo se viera el título. Sin coincidencia, cae en el resumen normal.
+ */
+export const fragmentoCon = (
+  texto: string | null | undefined,
+  busqueda: string,
+): string => {
+  if (!texto) return "";
+  const plano = lineasLimpias(texto).join(" ");
+  const posicion = plano.toLowerCase().indexOf(busqueda.toLowerCase());
+  if (posicion < 0 || !busqueda) return resumenDe(texto);
+  // La ventana se ajusta a palabras enteras: «…lamada de» no se lee bien.
+  let inicio = Math.max(0, posicion - CONTEXTO_DEL_FRAGMENTO);
+  if (inicio > 0) {
+    const espacio = plano.indexOf(" ", inicio);
+    if (espacio >= 0 && espacio < posicion) inicio = espacio + 1;
+  }
+  let fin = Math.min(
+    plano.length,
+    posicion + busqueda.length + CONTEXTO_DEL_FRAGMENTO,
+  );
+  if (fin < plano.length) {
+    const espacio = plano.lastIndexOf(" ", fin);
+    if (espacio > posicion + busqueda.length) fin = espacio;
+  }
+  return `${inicio > 0 ? "…" : ""}${plano.slice(inicio, fin).trim()}${
+    fin < plano.length ? "…" : ""
+  }`;
 };
 
 /** «septiembre de 2026»: la cabecera de cada grupo de la cronología. */

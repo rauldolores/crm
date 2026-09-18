@@ -136,6 +136,40 @@ describe("LineaDeTiempo", () => {
       .not.toBeInTheDocument();
   });
 
+  it("buscar deja solo lo que contiene el texto, con la coincidencia marcada", async () => {
+    // Arrange
+    const screen = await render(<Pantalla />);
+    await expect.element(screen.getByText("6 eventos")).toBeInTheDocument();
+
+    // Act: «conversación» solo aparece en el segundo párrafo de la llamada.
+    await screen
+      .getByRole("searchbox", { name: "Buscar en la línea de tiempo" })
+      .fill("conversación");
+
+    // Assert: un solo evento, y la fila enseña el trozo donde aparece, no la
+    // primera línea de la nota.
+    await expect.element(screen.getByText("1 evento")).toBeInTheDocument();
+    await expect
+      .element(screen.getByText("conversación", { exact: true }))
+      .toBeInTheDocument();
+    await expect
+      .element(screen.getByText("Nota antigua de julio"))
+      .not.toBeInTheDocument();
+    await expect
+      .element(
+        screen.getByText("Llamada de seguimiento: quiere el plan anual."),
+      )
+      .not.toBeInTheDocument();
+
+    // Sin coincidencias, lo dice.
+    await screen
+      .getByRole("searchbox", { name: "Buscar en la línea de tiempo" })
+      .fill("xyzzy");
+    await expect
+      .element(screen.getByText("Nada coincide con «xyzzy»."))
+      .toBeInTheDocument();
+  });
+
   it("abrir un evento muestra la nota completa, con su segundo párrafo", async () => {
     const screen = await render(<Pantalla />);
     const resumen = screen.getByText(

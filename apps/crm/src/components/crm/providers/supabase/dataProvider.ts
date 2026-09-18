@@ -569,6 +569,14 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
     },
   },
   {
+    // El buscador de la línea de tiempo del contacto: título (tareas,
+    // oportunidades, tickets, cotizaciones) y texto (notas y descripciones).
+    resource: "contact_timeline",
+    beforeGetList: async (params) => {
+      return applyFullTextSearch(["title", "text"])(params);
+    },
+  },
+  {
     resource: "quotes",
     beforeGetList: async (params) => {
       return applyFullTextSearch(["number", "title"])(params);

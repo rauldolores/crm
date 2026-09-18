@@ -993,6 +993,11 @@ export const spanishCrmMessages = {
       count: "%{smart_count} evento |||| %{smart_count} eventos",
       loading: "Cargando…",
       open: "Abrir",
+      search: {
+        placeholder: "Buscar en notas, tareas y demás…",
+        label: "Buscar en la línea de tiempo",
+        empty: "Nada coincide con «%{q}».",
+      },
       filters: {
         label: "Filtrar la línea de tiempo",
         all: "Todo",

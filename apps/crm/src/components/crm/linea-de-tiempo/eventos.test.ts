@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   agruparPorMes,
   claveDeEtiqueta,
+  fragmentoCon,
   iconoDelEvento,
   resumenDe,
 } from "./eventos";
@@ -25,6 +26,33 @@ describe("resumenDe", () => {
   it("es vacío sin texto", () => {
     expect(resumenDe(null)).toBe("");
     expect(resumenDe("   \n  ")).toBe("");
+  });
+});
+
+describe("fragmentoCon", () => {
+  it("enseña el trozo de la nota donde aparece lo buscado, con contexto a cada lado", () => {
+    // Arrange: la coincidencia está en el tercer párrafo, lejos del inicio.
+    const nota = [
+      "## Reunión de seguimiento",
+      "Primer párrafo con muchas palabras que no vienen al caso ".repeat(3),
+      "Al final preguntó por la **garantía** extendida del equipo y quedó en avisar.",
+    ].join("\n\n");
+
+    // Act
+    const fragmento = fragmentoCon(nota, "GARANTÍA");
+
+    // Assert: contexto por delante y por detrás, sin Markdown, con elipsis.
+    expect(fragmento).toMatch(/^…\S+ /); // empieza en palabra entera
+    expect(fragmento).toContain("preguntó por la garantía extendida");
+    expect(fragmento).not.toContain("**");
+    expect(fragmento.length).toBeLessThan(nota.length);
+  });
+
+  it("sin coincidencia cae en el resumen normal", () => {
+    expect(fragmentoCon("## Solo la primera línea\nOtra", "zzz")).toBe(
+      "Solo la primera línea",
+    );
+    expect(fragmentoCon(null, "algo")).toBe("");
   });
 });
 

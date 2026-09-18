@@ -4,6 +4,7 @@ import {
   ChevronRight,
   ExternalLink,
   Paperclip,
+  Search,
 } from "lucide-react";
 import {
   InfiniteListBase,
@@ -12,10 +13,17 @@ import {
   useListContext,
   useTranslate,
 } from "ra-core";
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { InfinitePagination } from "../misc/InfinitePagination";
@@ -32,11 +40,21 @@ import {
   claveDeEtiqueta,
   type EventoDeLaLinea,
   type FiltroDeLaLinea,
+  fragmentoCon,
   iconoDelEvento,
   resumenDe,
 } from "./eventos";
 
 const POR_PAGINA = 25;
+/** Lo que se espera tras la última tecla antes de preguntar a la base. */
+const ESPERA_DE_BUSQUEDA_MS = 300;
+
+/**
+ * Lo que se está buscando (ya asentado), para que cada fila resalte la
+ * coincidencia. Va aparte del ListContext: el filtro permanente de
+ * InfiniteListBase no se refleja en `filterValues`.
+ */
+const BusquedaContext = createContext("");
 
 /**
  * Línea de tiempo del contacto: todo lo que le ha pasado (notas, llamadas,
@@ -53,6 +71,11 @@ export const LineaDeTiempo = ({
   contactId: string | number;
 }) => {
   const [filtro, setFiltro] = useState<FiltroDeLaLinea>({ todo: true });
+  const [busqueda, setBusqueda] = useState("");
+  const busquedaEnCurso = useValorConEspera(
+    busqueda.trim(),
+    ESPERA_DE_BUSQUEDA_MS,
+  );
   const filtroDeLista =
     "todo" in filtro
       ? {}
@@ -63,7 +86,11 @@ export const LineaDeTiempo = ({
   return (
     <InfiniteListBase
       resource="contact_timeline"
-      filter={{ contact_id: contactId, ...filtroDeLista }}
+      filter={{
+        contact_id: contactId,
+        ...filtroDeLista,
+        ...(busquedaEnCurso ? { q: busquedaEnCurso } : {}),
+      }}
       sort={{ field: "date", order: "DESC" }}
       perPage={POR_PAGINA}
       disableSyncWithLocation
@@ -72,9 +99,78 @@ export const LineaDeTiempo = ({
       <ResourceContextProvider value="contact_notes">
         <NoteCreate reference="contacts" showStatus className="mt-4" />
       </ResourceContextProvider>
+      <Buscador valor={busqueda} onChange={setBusqueda} />
       <Filtros filtro={filtro} onChange={setFiltro} />
-      <Cronologia />
+      <BusquedaContext.Provider value={busquedaEnCurso}>
+        <Cronologia />
+      </BusquedaContext.Provider>
     </InfiniteListBase>
+  );
+};
+
+/** Devuelve el valor solo cuando lleva `espera` ms sin cambiar. */
+const useValorConEspera = <T,>(valor: T, espera: number): T => {
+  const [asentado, setAsentado] = useState(valor);
+  useEffect(() => {
+    const temporizador = setTimeout(() => setAsentado(valor), espera);
+    return () => clearTimeout(temporizador);
+  }, [valor, espera]);
+  return asentado;
+};
+
+/** El texto con cada aparición de lo buscado marcada. */
+const Resaltado = ({
+  texto,
+  busqueda,
+}: {
+  texto: string;
+  busqueda: string;
+}) => {
+  if (!busqueda) return texto;
+  const partes: ReactNode[] = [];
+  const minusculas = texto.toLowerCase();
+  const patron = busqueda.toLowerCase();
+  let desde = 0;
+  let posicion = minusculas.indexOf(patron);
+  while (posicion >= 0) {
+    partes.push(texto.slice(desde, posicion));
+    partes.push(
+      <mark key={posicion} className="rounded-sm bg-primary/20 text-inherit">
+        {texto.slice(posicion, posicion + patron.length)}
+      </mark>,
+    );
+    desde = posicion + patron.length;
+    posicion = minusculas.indexOf(patron, desde);
+  }
+  partes.push(texto.slice(desde));
+  return partes;
+};
+
+/**
+ * Busca en el texto de las notas y en los títulos de todo lo demás. Un
+ * cliente con años de historia acumula cientos de notas: sin esto, encontrar
+ * «lo que dijo de la garantía» es leerlas todas.
+ */
+const Buscador = ({
+  valor,
+  onChange,
+}: {
+  valor: string;
+  onChange: (valor: string) => void;
+}) => {
+  const translate = useTranslate();
+  return (
+    <div className="relative mt-6">
+      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        value={valor}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={translate("crm.timeline.search.placeholder")}
+        aria-label={translate("crm.timeline.search.label")}
+        className="pl-8"
+      />
+    </div>
   );
 };
 
@@ -165,6 +261,7 @@ const Cronologia = () => {
   const translate = useTranslate();
   const { data, isPending, error, total, refetch } =
     useListContext<EventoDeLaLinea>();
+  const busqueda = useContext(BusquedaContext);
   useRefrescarCuandoCambienLasNotas(refetch);
 
   if (isPending || error) return null;
@@ -172,7 +269,9 @@ const Cronologia = () => {
   if (eventos.length === 0) {
     return (
       <p className="mt-6 text-sm text-muted-foreground">
-        {translate("crm.timeline.empty")}
+        {busqueda
+          ? translate("crm.timeline.search.empty", { q: busqueda })
+          : translate("crm.timeline.empty")}
       </p>
     );
   }
@@ -204,6 +303,7 @@ const Cronologia = () => {
 const Evento = ({ evento }: { evento: EventoDeLaLinea }) => {
   const translate = useTranslate();
   const { noteTypes } = useConfigurationContext();
+  const busqueda = useContext(BusquedaContext);
   const [abierto, setAbierto] = useState(false);
   const nombre = useGetSalesName(evento.sales_id ?? undefined, {
     enabled: evento.sales_id != null,
@@ -215,11 +315,15 @@ const Evento = ({ evento }: { evento: EventoDeLaLinea }) => {
         translate("crm.timeline.events.note"))
       : translate(claveDeEtiqueta(evento));
   const cambioDeEtapa = useCambioDeEtapa(evento);
+  // Buscando, la fila enseña el trozo donde aparece lo buscado.
+  const cuerpo = busqueda
+    ? fragmentoCon(evento.text, busqueda)
+    : resumenDe(evento.text);
   const resumen = cambioDeEtapa
     ? [evento.title, cambioDeEtapa].filter(Boolean).join(" — ")
     : evento.title
-      ? [evento.title, resumenDe(evento.text)].filter(Boolean).join(" — ")
-      : resumenDe(evento.text);
+      ? [evento.title, cuerpo].filter(Boolean).join(" — ")
+      : cuerpo;
 
   return (
     <li className="relative py-1.5">
@@ -252,7 +356,9 @@ const Evento = ({ evento }: { evento: EventoDeLaLinea }) => {
             )}
           </span>
           {!abierto && resumen && (
-            <span className="block truncate text-sm">{resumen}</span>
+            <span className="block truncate text-sm">
+              <Resaltado texto={resumen} busqueda={busqueda} />
+            </span>
           )}
         </span>
       </button>
