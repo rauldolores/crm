@@ -26,6 +26,7 @@ import type {
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { aplanarCamposPersonalizados } from "../misc/camposPersonalizadosCsv";
 import { VistasGuardadas } from "../misc/VistasGuardadas";
+import { BulkArchivarButton } from "./ArchivarContactoButton";
 import { BulkTagButton } from "./BulkTagButton";
 import { ContactEmpty } from "./ContactEmpty";
 import { ContactImportButton } from "./ContactImportButton";
@@ -88,6 +89,7 @@ const ContactBulkActionButtons = () => (
   <>
     <SelectAllButton />
     <BulkTagButton />
+    <BulkArchivarButton />
     <BulkExportButton />
     <BulkDeleteButton />
   </>

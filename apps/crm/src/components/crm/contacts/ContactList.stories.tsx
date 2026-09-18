@@ -31,6 +31,30 @@ const successContacts = [
   }),
 ];
 
+/**
+ * Un contacto archivado entre dos activos: la lista no lo enseña salvo con
+ * el filtro «Solo archivados».
+ */
+export const ConArchivado = () => (
+  <StoryWrapper
+    data={{
+      contacts: [
+        ...successContacts,
+        buildContact({
+          first_name: "Charles",
+          id: 3,
+          last_name: "Babbage",
+          archived_at: "2024-03-01T10:00:00.000Z",
+        }),
+      ],
+    }}
+  >
+    <ResourceContextProvider value="contacts">
+      <ContactList />
+    </ResourceContextProvider>
+  </StoryWrapper>
+);
+
 export const DesktopEmpty = () => (
   <StoryWrapper>
     <ResourceContextProvider value="contacts">

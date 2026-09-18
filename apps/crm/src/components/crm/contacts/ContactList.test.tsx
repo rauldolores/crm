@@ -1,11 +1,13 @@
 import { render } from "vitest-browser-react";
+import { page } from "vitest/browser";
 
 import {
-  DesktopEmpty,
-  DesktopSuccess,
-  DesktopLoading,
-  DesktopError,
   BulkTagButton,
+  ConArchivado,
+  DesktopEmpty,
+  DesktopError,
+  DesktopLoading,
+  DesktopSuccess,
 } from "./ContactList.stories";
 
 afterEach(() => {
@@ -21,6 +23,50 @@ describe("ContactList", () => {
     await expect
       .element(screen.getByText("Parece que tu lista de contactos está vacía."))
       .toBeVisible();
+  });
+
+  it("esconde los contactos archivados hasta que se piden con el filtro", async () => {
+    // Arrange / Act: en escritorio, con la barra de filtros a la vista.
+    await page.viewport(1600, 900);
+    const screen = await render(<ConArchivado />);
+
+    // Assert: solo los activos…
+    await expect.element(screen.getByText("Ada Lovelace")).toBeVisible();
+    await expect
+      .element(screen.getByText("Charles Babbage"))
+      .not.toBeInTheDocument();
+
+    // …y con «Solo archivados», solo el archivado.
+    await screen.getByRole("button", { name: "Solo archivados" }).click();
+    await expect.element(screen.getByText("Charles Babbage")).toBeVisible();
+    await expect
+      .element(screen.getByText("Ada Lovelace"))
+      .not.toBeInTheDocument();
+  });
+
+  it("archiva los contactos seleccionados y los quita de la lista", async () => {
+    await page.viewport(1600, 900);
+    const screen = await render(<ConArchivado />);
+    await expect.element(screen.getByText("Ada Lovelace")).toBeVisible();
+
+    // La lista va por última actividad: Grace primero, Ada segunda.
+    await expect
+      .poll(() => getSelectionCheckboxes(screen.container).length)
+      .toBe(2);
+    await getSelectionCheckboxes(screen.container)[1].click();
+    await screen.getByRole("button", { name: "Archivar" }).click();
+    await screen
+      .getByRole("dialog")
+      .getByRole("button", { name: "Archivar" })
+      .click();
+
+    await expect
+      .element(screen.getByText("1 contacto archivado"))
+      .toBeInTheDocument();
+    await expect
+      .element(screen.getByText("Ada Lovelace"))
+      .not.toBeInTheDocument();
+    await expect.element(screen.getByText("Grace Hopper")).toBeVisible();
   });
 
   it("renders contacts in a list", async () => {

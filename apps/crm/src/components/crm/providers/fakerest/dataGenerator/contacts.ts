@@ -106,6 +106,7 @@ export const generateContacts = (db: Db, size = 500): Required<Contact>[] => {
       last_activity: last_seen,
       status_is_automatic: true,
       status_set_at: "",
+      archived_at: null,
     };
   });
 };

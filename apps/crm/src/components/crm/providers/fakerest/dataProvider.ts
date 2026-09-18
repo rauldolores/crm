@@ -25,6 +25,7 @@ import { getActivityLog } from "../commons/activity";
 import { getContactTimeline } from "../commons/contactTimeline";
 import { getCompanyAvatar } from "../commons/getCompanyAvatar";
 import { getContactAvatar } from "../commons/getContactAvatar";
+import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
 import { mergeCompanies } from "../commons/mergeCompanies";
 import { mergeContacts } from "../commons/mergeContacts";
 import {
@@ -495,6 +496,7 @@ export const createDataProvider = ({
       } satisfies ResourceCallbacks<Sale>,
       {
         resource: "contacts",
+        beforeGetList: async (params) => aplicarFiltroDeArchivados(params),
         beforeCreate: async (createParams, dataProvider) => {
           const params = {
             ...createParams,

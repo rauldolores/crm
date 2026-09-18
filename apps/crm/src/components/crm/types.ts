@@ -117,6 +117,8 @@ export type Contact = {
   last_name: string;
   title: string;
   company_id?: Identifier | null;
+  /** Archivado: fuera de listas y selectores, con su historial (null = activo). */
+  archived_at?: string | null;
   email_jsonb: EmailAndType[];
   avatar?: Partial<RAFile>;
   linkedin_url?: string | null;

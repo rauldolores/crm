@@ -1,5 +1,12 @@
 import { endOfYesterday, startOfMonth, startOfWeek, subMonths } from "date-fns";
-import { CheckSquare, Clock, Tag, TrendingUp, Users } from "lucide-react";
+import {
+  Archive,
+  CheckSquare,
+  Clock,
+  Tag,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import {
   useGetIdentity,
   useGetList,
@@ -15,6 +22,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import { ResponsiveFilters } from "../misc/ResponsiveFilters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ActiveFilterButton } from "../misc/ActiveFilterButton";
+import { FILTRO_ARCHIVADOS } from "../providers/commons/filtroDeArchivados";
 
 export const ContactListFilter = () => {
   const { noteStatuses } = useConfigurationContext();
@@ -148,6 +156,18 @@ export const ContactListFilter = () => {
           className="w-full justify-between h-10 md:h-8"
           label="crm.common.me"
           value={{ sales_id: identity?.id }}
+          size={isMobile ? "lg" : undefined}
+        />
+      </FilterCategory>
+
+      <FilterCategory
+        icon={<Archive />}
+        label="resources.contacts.archive.filter"
+      >
+        <ToggleFilterButton
+          className="w-full justify-between h-10 md:h-8"
+          label="resources.contacts.archive.filter_only"
+          value={{ [FILTRO_ARCHIVADOS]: true }}
           size={isMobile ? "lg" : undefined}
         />
       </FilterCategory>

@@ -214,6 +214,24 @@ export const spanishCrmMessages = {
           "Etiqueta añadida a %{smart_count} contacto |||| Etiqueta añadida a %{smart_count} contactos",
         title: "Añadir etiqueta a los contactos",
       },
+      archive: {
+        action: "Archivar contacto",
+        restore: "Recuperar contacto",
+        badge: "Archivado el %{date}",
+        confirm_title: "¿Archivar este contacto?",
+        confirm_description:
+          "Dejará de aparecer en las listas y en los selectores, pero conserva sus notas, tareas y oportunidades. Puedes recuperarlo cuando quieras.",
+        archived: "Contacto archivado",
+        restored: "Contacto recuperado",
+        error: "No se pudo archivar el contacto",
+        bulk_action: "Archivar",
+        bulk_confirm_title:
+          "¿Archivar %{smart_count} contacto? |||| ¿Archivar %{smart_count} contactos?",
+        bulk_archived:
+          "%{smart_count} contacto archivado |||| %{smart_count} contactos archivados",
+        filter: "Archivados",
+        filter_only: "Solo archivados",
+      },
       merge: {
         action: "Fusionar con otro contacto",
         confirm: "Fusionar contactos",

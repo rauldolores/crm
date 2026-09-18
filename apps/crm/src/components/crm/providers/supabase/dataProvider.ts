@@ -21,6 +21,7 @@ import type {
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
+import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
 import type { DestinoDeOportunidad } from "../commons/moverOportunidad";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient, getUrlDeDatos } from "./supabase";
@@ -539,7 +540,7 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
         "email",
         "phone",
         "background",
-      ])(params);
+      ])(aplicarFiltroDeArchivados(params));
     },
   },
   {
@@ -572,7 +573,9 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
   {
     resource: "contacts_summary",
     beforeGetList: async (params) => {
-      return applyFullTextSearch(["first_name", "last_name"])(params);
+      return applyFullTextSearch(["first_name", "last_name"])(
+        aplicarFiltroDeArchivados(params),
+      );
     },
   },
   {

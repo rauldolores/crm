@@ -128,6 +128,7 @@ with resumen as (
         co.has_newsletter,
         co.status as status_manual,
         co.status_set_at,
+        co.archived_at,
         co.tags,
         co.company_id,
         co.sales_id,
@@ -219,7 +220,8 @@ select
         (r.status_manual is not null and r.status_manual not in ('cold', 'warm', 'hot'))
         or coalesce(r.status_set_at >= now() - interval '14 days', false)
     ) as status_is_automatic,
-    r.status_set_at
+    r.status_set_at,
+    r.archived_at
 from resumen r;
 
 -- Módulo Afiliados: negocio referido y comisión devengada por afiliado.

@@ -15,6 +15,7 @@ import { ContactBackgroundInfo } from "./ContactBackgroundInfo";
 import { AsideSection } from "../misc/AsideSection";
 import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 import type { Contact } from "../types";
+import { ArchivarContactoButton } from "./ArchivarContactoButton";
 import { ContactMergeButton } from "./ContactMergeButton";
 import { ExportVCardButton } from "./ExportVCardButton";
 import { EnviarCorreoButton } from "./EnviarCorreoButton";
@@ -133,6 +134,7 @@ export const ContactAside = ({ link = "edit" }: { link?: "edit" | "show" }) => {
 
       {link !== "edit" && (
         <div className="mt-6 pt-6 border-t hidden sm:flex flex-col gap-2 items-start">
+          <ArchivarContactoButton />
           <DeleteButton
             className="h-6 cursor-pointer hover:bg-destructive/10! text-destructive! border-destructive! focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40"
             size="sm"

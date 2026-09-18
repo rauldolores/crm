@@ -68,6 +68,9 @@ create table crm.contacts (
     -- Cuándo una persona fijó el estado a mano: la vista contacts_summary lo
     -- respeta 14 días y después la temperatura vuelve a calcularse sola.
     status_set_at timestamp with time zone,
+    -- Archivado: fuera de listas y selectores, pero con todo su historial
+    -- (null = activo). Ver la migración 20260918230000.
+    archived_at timestamp with time zone,
     tags bigint[],
     company_id bigint,
     sales_id bigint,
@@ -856,6 +859,7 @@ create index ticket_notes_ticket_id_idx on crm.ticket_notes using btree (ticket_
 create index if not exists companies_organization_id_idx on crm.companies (organization_id);
 create index if not exists contacts_organization_id_idx on crm.contacts (organization_id);
 create index if not exists contact_notes_organization_id_idx on crm.contact_notes (organization_id);
+create index if not exists contacts_archived_at_idx on crm.contacts (organization_id, archived_at);
 create index if not exists deals_organization_id_idx on crm.deals (organization_id);
 create index if not exists deal_notes_organization_id_idx on crm.deal_notes (organization_id);
 create index if not exists ticket_notes_organization_id_idx on crm.ticket_notes (organization_id);

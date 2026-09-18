@@ -10,6 +10,7 @@ import type { ShowBaseProps } from "ra-core";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { TextField } from "@/components/admin/text-field";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ import type { Contact } from "../types";
 import { Avatar } from "./Avatar";
 import { ContactAside } from "./ContactAside";
 import { MobileBackButton } from "../misc/MobileBackButton";
+import { formatLocalizedDate } from "../misc/RelativeDate";
 
 export const ContactShow = (props: ShowBaseProps = {}) => {
   const isMobile = useIsMobile();
@@ -249,8 +251,15 @@ const ContactShowContent = () => {
             <div className="flex">
               <Avatar />
               <div className="ml-3 flex-1">
-                <h5 className="font-display text-2xl font-semibold tracking-tight">
+                <h5 className="font-display flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
                   <RecordRepresentation />
+                  {record.archived_at && (
+                    <Badge variant="secondary" className="font-normal">
+                      {translate("resources.contacts.archive.badge", {
+                        date: formatLocalizedDate(record.archived_at),
+                      })}
+                    </Badge>
+                  )}
                 </h5>
                 <div className="inline-flex text-sm text-muted-foreground">
                   {record.title && record.company_id != null
