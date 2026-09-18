@@ -37,7 +37,7 @@ export const Precios = () => {
         <TituloDeSeccion
           eyebrow="Planes y precios"
           titulo="Un precio claro por equipo, en pesos mexicanos"
-          subtitulo="Empieza con una prueba de 30 días sin tarjeta. Paga al mes o ahorra pagando el año; cambias de plan cuando tu equipo crezca y los datos se quedan donde están."
+          subtitulo="Empieza con 30 días de prueba en Impulso: registras tu tarjeta y no se cobra nada hasta que termine. Paga al mes o ahorra pagando el año; cambias de plan cuando tu equipo crezca y los datos se quedan donde están."
         />
         {hayAnual && (
           <div

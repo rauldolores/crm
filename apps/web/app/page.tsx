@@ -1388,7 +1388,7 @@ const FAQS = [
   },
   {
     p: "¿Hay prueba gratis?",
-    r: "Sí: el plan Impulso incluye 30 días de prueba sin tarjeta. Creas tu cuenta, importas tus contactos y decides después.",
+    r: "Sí: el plan Impulso incluye 30 días de prueba. Creas tu cuenta, registras una tarjeta y no se te cobra nada hasta que termine la prueba; si cancelas antes, no hay cargo.",
   },
   {
     p: "¿Tiene soporte a clientes y gestión de contratos?",
@@ -1502,8 +1502,9 @@ const CtaFinal = () => (
         </h2>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-brand-50/90">
           Crea tu cuenta, importa tus contactos y en veinte minutos tienes el
-          CRM andando. Treinta días gratis, sin tarjeta. Y si prefieres que te
-          lo enseñemos sobre tu operación, pide una demo.
+          CRM andando. Treinta días gratis, sin cargo hasta que termine la
+          prueba. Y si prefieres que te lo enseñemos sobre tu operación, pide
+          una demo.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a

@@ -86,7 +86,7 @@ export function PlantillaIndustria({ industria }: { industria: Industria }) {
                   {industria.hero.ctaPrincipal}
                 </a>
                 <span className="basis-full text-sm text-neutral-500 sm:basis-auto">
-                  30 días gratis · sin tarjeta
+                  30 días gratis · sin cargo hasta que termine la prueba
                 </span>
               </div>
             </div>

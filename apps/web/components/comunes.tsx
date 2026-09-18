@@ -58,7 +58,8 @@ export const TituloDeSeccion = ({
 
 /**
  * CTA principal: registrarse en la aplicación. El plan Impulso da 30 días
- * gratis sin tarjeta, así que el camino corto es probarlo, no pedir una
+ * gratis (con tarjeta, sin cargo hasta que termine la prueba), así que el
+ * camino corto es probarlo, no pedir una
  * demo. La demo queda como CTA secundario para quien necesita hablar antes
  * (infraestructura propia, SSO, implementación guiada).
  */
@@ -84,7 +85,7 @@ export const CtaRegistro = ({
 /** Lo que quita el miedo a pulsar «Regístrate»: va siempre junto al botón. */
 export const NotaDePrueba = ({ className = "" }: { className?: string }) => (
   <span className={"text-sm text-neutral-500 " + className}>
-    30 días gratis · sin tarjeta
+    30 días gratis · sin cargo hasta que termine la prueba
   </span>
 );
 
@@ -178,7 +179,7 @@ export const CtaBanda = ({
           </a>
         </div>
         <p className="mt-4 text-sm text-brand-100">
-          30 días gratis · sin tarjeta
+          30 días gratis · sin cargo hasta que termine la prueba
         </p>
       </div>
     </div>

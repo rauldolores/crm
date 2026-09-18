@@ -123,7 +123,7 @@ export const TERMINOS: DocumentoLegal = {
     {
       titulo: "Prueba gratis",
       parrafos: [
-        "El plan Impulso incluye un periodo de prueba de 30 días. Durante la prueba puedes cancelar sin costo; si no cancelas antes de que termine, comienza el cobro del plan elegido.",
+        "El plan Impulso incluye un periodo de prueba de 30 días. Para iniciarla se registra una tarjeta, pero no se hace ningún cargo durante la prueba; puedes cancelar sin costo antes de que termine y, si no cancelas, el primer cobro se realiza al concluir.",
       ],
     },
     {
