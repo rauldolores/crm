@@ -14,10 +14,10 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * sesión.
  */
 export async function POST(peticion: Request) {
-  const auth = await requireKontroliaPermission(
-    peticion,
-    "crm.contactos.fusionar",
-  );
+  // Como el resto de rutas /api: basta con pertenecer a la organización.
+  // Los roles de KontrolIA (owner, member) no llevan permisos crm.* y
+  // exigir uno dejaría fuera a quien sí puede fusionar desde el puente.
+  const auth = await requireKontroliaPermission(peticion, []);
   if (!auth.ok) return auth.response;
 
   const cuerpo = (await peticion.json().catch(() => null)) as {
