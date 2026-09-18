@@ -15,6 +15,41 @@ export const URL_APP = (
   process.env.NEXT_PUBLIC_APP_URL ?? "https://panel.vinqulia.com"
 ).replace(/\/$/, "");
 
+/**
+ * Canales de contacto públicos. El correo es el mismo que recibe los leads
+ * del formulario de demo (ventas@kontrolia.io). El WhatsApp solo se muestra
+ * si está configurado: un número inventado sería peor que ninguno.
+ */
+export const CONTACTO = {
+  correo: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "ventas@kontrolia.io",
+  /** En formato internacional sin espacios, p. ej. 5215512345678. */
+  whatsapp: process.env.NEXT_PUBLIC_WHATSAPP ?? "",
+};
+
+export const urlWhatsapp = (mensaje = "Hola, me interesa Vinqulia") =>
+  CONTACTO.whatsapp
+    ? `https://wa.me/${CONTACTO.whatsapp}?text=${encodeURIComponent(mensaje)}`
+    : "";
+
+/**
+ * Identidad del responsable para el aviso de privacidad y los términos.
+ * La razón social y el domicilio son datos legales que deben venir del
+ * despliegue; mientras no estén, el aviso nombra a Kontrolia como nombre
+ * comercial y omite el domicilio.
+ */
+export const RESPONSABLE = {
+  nombreComercial: "Kontrolia",
+  producto: "Vinqulia",
+  razonSocial: process.env.NEXT_PUBLIC_RAZON_SOCIAL ?? "Kontrolia",
+  domicilio: process.env.NEXT_PUBLIC_DOMICILIO_FISCAL ?? "",
+  correoPrivacidad:
+    process.env.NEXT_PUBLIC_PRIVACY_EMAIL ??
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL ??
+    "ventas@kontrolia.io",
+  /** Fecha de la última actualización de los textos legales. */
+  actualizado: "17 de septiembre de 2026",
+};
+
 /** Recorta una descripción para las meta etiquetas sin cortar palabras. */
 export const metaDescripcion = (texto: string, limite = 158) => {
   if (texto.length <= limite) return texto;

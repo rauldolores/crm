@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { HOJA_DE_RUTA, INDUSTRIAS } from "../content/industrias";
+import { CONTACTO, urlWhatsapp } from "../lib/sitio";
 import { Logo } from "./comunes";
 
 /**
@@ -23,10 +24,18 @@ export function PieDePagina({ enInicio = false }: { enInicio?: boolean }) {
     { href: prefijo + "#demo", label: "Demo" },
     { href: prefijo + "#faq", label: "FAQ" },
   ];
+  const whatsapp = urlWhatsapp();
+  const legales = [
+    { href: "/contacto", label: "Contacto y soporte" },
+    { href: `mailto:${CONTACTO.correo}`, label: CONTACTO.correo },
+    ...(whatsapp ? [{ href: whatsapp, label: "WhatsApp" }] : []),
+    { href: "/aviso-de-privacidad", label: "Aviso de privacidad" },
+    { href: "/terminos", label: "Términos y condiciones" },
+  ];
 
   return (
     <footer className="border-t border-neutral-200/70 bg-white/60">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Logo small />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-neutral-600">
@@ -84,6 +93,24 @@ export function PieDePagina({ enInicio = false }: { enInicio?: boolean }) {
               <li key={futura.nombre} className="text-sm text-neutral-400">
                 {futura.nombre}{" "}
                 <span className="text-[11px]">(en preparación)</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+            Contacto y legal
+          </p>
+          <ul className="mt-3 space-y-2">
+            {legales.map((enlace) => (
+              <li key={enlace.href}>
+                <Link
+                  href={enlace.href}
+                  className="text-sm text-neutral-600 transition-colors hover:text-brand-700"
+                >
+                  {enlace.label}
+                </Link>
               </li>
             ))}
           </ul>

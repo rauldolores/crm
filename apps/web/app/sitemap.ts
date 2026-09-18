@@ -30,6 +30,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       priority: 0.8,
     },
+    {
+      url: URL_SITIO + "/contacto",
+      lastModified: ahora,
+      changeFrequency: "yearly",
+      priority: 0.5,
+    },
+    {
+      url: URL_SITIO + "/aviso-de-privacidad",
+      lastModified: ahora,
+      changeFrequency: "yearly",
+      priority: 0.2,
+    },
+    {
+      url: URL_SITIO + "/terminos",
+      lastModified: ahora,
+      changeFrequency: "yearly",
+      priority: 0.2,
+    },
   ];
 
   for (const industria of INDUSTRIAS) {

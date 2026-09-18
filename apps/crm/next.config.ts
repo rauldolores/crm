@@ -15,6 +15,20 @@ const nextConfig: NextConfig = {
   // Genera PDFs en el servidor con dependencias nativas de Node (fontkit,
   // yoga); empaquetarlo lo rompe. Se carga tal cual desde node_modules.
   serverExternalPackages: ["@react-pdf/renderer"],
+  // El dominio anterior sigue asignado en Vercel y el cliente OAuth solo
+  // acepta panel.vinqulia.com: quien entre por crm.kontrolia.io no podría
+  // iniciar sesión (y comparte cookies con auth.kontrolia.io). Se manda al
+  // dominio actual conservando la ruta.
+  async redirects() {
+    return [
+      {
+        source: "/:ruta*",
+        has: [{ type: "host", value: "crm.kontrolia.io" }],
+        destination: "https://panel.vinqulia.com/:ruta*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

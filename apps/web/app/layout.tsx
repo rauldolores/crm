@@ -16,6 +16,23 @@ export const metadata: Metadata = {
     shortcut: "/vinqulia-favicon.png",
     apple: "/vinqulia-icon.png",
   },
+  // Open Graph/Twitter de la portada: la imagen sale de opengraph-image.tsx
+  // y Next la enlaza sola; aquí van título y descripción para compartir.
+  openGraph: {
+    title: "Vinqulia | El sistema comercial que se adapta a tu empresa",
+    description:
+      "Contactos, oportunidades, seguimiento y comunicación en un solo lugar. Con WhatsApp, automatizaciones e IA. 30 días gratis.",
+    url: URL_SITIO,
+    siteName: "Vinqulia",
+    locale: "es_MX",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Vinqulia | El sistema comercial que se adapta a tu empresa",
+    description:
+      "Contactos, oportunidades, seguimiento y comunicación en un solo lugar. Con WhatsApp, automatizaciones e IA. 30 días gratis.",
+  },
   keywords: [
     "CRM",
     "CRM para pymes",

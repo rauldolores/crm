@@ -5,7 +5,10 @@
  * aplicación `crm` (lo que la propia aplicación muestra en Plan y
  * facturación). Ese catálogo exige sesión, así que la web pública no lo
  * consulta en vivo: se copia aquí. Si cambia un precio o un límite allí,
- * hay que reflejarlo aquí. Última sincronización: 2026-09-17.
+ * hay que reflejarlo aquí. Última sincronización: 2026-09-17 (límites:
+ * Impulso 150 contactos nuevos al mes, 1 embudo, 3 usuarios, sin
+ * importación ni asistente de IA; Pro 400/mes, 5 embudos, 10 usuarios;
+ * Max 1,000/mes, 15 embudos, 25 usuarios).
  */
 
 export interface Plan {
@@ -42,12 +45,11 @@ export const PLANES: Plan[] = [
     diasDePrueba: 30,
     usuarios: "Hasta 3 usuarios",
     incluye: [
-      "Contactos, empresas y oportunidades (hasta 100 contactos)",
+      "Contactos, empresas y oportunidades (hasta 150 contactos nuevos al mes)",
       "Un embudo de ventas con tablero Kanban",
       "Tareas, notas y panel de inicio",
       "Formularios web para captar contactos",
-      "Importación desde CSV",
-      "Aplicación móvil y centro de ayuda",
+      "Versión móvil (PWA) y centro de ayuda",
       "Soporte estándar",
     ],
   },
@@ -60,8 +62,9 @@ export const PLANES: Plan[] = [
     diasDePrueba: 0,
     usuarios: "Hasta 10 usuarios",
     incluye: [
-      "Todo lo de Impulso, sin límite de contactos",
-      "Varios embudos (ventas, renovaciones, cobranza…)",
+      "Todo lo de Impulso, con hasta 400 contactos nuevos al mes",
+      "Hasta 5 embudos (ventas, renovaciones, cobranza…)",
+      "Importación desde CSV y JSON",
       "WhatsApp y correo desde la ficha, con tu propio dominio",
       "Automatizaciones: tareas, responsables y correos solos",
       "Plantillas de correo con campos que se rellenan solos",
@@ -83,8 +86,8 @@ export const PLANES: Plan[] = [
     diasDePrueba: 0,
     usuarios: "Hasta 25 usuarios",
     incluye: [
-      "Todo lo de Pro",
-      "Personalización avanzada de pantallas y procesos",
+      "Todo lo de Pro, con hasta 1,000 contactos nuevos al mes y 15 embudos",
+      "Campos, vistas y procesos personalizados con acompañamiento",
       "Automatizaciones avanzadas",
       "Integración con tu facturación, ERP o tienda",
       "Configuración guiada por el equipo de Kontrolia",

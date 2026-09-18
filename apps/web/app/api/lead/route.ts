@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { CONTACTO } from "../../../lib/sitio";
+
 import {
   MODALIDADES,
   PLANTILLA_DE_COTIZACION,
@@ -50,7 +52,35 @@ const RESPONSABLE = process.env.CRM_SALES_ID
   : undefined;
 
 const limpiar = (v: unknown, max = 500) =>
-  String(v ?? "").trim().slice(0, max);
+  String(v ?? "")
+    .trim()
+    .slice(0, max);
+
+/**
+ * Freno por IP, en memoria y por instancia: suficiente para que un script
+ * no llene el CRM de leads falsos en un minuto, sin añadir infraestructura.
+ * En serverless cada instancia lleva su propio contador, así que el tope
+ * real es «por instancia»; para un formulario de demo es de sobra.
+ */
+const VENTANA_MS = 10 * 60 * 1000;
+const MAX_POR_VENTANA = 8;
+const intentosPorIp = new Map<string, { desde: number; cuenta: number }>();
+
+const excedeElFreno = (ip: string): boolean => {
+  const ahora = Date.now();
+  const registro = intentosPorIp.get(ip);
+  if (!registro || ahora - registro.desde > VENTANA_MS) {
+    intentosPorIp.set(ip, { desde: ahora, cuenta: 1 });
+    return false;
+  }
+  registro.cuenta += 1;
+  return registro.cuenta > MAX_POR_VENTANA;
+};
+
+const ipDe = (request: Request) =>
+  request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+  request.headers.get("x-real-ip") ||
+  "desconocida";
 
 const GESTION_LABEL: Record<string, string> = {
   excel: "Excel u hojas de cálculo",
@@ -109,8 +139,7 @@ async function llamarCRM(ruta: string, metodo: string, cuerpo?: unknown) {
 
 const fila = (datos: unknown) =>
   (Array.isArray(datos) ? datos[0] : datos) as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
 
 /** Rango "11-50" -> 50 (companies.size es smallint). */
 const tamanoDeEmpresa = (rango: string) =>
@@ -147,12 +176,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignorado: true });
   }
 
-  if (!CLAVE) {
+  if (excedeElFreno(ipDe(request))) {
     return NextResponse.json(
       {
         ok: false,
         message:
-          "El formulario aún no está conectado al CRM. Por favor, escríbenos por WhatsApp mientras lo activamos.",
+          "Demasiados intentos seguidos. Espera unos minutos e inténtalo de nuevo.",
+      },
+      { status: 429 },
+    );
+  }
+
+  if (!CLAVE) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `El formulario aún no está conectado al CRM. Escríbenos a ${CONTACTO.correo} mientras lo activamos.`,
       },
       { status: 503 },
     );
@@ -465,9 +504,12 @@ async function crearCotizacionEnBorrador({
   contactId: number;
   estimacion: Estimacion;
 }) {
-  const configuracion = fila(await llamarCRM("configuration?select=config", "GET"));
-  const plantillas = ((configuracion?.config as { quoteTemplates?: unknown[] } | undefined)
-    ?.quoteTemplates ?? []) as {
+  const configuracion = fila(
+    await llamarCRM("configuration?select=config", "GET"),
+  );
+  const plantillas = ((
+    configuracion?.config as { quoteTemplates?: unknown[] } | undefined
+  )?.quoteTemplates ?? []) as {
     key: string;
     title?: string;
     notes?: string;

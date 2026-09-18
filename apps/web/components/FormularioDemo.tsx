@@ -243,9 +243,9 @@ export function FormularioDemo() {
           ¡Gracias por tu interés!
         </h3>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-neutral-600">
-          Recibimos tu solicitud y ya la tenemos registrada. El equipo
-          comercial de Kontrolia te contactará para coordinar una demo pensada
-          para tu operación.
+          Recibimos tu solicitud y ya la tenemos registrada. El equipo comercial
+          de Kontrolia te contactará para coordinar una demo pensada para tu
+          operación.
         </p>
         <p className="mt-4 text-sm text-neutral-500">
           ¿Prefieres explorar por tu cuenta?{" "}
@@ -259,7 +259,6 @@ export function FormularioDemo() {
       </div>
     );
   }
-
 
   if (paso === 1) {
     return (
@@ -376,13 +375,19 @@ export function FormularioDemo() {
           </button>
           <p className="text-xs leading-relaxed text-neutral-500">
             Al continuar aceptas que Kontrolia te contacte para coordinar la
-            demo. No compartimos tus datos con terceros.
+            demo, según nuestro{" "}
+            <a
+              href="/aviso-de-privacidad"
+              className="font-medium text-brand-700 underline-offset-2 hover:underline"
+            >
+              aviso de privacidad
+            </a>
+            . No compartimos tus datos con terceros.
           </p>
         </div>
       </form>
     );
   }
-
 
   // Paso 2: enriquecer el lead ya capturado.
   return (
@@ -413,7 +418,11 @@ export function FormularioDemo() {
             <label htmlFor="lead-empleados" className={estilosEtiqueta}>
               Empleados
             </label>
-            <select id="lead-empleados" name="empleados" className={estilosCampo}>
+            <select
+              id="lead-empleados"
+              name="empleados"
+              className={estilosCampo}
+            >
               <option value="">Selecciona…</option>
               {EMPLEADOS.map((opcion) => (
                 <option key={opcion.valor} value={opcion.valor}>

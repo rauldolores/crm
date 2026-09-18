@@ -71,7 +71,7 @@ const MockupWhatsApp = () => (
           WhatsApp · Ana García
         </p>
         <p className="text-xs text-neutral-500">
-          Enviado hace 2 h · +34 612 34 56 78
+          Enviado hace 2 h · +52 55 1234 5678
         </p>
       </div>
     </div>
@@ -1162,13 +1162,14 @@ const INTEGRACIONES: {
   {
     icono: KeyRound,
     nombre: "KontrolIA Auth",
-    texto: "Usuarios, roles y SSO con Google, Azure, Keycloak o Auth0.",
+    texto:
+      "Usuarios, roles y permisos centralizados, con inicio de sesión con Google. Otros proveedores de identidad, en Enterprise.",
   },
   {
     icono: Webhook,
     nombre: "API y webhooks",
     texto:
-      "API REST completa, claves de API y webhooks firmados: n8n, Zapier, Make o tu propio servidor.",
+      "API REST completa, claves de API y webhooks firmados, para conectar n8n, Zapier, Make o tu propio servidor.",
   },
   {
     icono: Bot,
@@ -1180,7 +1181,7 @@ const INTEGRACIONES: {
     icono: Receipt,
     nombre: "Facturación, ERP o tienda",
     texto:
-      "Registran cada venta y contrato en el módulo Clientes, sin conocer los ids del CRM.",
+      "Tu sistema registra cada venta y contrato en el módulo Clientes por API, sin conocer los ids del CRM.",
   },
   {
     icono: Database,

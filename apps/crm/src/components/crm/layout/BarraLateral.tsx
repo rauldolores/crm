@@ -20,6 +20,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
 import { ImportPage } from "../misc/ImportPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
+import { URL_AVISO_DE_PRIVACIDAD, URL_TERMINOS } from "../legal/enlaces";
 import { MODULE_REGISTRY } from "../modules/registry";
 import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
@@ -314,6 +315,25 @@ export const BarraLateral = () => {
           <div className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
             <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />
             <span className="truncate">{title} · CRM</span>
+          </div>
+          <div className="mt-1 flex flex-wrap gap-x-2 px-2 text-[11px] text-muted-foreground/80">
+            <a
+              href={URL_AVISO_DE_PRIVACIDAD}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-foreground"
+            >
+              Privacidad
+            </a>
+            <span aria-hidden>·</span>
+            <a
+              href={URL_TERMINOS}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-foreground"
+            >
+              Términos
+            </a>
           </div>
         </div>
       </div>
