@@ -12,7 +12,6 @@ import {
 
 import { AsideSection } from "../misc/AsideSection";
 import { Markdown } from "../misc/Markdown";
-import { NoteCreate } from "../notes/NoteCreate";
 import { formatLocalizedDate, formatRelativeDate } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
@@ -193,7 +192,9 @@ const TicketShowContent = () => {
               perPage={25}
               disableSyncWithLocation
               storeKey={false}
-              empty={<NoteCreate reference="tickets" />}
+              // Sin `empty`: sin notas, el hilo sigue pintando el formulario
+              // y los cambios del historial.
+              empty={false}
             >
               <HiloDeTicket ticketId={record.id} />
             </InfiniteListBase>
