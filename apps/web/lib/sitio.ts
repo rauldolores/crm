@@ -16,12 +16,11 @@ export const URL_APP = (
 ).replace(/\/$/, "");
 
 /**
- * Canales de contacto públicos. El correo es el mismo que recibe los leads
- * del formulario de demo (ventas@kontrolia.io). El WhatsApp solo se muestra
- * si está configurado: un número inventado sería peor que ninguno.
+ * Canales de contacto públicos: el correo general de Kontrolia y, si está
+ * configurado, el WhatsApp — un número inventado sería peor que ninguno.
  */
 export const CONTACTO = {
-  correo: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "ventas@kontrolia.io",
+  correo: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "hola@kontrolia.io",
   /** En formato internacional sin espacios, p. ej. 5215512345678. */
   whatsapp: process.env.NEXT_PUBLIC_WHATSAPP ?? "",
 };
@@ -45,7 +44,7 @@ export const RESPONSABLE = {
   correoPrivacidad:
     process.env.NEXT_PUBLIC_PRIVACY_EMAIL ??
     process.env.NEXT_PUBLIC_CONTACT_EMAIL ??
-    "ventas@kontrolia.io",
+    "hola@kontrolia.io",
   /** Fecha de la última actualización de los textos legales. */
   actualizado: "17 de septiembre de 2026",
 };
