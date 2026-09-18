@@ -6,6 +6,8 @@ import { ListPagination } from "@/components/admin/list-pagination";
 import { SortButton } from "@/components/admin/sort-button";
 
 import { TopToolbar } from "../layout/TopToolbar";
+import { exportadorDeEmpresas } from "../misc/exportadores";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import { VistasGuardadas } from "../misc/VistasGuardadas";
 import { CompanyEmpty } from "./CompanyEmpty";
 import { CompanyListFilter } from "./CompanyListFilter";
@@ -13,11 +15,13 @@ import { ImageList } from "./GridList";
 
 export const CompanyList = () => {
   const { identity } = useGetIdentity();
+  const { companyCustomFields } = useConfigurationContext();
   if (!identity) return null;
   return (
     <List
       perPage={25}
       sort={{ field: "name", order: "ASC" }}
+      exporter={exportadorDeEmpresas(companyCustomFields)}
       actions={<CompanyListActions />}
       pagination={<ListPagination rowsPerPageOptions={[10, 25, 50, 100]} />}
     >

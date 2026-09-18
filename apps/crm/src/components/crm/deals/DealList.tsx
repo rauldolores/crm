@@ -18,6 +18,7 @@ import { SelectInput } from "@/components/admin/select-input";
 
 import { Button } from "@/components/ui/button";
 
+import { exportadorDeOportunidades } from "../misc/exportadores";
 import { LOCALE } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { TopToolbar } from "../layout/TopToolbar";
@@ -39,7 +40,8 @@ export const OPORTUNIDADES_EN_EL_TABLERO = 1000;
 
 const DealList = () => {
   const { identity } = useGetIdentity();
-  const { dealCategories, dealPipelines } = useConfigurationContext();
+  const { dealCategories, dealPipelines, dealCustomFields } =
+    useConfigurationContext();
   const translate = useTranslate();
   // Filtro por etiqueta: `tags@cs` espera `{id}` (contención en el arreglo),
   // así que las opciones llevan ese valor ya formado.
@@ -89,6 +91,7 @@ const DealList = () => {
       filterDefaultValues={{ pipeline: dealPipelines[0]?.value }}
       sort={{ field: "index", order: "DESC" }}
       filters={dealFilters}
+      exporter={exportadorDeOportunidades(dealCustomFields, dealPipelines)}
       actions={<DealActions />}
       pagination={null}
     >
