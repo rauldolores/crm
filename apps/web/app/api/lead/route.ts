@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import {
   MODALIDADES,
+  PLANTILLA_DE_COTIZACION,
+  condicionesPorDefecto,
   estimar,
+  lineasDeCotizacion,
+  type Estimacion,
   type Modalidad,
 } from "../../../content/enterprise";
 
@@ -22,8 +26,10 @@ import {
  * Paso "enterprise": la solicitud de /enterprise, en un solo envío. Crea
  *         empresa, contacto y oportunidad con la estimación del primer año
  *         como importe (recalculada aquí, no se confía en la del navegador),
- *         y una tarea de llamada para el día siguiente. Este formulario ES
- *         Vinqulia: lo que el prospecto llena cae en el CRM de Kontrolia.
+ *         una tarea de llamada para el día siguiente y la cotización en
+ *         borrador con las mismas cifras que vio el prospecto: quien atiende
+ *         abre la oportunidad, revisa y envía. Este formulario ES Vinqulia:
+ *         lo que el prospecto llena cae en el CRM de Kontrolia.
  *
  * Configuración (ver .env.example):
  *   CRM_API_BASE_URL  — base de la API del CRM (local o producción)
@@ -430,5 +436,79 @@ async function pasoEnterprise(cuerpo: Record<string, unknown>) {
     console.error("[lead] No se pudo crear la tarea de llamada:", error);
   });
 
+  await crearCotizacionEnBorrador({
+    dealId,
+    companyId,
+    contactId,
+    estimacion,
+  }).catch((error: unknown) => {
+    console.error("[lead] No se pudo crear la cotización en borrador:", error);
+  });
+
   return NextResponse.json({ ok: true, leadId: dealId, companyId, contactId });
+}
+
+/**
+ * La cotización Enterprise, en borrador, con las cifras de la estimación.
+ * Si en el CRM existe la plantilla de la modalidad (Ajustes →
+ * Cotizaciones), toma de ella el título, las condiciones y la vigencia;
+ * las líneas salen siempre de la estimación, que es lo que el prospecto vio.
+ */
+async function crearCotizacionEnBorrador({
+  dealId,
+  companyId,
+  contactId,
+  estimacion,
+}: {
+  dealId: number;
+  companyId: number;
+  contactId: number;
+  estimacion: Estimacion;
+}) {
+  const configuracion = fila(await llamarCRM("configuration?select=config", "GET"));
+  const plantillas = ((configuracion?.config as { quoteTemplates?: unknown[] } | undefined)
+    ?.quoteTemplates ?? []) as {
+    key: string;
+    title?: string;
+    notes?: string;
+    valid_days?: number;
+    contract_period?: string | null;
+  }[];
+  const plantilla = plantillas.find(
+    (p) => p.key === PLANTILLA_DE_COTIZACION[estimacion.modalidad],
+  );
+
+  const vigenciaDias = plantilla?.valid_days ?? 30;
+  const validaHasta = new Date(Date.now() + vigenciaDias * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+
+  const cotizacion = fila(
+    await llamarCRM("quotes", "POST", {
+      deal_id: dealId,
+      company_id: companyId,
+      contact_id: contactId,
+      title:
+        plantilla?.title ??
+        `Vinqulia Enterprise · ${MODALIDADES[estimacion.modalidad].nombre}`,
+      notes: plantilla?.notes ?? condicionesPorDefecto(estimacion.modalidad),
+      contract_period: plantilla?.contract_period ?? "yearly",
+      valid_until: validaHasta,
+      currency: "MXN",
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const quoteId = Number(cotizacion?.id);
+  if (!quoteId) throw new Error("No se pudo crear la cotización.");
+
+  const lineas = lineasDeCotizacion(estimacion);
+  for (const [indice, linea] of lineas.entries()) {
+    await llamarCRM("quote_items", "POST", {
+      quote_id: quoteId,
+      position: indice,
+      ...linea,
+      discount_pct: 0,
+      tax_rate: 16,
+    });
+  }
 }

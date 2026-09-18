@@ -41,16 +41,16 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
     {
       title: "Crear una automatización",
       description:
-        "Crea una regla automática. Acciones: create_task (crea una tarea), assign_owner (asigna responsable) o send_email (manda una plantilla). Para send_email pasa plantillaId; para create_task, texto y opcionalmente venceEnDias — sin él la tarea queda sin fecha límite. Con sobre=contracts y cuando=renewal_due la regla actúa diasAntes días antes de que se renueve un contrato activo (módulo Clientes); ahí no vale assign_owner.",
+        "Crea una regla automática. Acciones: create_task (crea una tarea), assign_owner (asigna responsable) o send_email (manda una plantilla). Para send_email pasa plantillaId; para create_task, texto y opcionalmente venceEnDias — sin él la tarea queda sin fecha límite. Con sobre=contracts y cuando=renewal_due la regla actúa diasAntes días antes de que se renueve un contrato activo (módulo Clientes). Con sobre=quotes y cuando=unanswered actúa diasDespues días después de enviar una cotización que sigue sin respuesta. En esos dos no vale assign_owner.",
       inputSchema: z.object({
         nombre: z.string(),
         sobre: z
-          .enum(["contacts", "deals", "contracts"])
+          .enum(["contacts", "deals", "contracts", "quotes"])
           .describe("Qué se vigila."),
         cuando: z
-          .enum(["created", "stage_changed", "renewal_due"])
+          .enum(["created", "stage_changed", "renewal_due", "unanswered"])
           .describe(
-            "stage_changed solo aplica a deals; renewal_due solo a contracts.",
+            "stage_changed solo aplica a deals; renewal_due solo a contracts; unanswered solo a quotes.",
           ),
         etapa: z
           .string()
@@ -61,6 +61,12 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
           .optional()
           .describe(
             "Con renewal_due, cuántos días antes de la renovación. Por defecto 30.",
+          ),
+        diasDespues: z
+          .number()
+          .optional()
+          .describe(
+            "Con unanswered, cuántos días después de enviar la cotización. Por defecto 3.",
           ),
         accion: z.enum(["create_task", "assign_owner", "send_email"]),
         texto: z.string().optional().describe("create_task: qué dice la tarea."),
@@ -75,10 +81,11 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
     },
     async (args: {
       nombre: string;
-      sobre: "contacts" | "deals" | "contracts";
-      cuando: "created" | "stage_changed" | "renewal_due";
+      sobre: "contacts" | "deals" | "contracts" | "quotes";
+      cuando: "created" | "stage_changed" | "renewal_due" | "unanswered";
       etapa?: string;
       diasAntes?: number;
+      diasDespues?: number;
       accion: "create_task" | "assign_owner" | "send_email";
       texto?: string;
       tipoDeTarea?: string;
@@ -96,11 +103,15 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
         return error("Para create_task hace falta el texto de la tarea.");
       }
       const esRenovacion = args.cuando === "renewal_due";
+      const esCotizacion = args.cuando === "unanswered";
       if (esRenovacion !== (args.sobre === "contracts")) {
         return error("renewal_due va con sobre=contracts, y solo con él.");
       }
-      if (esRenovacion && args.accion === "assign_owner") {
-        return error("assign_owner no aplica a una renovación de contrato.");
+      if (esCotizacion !== (args.sobre === "quotes")) {
+        return error("unanswered va con sobre=quotes, y solo con él.");
+      }
+      if ((esRenovacion || esCotizacion) && args.accion === "assign_owner") {
+        return error("assign_owner no aplica a reglas por fecha.");
       }
 
       const parametros: Record<string, unknown> =
@@ -130,7 +141,9 @@ export const registrarAutomatizaciones: RegistradorDeHerramientas = (
           args.sobre,
           args.cuando,
           JSON.stringify(
-            esRenovacion
+            esCotizacion
+              ? { daysAfter: args.diasDespues ?? 3 }
+              : esRenovacion
               ? { daysBefore: args.diasAntes ?? 30 }
               : args.etapa
                 ? { stage: args.etapa }

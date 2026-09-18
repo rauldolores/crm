@@ -5,6 +5,11 @@ import {
   enviarCorreoDeOrganizacion,
 } from "@/lib/server/correo/enviar";
 import { valoresDeFusion } from "@/lib/server/correo/valoresDeFusion";
+import {
+  cotizacionPorId,
+  enlacePublico,
+} from "@/lib/server/cotizaciones/cotizaciones";
+import { valoresDeCotizacion } from "@/lib/server/cotizaciones/enviar";
 import { rellenarCampos } from "@/components/crm/email/camposDeFusion";
 import { envolverEnPlantilla } from "@/components/crm/email/plantillaBase";
 
@@ -31,6 +36,7 @@ interface FilaDeCola {
   contact_id: number;
   deal_id: number | null;
   contract_id: number | null;
+  quote_id: number | null;
   attempts: number;
 }
 
@@ -63,7 +69,7 @@ export async function POST(peticion: Request) {
   const { data: pendientes } = await supabase
     .from("email_outbox")
     .select(
-      "id, organization_id, template_id, contact_id, deal_id, contract_id, attempts",
+      "id, organization_id, template_id, contact_id, deal_id, contract_id, quote_id, attempts",
     )
     .is("sent_at", null)
     .lte("next_attempt_at", new Date().toISOString())
@@ -121,7 +127,29 @@ export async function POST(peticion: Request) {
     }
 
     const p = plantilla as Plantilla;
-    const { valores, correoDelContacto } = resuelto;
+    const { correoDelContacto } = resuelto;
+    let valores = resuelto.valores;
+
+    // Recordatorio de cotización: los campos {{cotizacion.*}} y su enlace,
+    // armado con el origen de esta misma petición.
+    if (fila.quote_id) {
+      const completa = await cotizacionPorId(
+        fila.organization_id,
+        fila.quote_id,
+      );
+      if (completa) {
+        valores = {
+          ...valores,
+          ...valoresDeCotizacion(
+            completa,
+            enlacePublico(
+              new URL(peticion.url).origin,
+              completa.cotizacion.public_token,
+            ),
+          ),
+        };
+      }
+    }
 
     // El mismo armazón que se ve en la vista previa al editar la plantilla.
     const html = rellenarCampos(

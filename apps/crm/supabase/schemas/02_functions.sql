@@ -740,6 +740,7 @@ create or replace function crm.aplicar_accion_de_automatizacion(
     contacto bigint,
     oportunidad bigint,
     contrato bigint,
+    cotizacion bigint,
     responsable bigint
 ) returns void
     language plpgsql security definer
@@ -748,8 +749,6 @@ create or replace function crm.aplicar_accion_de_automatizacion(
 declare
   plantilla bigint;
 begin
-  -- Las tareas y los correos cuelgan siempre de un contacto: sin él no hay
-  -- a quién asignar ni a quién escribir, y la regla se salta.
   if contacto is null then
     return;
   end if;
@@ -762,8 +761,6 @@ begin
       contacto,
       coalesce(nullif(regla.action_params ->> 'text', ''), regla.name),
       nullif(regla.action_params ->> 'taskType', ''),
-      -- Sin días, la tarea queda SIN vencimiento: no todo lo que genera una
-      -- automatización tiene fecha límite.
       case
         when regla.action_params ->> 'dueInDays' ~ '^[0-9]+$'
         then now() + ((regla.action_params ->> 'dueInDays') || ' days')::interval
@@ -775,8 +772,6 @@ begin
   elsif regla.action_type = 'send_email' then
     plantilla := nullif(regla.action_params ->> 'templateId', '')::bigint;
 
-    -- Solo se encola si la plantilla sigue existiendo y activa en esta
-    -- organización: una plantilla borrada o apagada no debe mandar nada.
     if plantilla is not null
        and exists (
          select 1 from crm.email_templates
@@ -785,17 +780,17 @@ begin
             and active
        ) then
       insert into crm.email_outbox
-        (organization_id, automation_id, template_id, contact_id, deal_id, contract_id)
-      values (regla.organization_id, regla.id, plantilla, contacto, oportunidad, contrato);
+        (organization_id, automation_id, template_id, contact_id, deal_id, contract_id, quote_id)
+      values (regla.organization_id, regla.id, plantilla, contacto, oportunidad, contrato, cotizacion);
     end if;
   end if;
 end;
 $$;
 
-revoke all on function crm.aplicar_accion_de_automatizacion(crm.automations, bigint, bigint, bigint, bigint) from public;
-grant all on function crm.aplicar_accion_de_automatizacion(crm.automations, bigint, bigint, bigint, bigint) to service_role;
+revoke all on function crm.aplicar_accion_de_automatizacion(crm.automations, bigint, bigint, bigint, bigint, bigint) from public;
+grant all on function crm.aplicar_accion_de_automatizacion(crm.automations, bigint, bigint, bigint, bigint, bigint) to service_role;
 
--- 4. El motor de escrituras, delegando la acción. Mismo comportamiento.
+-- 4. El motor de escrituras pasa «sin cotización».
 create or replace function crm.run_automations() returns trigger
     language plpgsql security definer
     set search_path = ''
@@ -808,8 +803,6 @@ declare
   contacto bigint;
   responsable bigint;
 begin
-  -- Guarda contra cascadas: una acción que escribe (asignar responsable)
-  -- volvería a disparar el motor y podría no terminar nunca.
   if pg_trigger_depth() > 1 then
     return null;
   end if;
@@ -822,15 +815,11 @@ begin
   if tg_op = 'INSERT' then
     evento := 'created';
   elsif tg_table_name = 'deals' and new.stage is distinct from old.stage then
-    -- Solo el cambio de etapa cuenta: al crear ya se notificó como 'created'.
     evento := 'stage_changed';
   else
     return null;
   end if;
 
-  -- La etapa se lee ANTES del bucle y solo donde existe la columna:
-  -- PL/pgSQL prepara cada consulta entera, así que una referencia a
-  -- new.stage fallaría en contacts aunque la condición nunca se cumpla.
   if tg_table_name = 'deals' then
     etapa := new.stage;
   end if;
@@ -842,8 +831,6 @@ begin
        and trigger_resource = tg_table_name
        and trigger_event = evento
   loop
-    -- Cada regla va protegida: una mal configurada no tumba ni a las demás
-    -- ni a la escritura que las disparó.
     begin
       if evento = 'stage_changed'
          and nullif(regla.trigger_params ->> 'stage', '') is not null
@@ -851,7 +838,6 @@ begin
         continue;
       end if;
 
-      -- En una oportunidad se usa su primer contacto.
       if tg_table_name = 'contacts' then
         contacto := new.id;
       else
@@ -873,6 +859,7 @@ begin
           contacto,
           case when tg_table_name = 'deals' then new.id else null end,
           null,
+          null,
           new.sales_id
         );
       end if;
@@ -886,12 +873,7 @@ begin
 end;
 $$;
 
--- 5. El motor por fecha.
---
--- Una regla contracts/renewal_due con daysBefore = N aplica a todo contrato
--- activo cuya renovación caiga dentro de los próximos N días y sobre el que
--- esa regla no haya actuado aún para esa fecha. «Dentro de», no «exactamente
--- a N días»: así un día sin cron no deja renovaciones sin avisar.
+-- 5. El motor por fecha: renovaciones y, ahora, cotizaciones sin respuesta.
 create or replace function crm.ejecutar_automatizaciones_por_fecha() returns integer
     language plpgsql security definer
     set search_path = ''
@@ -899,10 +881,12 @@ create or replace function crm.ejecutar_automatizaciones_por_fecha() returns int
 declare
   regla crm.automations;
   contrato record;
+  cotizacion record;
   contacto bigint;
   dias integer;
   disparadas integer := 0;
 begin
+  -- Renovaciones de contratos (módulo Clientes).
   for regla in
     select * from crm.automations
      where active
@@ -931,11 +915,6 @@ begin
          )
     loop
       begin
-        -- El contrato es de una empresa; la tarea o el correo van al contacto
-        -- de esa empresa con actividad más reciente. Sin contacto no hay a
-        -- quién avisar, y se deja constancia igual para no reintentarlo cada
-        -- día: cuando se dé de alta un contacto ya será tarde para este
-        -- aviso, pero no para el de la siguiente renovación.
         select c.id into contacto
           from crm.contacts c
          where c.company_id = contrato.company_id
@@ -948,11 +927,66 @@ begin
         values (regla.organization_id, regla.id, contrato.id, contrato.renews_on);
 
         perform crm.aplicar_accion_de_automatizacion(
-          regla, contacto, null, contrato.id, contrato.sales_id
+          regla, contacto, null, contrato.id, null, contrato.sales_id
         );
         disparadas := disparadas + 1;
       exception when others then
-        null; -- un contrato falla, los demás siguen
+        null;
+      end;
+    end loop;
+  end loop;
+
+  -- Cotizaciones enviadas (o vistas) que llevan N días sin respuesta y
+  -- siguen vigentes. Una sola vez por regla y cotización: si el cliente no
+  -- contesta al recordatorio, la siguiente regla (con más días) es la que
+  -- vuelve a avisar, no esta.
+  for regla in
+    select * from crm.automations
+     where active
+       and trigger_resource = 'quotes'
+       and trigger_event = 'unanswered'
+  loop
+    dias := case
+      when regla.trigger_params ->> 'daysAfter' ~ '^[0-9]+$'
+      then (regla.trigger_params ->> 'daysAfter')::integer
+      else 3
+    end;
+
+    for cotizacion in
+      select q.id, q.deal_id, q.company_id, q.contact_id, q.sales_id, q.sent_at
+        from crm.quotes q
+       where q.organization_id = regla.organization_id
+         and q.status in ('sent', 'viewed')
+         and q.sent_at is not null
+         and q.sent_at <= now() - (dias || ' days')::interval
+         and (q.valid_until is null or q.valid_until >= current_date)
+         and not exists (
+           select 1 from crm.automation_runs r
+            where r.automation_id = regla.id
+              and r.quote_id = q.id
+         )
+    loop
+      begin
+        contacto := cotizacion.contact_id;
+        if contacto is null and cotizacion.company_id is not null then
+          select c.id into contacto
+            from crm.contacts c
+           where c.company_id = cotizacion.company_id
+             and c.organization_id = regla.organization_id
+           order by c.last_seen desc nulls last, c.id
+           limit 1;
+        end if;
+
+        insert into crm.automation_runs
+          (organization_id, automation_id, quote_id, due_on)
+        values (regla.organization_id, regla.id, cotizacion.id, current_date);
+
+        perform crm.aplicar_accion_de_automatizacion(
+          regla, contacto, cotizacion.deal_id, null, cotizacion.id, cotizacion.sales_id
+        );
+        disparadas := disparadas + 1;
+      exception when others then
+        null;
       end;
     end loop;
   end loop;

@@ -119,19 +119,23 @@ const TarjetaDeRegla = ({
       ?.label ?? regla.trigger_params?.stage;
 
   const cuando =
-    regla.trigger_event === "renewal_due"
-      ? translate("crm.automations.when.renewal_due_named", {
-          days: regla.trigger_params?.daysBefore ?? 30,
+    regla.trigger_event === "unanswered"
+      ? translate("crm.automations.when.quote_unanswered_named", {
+          days: regla.trigger_params?.daysAfter ?? 3,
         })
-      : regla.trigger_event === "stage_changed"
-        ? translate("crm.automations.when.deal_stage_named", {
-            stage: etiquetaDeEtapa ?? "",
+      : regla.trigger_event === "renewal_due"
+        ? translate("crm.automations.when.renewal_due_named", {
+            days: regla.trigger_params?.daysBefore ?? 30,
           })
-        : translate(
-            regla.trigger_resource === "contacts"
-              ? "crm.automations.when.contact_created"
-              : "crm.automations.when.deal_created",
-          );
+        : regla.trigger_event === "stage_changed"
+          ? translate("crm.automations.when.deal_stage_named", {
+              stage: etiquetaDeEtapa ?? "",
+            })
+          : translate(
+              regla.trigger_resource === "contacts"
+                ? "crm.automations.when.contact_created"
+                : "crm.automations.when.deal_created",
+            );
 
   const entonces =
     regla.action_type === "send_email"
@@ -225,11 +229,13 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
             trigger_resource,
             trigger_event,
             trigger_params:
-              trigger_event === "renewal_due"
-                ? { daysBefore: Number(valores.daysBefore ?? 30) }
-                : trigger_event === "stage_changed" && valores.stage
-                  ? { stage: valores.stage }
-                  : {},
+              trigger_event === "unanswered"
+                ? { daysAfter: Number(valores.daysAfter ?? 3) }
+                : trigger_event === "renewal_due"
+                  ? { daysBefore: Number(valores.daysBefore ?? 30) }
+                  : trigger_event === "stage_changed" && valores.stage
+                    ? { stage: valores.stage }
+                    : {},
             action_type: valores.accion,
             action_params: esCorreo
               ? { templateId: valores.templateId }
@@ -266,6 +272,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
         cuando: "contacts:created",
         accion: "create_task",
         daysBefore: 30,
+        daysAfter: 3,
       }}
     >
       <div className="flex flex-col gap-4">
@@ -293,6 +300,7 @@ const CamposDeLaRegla = () => {
   const cuando = useWatch({ name: "cuando" });
   const accion = useWatch({ name: "accion" });
   const esRenovacion = cuando === "contracts:renewal_due";
+  const esCotizacion = cuando === "quotes:unanswered";
 
   // La renovación de contratos solo existe con el módulo Clientes activo.
   const disparadores = [
@@ -307,12 +315,13 @@ const CamposDeLaRegla = () => {
           },
         ]
       : []),
+    { id: "quotes:unanswered", name: "crm.automations.when.quote_unanswered" },
   ];
   // Asignar responsable cambia la fila que disparó la regla; un contrato que
   // se acerca a su renovación no es una fila nueva a la que asignar nadie.
   const acciones = [
     { id: "create_task", name: "crm.automations.then.task" },
-    ...(esRenovacion
+    ...(esRenovacion || esCotizacion
       ? []
       : [{ id: "assign_owner", name: "crm.automations.then.assign" }]),
     { id: "send_email", name: "crm.automations.then.email" },
@@ -327,6 +336,15 @@ const CamposDeLaRegla = () => {
         helperText={false}
         validate={required()}
       />
+      {esCotizacion && (
+        <NumberInput
+          source="daysAfter"
+          label="crm.automations.fields.days_after"
+          helperText="crm.automations.fields.days_after_help"
+          min={1}
+          validate={required()}
+        />
+      )}
       {esRenovacion && (
         <NumberInput
           source="daysBefore"

@@ -228,3 +228,39 @@ export const estimar = (modalidad: Modalidad, usuarios: number): Estimacion => {
     porUsuarioAlMes: Math.round(licenciaAnual / 12 / usuariosValidos),
   };
 };
+
+/**
+ * Clave de la plantilla de cotización del CRM que corresponde a cada
+ * modalidad (Ajustes → Cotizaciones). Si existe, la cotización automática
+ * toma de ella el título y las condiciones; si no, usa el texto de abajo.
+ */
+export const PLANTILLA_DE_COTIZACION: Record<Modalidad, string> = {
+  nube: "enterprise-nube-dedicada",
+  onpremise: "enterprise-en-tus-servidores",
+};
+
+/** Condiciones de la cotización cuando no hay plantilla en el CRM. */
+export const condicionesPorDefecto = (modalidad: Modalidad): string =>
+  [
+    `Licencia anual de Vinqulia Enterprise (${MODALIDADES[modalidad].nombre.toLowerCase()}). Incluye: ${INCLUYE.join("; ").toLowerCase()}.`,
+    `La implementación incluye: ${IMPLEMENTACION_INCLUYE.join("; ").toLowerCase()}.`,
+    `No incluye: ${NO_INCLUYE.join("; ").toLowerCase()}.`,
+    `Licencia anual pagada por adelantado con CFDI; ${DESCUENTO_2_ANIOS} % de descuento a 2 años y ${DESCUENTO_3_ANIOS} % a 3. Precios en MXN más IVA.`,
+  ].join("\n\n");
+
+/** Las dos líneas de una cotización Enterprise, con los precios de la estimación. */
+export const lineasDeCotizacion = (
+  estimacion: Estimacion,
+): { description: string; quantity: number; unit_price: number }[] => [
+  {
+    description: `Licencia anual Vinqulia Enterprise · ${MODALIDADES[estimacion.modalidad].nombre.toLowerCase()} · ${estimacion.banda.etiqueta.toLowerCase()}`,
+    quantity: 1,
+    unit_price: estimacion.licenciaAnual,
+  },
+  {
+    description:
+      "Implementación: puesta en marcha, migración, configuración y capacitación",
+    quantity: 1,
+    unit_price: estimacion.implementacion,
+  },
+];

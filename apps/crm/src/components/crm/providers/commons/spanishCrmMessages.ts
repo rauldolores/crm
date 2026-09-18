@@ -598,6 +598,9 @@ export const spanishCrmMessages = {
         due_in_days: "Vence en (días)",
         due_in_days_help: "Déjalo vacío si la tarea no lleva fecha límite.",
         owner: "Responsable",
+        days_after: "Tras cuántos días sin respuesta",
+        days_after_help:
+          "Se revisa una vez al día. Cuenta desde que se envió; solo cotizaciones enviadas o vistas que siguen vigentes. Avisa una sola vez por cotización.",
         days_before: "Con cuántos días de antelación",
         days_before_help:
           "Se revisa una vez al día. La tarea o el correo van al contacto de la empresa con actividad más reciente; una empresa sin contactos no recibe aviso.",
@@ -610,6 +613,9 @@ export const spanishCrmMessages = {
         renewal_due: "Se acerca la renovación de un contrato",
         renewal_due_named:
           "Faltan %{days} días para que se renueve un contrato",
+        quote_unanswered: "Una cotización lleva días sin respuesta",
+        quote_unanswered_named:
+          "Una cotización lleva %{days} días enviada sin respuesta",
       },
       then: {
         task: "Crear una tarea",
