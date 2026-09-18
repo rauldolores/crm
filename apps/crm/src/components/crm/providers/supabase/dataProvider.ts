@@ -383,6 +383,19 @@ const getDataProviderWithCustomMethods = () => {
         throw new Error(cuerpo.message || "No se pudo enviar el correo");
       }
     },
+    async mergeCompanies(loserId: Identifier, winnerId: Identifier) {
+      const respuesta = await llamarApiDelCrm("/api/empresas/fusionar", {
+        loserId,
+        winnerId,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(
+          cuerpo.message || "No se pudieron fusionar las empresas",
+        );
+      }
+      return respuesta.json();
+    },
     async moverOportunidad(
       deal: Deal,
       destino: DestinoDeOportunidad,

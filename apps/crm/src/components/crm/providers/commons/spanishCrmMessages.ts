@@ -12,6 +12,27 @@
 export const spanishCrmMessages = {
   resources: {
     companies: {
+      merge: {
+        action: "Fusionar con otra empresa",
+        title: "Fusionar empresa",
+        description:
+          "La misma empresa dada de alta dos veces: todo lo de esta pasa a la que elijas y esta se elimina.",
+        current_company: "Empresa actual (se eliminará)",
+        target_company: "Empresa destino (se conservará)",
+        what_will_be_merged: "Qué pasa a la empresa destino:",
+        contacts: "%{smart_count} contacto |||| %{smart_count} contactos",
+        deals: "%{smart_count} oportunidad |||| %{smart_count} oportunidades",
+        tickets: "%{smart_count} ticket |||| %{smart_count} tickets",
+        data: "Los datos que le falten a la empresa destino (dirección, web, teléfono…) se toman de esta.",
+        warning_title: "Atención: no se puede deshacer",
+        warning_description:
+          "Contactos, oportunidades, tickets, cotizaciones, contratos y facturas quedarán en la empresa destino.",
+        confirm: "Fusionar empresas",
+        merging: "Fusionando…",
+        select_target: "Elige la empresa con la que quieres fusionar",
+        success: "Empresas fusionadas",
+        error: "No se pudieron fusionar las empresas",
+      },
       name: "Empresa |||| Empresas",
       forcedCaseName: "Empresa",
       fields: {

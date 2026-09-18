@@ -25,6 +25,7 @@ import { getActivityLog } from "../commons/activity";
 import { getContactTimeline } from "../commons/contactTimeline";
 import { getCompanyAvatar } from "../commons/getCompanyAvatar";
 import { getContactAvatar } from "../commons/getContactAvatar";
+import { mergeCompanies } from "../commons/mergeCompanies";
 import { mergeContacts } from "../commons/mergeContacts";
 import {
   hacerSitioAOportunidadNueva,
@@ -276,6 +277,9 @@ export const createDataProvider = ({
     },
     mergeContacts: async (sourceId: Identifier, targetId: Identifier) => {
       return mergeContacts(sourceId, targetId, baseDataProvider);
+    },
+    mergeCompanies: async (loserId: Identifier, winnerId: Identifier) => {
+      return mergeCompanies(loserId, winnerId, baseDataProvider);
     },
     moverOportunidad: async (
       deal: Deal,
