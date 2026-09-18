@@ -1,8 +1,10 @@
+import { Columns3, List as ListIcon } from "lucide-react";
 import {
   useGetIdentity,
   useListContext,
   useNotify,
   useRecordContext,
+  useStore,
   useTranslate,
   useUpdateMany,
 } from "ra-core";
@@ -28,6 +30,7 @@ import type { Sale, Ticket } from "../types";
 import { CerrarTicketDialog } from "./CerrarTicketDialog";
 import { parseTicketSubject } from "./parseTicketSubject";
 import { SlaDeTicket } from "./SlaDeTicket";
+import { TableroDeTickets } from "./TableroDeTickets";
 import { CategoriaDeTicket, PrioridadDeTicket } from "./TicketBadges";
 import {
   SelectorDeEstadoDeTicket,
@@ -98,14 +101,60 @@ const CreatedField = () => {
   );
 };
 
+type Vista = "tabla" | "tablero";
+
+/** Tabla o tablero por estado; la elección se recuerda por navegador. */
+const SelectorDeVista = ({
+  vista,
+  onChange,
+}: {
+  vista: Vista;
+  onChange: (vista: Vista) => void;
+}) => {
+  const translate = useTranslate();
+  const opciones: { valor: Vista; icono: typeof ListIcon; clave: string }[] = [
+    { valor: "tabla", icono: ListIcon, clave: "resources.tickets.views.table" },
+    {
+      valor: "tablero",
+      icono: Columns3,
+      clave: "resources.tickets.views.board",
+    },
+  ];
+  return (
+    <div className="ml-auto flex gap-1">
+      {opciones.map(({ valor, icono: Icono, clave }) => (
+        <Button
+          key={valor}
+          type="button"
+          size="sm"
+          variant={vista === valor ? "secondary" : "ghost"}
+          className="text-muted-foreground data-[activa=true]:text-foreground"
+          data-activa={vista === valor}
+          aria-pressed={vista === valor}
+          onClick={() => onChange(valor)}
+        >
+          <Icono className="size-4" />
+          {translate(clave)}
+        </Button>
+      ))}
+    </div>
+  );
+};
+
 /** Accesos rápidos a las vistas que más se usan al triar una cola. */
-const FiltrosRapidos = () => {
+const FiltrosRapidos = ({
+  vista,
+  onChangeVista,
+}: {
+  vista: Vista;
+  onChangeVista: (vista: Vista) => void;
+}) => {
   const { identity } = useGetIdentity();
   // Fijo al montar: ToggleFilterButton compara el valor con el filtro activo
   // para pintarse seleccionado, así que no puede cambiar en cada render.
   const [ahora] = useState(() => new Date().toISOString());
   return (
-    <div className="mb-2 flex flex-wrap gap-1">
+    <div className="mb-2 flex flex-wrap items-center gap-1">
       {identity?.id != null && (
         <ToggleFilterButton
           className="w-auto"
@@ -128,6 +177,7 @@ const FiltrosRapidos = () => {
         label="resources.tickets.filters.overdue"
         value={{ "status@neq": "closed", "due_at@lt": ahora }}
       />
+      <SelectorDeVista vista={vista} onChange={onChangeVista} />
     </div>
   );
 };
@@ -202,9 +252,14 @@ const AccionesMasivas = () => {
   );
 };
 
+/** Tickets que caben en el tablero: sobra para una cola de soporte de pyme. */
+const TICKETS_EN_EL_TABLERO = 500;
+
 export const TicketList = () => {
   const { ticketStatuses, ticketPriorities, ticketCategories } =
     useConfigurationContext();
+  const [vista, setVista] = useStore<Vista>("tickets.vista", "tabla");
+  const esTablero = vista === "tablero";
   const aOpciones = (lista: { value: string; label: string }[]) =>
     lista.map((item) => ({ id: item.value, name: item.label }));
 
@@ -241,68 +296,80 @@ export const TicketList = () => {
   ];
 
   return (
+    // La clave remonta la lista al cambiar de vista: el tablero necesita
+    // otra paginación (todo de golpe) y los filtros viven en la URL, así
+    // que no se pierden.
     <List
-      perPage={25}
+      key={vista}
+      perPage={esTablero ? TICKETS_EN_EL_TABLERO : 25}
+      pagination={esTablero ? null : undefined}
       filters={filters}
       actions={<TicketListActions />}
       sort={{ field: "last_activity_at", order: "DESC" }}
     >
-      <FiltrosRapidos />
-      <DataTable
-        bulkActionsToolbar={
-          <BulkActionsToolbar>
-            <AccionesMasivas />
-          </BulkActionsToolbar>
-        }
-      >
-        <DataTable.Col
-          source="subject"
-          label="resources.tickets.fields.subject"
+      <FiltrosRapidos vista={vista} onChangeVista={setVista} />
+      {esTablero ? (
+        <TableroDeTickets />
+      ) : (
+        <DataTable
+          bulkActionsToolbar={
+            <BulkActionsToolbar>
+              <AccionesMasivas />
+            </BulkActionsToolbar>
+          }
         >
-          <SubjectField />
-        </DataTable.Col>
-        <DataTable.Col label="resources.tickets.fields.contact_id">
-          <ReferenceField
-            source="contact_id"
-            reference="contacts"
-            link="show"
-          />
-        </DataTable.Col>
-        <DataTable.Col label="resources.tickets.fields.company_id">
-          <ReferenceField
-            source="company_id"
-            reference="companies"
-            link="show"
-          />
-        </DataTable.Col>
-        <DataTable.Col
-          source="priority"
-          label="resources.tickets.fields.priority"
-        >
-          <PriorityField />
-        </DataTable.Col>
-        <DataTable.Col label="resources.tickets.fields.sales_id">
-          <SelectorDeResponsableDeTicket conAsignarme={false} />
-        </DataTable.Col>
-        <DataTable.Col label="resources.tickets.fields.status">
-          <SelectorDeEstadoDeTicket />
-        </DataTable.Col>
-        <DataTable.Col source="due_at" label="resources.tickets.fields.due_at">
-          <VencimientoField />
-        </DataTable.Col>
-        <DataTable.Col
-          source="last_activity_at"
-          label="resources.tickets.fields.last_activity_at"
-        >
-          <LastActivityField />
-        </DataTable.Col>
-        <DataTable.Col
-          source="created_at"
-          label="resources.tickets.fields.created_at"
-        >
-          <CreatedField />
-        </DataTable.Col>
-      </DataTable>
+          <DataTable.Col
+            source="subject"
+            label="resources.tickets.fields.subject"
+          >
+            <SubjectField />
+          </DataTable.Col>
+          <DataTable.Col label="resources.tickets.fields.contact_id">
+            <ReferenceField
+              source="contact_id"
+              reference="contacts"
+              link="show"
+            />
+          </DataTable.Col>
+          <DataTable.Col label="resources.tickets.fields.company_id">
+            <ReferenceField
+              source="company_id"
+              reference="companies"
+              link="show"
+            />
+          </DataTable.Col>
+          <DataTable.Col
+            source="priority"
+            label="resources.tickets.fields.priority"
+          >
+            <PriorityField />
+          </DataTable.Col>
+          <DataTable.Col label="resources.tickets.fields.sales_id">
+            <SelectorDeResponsableDeTicket conAsignarme={false} />
+          </DataTable.Col>
+          <DataTable.Col label="resources.tickets.fields.status">
+            <SelectorDeEstadoDeTicket />
+          </DataTable.Col>
+          <DataTable.Col
+            source="due_at"
+            label="resources.tickets.fields.due_at"
+          >
+            <VencimientoField />
+          </DataTable.Col>
+          <DataTable.Col
+            source="last_activity_at"
+            label="resources.tickets.fields.last_activity_at"
+          >
+            <LastActivityField />
+          </DataTable.Col>
+          <DataTable.Col
+            source="created_at"
+            label="resources.tickets.fields.created_at"
+          >
+            <CreatedField />
+          </DataTable.Col>
+        </DataTable>
+      )}
     </List>
   );
 };

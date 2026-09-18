@@ -13,13 +13,12 @@ import {
 import { AsideSection } from "../misc/AsideSection";
 import { Markdown } from "../misc/Markdown";
 import { NoteCreate } from "../notes/NoteCreate";
-import { NotesIterator } from "../notes/NotesIterator";
 import { formatLocalizedDate, formatRelativeDate } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
 import { parseTicketSubject } from "./parseTicketSubject";
 import { FusionarTicketButton } from "./FusionarTicketDialog";
-import { HistorialDeTicket } from "./HistorialDeTicket";
+import { HiloDeTicket } from "./HiloDeTicket";
 import { ResponderPorCorreoButton } from "./ResponderPorCorreoButton";
 import { ResumenConIa } from "./ResumenConIa";
 import { SatisfaccionDeTicket } from "./SatisfaccionDeTicket";
@@ -118,7 +117,11 @@ const TicketShowContent = () => {
 
             <div className="mb-4 flex flex-col gap-3">
               <SatisfaccionDeTicket ticket={record} />
-              <ResumenConIa ticket={record} />
+              <div>
+                <div>
+                  <ResumenConIa ticket={record} />
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -192,16 +195,13 @@ const TicketShowContent = () => {
               storeKey={false}
               empty={<NoteCreate reference="tickets" />}
             >
-              <NotesIterator reference="tickets" />
+              <HiloDeTicket ticketId={record.id} />
             </InfiniteListBase>
           </CardContent>
         </Card>
       </div>
 
       <div className="hidden sm:block w-92 min-w-92">
-        <AsideSection title={translate("resources.tickets.history.title")}>
-          <HistorialDeTicket ticketId={record.id} />
-        </AsideSection>
         <AsideSection title={translate("resources.tickets.other_from_contact")}>
           <InfiniteListBase
             resource="tickets"

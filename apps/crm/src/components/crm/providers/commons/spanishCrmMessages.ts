@@ -432,6 +432,13 @@ export const spanishCrmMessages = {
         success: "Respuesta enviada y guardada en el ticket",
         error: "No se pudo enviar la respuesta",
       },
+      views: {
+        table: "Tabla",
+        board: "Tablero",
+      },
+      board: {
+        show_more: "Ver %{count} más",
+      },
       ai: {
         summarize: "Resumen con IA",
         summary_title: "Resumen del hilo (IA)",

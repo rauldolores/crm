@@ -1,37 +1,23 @@
-import { useGetList, useGetMany, useTranslate } from "ra-core";
+import { useGetMany, useTranslate } from "ra-core";
 
-import { formatRelativeDate } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Sale, TicketEvent } from "../types";
 
 /**
- * Quién cambió qué y cuándo (crm.ticket_events). Se lee del historial que
- * escribe la base, no de la interfaz: así también cuenta lo que cambian el
- * agente de voz, los formularios o la API.
+ * Convierte los eventos del historial (crm.ticket_events) en frases: «Estado:
+ * Abierto → Cerrado», «Asignado a Raúl…». Resuelve de una vez los nombres de
+ * las personas implicadas (quien hizo el cambio y a quién se asignó).
  */
-export const HistorialDeTicket = ({
-  ticketId,
-}: {
-  ticketId: number | string;
-}) => {
+export const useDescripcionDeEventos = (eventos: TicketEvent[]) => {
   const translate = useTranslate();
   const { ticketStatuses, ticketPriorities, ticketCategories } =
     useConfigurationContext();
-  const { data: eventos, isPending } = useGetList<TicketEvent>(
-    "ticket_events",
-    {
-      pagination: { page: 1, perPage: 100 },
-      sort: { field: "created_at", order: "DESC" },
-      filter: { ticket_id: ticketId },
-    },
-  );
   const idsDeUsuarios = Array.from(
     new Set(
-      (eventos ?? [])
+      eventos
         .flatMap((e) => [
           e.sales_id,
           e.field === "sales_id" ? Number(e.new_value) : null,
-          e.field === "sales_id" ? Number(e.old_value) : null,
         ])
         .filter((id): id is number => id != null && Number.isFinite(id)),
     ),
@@ -41,14 +27,6 @@ export const HistorialDeTicket = ({
     { ids: idsDeUsuarios },
     { enabled: idsDeUsuarios.length > 0 },
   );
-
-  if (isPending || !eventos?.length) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        {translate("resources.tickets.history.empty")}
-      </p>
-    );
-  }
 
   const nombre = (id?: string | number | null) => {
     if (id == null || id === "")
@@ -89,20 +67,11 @@ export const HistorialDeTicket = ({
     }
   };
 
-  return (
-    <ol className="flex flex-col gap-2 text-sm">
-      {eventos.map((e) => (
-        <li key={e.id} className="flex flex-col">
-          <span>{describir(e)}</span>
-          <span className="text-xs text-muted-foreground">
-            {e.sales_id != null
-              ? nombre(e.sales_id)
-              : translate("resources.tickets.history.system")}
-            {" · "}
-            {formatRelativeDate(e.created_at)}
-          </span>
-        </li>
-      ))}
-    </ol>
-  );
+  /** Quién lo hizo, o «Sistema» cuando vino de un formulario, la API o una regla. */
+  const autor = (e: TicketEvent): string =>
+    e.sales_id != null
+      ? nombre(e.sales_id)
+      : translate("resources.tickets.history.system");
+
+  return { describir, autor };
 };

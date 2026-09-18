@@ -7,6 +7,7 @@ import { Status } from "../misc/Status";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
 import { parseTicketSubject } from "./parseTicketSubject";
+import { SlaDeTicket } from "./SlaDeTicket";
 import { PrioridadDeTicket } from "./TicketBadges";
 import { useIndiceDePrioridad } from "./useIndiceDePrioridad";
 
@@ -66,6 +67,11 @@ export const TicketsIterator = ({
                 {showContact && ticket.created_at ? " · " : ""}
                 {ticket.created_at ? formatRelativeDate(ticket.created_at) : ""}
               </p>
+              {/* Solo mientras está abierto: en una lista corta, «vencido
+                  hace 2 días» es lo que decide a cuál entrar primero. */}
+              {ticket.status !== "closed" && (
+                <SlaDeTicket ticket={ticket} compacto />
+              )}
             </div>
           </Link>
         );
