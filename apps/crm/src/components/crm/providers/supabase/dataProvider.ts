@@ -351,20 +351,19 @@ const getDataProviderWithCustomMethods = () => {
       return getIsInitialized();
     },
     async mergeContacts(sourceId: Identifier, targetId: Identifier) {
-      const { data, error } = await getSupabaseClient().functions.invoke(
-        "merge_contacts",
-        {
-          method: "POST",
-          body: { loserId: sourceId, winnerId: targetId },
-        },
-      );
-
-      if (error) {
-        console.error("merge_contacts.error", error);
-        throw new Error("Failed to merge contacts");
+      // Ruta /api del propio CRM (comprueba tenencia y llama a
+      // crm.merge_contacts); la edge function original nunca se desplegó.
+      const respuesta = await llamarApiDelCrm("/api/contactos/fusionar", {
+        loserId: sourceId,
+        winnerId: targetId,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(
+          cuerpo.message || "No se pudieron fusionar los contactos",
+        );
       }
-
-      return data;
+      return respuesta.json();
     },
     async enviarCorreo(
       contactId: Identifier,
