@@ -55,6 +55,20 @@ create or replace trigger "20_contact_saved"
     before insert or update on crm.contacts
     for each row execute function crm.handle_contact_saved();
 
+-- Tickets: prefijos → categoría, sellos de fechas, cierre e historial
+create or replace trigger on_crm_tickets_before_write
+    before insert or update on crm.tickets
+    for each row execute function crm.handle_ticket_before_write();
+
+create or replace trigger on_crm_tickets_log_events
+    after insert or update on crm.tickets
+    for each row execute function crm.log_ticket_events();
+
+-- Una nota en el ticket cuenta como actividad
+create or replace trigger on_crm_ticket_notes_created
+    after insert on crm.ticket_notes
+    for each row execute function crm.handle_ticket_note_created();
+
 -- Sella cuándo una persona fija el estado del contacto (ver contacts_summary)
 create or replace trigger on_crm_contacts_status_set
     before insert or update of status on crm.contacts

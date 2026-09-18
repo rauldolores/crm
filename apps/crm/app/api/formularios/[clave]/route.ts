@@ -289,6 +289,7 @@ export async function POST(peticion: Request, { params }: Contexto) {
       subject: asunto,
       description: descripcion,
       status: "open",
+      source: "web_form",
       contact_id: contacto.id,
       company_id: companyId,
     });

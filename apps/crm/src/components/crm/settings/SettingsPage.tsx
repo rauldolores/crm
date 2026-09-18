@@ -1,14 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import type { RaRecord } from "ra-core";
-import {
-  EditBase,
-  Form,
-  useGetList,
-  useInput,
-  useNotify,
-  useTranslate,
-} from "ra-core";
+import { EditBase, Form, useGetList, useNotify, useTranslate } from "ra-core";
 import { useCallback, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -33,6 +26,8 @@ import type {
   DealPipeline,
 } from "../types";
 import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
+import { AjustesDeTickets } from "./AjustesDeTickets";
+import { ColorInput } from "./ColorInput";
 
 const SECTIONS = [
   {
@@ -216,6 +211,8 @@ const transformFormValues = (data: Record<string, any>) => {
       dealPipelineStatuses: embudos[0]?.pipelineStatuses ?? [],
       noteStatuses: ensureValues(data.noteStatuses),
       noteTypes: ensureValues(data.noteTypes),
+      ticketPriorities: ensureValues(data.ticketPriorities),
+      ticketCategories: ensureValues(data.ticketCategories),
       contactCustomFields: aDefiniciones(data.contactCustomFields),
       companyCustomFields: aDefiniciones(data.companyCustomFields),
       dealCustomFields: aDefiniciones(data.dealCustomFields),
@@ -270,6 +267,8 @@ const SettingsForm = () => {
       dealLossReasons: config.dealLossReasons,
       noteStatuses: config.noteStatuses,
       noteTypes: config.noteTypes,
+      ticketPriorities: config.ticketPriorities,
+      ticketCategories: config.ticketCategories,
       contactCustomFields: aFilasEditables(config.contactCustomFields),
       companyCustomFields: aFilasEditables(config.companyCustomFields),
       dealCustomFields: aFilasEditables(config.dealCustomFields),
@@ -479,6 +478,8 @@ const SettingsFormFields = () => {
             </ArrayInput>
           </CardContent>
         </Card>
+
+        <AjustesDeTickets />
 
         {/* Tasks */}
         <Card id="tasks">
@@ -803,18 +804,5 @@ const SelectorDeEtapas = ({
         );
       })}
     </div>
-  );
-};
-
-/** A minimal color picker input compatible with ra-core's useInput. */
-const ColorInput = ({ source }: { source: string }) => {
-  const { field } = useInput({ source });
-  return (
-    <input
-      type="color"
-      {...field}
-      value={field.value || "#000000"}
-      className="w-9 h-9 shrink-0 cursor-pointer appearance-none rounded border bg-transparent p-0.5 [&::-webkit-color-swatch-wrapper]:cursor-pointer [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:cursor-pointer [&::-webkit-color-swatch]:rounded-sm [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:cursor-pointer [&::-moz-color-swatch]:rounded-sm [&::-moz-color-swatch]:border-none"
-    />
   );
 };

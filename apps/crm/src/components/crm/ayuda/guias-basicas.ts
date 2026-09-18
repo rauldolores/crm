@@ -343,14 +343,16 @@ export const PANTALLAS: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "Un ticket es «un cliente necesita algo»: un pedido que no llegó, una duda, una reclamación. Tiene asunto, contacto y empresa, categoría, estado (abierto o cerrado) y su propio hilo de notas. La lista los muestra con el estado editable en línea, y la ficha del contacto enseña cuántos tiene abiertos.",
+            "Un ticket es «un cliente necesita algo»: un pedido que no llegó, una duda, una reclamación. Tiene número (#123), asunto, contacto y empresa, prioridad (baja, normal, alta, urgente), categoría, responsable, estado (abierto, en proceso, cerrado) y su propio hilo de notas. La lista se ordena por última actividad, se filtra por estado, prioridad, categoría y responsable, y tiene accesos rápidos a «Mis tickets», «Sin asignar» y «Solo abiertos».",
         },
         {
           tipo: "lista",
           items: [
-            "Los tickets pueden llegar solos desde un formulario web de tipo «Ticket de soporte» pegado en tu página.",
-            "También los puede crear un asistente de IA conectado por MCP a partir de una conversación con el cliente.",
-            "Cierra el ticket cambiando el estado en la lista; queda en el historial.",
+            "Los tickets pueden llegar solos desde un formulario web de tipo «Ticket de soporte», desde un asistente de IA por MCP o desde el agente de voz; la ficha dice de dónde vino cada uno. Si el asunto trae «[categoría]» delante, se convierte en la categoría real.",
+            "Asignar: elige el responsable en la lista o en la ficha, o pulsa «Asignármelo». Selecciona varios y ciérralos o asígnatelos de golpe.",
+            "Cerrar pide un motivo (resuelto, duplicado, sin respuesta del cliente…) y una nota opcional; la fecha de cierre queda sellada y se puede reabrir. El historial de la ficha guarda quién cambió el estado, la prioridad, la categoría o el responsable y cuándo.",
+            "Al crear un ticket, si el contacto ya tiene otro abierto, aparece un aviso con el enlace para no duplicarlo.",
+            "Prioridades y categorías se configuran en Ajustes → Tickets.",
           ],
         },
         {

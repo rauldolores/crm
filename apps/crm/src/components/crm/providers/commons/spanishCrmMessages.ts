@@ -362,12 +362,68 @@ export const spanishCrmMessages = {
         contact_id: "Contacto",
         company_id: "Empresa",
         sales_id: "Responsable",
-        created_at: "Fecha de alta",
+        created_at: "Creado",
+        priority: "Prioridad",
+        category: "Categoría",
+        source: "Origen",
+        resolution: "Motivo de cierre",
+        last_activity_at: "Última actividad",
+        closed_at: "Cerrado",
       },
       action: {
         new: "Nuevo ticket",
         create: "Crear ticket",
         edit: "Editar ticket",
+        assign_me: "Asignármelo",
+        close_many: "Cerrar seleccionados",
+      },
+      unassigned: "Sin asignar",
+      no_category: "Sin categoría",
+      filters: {
+        mine: "Mis tickets",
+        unassigned: "Sin asignar",
+        open: "Solo abiertos",
+      },
+      sources: {
+        manual: "Creado a mano",
+        web_form: "Formulario web",
+        mcp: "Asistente de IA",
+        api: "API",
+        voice_agent: "Agente de voz",
+        email: "Correo",
+      },
+      dates: {
+        created: "Creado el %{date}",
+        closed: "Cerrado el %{date}",
+      },
+      close: {
+        title: "Cerrar ticket",
+        description:
+          "Indica cómo terminó. Queda en el historial y en los informes; puedes reabrirlo después.",
+        note: "Nota de cierre (opcional)",
+        note_placeholder: "Qué se hizo o qué se le dijo al cliente",
+        confirm: "Cerrar ticket",
+      },
+      duplicates: {
+        title:
+          "Este contacto ya tiene %{smart_count} ticket abierto |||| Este contacto ya tiene %{smart_count} tickets abiertos",
+      },
+      history: {
+        title: "Historial",
+        empty: "Sin cambios registrados.",
+        system: "Sistema",
+        created: "Ticket creado",
+        status: "Estado: %{from} → %{to}",
+        priority: "Prioridad: %{from} → %{to}",
+        category: "Categoría: %{from} → %{to}",
+        sales_id: "Asignado a %{to}",
+      },
+      notifications: {
+        update_error: "No se pudo actualizar el ticket",
+        closed_many:
+          "%{smart_count} ticket cerrado |||| %{smart_count} tickets cerrados",
+        assigned_many:
+          "%{smart_count} ticket asignado a ti |||| %{smart_count} tickets asignados a ti",
       },
       empty: {
         title: "No hay tickets",
@@ -1422,6 +1478,14 @@ export const spanishCrmMessages = {
       saving: "Guardando...",
       tasks: {
         types: "Tipos",
+      },
+      tickets: {
+        priorities: "Prioridades",
+        priorities_help:
+          "De menor a mayor urgencia. El orden manda: la lista y el panel destacan las de abajo.",
+        categories: "Categorías",
+        categories_help:
+          "Para clasificar y filtrar. Los tickets que llegan del agente de voz o de un formulario con «[categoría]» en el asunto caen en la que coincida.",
       },
       preferences: "Preferencias",
       title: "Ajustes",

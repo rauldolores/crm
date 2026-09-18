@@ -14,12 +14,20 @@ import { AsideSection } from "../misc/AsideSection";
 import { Markdown } from "../misc/Markdown";
 import { NoteCreate } from "../notes/NoteCreate";
 import { NotesIterator } from "../notes/NotesIterator";
-import { formatRelativeDate } from "../misc/RelativeDate";
-import { Status } from "../misc/Status";
-import { useConfigurationContext } from "../root/ConfigurationContext";
+import { formatLocalizedDate, formatRelativeDate } from "../misc/RelativeDate";
 import type { Ticket } from "../types";
 import { parseTicketSubject } from "./parseTicketSubject";
-import { TicketSubjectTags } from "./TicketSubjectTags";
+import { HistorialDeTicket } from "./HistorialDeTicket";
+import {
+  SelectorDeEstadoDeTicket,
+  SelectorDeResponsableDeTicket,
+} from "./SelectoresDeTicket";
+import {
+  CategoriaDeTicket,
+  OrigenDeTicket,
+  PrioridadDeTicket,
+  ResolucionDeTicket,
+} from "./TicketBadges";
 import { TicketsIterator } from "./TicketsIterator";
 
 export const TicketShow = () => (
@@ -31,11 +39,10 @@ export const TicketShow = () => (
 const TicketShowContent = () => {
   const translate = useTranslate();
   const { record, isPending } = useShowContext<Ticket>();
-  const { ticketStatuses } = useConfigurationContext();
 
   if (isPending || !record) return null;
 
-  const { title, tags } = parseTicketSubject(record.subject);
+  const { title } = parseTicketSubject(record.subject);
 
   return (
     <div className="mt-2 flex pb-2 gap-8">
@@ -43,17 +50,48 @@ const TicketShowContent = () => {
         <Card>
           <CardContent>
             <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <Status status={record.status} statuses={ticketStatuses} />
-                  <h5 className="text-xl">{title}</h5>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  #{record.id}
+                  {record.source && record.source !== "manual" && " · "}
+                  <OrigenDeTicket value={record.source} />
+                </p>
+                <h5 className="font-display text-2xl font-semibold tracking-tight">
+                  {title}
+                </h5>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <PrioridadDeTicket value={record.priority} />
+                  <CategoriaDeTicket value={record.category} />
                 </div>
-                <TicketSubjectTags tags={tags} className="mb-1" />
-                {record.created_at && (
-                  <p className="text-sm text-muted-foreground">
-                    {translate("crm.common.last_activity_with_date", {
-                      date: formatRelativeDate(record.created_at),
-                    })}
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {translate("resources.tickets.dates.created", {
+                    date: record.created_at
+                      ? formatLocalizedDate(record.created_at)
+                      : "",
+                  })}
+                  {record.last_activity_at && (
+                    <>
+                      {" · "}
+                      {translate("crm.common.last_activity_with_date", {
+                        date: formatRelativeDate(record.last_activity_at),
+                      })}
+                    </>
+                  )}
+                  {record.closed_at && (
+                    <>
+                      {" · "}
+                      {translate("resources.tickets.dates.closed", {
+                        date: formatLocalizedDate(record.closed_at),
+                      })}
+                    </>
+                  )}
+                </p>
+                {record.status === "closed" && record.resolution && (
+                  <p className="mt-1 text-sm">
+                    <span className="text-muted-foreground">
+                      {translate("resources.tickets.fields.resolution")}:{" "}
+                    </span>
+                    <ResolucionDeTicket value={record.resolution} />
                   </p>
                 )}
               </div>
@@ -87,18 +125,18 @@ const TicketShowContent = () => {
                   link="show"
                 />
               </div>
-              {record.sales_id != null && (
-                <div>
-                  <p className="text-muted-foreground mb-1">
-                    {translate("resources.tickets.fields.sales_id")}
-                  </p>
-                  <ReferenceField
-                    source="sales_id"
-                    reference="sales"
-                    link={false}
-                  />
-                </div>
-              )}
+              <div>
+                <p className="text-muted-foreground mb-1">
+                  {translate("resources.tickets.fields.status")}
+                </p>
+                <SelectorDeEstadoDeTicket className="-ml-3" />
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">
+                  {translate("resources.tickets.fields.sales_id")}
+                </p>
+                <SelectorDeResponsableDeTicket className="-ml-3" />
+              </div>
             </div>
 
             <Separator className="my-4" />
@@ -118,6 +156,9 @@ const TicketShowContent = () => {
       </div>
 
       <div className="hidden sm:block w-92 min-w-92">
+        <AsideSection title={translate("resources.tickets.history.title")}>
+          <HistorialDeTicket ticketId={record.id} />
+        </AsideSection>
         <AsideSection title={translate("resources.tickets.other_from_contact")}>
           <InfiniteListBase
             resource="tickets"

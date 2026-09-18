@@ -16,6 +16,30 @@
  * Un cuerpo que no sea JSON se devuelve tal cual: no toda peticion al puente
  * lleva filas.
  */
+/**
+ * Sella quién hace la modificación en tablas con historial (`updated_by`).
+ * Se impone siempre, también sobre lo que mande el cliente: el disparador
+ * que escribe el historial lo lee de la fila, y la base no puede saberlo
+ * por sí misma porque el puente escribe con la clave de servicio. Con una
+ * clave de API no hay persona detrás: queda null, que el historial muestra
+ * como «sistema».
+ */
+export function imponerActor(texto: string, actor: number | null): string {
+  let datos: unknown;
+  try {
+    datos = JSON.parse(texto);
+  } catch {
+    return texto;
+  }
+  const conActor = (fila: unknown) =>
+    fila == null || typeof fila !== "object" || Array.isArray(fila)
+      ? fila
+      : { ...(fila as Record<string, unknown>), updated_by: actor };
+  return JSON.stringify(
+    Array.isArray(datos) ? datos.map(conActor) : conActor(datos),
+  );
+}
+
 export function imponerDueno(
   texto: string,
   organizacionId: string,

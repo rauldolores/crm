@@ -192,6 +192,8 @@ grant select, insert, update, delete on table crm.tickets to anon, authenticated
 grant usage, select on sequence crm.tickets_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table crm.ticket_notes to anon, authenticated, service_role;
 grant usage, select on sequence crm.ticket_notes_id_seq to anon, authenticated, service_role;
+grant select, insert on table crm.ticket_events to anon, authenticated, service_role;
+grant usage, select on sequence crm.ticket_events_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table crm.api_keys to anon, authenticated, service_role;
 grant usage, select on sequence crm.api_keys_id_seq to anon, authenticated, service_role;
 grant select, insert, update, delete on table crm.affiliates to anon, authenticated, service_role;

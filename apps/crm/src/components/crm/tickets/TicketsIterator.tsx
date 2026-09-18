@@ -7,6 +7,8 @@ import { Status } from "../misc/Status";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Ticket } from "../types";
 import { parseTicketSubject } from "./parseTicketSubject";
+import { PrioridadDeTicket } from "./TicketBadges";
+import { useIndiceDePrioridad } from "./useIndiceDePrioridad";
 
 /**
  * Filas compactas de tickets, para el panorama de un contacto, una empresa,
@@ -21,6 +23,7 @@ export const TicketsIterator = ({
 }) => {
   const { data, isPending, error } = useListContext<Ticket>();
   const { ticketStatuses } = useConfigurationContext();
+  const indiceDePrioridad = useIndiceDePrioridad();
 
   if (isPending || error || !data?.length) return null;
 
@@ -40,7 +43,17 @@ export const TicketsIterator = ({
               className="mt-1.5"
             />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm">{title}</p>
+              <p className="flex items-center gap-2 text-sm">
+                <span className="truncate">{title}</span>
+                {/* Solo las prioridades por encima de la normal: en una
+                    lista corta, marcar «normal» en todas es ruido. */}
+                {indiceDePrioridad(ticket.priority) >= 2 && (
+                  <PrioridadDeTicket
+                    value={ticket.priority}
+                    className="shrink-0"
+                  />
+                )}
+              </p>
               <p className="truncate text-xs text-muted-foreground">
                 {showContact && (
                   <ReferenceField

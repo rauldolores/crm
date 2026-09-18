@@ -114,6 +114,39 @@ export const defaultTicketStatuses = [
   { value: "closed", label: "Cerrado", color: "#a4e87d" },
 ];
 
+// Prioridades de un ticket, de menor a mayor. Mismo formato {value,label,
+// color}; el orden de la lista es el orden de urgencia (lo usa la lista para
+// ordenar y el panel para destacar).
+export const defaultTicketPriorities = [
+  { value: "low", label: "Baja", color: "#9ca3af" },
+  { value: "normal", label: "Normal", color: "#7dbde8" },
+  { value: "high", label: "Alta", color: "#e8cb7d" },
+  { value: "urgent", label: "Urgente", color: "#e05252" },
+];
+
+// Categorías de fábrica de un ticket. Los valores coinciden con lo que ya
+// mandaba el agente de voz como prefijo «[categoría]» del asunto, para que
+// esos tickets caigan en una categoría conocida.
+export const defaultTicketCategories = [
+  { value: "product", label: "Producto" },
+  { value: "billing", label: "Facturación" },
+  { value: "support", label: "Soporte" },
+  { value: "sales", label: "Ventas" },
+  { value: "other", label: "Otro" },
+];
+
+// Motivos de cierre de un ticket. Fijos: son los que hacen legibles los
+// informes (resuelto vs. duplicado vs. sin respuesta), no un vocabulario
+// de la organización.
+export const ticketResolutions = [
+  { value: "resolved", label: "Resuelto" },
+  { value: "not_reproducible", label: "No se pudo reproducir" },
+  { value: "duplicate", label: "Duplicado" },
+  { value: "no_response", label: "Sin respuesta del cliente" },
+  { value: "wont_fix", label: "No se va a atender" },
+  { value: "other", label: "Otro" },
+];
+
 // Etapas del ciclo de vida de un cliente, para el módulo Clientes. Mismo
 // formato {value,label,color} que los estados de contacto y de ticket: se
 // pintan con la misma pastilla.
@@ -156,6 +189,8 @@ export const defaultConfiguration: ConfigurationContextValue = {
   noteTypes: defaultNoteTypes,
   taskTypes: defaultTaskTypes,
   ticketStatuses: defaultTicketStatuses,
+  ticketPriorities: defaultTicketPriorities,
+  ticketCategories: defaultTicketCategories,
   customerStages: defaultCustomerStages,
   title: defaultTitle,
   darkModeLogo: defaultDarkModeLogo,

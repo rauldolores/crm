@@ -48,6 +48,10 @@ export interface ConfigurationContextValue {
   taskTypes: LabeledValue[];
   /** Estados de un ticket de soporte: abierto, en proceso, cerrado… */
   ticketStatuses: NoteStatus[];
+  /** Prioridades de un ticket, de menor a mayor urgencia. */
+  ticketPriorities: NoteStatus[];
+  /** Categorías de un ticket (producto, facturación…). */
+  ticketCategories: LabeledValue[];
   /** Etapas del ciclo de vida del cliente (módulo Clientes). */
   customerStages: NoteStatus[];
   title: string;

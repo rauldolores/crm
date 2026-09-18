@@ -310,6 +310,30 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/cotizaciones/CotizacionesPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/EditorDeCotizacion.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/ListaDeCotizaciones.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/SeccionDeCotizaciones.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/estado.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/totales.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/customers/CustomerList.tsx",
           "type": "registry:component"
         },
@@ -543,6 +567,10 @@
         },
         {
           "path": "src/components/crm/layout/TopToolbar.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/legal/enlaces.ts",
           "type": "registry:component"
         },
         {
@@ -790,6 +818,22 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/organizaciones/MiembrosDeLaOrganizacion.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/organizaciones/OrganizacionesPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/organizaciones/navegacion.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/organizaciones/rutas.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/providers/commons/activity.ts",
           "type": "registry:component"
         },
@@ -930,6 +974,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/public/AccionesDeCotizacion.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/public/FormularioPublico.tsx",
           "type": "registry:component"
         },
@@ -950,6 +998,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/sales/InvitarUsuarioButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/sales/SalesInputs.tsx",
           "type": "registry:component"
         },
@@ -963,6 +1015,14 @@
         },
         {
           "path": "src/components/crm/sales/useGetSalesName.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/settings/AjustesDeTickets.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/settings/ColorInput.tsx",
           "type": "registry:component"
         },
         {
@@ -1102,6 +1162,26 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tickets/AvisoDeDuplicados.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/CerrarTicketDialog.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/HistorialDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/SelectoresDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TicketBadges.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/tickets/TicketCreate.tsx",
           "type": "registry:component"
         },
@@ -1135,6 +1215,10 @@
         },
         {
           "path": "src/components/crm/tickets/parseTicketSubject.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/useIndiceDePrioridad.ts",
           "type": "registry:component"
         },
         {
@@ -1182,6 +1266,18 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/kontrolia-auth/equipo.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/kontrolia-auth/equipo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/kontrolia-auth/facturacion.test.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/kontrolia-auth/facturacion.ts",
           "type": "registry:lib"
         },
@@ -1190,7 +1286,19 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/kontrolia-auth/organizaciones.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/kontrolia-auth/permissions-catalog.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/kontrolia-auth/refrescoOAuth.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/kontrolia-auth/refrescoOAuth.ts",
           "type": "registry:lib"
         },
         {
@@ -1243,6 +1351,22 @@
         },
         {
           "path": "src/lib/server/correo/valoresDeFusion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/cotizaciones/aceptar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/cotizaciones/cotizaciones.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/cotizaciones/enviar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/cotizaciones/pdf.tsx",
           "type": "registry:lib"
         },
         {
@@ -1322,6 +1446,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/mcp/herramientas/cotizaciones.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/mcp/herramientas/empresas.ts",
           "type": "registry:lib"
         },
@@ -1359,6 +1487,14 @@
         },
         {
           "path": "src/lib/server/mcp/validateSql.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/organizaciones/crearOrganizacion.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/organizaciones/crearOrganizacion.ts",
           "type": "registry:lib"
         },
         {

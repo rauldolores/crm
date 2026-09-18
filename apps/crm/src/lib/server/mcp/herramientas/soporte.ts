@@ -10,10 +10,12 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
     {
       title: "Buscar tickets",
       description:
-        "Tickets de soporte por asunto, estado, contacto o empresa. Los estados los define cada organización (ver_configuracion).",
+        "Tickets de soporte por asunto, estado, prioridad, responsable, contacto o empresa, ordenados por última actividad. Los estados, prioridades y categorías los define cada organización (ver_configuracion).",
       inputSchema: z.object({
         texto: z.string().optional().describe("Parte del asunto o la descripción."),
         estado: z.string().optional(),
+        prioridad: z.string().optional(),
+        responsableId: z.number().optional(),
         contactoId: z.number().optional(),
         empresaId: z.number().optional(),
         limite: z.number().optional(),
@@ -23,6 +25,8 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
     async (args: {
       texto?: string;
       estado?: string;
+      prioridad?: string;
+      responsableId?: number;
       contactoId?: number;
       empresaId?: number;
       limite?: number;
@@ -39,6 +43,14 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
         parametros.push(args.estado);
         condiciones.push(`t.status = $${parametros.length}`);
       }
+      if (args.prioridad) {
+        parametros.push(args.prioridad);
+        condiciones.push(`t.priority = $${parametros.length}`);
+      }
+      if (args.responsableId) {
+        parametros.push(args.responsableId);
+        condiciones.push(`t.sales_id = $${parametros.length}`);
+      }
       if (args.contactoId) {
         parametros.push(args.contactoId);
         condiciones.push(`t.contact_id = $${parametros.length}`);
@@ -51,13 +63,15 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
 
       return responder(
         ctx,
-        `select t.id, t.subject as asunto, t.status as estado, t.contact_id,
-                t.company_id, t.sales_id, t.created_at,
+        `select t.id, t.subject as asunto, t.status as estado,
+                t.priority as prioridad, t.category as categoria,
+                t.contact_id, t.company_id, t.sales_id, t.created_at,
+                t.last_activity_at as ultima_actividad, t.closed_at as cerrado_el,
                 c.first_name || ' ' || coalesce(c.last_name,'') as contacto
            from tickets t
            left join contacts c on c.id = t.contact_id
           ${condiciones.length ? "where " + condiciones.join(" and ") : ""}
-          order by t.created_at desc limit $${parametros.length}`,
+          order by t.last_activity_at desc limit $${parametros.length}`,
         parametros,
       );
     },
@@ -97,6 +111,14 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
         asunto: z.string(),
         descripcion: z.string().optional(),
         estado: z.string().optional().describe("Por defecto, open."),
+        prioridad: z
+          .string()
+          .optional()
+          .describe("low | normal | high | urgent (o los valores configurados). Por defecto, normal."),
+        categoria: z
+          .string()
+          .optional()
+          .describe("Valor de las categorías configuradas (product, billing, support, sales, other…)."),
         empresaId: z.number().optional(),
         responsableId: z.number().optional(),
       }),
@@ -106,19 +128,23 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
       asunto: string;
       descripcion?: string;
       estado?: string;
+      prioridad?: string;
+      categoria?: string;
       empresaId?: number;
       responsableId?: number;
     }) =>
       responder(
         ctx,
         `insert into tickets
-           (contact_id, company_id, subject, description, status, sales_id)
+           (contact_id, company_id, subject, description, status, sales_id,
+            priority, category, source)
          values (
            $1,
            coalesce($2, (select company_id from contacts where id = $1)),
-           $3, $4, coalesce($5, 'open'), $6
+           $3, $4, coalesce($5, 'open'), $6,
+           coalesce($7, 'normal'), $8, 'mcp'
          )
-         returning id, subject, status`,
+         returning id, subject, status, priority, category`,
         [
           args.contactoId,
           args.empresaId ?? null,
@@ -126,6 +152,8 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
           args.descripcion ?? null,
           args.estado ?? null,
           args.responsableId ?? null,
+          args.prioridad ?? null,
+          args.categoria ?? null,
         ],
       ),
   );

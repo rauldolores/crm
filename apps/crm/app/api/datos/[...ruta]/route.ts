@@ -1,6 +1,7 @@
 import { afiliadoDeLaSesion } from "@/lib/server/afiliadoDeLaSesion";
 import { autenticarPuente } from "@/lib/server/autenticarPuente";
 import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
+import { imponerActor } from "@/lib/server/imponerDueno";
 import { imponerDueno } from "@/lib/server/imponerDueno";
 import {
   contarUso,
@@ -106,6 +107,7 @@ const CON_DUENO = new Set([
   "tasks",
   "tickets",
   "ticket_notes",
+  "ticket_events",
   "configuration",
   "activity_log",
   "affiliates",
@@ -137,6 +139,9 @@ const CON_SOLO_PROPIOS = new Set(["companies", "contacts", "deals"]);
  * mismo motivo: este archivo es lo unico que sabe quien esta detras de la
  * peticion.
  */
+/** Tablas con columna `updated_by`, que el disparador de historial lee. */
+const CON_ACTOR = new Set(["tickets"]);
+
 const CON_RESPONSABLE = new Set([
   "companies",
   "contacts",
@@ -249,6 +254,15 @@ async function reenviar(peticion: Request, ruta: string[]) {
           : null;
 
       cuerpo = imponerDueno(texto, organizacionId, responsable);
+
+      // Tablas con historial: quién hizo el cambio, para el disparador que
+      // lo registra. Ver imponerActor.
+      if (CON_ACTOR.has(recurso)) {
+        cuerpo = imponerActor(
+          cuerpo,
+          await comercialDeLaSesion(organizacionId, usuarioId),
+        );
+      }
 
       // Un afiliado no puede crear ni mover un registro fuera de lo que
       // gestiona: a diferencia de `responsable` (que solo rellena si viene

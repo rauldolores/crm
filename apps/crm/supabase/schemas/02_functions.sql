@@ -180,6 +180,122 @@ begin
 end;
 $$;
 
+CREATE OR REPLACE FUNCTION "crm"."ticket_subject_prefixes"("asunto" "text", OUT "categoria" "text", OUT "motivo" "text", OUT "limpio" "text") RETURNS record
+    LANGUAGE "plpgsql" IMMUTABLE
+    SET "search_path" TO ''
+    AS $$
+declare
+  resto text := asunto;
+  m text[];
+  n int := 0;
+begin
+  categoria := null;
+  motivo := null;
+  loop
+    m := regexp_match(resto, '^\s*\[([^\]]+)\]\s*');
+    exit when m is null or n >= 6;
+    n := n + 1;
+    if n = 1 then
+      categoria := lower(btrim(m[1]));
+    elsif n = 2 then
+      motivo := btrim(m[1]);
+    end if;
+    resto := substr(resto, length((regexp_match(resto, '^\s*\[[^\]]+\]\s*'))[1]) + 1);
+  end loop;
+  limpio := coalesce(nullif(btrim(resto), ''), asunto);
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "crm"."handle_ticket_before_write"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+declare
+  p record;
+begin
+  if tg_op = 'INSERT' then
+    -- Compatibilidad con el agente de voz y los formularios: el prefijo
+    -- «[categoría]» del asunto pasa a la columna, el segundo «[motivo]» a la
+    -- descripción si venía vacía, y el asunto queda limpio.
+    if new.category is null and new.subject ~ '^\s*\[' then
+      select * into p from crm.ticket_subject_prefixes(new.subject);
+      new.category := p.categoria;
+      if new.description is null and p.motivo is not null then
+        new.description := p.motivo;
+      end if;
+      new.subject := p.limpio;
+    end if;
+    new.last_activity_at := coalesce(new.last_activity_at, now());
+    if new.status = 'closed' then
+      new.closed_at := coalesce(new.closed_at, now());
+    end if;
+    return new;
+  end if;
+
+  new.updated_at := now();
+  if new.status is distinct from old.status
+     or new.priority is distinct from old.priority
+     or new.category is distinct from old.category
+     or new.sales_id is distinct from old.sales_id then
+    new.last_activity_at := now();
+  end if;
+  if new.status = 'closed' and old.status is distinct from 'closed' then
+    new.closed_at := now();
+  elsif new.status <> 'closed' and old.status = 'closed' then
+    -- Reabrir: el cierre anterior deja de valer, el historial lo conserva.
+    new.closed_at := null;
+    new.resolution := null;
+  end if;
+  return new;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "crm"."log_ticket_events"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+  actor bigint := new.updated_by;
+begin
+  if tg_op = 'INSERT' then
+    insert into crm.ticket_events (organization_id, ticket_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, coalesce(actor, new.sales_id), 'created', null, new.status);
+    return new;
+  end if;
+
+  if new.status is distinct from old.status then
+    insert into crm.ticket_events (organization_id, ticket_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'status', old.status, new.status);
+  end if;
+  if new.priority is distinct from old.priority then
+    insert into crm.ticket_events (organization_id, ticket_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'priority', old.priority, new.priority);
+  end if;
+  if new.category is distinct from old.category then
+    insert into crm.ticket_events (organization_id, ticket_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'category', old.category, new.category);
+  end if;
+  if new.sales_id is distinct from old.sales_id then
+    insert into crm.ticket_events (organization_id, ticket_id, sales_id, field, old_value, new_value)
+    values (new.organization_id, new.id, actor, 'sales_id', old.sales_id::text, new.sales_id::text);
+  end if;
+  return new;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "crm"."handle_ticket_note_created"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+begin
+  update crm.tickets
+     set last_activity_at = greatest(last_activity_at, coalesce(new.date, now())),
+         updated_at = now()
+   where id = new.ticket_id;
+  return new;
+end;
+$$;
+
 CREATE OR REPLACE FUNCTION "crm"."stamp_contact_status_set_at"() RETURNS "trigger"
     LANGUAGE "plpgsql"
     SET "search_path" TO ''

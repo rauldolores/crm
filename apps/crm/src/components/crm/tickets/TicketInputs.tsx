@@ -9,7 +9,9 @@ import { TextInput } from "@/components/admin/text-input";
 import { AutocompleteCompanyInput } from "../companies/AutocompleteCompanyInput.tsx";
 import { contactOptionText } from "../misc/ContactOption";
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Contact, Ticket } from "../types";
+import { ticketResolutions } from "../root/defaultConfiguration";
+import type { Contact, Sale, Ticket } from "../types";
+import { AvisoDeDuplicados } from "./AvisoDeDuplicados";
 
 /**
  * Al elegir un contacto se rellena la empresa con la suya, ya que un ticket
@@ -35,8 +37,14 @@ const useHidratarEmpresaDesdeContacto = () => {
   }, [contacto?.company_id]);
 };
 
-export const TicketInputs = () => {
-  const { ticketStatuses } = useConfigurationContext();
+const aOpciones = (lista: { value: string; label: string }[]) =>
+  lista.map((item) => ({ id: item.value, name: item.label }));
+
+export const TicketInputs = ({ esAlta = false }: { esAlta?: boolean }) => {
+  const { ticketStatuses, ticketPriorities, ticketCategories } =
+    useConfigurationContext();
+  const { control } = useFormContext<Ticket>();
+  const status = useWatch({ control, name: "status" });
   useHidratarEmpresaDesdeContacto();
 
   return (
@@ -47,6 +55,7 @@ export const TicketInputs = () => {
         validate={required()}
         helperText={false}
       />
+      {esAlta && <AvisoDeDuplicados />}
       <TextInput
         source="description"
         label="resources.tickets.fields.description"
@@ -54,7 +63,7 @@ export const TicketInputs = () => {
         rows={4}
         helperText={false}
       />
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ReferenceInput source="contact_id" reference="contacts" perPage={10}>
           <AutocompleteInput
             label="resources.tickets.fields.contact_id"
@@ -70,15 +79,50 @@ export const TicketInputs = () => {
           />
         </ReferenceInput>
       </div>
-      <SelectInput
-        source="status"
-        label="resources.tickets.fields.status"
-        choices={ticketStatuses.map((estado) => ({
-          id: estado.value,
-          name: estado.label,
-        }))}
-        helperText={false}
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <SelectInput
+          source="priority"
+          label="resources.tickets.fields.priority"
+          choices={aOpciones(ticketPriorities)}
+          validate={required()}
+          helperText={false}
+        />
+        <SelectInput
+          source="category"
+          label="resources.tickets.fields.category"
+          choices={aOpciones(ticketCategories)}
+          emptyText="resources.tickets.no_category"
+          helperText={false}
+        />
+        <ReferenceInput
+          source="sales_id"
+          reference="sales"
+          filter={{ "disabled@neq": true }}
+        >
+          <AutocompleteInput
+            label="resources.tickets.fields.sales_id"
+            optionText={(sale: Sale) => `${sale.first_name} ${sale.last_name}`}
+            helperText={false}
+          />
+        </ReferenceInput>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <SelectInput
+          source="status"
+          label="resources.tickets.fields.status"
+          choices={aOpciones(ticketStatuses)}
+          helperText={false}
+        />
+        {status === "closed" && (
+          <SelectInput
+            source="resolution"
+            label="resources.tickets.fields.resolution"
+            choices={aOpciones(ticketResolutions)}
+            validate={required()}
+            helperText={false}
+          />
+        )}
+      </div>
     </div>
   );
 };

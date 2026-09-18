@@ -399,9 +399,36 @@ export type Ticket = {
   status: string;
   contact_id: Identifier;
   company_id: Identifier;
-  sales_id?: Identifier;
+  /** Responsable; por defecto quien lo creó. */
+  sales_id?: Identifier | null;
   created_at?: string;
   updated_at?: string;
+  /** Valor de configuration.ticketPriorities. */
+  priority: string;
+  /** Valor de configuration.ticketCategories; nulo si no se clasificó. */
+  category?: string | null;
+  /** manual | web_form | mcp | api | voice_agent | email */
+  source?: string;
+  /** Sellado al pasar a «closed»; nulo al reabrir. */
+  closed_at?: string | null;
+  /** Motivo de cierre (ticketResolutions); nulo mientras está abierto. */
+  resolution?: string | null;
+  /** Último cambio o nota; es lo que ordena la lista. */
+  last_activity_at?: string;
+  /** Quién hizo la última modificación; lo sella el puente. */
+  updated_by?: Identifier | null;
+} & Pick<RaRecord, "id">;
+
+/** Un cambio en un ticket: quién cambió qué y cuándo (crm.ticket_events). */
+export type TicketEvent = {
+  ticket_id: Identifier;
+  /** Quién; nulo cuando lo hizo un sistema (formulario, API, agente). */
+  sales_id?: Identifier | null;
+  /** created | status | priority | category | sales_id */
+  field: string;
+  old_value?: string | null;
+  new_value?: string | null;
+  created_at: string;
 } & Pick<RaRecord, "id">;
 
 /**

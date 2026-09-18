@@ -12,10 +12,17 @@ export const TicketCreate = () => {
     <CreateBase redirect="show">
       <div className="mt-2 flex lg:mr-72">
         <div className="flex-1">
-          <Form defaultValues={{ status: "open", sales_id: identity?.id }}>
+          <Form
+            defaultValues={{
+              status: "open",
+              priority: "normal",
+              source: "manual",
+              sales_id: identity?.id,
+            }}
+          >
             <Card>
               <CardContent>
-                <TicketInputs />
+                <TicketInputs esAlta />
                 <div
                   role="toolbar"
                   className="sticky flex pt-4 pb-4 md:pb-0 bottom-0 bg-linear-to-b from-transparent to-card to-10% flex-row justify-end gap-2"

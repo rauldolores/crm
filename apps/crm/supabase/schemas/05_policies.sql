@@ -31,6 +31,7 @@ alter table crm.configuration enable row level security;
 alter table crm.favicons_excluded_domains enable row level security;
 alter table crm.tickets enable row level security;
 alter table crm.ticket_notes enable row level security;
+alter table crm.ticket_events enable row level security;
 alter table crm.affiliates enable row level security;
 alter table crm.webhook_deliveries enable row level security;
 -- Sin una sola politica, a proposito: guarda el secreto del proveedor de
@@ -293,6 +294,14 @@ create policy "Ticket notes are updated within the organization" on crm.ticket_n
 create policy "Ticket notes are deleted within the organization" on crm.ticket_notes
     for delete to authenticated
     using (organization_id = crm.current_organization_id());
+
+-- Ticket Events (solo lectura desde la aplicación; los escribe el disparador)
+create policy "Ticket events are scoped to the organization" on crm.ticket_events
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Ticket events are created in the organization" on crm.ticket_events
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id());
 
 -- Affiliates
 create policy "Affiliates are scoped to the organization" on crm.affiliates
