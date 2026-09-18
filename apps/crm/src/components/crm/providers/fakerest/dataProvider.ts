@@ -22,6 +22,7 @@ import type {
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
 import { getActivityLog } from "../commons/activity";
+import { getContactTimeline } from "../commons/contactTimeline";
 import { getCompanyAvatar } from "../commons/getCompanyAvatar";
 import { getContactAvatar } from "../commons/getContactAvatar";
 import { mergeContacts } from "../commons/mergeContacts";
@@ -181,6 +182,12 @@ export const createDataProvider = ({
         const { page, perPage } = pagination;
         const start = (page - 1) * perPage;
         return { data: all.slice(start, start + perPage), total: all.length };
+      }
+      if (resource === "contact_timeline") {
+        return getContactTimeline(
+          withSupabaseFilterAdapter(baseDataProvider),
+          params,
+        ) as never;
       }
       return baseDataProvider.getList(resource, params);
     },

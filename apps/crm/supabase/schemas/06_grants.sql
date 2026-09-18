@@ -112,6 +112,10 @@ grant all on table crm.activity_log to anon;
 grant all on table crm.activity_log to authenticated;
 grant all on table crm.activity_log to service_role;
 
+grant all on table crm.contact_timeline to anon;
+grant all on table crm.contact_timeline to authenticated;
+grant all on table crm.contact_timeline to service_role;
+
 grant all on table crm.companies_summary to anon;
 grant all on table crm.companies_summary to authenticated;
 grant all on table crm.companies_summary to service_role;
@@ -240,3 +244,23 @@ grant usage, select on sequence crm.quote_items_id_seq to anon, authenticated, s
 grant select, insert, update, delete on table crm.quote_sequences to service_role;
 revoke all on table crm.quote_sequences from anon;
 revoke all on table crm.quote_sequences from authenticated;
+
+-- Conectores: SOLO service_role, guardan la credencial del proveedor.
+grant select, insert, update, delete on table crm.connectors to service_role;
+grant usage, select on sequence crm.connectors_id_seq to service_role;
+revoke all on table crm.connectors from anon;
+revoke all on table crm.connectors from authenticated;
+revoke all on sequence crm.connectors_id_seq from anon;
+revoke all on sequence crm.connectors_id_seq from authenticated;
+-- Productos y facturas: solo lectura para la organización; los escribe el
+-- servidor al sincronizar o al facturar.
+grant select on table crm.products to anon, authenticated;
+grant select, insert, update, delete on table crm.products to service_role;
+grant usage, select on sequence crm.products_id_seq to anon, authenticated, service_role;
+revoke insert, update, delete on table crm.products from anon;
+revoke insert, update, delete on table crm.products from authenticated;
+grant select on table crm.invoices to anon, authenticated;
+grant select, insert, update, delete on table crm.invoices to service_role;
+grant usage, select on sequence crm.invoices_id_seq to anon, authenticated, service_role;
+revoke insert, update, delete on table crm.invoices from anon;
+revoke insert, update, delete on table crm.invoices from authenticated;

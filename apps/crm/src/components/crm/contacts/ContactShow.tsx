@@ -20,7 +20,8 @@ import { Link } from "react-router";
 import MobileHeader from "../layout/MobileHeader";
 import { MobileContent } from "../layout/MobileContent";
 import { CompanyAvatar } from "../companies/CompanyAvatar";
-import { NoteCreate, NotesIterator, NotesIteratorMobile } from "../notes";
+import { LineaDeTiempo } from "../linea-de-tiempo/LineaDeTiempo";
+import { NotesIteratorMobile } from "../notes";
 import { NoteCreateSheet } from "../notes/NoteCreateSheet";
 import { TagsListEdit } from "./TagsListEdit";
 import { ContactEditSheet } from "./ContactEditSheet";
@@ -280,19 +281,11 @@ const ContactShowContent = () => {
                 </ReferenceField>
               </div>
             </div>
-            <InfiniteListBase
-              resource="contact_notes"
-              filter={{ contact_id: record.id }}
-              sort={{ field: "date", order: "DESC" }}
-              perPage={25}
-              disableSyncWithLocation
-              storeKey={false}
-              empty={
-                <NoteCreate reference="contacts" showStatus className="mt-4" />
-              }
-            >
-              <NotesIterator reference="contacts" showStatus />
-            </InfiniteListBase>
+            {/* Toda la historia del contacto en una cronología —notas,
+                llamadas, WhatsApp, correos, tareas, oportunidades, tickets,
+                cotizaciones— con resumen por evento y el detalle a un clic.
+                Un cliente de años deja de ser una lista interminable. */}
+            <LineaDeTiempo contactId={record.id} />
           </CardContent>
         </Card>
       </div>

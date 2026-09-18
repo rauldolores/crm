@@ -86,6 +86,10 @@ const RECURSOS_PROHIBIDOS = new Set([
   "internal_settings",
   // Folios de cotización: los asigna la base; nadie los edita a mano.
   "quote_sequences",
+  // Conectores: guardan la credencial del proveedor en claro (Shopify,
+  // Faqturia…). Solo por /api/conectores, que exige administrador y nunca
+  // devuelve el secreto.
+  "connectors",
 ]);
 
 /** Tablas y vistas que pertenecen a una organización. */
@@ -110,6 +114,7 @@ const CON_DUENO = new Set([
   "ticket_events",
   "configuration",
   "activity_log",
+  "contact_timeline",
   "affiliates",
   "affiliate_commissions",
   "email_templates",
@@ -120,6 +125,8 @@ const CON_DUENO = new Set([
   "customer_summary",
   "quotes",
   "quote_items",
+  "products",
+  "invoices",
 ]);
 
 /**
