@@ -10,12 +10,11 @@ const traducciones: Record<string, string> = {
   "crm.billing.enterprise.tagline": "Te generamos la cotización a tu medida",
   "crm.billing.enterprise.custom_quote": "A tu medida",
   "crm.billing.enterprise.side_by_side": "Trabajamos hombro con hombro",
-  "crm.billing.enterprise.features.infrastructure": "Infraestructura propia",
-  "crm.billing.enterprise.features.sso": "SSO",
+  "crm.billing.enterprise.features.dedicated": "Infraestructura propia",
+  "crm.billing.enterprise.features.sla": "SLA",
   "crm.billing.enterprise.features.integrations": "Integraciones",
   "crm.billing.enterprise.features.custom_deploys":
     "Despliegues personalizados",
-  "crm.billing.enterprise.features.sla": "SLA",
   "crm.billing.enterprise.features.large_teams": "Grandes equipos",
   "crm.billing.enterprise.features.custom_projects": "Proyectos particulares",
   "crm.billing.enterprise.action": "Quiero ser contactado",
@@ -79,7 +78,7 @@ describe("PlanEnterpriseCard", () => {
     await expect
       .element(screen.getByText("Infraestructura propia"))
       .toBeInTheDocument();
-    await expect.element(screen.getByText("SSO")).toBeInTheDocument();
+    await expect.element(screen.getByText("SLA")).toBeInTheDocument();
   });
 
   it("precarga el nombre de la sesión activa al abrir el diálogo", async () => {
