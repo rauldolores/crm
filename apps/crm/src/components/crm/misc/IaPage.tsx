@@ -19,9 +19,9 @@ import { MODELOS_POR_PROVEEDOR } from "./modelosDeIa";
  * pegue una clave para poder redactar un correo era pedirle demasiado. Aquí
  * solo se enciende o se apaga, y se elige modelo si se quiere otro.
  *
- * Las instalaciones que ya habían puesto su propia clave la conservan: para
- * esas, la pantalla sigue enseñando proveedor y clave, porque siguen pagando
- * su propio consumo y pueden querer cambiarla.
+ * Una instalación en servidores del cliente que configuró su clave a mano
+ * antes de esto sigue funcionando con ella (ver configuracion.ts), pero aquí
+ * ya no se pide ni se cambia: se pone en el servidor.
  */
 
 const PROVEEDORES = [
@@ -48,8 +48,6 @@ interface ConfiguracionDeIa {
   tieneClave: boolean;
   /** Funciona con la clave del despliegue: aquí no se pide ninguna. */
   incluida: boolean;
-  /** Esta organización guardó su propia clave en su día. */
-  claveDelCliente: boolean;
 }
 
 export const IaPage = () => {
@@ -61,7 +59,6 @@ export const IaPage = () => {
   const [config, setConfig] = useState<ConfiguracionDeIa | null>(null);
 
   const [proveedor, setProveedor] = useState<string>("claude");
-  const [clave, setClave] = useState("");
   const [modelo, setModelo] = useState("");
   const [activo, setActivo] = useState(true);
   // "Otro" abre el campo libre: la lista de modelos es de conveniencia, no
@@ -73,7 +70,6 @@ export const IaPage = () => {
     setProveedor(datos.provider ?? "claude");
     setModelo(datos.model ?? "");
     setActivo(datos.active);
-    setClave("");
     const conocidos = MODELOS_POR_PROVEEDOR[datos.provider ?? ""] ?? [];
     setModeloAMano(
       Boolean(datos.model) && !conocidos.some((m) => m.value === datos.model),
@@ -103,7 +99,6 @@ export const IaPage = () => {
           method: "PUT",
           body: JSON.stringify({
             provider: proveedor,
-            apiKey: clave,
             model: modelo,
             active: activo,
           }),
@@ -120,9 +115,8 @@ export const IaPage = () => {
 
   if (cargando) return null;
 
-  // Con la clave del despliegue no hay nada que pedir: ni proveedor (es el
-  // de la clave) ni credencial.
-  const conClavePropia = config?.claveDelCliente ?? false;
+  // No hay nada que pedir: ni proveedor (es el de la clave del despliegue)
+  // ni credencial.
   const sinClaveEnNingunSitio = !config?.tieneClave;
 
   return (
@@ -142,51 +136,11 @@ export const IaPage = () => {
 
       <Card>
         <CardContent className="space-y-4 pt-6 text-sm">
-          {conClavePropia ? (
-            <>
-              <div className="space-y-1.5">
-                <Label>{translate("crm.ai.provider")}</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PROVEEDORES.map((item) => (
-                    <Button
-                      key={item.value}
-                      type="button"
-                      size="sm"
-                      variant={proveedor === item.value ? "default" : "outline"}
-                      onClick={() => {
-                        setProveedor(item.value);
-                        setModelo("");
-                        setModeloAMano(false);
-                      }}
-                    >
-                      {item.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="clave-ia">{translate("crm.ai.api_key")}</Label>
-                <Input
-                  id="clave-ia"
-                  type="password"
-                  autoComplete="off"
-                  value={clave}
-                  placeholder={translate("crm.ai.api_key_saved")}
-                  onChange={(evento) => setClave(evento.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {translate("crm.ai.own_key_help")}
-                </p>
-              </div>
-            </>
-          ) : (
+          {config?.incluida && (
             <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-              {config?.incluida
-                ? translate("crm.ai.included", {
-                    provider: nombreDelProveedor(config.provider ?? ""),
-                  })
-                : translate("crm.ai.not_configured")}
+              {translate("crm.ai.included", {
+                provider: nombreDelProveedor(config.provider ?? ""),
+              })}
             </p>
           )}
 

@@ -5,14 +5,16 @@ import { esProveedorDeIa, MODELO_POR_DEFECTO } from "./proveedores";
 /**
  * Con qué cuenta de IA trabaja una organización.
  *
- * La clave es del DESPLIEGUE, no de cada cliente: pedirle a una pyme que
- * abra una cuenta en Anthropic o en OpenAI y pegue una clave para poder
- * redactar un correo era pedirle demasiado, así que la pone quien instala el
- * CRM (`AI_API_KEY`) y el cliente solo enciende o apaga la función.
+ * La clave es del DESPLIEGUE (`AI_API_KEY`), no de cada cliente: pedirle a
+ * una pyme que abra cuenta en Anthropic o en OpenAI y pegue una clave para
+ * poder redactar un correo era pedirle demasiado. Quien instala el CRM la
+ * pone una vez y todas sus organizaciones la usan; en la pantalla solo se
+ * enciende o se apaga.
  *
- * Una organización que ya tenía la suya la conserva y se sigue prefiriendo:
- * paga su propio consumo, que es lo que eligió. Y el interruptor manda en
- * ambos casos — apagada es apagada, aunque el despliegue tenga clave.
+ * `crm.ai_settings.api_key` se conserva para las instalaciones que ya la
+ * habían configurado a mano y no tienen la variable de entorno —una
+ * instalación en servidores del cliente, por ejemplo—, pero deja de pedirse.
+ * Si el despliegue tiene clave, es la que manda.
  */
 
 const proveedorDelEntorno = (): ProveedorDeIa | null => {
@@ -31,37 +33,38 @@ export const cuentaDeIaDelEntorno = (): CuentaDeIa | null => {
 export async function cuentaDeIaDeOrganizacion(
   organizacionId: string,
 ): Promise<CuentaDeIa | null> {
+  const entorno = cuentaDeIaDelEntorno();
   const { data } = await getServiceClient()
     .from("ai_settings")
     .select("provider, api_key, model, active")
     .eq("organization_id", organizacionId)
     .maybeSingle();
 
-  // Sin fila, la IA está disponible si el despliegue tiene clave: es lo que
-  // encuentra una organización nueva, sin tener que configurar nada.
-  if (!data) return cuentaDeIaDelEntorno();
+  // Sin fila, vale lo del despliegue: es lo que encuentra una organización
+  // nueva sin configurar nada.
+  if (!data) return entorno;
 
-  // Con fila, el interruptor decide primero.
+  // Con fila, el interruptor manda: apagada es apagada.
   if (!data.active) return null;
 
-  const claveDelCliente = data.api_key as string | null;
-  if (claveDelCliente && esProveedorDeIa(data.provider)) {
-    return {
-      provider: data.provider,
-      apiKey: claveDelCliente,
-      model: (data.model as string | null) ?? null,
-    };
+  if (entorno) {
+    // El modelo sí lo elige la organización, mientras hable del mismo
+    // proveedor que la clave del despliegue.
+    const model =
+      data.provider === entorno.provider
+        ? ((data.model as string | null) ?? entorno.model ?? null)
+        : (entorno.model ?? null);
+    return { ...entorno, model };
   }
 
-  const entorno = cuentaDeIaDelEntorno();
-  if (!entorno) return null;
-  // El modelo sí puede elegirlo la organización, siempre que no haya
-  // cambiado de proveedor respecto al del despliegue.
-  const model =
-    data.provider === entorno.provider
-      ? ((data.model as string | null) ?? entorno.model ?? null)
-      : (entorno.model ?? null);
-  return { ...entorno, model };
+  // Instalación sin variable de entorno: su propia clave, como antes.
+  const propia = data.api_key as string | null;
+  if (!propia || !esProveedorDeIa(data.provider)) return null;
+  return {
+    provider: data.provider,
+    apiKey: propia,
+    model: (data.model as string | null) ?? null,
+  };
 }
 
 /** Metadatos para la pantalla. NUNCA incluye la clave. */
@@ -71,10 +74,8 @@ export interface ConfiguracionDeIaVisible {
   modeloPorDefecto: string | null;
   active: boolean;
   tieneClave: boolean;
-  /** La IA funciona con la clave del despliegue, no con una del cliente. */
+  /** La IA funciona con la clave del despliegue: aquí no se pide ninguna. */
   incluida: boolean;
-  /** Hay una clave propia guardada (instalaciones anteriores). */
-  claveDelCliente: boolean;
 }
 
 export async function configuracionDeIaVisible(
@@ -87,29 +88,18 @@ export async function configuracionDeIaVisible(
     .eq("organization_id", organizacionId)
     .maybeSingle();
 
-  if (!data) {
-    return {
-      provider: entorno?.provider ?? null,
-      model: entorno?.model ?? null,
-      modeloPorDefecto: entorno ? MODELO_POR_DEFECTO[entorno.provider] : null,
-      active: Boolean(entorno),
-      tieneClave: Boolean(entorno),
-      incluida: Boolean(entorno),
-      claveDelCliente: false,
-    };
-  }
+  // El proveedor que se va a usar de verdad, que es el que decide qué
+  // modelos ofrece la pantalla.
+  const provider = entorno?.provider ?? (data?.provider as string) ?? null;
+  const tieneClave = Boolean(entorno) || Boolean(data?.api_key);
 
-  const claveDelCliente = Boolean(data.api_key);
-  const provider = (data.provider as string) || (entorno?.provider ?? "");
   return {
     provider,
-    model: (data.model as string | null) ?? null,
-    modeloPorDefecto: esProveedorDeIa(provider)
-      ? MODELO_POR_DEFECTO[provider]
-      : null,
-    active: Boolean(data.active),
-    tieneClave: claveDelCliente || Boolean(entorno),
-    incluida: !claveDelCliente && Boolean(entorno),
-    claveDelCliente,
+    model: (data?.model as string | null) ?? entorno?.model ?? null,
+    modeloPorDefecto:
+      provider && esProveedorDeIa(provider) ? MODELO_POR_DEFECTO[provider] : null,
+    active: data ? Boolean(data.active) : Boolean(entorno),
+    tieneClave,
+    incluida: Boolean(entorno),
   };
 }

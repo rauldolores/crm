@@ -1360,8 +1360,6 @@ export const spanishCrmMessages = {
       saved: "Configuración de IA guardada",
       included:
         "Incluida en tu plan, con %{provider}. No necesitas contratar nada ni pegar ninguna clave: enciéndela y ya está.",
-      own_key_help:
-        "Tu organización usa su propia clave y paga su propio consumo. Se guarda del lado del servidor y no vuelve a mostrarse nunca. Déjala en blanco para conservar la que ya hay.",
       not_configured:
         "La IA no está disponible en esta instalación: falta configurar su clave en el servidor. Mientras tanto, las plantillas se escriben a mano.",
     },
