@@ -225,10 +225,10 @@ export const BarraLateral = () => {
 
   return (
     <aside className="relative hidden w-60 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
-      <div className="relative flex flex-1 flex-col gap-1 p-3">
+      <div className="relative flex min-h-0 flex-1 flex-col gap-1 p-3">
         <Link
           to="/"
-          className="group mb-5 flex items-center gap-2.5 px-2 py-1 no-underline text-sidebar-foreground"
+          className="group mb-5 flex shrink-0 items-center gap-2.5 px-2 py-1 no-underline text-sidebar-foreground"
         >
           <img
             src={darkModeLogo}
@@ -240,24 +240,33 @@ export const BarraLateral = () => {
           </span>
         </Link>
 
-        <GrupoDeSecciones
-          titulo="Principal"
-          secciones={secciones}
-          estaActiva={estaActiva}
-          esPrimero
-        />
-        <GrupoDeSecciones
-          titulo={translate("crm.modules.title")}
-          secciones={seccionesDeModulos}
-          estaActiva={estaActiva}
-        />
-        <GrupoDeSecciones
-          titulo={translate("crm.settings.sections.tools")}
-          secciones={seccionesDeHerramientas}
-          estaActiva={estaActiva}
-        />
+        {/* Lo único que se desplaza. Con muchos módulos activos la lista no
+            cabe en una pantalla de portátil, y lo que se salía por abajo era
+            justo lo de abajo: Ajustes, Ayuda y el consumo del plan. El
+            margen negativo saca la barra de desplazamiento al borde del
+            panel sin que el contenido pierda su margen. */}
+        <div className="-mr-3 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-3">
+          <GrupoDeSecciones
+            titulo="Principal"
+            secciones={secciones}
+            estaActiva={estaActiva}
+            esPrimero
+          />
+          <GrupoDeSecciones
+            titulo={translate("crm.modules.title")}
+            secciones={seccionesDeModulos}
+            estaActiva={estaActiva}
+          />
+          <GrupoDeSecciones
+            titulo={translate("crm.settings.sections.tools")}
+            secciones={seccionesDeHerramientas}
+            estaActiva={estaActiva}
+          />
+        </div>
 
-        <div className="mt-auto border-t border-sidebar-border pt-4">
+        {/* Fijo al fondo: Ayuda, Ajustes y el consumo del plan siempre a la
+            vista, que es lo que evita la sorpresa a mitad de una importación. */}
+        <div className="shrink-0 border-t border-sidebar-border pt-4">
           {/* Ayuda: para todo el mundo, antes que Ajustes. Es lo primero que
               busca quien acaba de entrar y no sabe qué es un CRM. */}
           <Link
