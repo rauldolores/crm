@@ -1,0 +1,12 @@
+-- La clave de IA pasa a ser del despliegue (variables de entorno), no de
+-- cada organización: quien usa el CRM no tiene por qué abrir una cuenta en
+-- Anthropic ni en OpenAI para que le funcionen las plantillas.
+--
+-- `crm.ai_settings` se queda, pero ahora solo guarda la decisión de la
+-- organización —encendido o apagado, y el modelo si quiere otro— y, en las
+-- instalaciones que ya pusieron la suya, su propia clave (que se sigue
+-- prefiriendo). Por eso api_key deja de ser obligatoria.
+--
+-- Aditiva y reversible: `alter column ... set not null` la devuelve a como
+-- estaba, siempre que no haya filas sin clave.
+alter table crm.ai_settings alter column api_key drop not null;

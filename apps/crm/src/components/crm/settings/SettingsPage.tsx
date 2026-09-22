@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { toSlug } from "@/lib/toSlug";
 import { ArrayInput } from "@/components/admin/array-input";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
+import { BooleanInput } from "@/components/admin/boolean-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { NumberInput } from "@/components/admin/number-input";
@@ -213,6 +214,7 @@ const transformFormValues = (data: Record<string, any>) => {
       dealCategories: ensureValues(data.dealCategories),
       taskTypes: ensureValues(data.taskTypes),
       dealPipelines: embudos,
+      requireIncomeToWin: data.requireIncomeToWin ?? true,
       dealLossReasons: ensureValues(data.dealLossReasons),
       // Derivados del primer embudo, por compatibilidad con configuraciones
       // y lectores anteriores a los embudos múltiples.
@@ -274,6 +276,7 @@ const SettingsForm = () => {
       dealCategories: config.dealCategories,
       taskTypes: config.taskTypes,
       dealPipelines: config.dealPipelines,
+      requireIncomeToWin: config.requireIncomeToWin,
       dealLossReasons: config.dealLossReasons,
       noteStatuses: config.noteStatuses,
       noteTypes: config.noteTypes,
@@ -435,6 +438,20 @@ const SettingsFormFields = () => {
                 <TextInput source="label" label={false} />
               </SimpleFormIterator>
             </ArrayInput>
+
+            <Separator />
+
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("crm.settings.deals.win_rule")}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {translate("crm.settings.deals.win_rule_help")}
+            </p>
+            <BooleanInput
+              source="requireIncomeToWin"
+              label="crm.settings.deals.win_rule_label"
+              helperText={false}
+            />
 
             <Separator />
 

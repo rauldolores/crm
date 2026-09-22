@@ -1,4 +1,5 @@
 import { afiliadoDeLaSesion } from "@/lib/server/afiliadoDeLaSesion";
+import { borraAlUsuarioDeLaSesion } from "@/lib/server/borradoDeUsuarios";
 import { autenticarPuente } from "@/lib/server/autenticarPuente";
 import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
 import { imponerActor } from "@/lib/server/imponerDueno";
@@ -226,6 +227,19 @@ async function reenviar(peticion: Request, ruta: string[]) {
   );
 
   const parametros = new URLSearchParams(origen.search);
+
+  // Nadie se borra a sí mismo del equipo: se quedaría con la sesión abierta
+  // y sin ficha, y si era el único administrador la organización se queda
+  // sin quien la administre. Ver borradoDeUsuarios.
+  if (peticion.method === "DELETE" && recurso === "sales") {
+    const propio = await comercialDeLaSesion(organizacionId, usuarioId);
+    if (borraAlUsuarioDeLaSesion(parametros, propio)) {
+      return esError(
+        403,
+        "No puedes eliminar tu propio usuario. Pídele a otra persona que administre la organización que lo haga.",
+      );
+    }
+  }
 
   // El filtro de organización se impone, no se acepta del cliente: si viniera
   // uno en la petición se descarta antes de añadir el correcto.

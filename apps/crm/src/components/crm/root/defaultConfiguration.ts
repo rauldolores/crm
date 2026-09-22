@@ -211,6 +211,10 @@ export const defaultConfiguration: ConfigurationContextValue = {
   companyCustomFields: [],
   dealCustomFields: [],
   modules: defaultModules,
+  // Encendida de fábrica: una oportunidad ganada sin cotización, contrato ni
+  // compra detrás no es un ingreso, es una casilla movida. Quien prefiera
+  // marcarlas antes de tener el papel lo apaga en Ajustes.
+  requireIncomeToWin: true,
   quoteTaxRate: defaultQuoteTaxRate,
   quoteTemplates: [],
   quoteIssuer: { name: "" },

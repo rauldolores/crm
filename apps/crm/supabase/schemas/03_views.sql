@@ -308,7 +308,12 @@ select
     k.next_renewal_on,
     coalesce(t.open_tickets, 0) as open_tickets,
     coalesce(t.overdue_tickets, 0) as overdue_tickets,
-    (coalesce(t.open_tickets, 0) >= 3 or coalesce(t.overdue_tickets, 0) >= 1) as at_risk
+    (coalesce(t.open_tickets, 0) >= 3 or coalesce(t.overdue_tickets, 0) >= 1) as at_risk,
+    coalesce(k.nb_recurring_contracts, 0) as nb_recurring_contracts,
+    coalesce(k.nb_one_time_contracts, 0) as nb_one_time_contracts,
+    coalesce(k.one_time_amount, 0) as one_time_amount,
+    coalesce(g.nb_won_deals, 0) as nb_won_deals,
+    coalesce(g.won_amount, 0) as won_amount
 from crm.companies c
 left join lateral (
     select count(*) as nb_purchases,
@@ -319,12 +324,46 @@ left join lateral (
      where company_id = c.id and status <> 'cancelled'
 ) p on true
 left join lateral (
-    select count(*) as nb_active_contracts,
-           sum(amount) as recurring_amount,
-           min(renews_on) filter (where renews_on is not null) as next_renewal_on
+    select
+        count(*) as nb_active_contracts,
+        count(*) filter (where billing_period in ('monthly', 'quarterly', 'yearly'))
+            as nb_recurring_contracts,
+        count(*) filter (where billing_period is null
+                            or billing_period not in ('monthly', 'quarterly', 'yearly'))
+            as nb_one_time_contracts,
+        sum(amount) filter (where billing_period in ('monthly', 'quarterly', 'yearly'))
+            as recurring_amount,
+        sum(amount) filter (where billing_period is null
+                               or billing_period not in ('monthly', 'quarterly', 'yearly'))
+            as one_time_amount,
+        min(renews_on) filter (
+            where renews_on is not null
+              and billing_period in ('monthly', 'quarterly', 'yearly')
+        ) as next_renewal_on
       from crm.contracts
      where company_id = c.id and status = 'active'
 ) k on true
+left join lateral (
+    select count(*) as nb_won_deals,
+           sum(d.amount) as won_amount
+      from crm.deals d
+     where d.company_id = c.id
+       and d.organization_id = c.organization_id
+       and d.archived_at is null
+       and coalesce(
+             (
+               select embudo -> 'pipelineStatuses' ? d.stage
+                 from crm.configuration cfg
+                      cross join lateral jsonb_array_elements(
+                        coalesce(cfg.config -> 'dealPipelines', '[]'::jsonb)
+                      ) as embudo
+                where cfg.organization_id = d.organization_id
+                  and embudo ->> 'value' = coalesce(d.pipeline, 'ventas')
+                limit 1
+             ),
+             false
+           )
+) g on true
 left join lateral (
     select count(*) as open_tickets,
            count(*) filter (where due_at < now()) as overdue_tickets

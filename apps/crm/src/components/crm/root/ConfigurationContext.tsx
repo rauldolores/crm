@@ -75,6 +75,12 @@ export interface ConfigurationContextValue {
   dealCustomFields: CustomFieldDefinition[];
   /** Módulos activables por organización, indexados por clave (ver modules/registry.ts). */
   modules: Record<string, ModuleConfig>;
+  /**
+   * Para pasar una oportunidad a una etapa ganada hace falta algo que
+   * represente el ingreso: una cotización aceptada, o un contrato o una
+   * compra de esa empresa. Se apaga desde Ajustes → Oportunidades.
+   */
+  requireIncomeToWin: boolean;
   /** IVA por defecto de las líneas de cotización, en porcentaje. */
   quoteTaxRate: number;
   /** Plantillas de cotización de la organización (líneas y condiciones). */

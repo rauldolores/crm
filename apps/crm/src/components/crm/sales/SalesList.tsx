@@ -1,5 +1,12 @@
-import { useRecordContext, useTranslate } from "ra-core";
+import {
+  useGetIdentity,
+  useListContext,
+  useRecordContext,
+  useTranslate,
+} from "ra-core";
 import { useEffect, useState } from "react";
+import { BulkDeleteButton } from "@/components/admin/bulk-delete-button";
+import { BulkExportButton } from "@/components/admin/bulk-export-button";
 import { DataTable } from "@/components/admin/data-table";
 import { ExportButton } from "@/components/admin/export-button";
 import { List } from "@/components/admin/list";
@@ -39,6 +46,36 @@ const SalesListActions = () => {
 
 const filters = [<SearchInput source="q" alwaysOn />];
 
+/**
+ * Borrar en bloque, menos a uno mismo.
+ *
+ * Quien se borra se queda con la sesión abierta y sin ficha: sin responsable
+ * asignable, sin poder crear nada y —si era el único administrador— con la
+ * organización sin quien la administre. El puente lo rechaza igualmente
+ * (ver borradoDeUsuarios.ts); aquí se explica antes de intentarlo.
+ */
+const AccionesDeEquipo = () => {
+  const translate = useTranslate();
+  const { selectedIds } = useListContext();
+  const { identity } = useGetIdentity();
+  const meIncluye =
+    identity?.id != null &&
+    (selectedIds ?? []).some((id) => String(id) === String(identity.id));
+
+  return (
+    <>
+      <BulkExportButton />
+      {meIncluye ? (
+        <span className="text-sm text-muted-foreground">
+          {translate("resources.sales.cannot_delete_self")}
+        </span>
+      ) : (
+        <BulkDeleteButton />
+      )}
+    </>
+  );
+};
+
 const OptionsField = (_props: { label?: string | boolean }) => {
   const record = useRecordContext();
   const translate = useTranslate();
@@ -72,7 +109,7 @@ export function SalesList() {
       actions={<SalesListActions />}
       sort={{ field: "first_name", order: "ASC" }}
     >
-      <DataTable>
+      <DataTable bulkActionButtons={<AccionesDeEquipo />}>
         <DataTable.Col source="first_name" />
         <DataTable.Col source="last_name" />
         <DataTable.Col source="email" />

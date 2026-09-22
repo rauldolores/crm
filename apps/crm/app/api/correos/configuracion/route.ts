@@ -74,32 +74,38 @@ export async function PUT(peticion: Request) {
   // La clave solo se escribe cuando llega una nueva: la pantalla no la
   // recibe nunca, así que un guardado sin tocarla mandaría el campo vacío y
   // borraría la que ya estaba.
-  const fila: Record<string, unknown> = {
-    organization_id: organizacionId,
+  const fila = {
     provider: cuerpo.provider,
     from_email: fromEmail,
     from_name: fromName,
     active: cuerpo?.active ?? true,
     updated_at: new Date().toISOString(),
   };
-  if (apiKey) fila.api_key = apiKey;
 
-  if (!apiKey) {
-    const { data: existente } = await supabase
+  if (apiKey) {
+    const { error } = await supabase
       .from("email_settings")
-      .select("organization_id")
+      .upsert(
+        { ...fila, organization_id: organizacionId, api_key: apiKey },
+        { onConflict: "organization_id" },
+      );
+    if (error) return esError(500, error.message);
+  } else {
+    // Sin clave nueva NO vale el upsert: PostgREST arma un INSERT ... ON
+    // CONFLICT y Postgres comprueba el NOT NULL de api_key antes de resolver
+    // el conflicto, así que fallaba con «null value in column api_key»
+    // aunque la fila ya existiera. Un UPDATE no toca la clave guardada.
+    const { data, error } = await supabase
+      .from("email_settings")
+      .update(fila)
       .eq("organization_id", organizacionId)
+      .select("organization_id")
       .maybeSingle();
-    if (!existente) {
+    if (error) return esError(500, error.message);
+    if (!data) {
       return esError(400, "Escribe la clave de API de tu proveedor de correo.");
     }
   }
-
-  const { error } = await supabase
-    .from("email_settings")
-    .upsert(fila, { onConflict: "organization_id" });
-
-  if (error) return esError(500, error.message);
 
   return Response.json(await configuracionVisible(organizacionId));
 }

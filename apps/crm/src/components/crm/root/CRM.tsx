@@ -203,6 +203,7 @@ export const CRM = ({
         ticketSla: defaultTicketSla,
         customerStages: defaultCustomerStages,
         modules: defaultModules,
+        requireIncomeToWin: true,
         quoteTaxRate: defaultQuoteTaxRate,
         quoteTemplates: [],
         quoteIssuer: { name: "" },

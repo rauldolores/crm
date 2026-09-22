@@ -20,7 +20,11 @@ import { RiesgoDeCliente } from "./RiesgoDeCliente";
  * quién le vence algo pronto?» sin abrir las fichas una por una.
  */
 
-const Importe = ({ campo }: { campo: "total_spent" | "recurring_amount" }) => {
+const Importe = ({
+  campo,
+}: {
+  campo: "total_spent" | "recurring_amount" | "one_time_amount" | "won_amount";
+}) => {
   const record = useRecordContext<CustomerSummary>();
   const { currency } = useConfigurationContext();
   if (!record) return null;
@@ -56,6 +60,33 @@ const Renovacion = () => {
         </span>
       )}
     </span>
+  );
+};
+
+/** Lo ganado en el embudo, con cuántas oportunidades lo sostienen. */
+const Ganadas = () => {
+  const record = useRecordContext<CustomerSummary>();
+  const translate = useTranslate();
+  const { currency } = useConfigurationContext();
+  if (!record) return null;
+  const cuenta = Number(record.nb_won_deals ?? 0);
+  if (cuenta === 0) return <span className="text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-col">
+      <span>
+        {Number(record.won_amount ?? 0).toLocaleString(undefined, {
+          style: "currency",
+          currency,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })}
+      </span>
+      <span className="text-xs text-muted-foreground">
+        {translate("crm.customers.fields.nb_won_deals", {
+          smart_count: cuenta,
+        })}
+      </span>
+    </div>
   );
 };
 
@@ -112,6 +143,12 @@ export const CustomerList = () => {
         />
         <DataTable.Col label="crm.customers.fields.recurring_amount">
           <Importe campo="recurring_amount" />
+        </DataTable.Col>
+        <DataTable.Col label="crm.customers.fields.one_time_amount">
+          <Importe campo="one_time_amount" />
+        </DataTable.Col>
+        <DataTable.Col label="crm.customers.fields.won_amount">
+          <Ganadas />
         </DataTable.Col>
         <DataTable.Col label="crm.customers.fields.next_renewal_on">
           <Renovacion />

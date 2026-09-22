@@ -2,6 +2,7 @@ import { DragDropContext, type OnDragEndResponder } from "@hello-pangea/dnd";
 import isEqual from "lodash/isEqual";
 import { useDataProvider, useListContext, useTranslate } from "ra-core";
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,11 +25,13 @@ import type { CrmDataProvider } from "../providers/supabase/dataProvider";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { DealColumn } from "./DealColumn";
+import { ingresoAsociado } from "./ingresoAsociado";
 import type { DealsByStage } from "./stages";
 import { getDealsByStage } from "./stages";
 
 export const DealListContent = () => {
-  const { dealPipelines, dealLossReasons } = useConfigurationContext();
+  const { dealPipelines, dealLossReasons, requireIncomeToWin } =
+    useConfigurationContext();
   const translate = useTranslate();
   const {
     data: unorderedDeals,
@@ -54,6 +57,8 @@ export const DealListContent = () => {
     nombre: string;
   } | null>(null);
   const [motivoElegido, setMotivoElegido] = useState<string>("");
+  // Movimiento a ganada bloqueado por no haber ingreso que lo respalde.
+  const [sinIngreso, setSinIngreso] = useState<Deal | null>(null);
 
   useEffect(() => {
     if (unorderedDeals) {
@@ -116,6 +121,20 @@ export const DealListContent = () => {
     if (esPerdida && sourceStage !== destinationStage) {
       setMotivoElegido("");
       setPerdidaPendiente({ aplicar, nombre: sourceDeal.name });
+      return;
+    }
+
+    // Ganada solo con algo que represente el ingreso detrás: una cotización
+    // aceptada, un contrato o una compra de esa empresa. Se comprueba al
+    // soltar (no antes) para no consultar por cada tarjeta del tablero.
+    const esGanada = (embudoActivo.pipelineStatuses ?? []).includes(
+      destinationStage,
+    );
+    if (requireIncomeToWin && esGanada && sourceStage !== destinationStage) {
+      ingresoAsociado(dataProvider, sourceDeal).then((motivo) => {
+        if (motivo) aplicar();
+        else setSinIngreso(sourceDeal);
+      });
       return;
     }
 
@@ -185,6 +204,43 @@ export const DealListContent = () => {
             >
               {translate("resources.deals.loss.confirm")}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={sinIngreso !== null}
+        onOpenChange={(abierto) => !abierto && setSinIngreso(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {translate("crm.deals.win_blocked.title")}
+            </DialogTitle>
+            <DialogDescription>
+              {translate("crm.deals.win_blocked.description", {
+                name: sinIngreso?.name ?? "",
+              })}
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            <li>{translate("crm.deals.win_blocked.quote")}</li>
+            <li>{translate("crm.deals.win_blocked.contract")}</li>
+            <li>{translate("crm.deals.win_blocked.purchase")}</li>
+          </ul>
+          <p className="text-xs text-muted-foreground">
+            {translate("crm.deals.win_blocked.setting")}
+          </p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSinIngreso(null)}>
+              {translate("ra.action.close")}
+            </Button>
+            {sinIngreso && (
+              <Button asChild>
+                <Link to={`/deals/${sinIngreso.id}/show`}>
+                  {translate("crm.deals.win_blocked.open")}
+                </Link>
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 
 import type { CrmDataProvider } from "../providers/types";
+import { SubidorDeLogo } from "./SubidorDeLogo";
 import {
   useConfigurationContext,
   useConfigurationUpdater,
@@ -176,11 +177,7 @@ export const CotizacionesPage = () => {
                   helperText={false}
                 />
               </div>
-              <TextInput
-                source="logo_url"
-                label="crm.quotes.settings.issuer_logo"
-                helperText={false}
-              />
+              <SubidorDeLogo source="logo_url" />
               <div className="flex justify-end">
                 <Button type="submit">{translate("ra.action.save")}</Button>
               </div>

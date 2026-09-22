@@ -369,7 +369,15 @@ export type CustomerSummary = {
   first_purchase_on?: string | null;
   last_purchase_on?: string | null;
   nb_active_contracts: number;
+  /** Solo los contratos con periodicidad: lo que entra cada periodo. */
+  nb_recurring_contracts: number;
   recurring_amount: number;
+  /** Contratos de pago único (o guardados sin periodicidad). */
+  nb_one_time_contracts: number;
+  one_time_amount: number;
+  /** Oportunidades ganadas de esta empresa, según las etapas de su embudo. */
+  nb_won_deals: number;
+  won_amount: number;
   next_renewal_on?: string | null;
   /** Soporte: tickets abiertos y vencidos; en riesgo = 3+ abiertos o alguno vencido. */
   open_tickets: number;

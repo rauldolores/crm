@@ -643,6 +643,8 @@ export const spanishCrmMessages = {
     },
     sales: {
       name: "Usuario |||| Usuarios",
+      cannot_delete_self:
+        "No puedes eliminar tu propio usuario. Quita tu selección para borrar a los demás.",
       fields: {
         first_name: "Nombre",
         last_name: "Apellidos",
@@ -1261,7 +1263,15 @@ export const spanishCrmMessages = {
         issuer_address: "Dirección",
         issuer_email: "Correo",
         issuer_phone: "Teléfono",
-        issuer_logo: "URL del logo",
+        logo_upload: "Subir logo",
+        logo_replace: "Cambiar logo",
+        logo_remove: "Quitar",
+        logo_empty: "Sin logo",
+        logo_help:
+          "PNG o JPG, hasta 2 MB. Sale en la cabecera del documento que ve el cliente y en el PDF. Se guarda al pulsar Guardar, como el resto del emisor.",
+        logo_uploaded: "Logo subido. Pulsa Guardar para dejarlo fijo.",
+        logo_error: "No se pudo subir el logo",
+        issuer_logo: "Logo",
         tax_rate: "IVA por defecto (%)",
         templates: "Plantillas",
         templates_help:
@@ -1331,7 +1341,7 @@ export const spanishCrmMessages = {
     ai: {
       title: "Inteligencia artificial",
       intro:
-        "Con qué proveedor se generan las plantillas de correo. La clave es tuya y el consumo se factura en tu cuenta del proveedor.",
+        "La IA que redacta plantillas de correo y resume hilos. Viene incluida: no tienes que contratar nada aparte ni pegar ninguna clave.",
       provider: "Proveedor",
       api_key: "Clave de API",
       api_key_placeholder: "Pega aquí la clave de tu proveedor",
@@ -1348,8 +1358,25 @@ export const spanishCrmMessages = {
         "Escribe el identificador exacto, tal como lo publica tu proveedor. Úsalo si acaba de salir un modelo que no está en la lista.",
       active: "Usar la IA con esta configuración",
       saved: "Configuración de IA guardada",
+      included:
+        "Incluida en tu plan, con %{provider}. No necesitas contratar nada ni pegar ninguna clave: enciéndela y ya está.",
+      own_key_help:
+        "Tu organización usa su propia clave y paga su propio consumo. Se guarda del lado del servidor y no vuelve a mostrarse nunca. Déjala en blanco para conservar la que ya hay.",
       not_configured:
-        "Todavía no has configurado un proveedor de IA. Sin él, las plantillas se escriben a mano.",
+        "La IA no está disponible en esta instalación: falta configurar su clave en el servidor. Mientras tanto, las plantillas se escriben a mano.",
+    },
+    deals: {
+      win_blocked: {
+        title: "Todavía no se puede dar por ganada",
+        description:
+          "«%{name}» no tiene nada que represente el ingreso. Registra una de estas tres cosas y vuélvela a mover:",
+        quote: "Una cotización aceptada de esta oportunidad.",
+        contract: "Un contrato de esta empresa (pestaña Cliente de su ficha).",
+        purchase: "Una compra registrada de esta empresa.",
+        setting:
+          "Esta exigencia se apaga en Ajustes → Oportunidades, si prefieres marcar las ganadas antes de tener el papel.",
+        open: "Abrir la oportunidad",
+      },
     },
     customers: {
       tab: "Cliente",
@@ -1366,7 +1393,8 @@ export const spanishCrmMessages = {
       renews_in_days: "en %{smart_count} día |||| en %{smart_count} días",
       renews_on: "renueva el",
       contracts: "Contratos y suscripciones",
-      no_contracts: "Sin contratos registrados.",
+      no_contracts: "Sin contratos con periodicidad.",
+      one_time_contracts: "Contratos de pago único",
       purchases: "Compras",
       no_purchases: "Sin compras registradas.",
       new_contract: "Añadir contrato",
@@ -1379,6 +1407,14 @@ export const spanishCrmMessages = {
         total_spent: "Total comprado",
         nb_purchases: "Compras",
         recurring_amount: "Recurrente",
+        nb_recurring_contracts:
+          "%{smart_count} contrato con periodicidad |||| %{smart_count} contratos con periodicidad",
+        one_time_amount: "Pago único",
+        nb_one_time_contracts:
+          "%{smart_count} contrato de pago único |||| %{smart_count} contratos de pago único",
+        won_amount: "Ganado en oportunidades",
+        nb_won_deals:
+          "%{smart_count} oportunidad ganada |||| %{smart_count} oportunidades ganadas",
         next_renewal_on: "Próxima renovación",
         support: "Soporte",
         contract_name: "Nombre del contrato o plan",
@@ -1803,6 +1839,10 @@ export const spanishCrmMessages = {
         lost_stages: "Etapas perdidas",
         lost_stages_help:
           "Marca cuáles significan que la oportunidad se perdió. Al mover una oportunidad a una de ellas, el CRM preguntará el motivo.",
+        win_rule: "Qué hace falta para dar una oportunidad por ganada",
+        win_rule_help:
+          "Con esto encendido, una oportunidad solo pasa a una etapa ganada si tiene detrás una cotización aceptada, o un contrato o una compra de esa empresa. Es lo que evita un embudo lleno de ganadas que nunca fueron dinero.",
+        win_rule_label: "Exigir cotización, contrato o compra",
         loss_reasons: "Motivos de pérdida",
         loss_reasons_help:
           "Las opciones que se ofrecerán al perder una oportunidad. Saber por qué se pierde es lo que convierte el historial en una decisión.",

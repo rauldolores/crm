@@ -81,10 +81,29 @@ const useImporte = () => {
 const fecha = (valor?: string | null) =>
   valor ? new Date(`${valor}T00:00:00`).toLocaleDateString() : "—";
 
-const Cifra = ({ etiqueta, valor }: { etiqueta: string; valor: string }) => (
+/**
+ * Recurrente es lo que tiene periodicidad. Un contrato de pago único —o uno
+ * guardado sin periodicidad, que tampoco se renueva— no lo es. Misma regla
+ * que la vista crm.customer_summary.
+ */
+const PERIODOS_RECURRENTES = ["monthly", "quarterly", "yearly"];
+
+const esRecurrente = (contrato: Contract) =>
+  PERIODOS_RECURRENTES.includes(contrato.billing_period ?? "");
+
+const Cifra = ({
+  etiqueta,
+  valor,
+  detalle,
+}: {
+  etiqueta: string;
+  valor: string;
+  detalle?: string;
+}) => (
   <div>
     <p className="text-xs text-muted-foreground">{etiqueta}</p>
     <p className="text-lg font-semibold">{valor}</p>
+    {detalle && <p className="text-xs text-muted-foreground">{detalle}</p>}
   </div>
 );
 
@@ -100,6 +119,11 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
     sort: { field: "renews_on", order: "ASC" },
     pagination: { page: 1, perPage: 100 },
   });
+  const recurrentes = (contratos ?? []).filter(esRecurrente);
+  const unicos = (contratos ?? []).filter(
+    (contrato) => !esRecurrente(contrato),
+  );
+
   const { data: compras } = useGetList<Purchase>("purchases", {
     filter: { company_id: empresa.id },
     sort: { field: "purchased_on", order: "DESC" },
@@ -121,7 +145,7 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
       {resumen && <RiesgoDeCliente resumen={resumen} />}
 
       {resumen && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <Cifra
             etiqueta={translate("crm.customers.fields.total_spent")}
             valor={importe(resumen.total_spent)}
@@ -131,8 +155,27 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
             valor={String(resumen.nb_purchases)}
           />
           <Cifra
+            etiqueta={translate("crm.customers.fields.won_amount")}
+            valor={importe(resumen.won_amount)}
+            detalle={translate("crm.customers.fields.nb_won_deals", {
+              smart_count: resumen.nb_won_deals,
+            })}
+          />
+          {/* Lo recurrente y lo de una sola vez, por separado: mezclarlos
+              hacía creer que entraba cada periodo algo que se cobró una vez. */}
+          <Cifra
             etiqueta={translate("crm.customers.fields.recurring_amount")}
             valor={importe(resumen.recurring_amount)}
+            detalle={translate("crm.customers.fields.nb_recurring_contracts", {
+              smart_count: resumen.nb_recurring_contracts,
+            })}
+          />
+          <Cifra
+            etiqueta={translate("crm.customers.fields.one_time_amount")}
+            valor={importe(resumen.one_time_amount)}
+            detalle={translate("crm.customers.fields.nb_one_time_contracts", {
+              smart_count: resumen.nb_one_time_contracts,
+            })}
           />
           <Cifra
             etiqueta={translate("crm.customers.fields.next_renewal_on")}
@@ -147,46 +190,29 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
         <h6 className="text-sm font-semibold">
           {translate("crm.customers.contracts")}
         </h6>
-        {!contratos?.length ? (
+        {!recurrentes.length ? (
           <p className="text-sm text-muted-foreground">
             {translate("crm.customers.no_contracts")}
           </p>
         ) : (
-          contratos.map((contrato) => (
-            <div
-              key={contrato.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm"
-            >
-              <div>
-                <p className="font-medium">{contrato.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {contrato.billing_period
-                    ? translate(
-                        `crm.customers.period.${contrato.billing_period}`,
-                      )
-                    : ""}
-                  {contrato.renews_on
-                    ? ` · ${translate("crm.customers.renews_on")} ${fecha(contrato.renews_on)}`
-                    : ""}
-                  {contrato.source !== "manual" ? ` · ${contrato.source}` : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="font-medium">{importe(contrato.amount)}</span>
-                <Badge
-                  variant={
-                    contrato.status === "active" ? "default" : "secondary"
-                  }
-                >
-                  {translate(
-                    `crm.customers.contract_status.${contrato.status}`,
-                  )}
-                </Badge>
-              </div>
-            </div>
+          recurrentes.map((contrato) => (
+            <FilaDeContrato key={contrato.id} contrato={contrato} />
           ))
         )}
       </section>
+
+      {/* Los de pago único llevan rubro propio: no entran cada periodo y no
+          se renuevan, así que listarlos con los recurrentes confundía. */}
+      {unicos.length > 0 && (
+        <section className="space-y-2">
+          <h6 className="text-sm font-semibold">
+            {translate("crm.customers.one_time_contracts")}
+          </h6>
+          {unicos.map((contrato) => (
+            <FilaDeContrato key={contrato.id} contrato={contrato} />
+          ))}
+        </section>
+      )}
 
       <section className="space-y-2">
         <h6 className="text-sm font-semibold">
@@ -202,6 +228,33 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
           ))
         )}
       </section>
+    </div>
+  );
+};
+
+const FilaDeContrato = ({ contrato }: { contrato: Contract }) => {
+  const translate = useTranslate();
+  const importe = useImporte();
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm">
+      <div>
+        <p className="font-medium">{contrato.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {contrato.billing_period
+            ? translate(`crm.customers.period.${contrato.billing_period}`)
+            : translate("crm.customers.period.one_time")}
+          {contrato.renews_on && esRecurrente(contrato)
+            ? ` · ${translate("crm.customers.renews_on")} ${fecha(contrato.renews_on)}`
+            : ""}
+          {contrato.source !== "manual" ? ` · ${contrato.source}` : ""}
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="font-medium">{importe(contrato.amount)}</span>
+        <Badge variant={contrato.status === "active" ? "default" : "secondary"}>
+          {translate(`crm.customers.contract_status.${contrato.status}`)}
+        </Badge>
+      </div>
     </div>
   );
 };
