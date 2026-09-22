@@ -9,6 +9,7 @@ import {
   type ResourceCallbacks,
 } from "ra-core";
 import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
+import { avisarExcedenteDe } from "@/lib/kontrolia-auth/excedentes";
 import type {
   ContactNote,
   Deal,
@@ -100,14 +101,16 @@ const sincronizacionesHechas = new Set<string>();
  */
 const llamarApiDelCrm = async (ruta: string, cuerpo: unknown) => {
   const token = await getKontroliaAccessToken();
-  return fetch(ruta, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(cuerpo),
-  });
+  return avisarExcedenteDe(
+    await fetch(ruta, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(cuerpo),
+    }),
+  );
 };
 
 const sincronizarComerciales = async (texto: string) => {

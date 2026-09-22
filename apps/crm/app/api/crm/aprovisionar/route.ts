@@ -1,4 +1,5 @@
 import {
+  conAvisoDeExcedente,
   contarUso,
   exigirCupo,
   LIMITE_USUARIOS,
@@ -83,7 +84,7 @@ export async function POST(peticion: Request) {
     return Response.json({ message: error.message }, { status: 500 });
   }
 
-  await contarUso(organizacionId, LIMITE_USUARIOS, nuevaFicha.id);
+  const uso = await contarUso(organizacionId, LIMITE_USUARIOS, nuevaFicha.id);
 
-  return Response.json({ sale: nuevaFicha });
+  return conAvisoDeExcedente(Response.json({ sale: nuevaFicha }), [uso]);
 }

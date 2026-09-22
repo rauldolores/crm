@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@supabase/supabase-js";
 
 import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
+import { avisarExcedenteDe } from "@/lib/kontrolia-auth/excedentes";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
 import { env } from "@/lib/env";
 
@@ -24,7 +25,11 @@ const fetchConToken: typeof fetch = async (entrada, opciones) => {
   if (token) {
     cabeceras.set("Authorization", `Bearer ${token}`);
   }
-  return fetch(entrada, { ...opciones, headers: cabeceras });
+  // Una alta hecha en excedente del plan vuelve con una cabecera; de aquí
+  // sale la notificación (ver lib/kontrolia-auth/excedentes.ts).
+  return avisarExcedenteDe(
+    await fetch(entrada, { ...opciones, headers: cabeceras }),
+  );
 };
 
 /**

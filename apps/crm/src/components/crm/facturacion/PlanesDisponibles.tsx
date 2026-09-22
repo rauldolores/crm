@@ -19,6 +19,7 @@ import {
 import {
   ahorroAnual,
   equivalenteMensual,
+  importeConMoneda,
   periodoDeCobro,
   precioAnualDelPlan,
   precioDelPlan,
@@ -296,6 +297,18 @@ export const PlanesDisponibles = ({
                           {limite.limit === null
                             ? translate("crm.billing.unlimited")
                             : limite.limit}
+                          {limite.limit !== null &&
+                            limite.overagePriceAmount != null && (
+                              <>
+                                {", "}
+                                {translate("crm.billing.overage_price", {
+                                  price: importeConMoneda(
+                                    limite.overagePriceAmount,
+                                    plan.currency,
+                                  ),
+                                })}
+                              </>
+                            )}
                         </li>
                       ))}
                     </ul>

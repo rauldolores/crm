@@ -8,6 +8,7 @@ import { GuardiaDeAplicacion } from "../autorizacion/GuardiaDeAplicacion";
 import { GuardiaDePlan } from "../facturacion/GuardiaDePlan";
 import { useConfigurationLoader } from "../root/useConfigurationLoader";
 import Header from "./Header";
+import { AvisoDeExcedente } from "../facturacion/AvisoDeExcedente";
 import { BarraLateral } from "./BarraLateral";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
@@ -16,6 +17,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
     <div className="flex min-h-screen">
       <GuardiaDeAplicacion />
       <GuardiaDePlan />
+      <AvisoDeExcedente />
       <BarraLateral />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />

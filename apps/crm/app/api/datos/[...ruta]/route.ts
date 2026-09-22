@@ -4,6 +4,7 @@ import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
 import { imponerActor } from "@/lib/server/imponerDueno";
 import { imponerDueno } from "@/lib/server/imponerDueno";
 import {
+  conAvisoDeExcedente,
   contarUso,
   exigirCupo,
   liberarUso,
@@ -443,16 +444,24 @@ async function contarYResponder(
 
   const texto = await respuesta.text();
   const ids = alta.ids.length > 0 ? alta.ids : idsDe(texto);
-  await Promise.all([
-    ...ids.map((id) => contarUso(organizacionId, alta.clave, id)),
-    ...alta.liberados.map((id) => liberarUso(organizacionId, alta.clave, id)),
+  const [reportes] = await Promise.all([
+    Promise.all(ids.map((id) => contarUso(organizacionId, alta.clave, id))),
+    Promise.all(
+      alta.liberados.map((id) => liberarUso(organizacionId, alta.clave, id)),
+    ),
   ]);
 
-  return new Response(alta.pidioRepresentacion ? texto : null, {
-    status: respuesta.status,
-    statusText: respuesta.statusText,
-    headers: cabecerasRespuesta,
-  });
+  // Si el alta fue en excedente (límite agotado con precio por unidad), la
+  // respuesta lo lleva en una cabecera y el navegador avisa. El último
+  // reporte es el que trae el acumulado más reciente.
+  return conAvisoDeExcedente(
+    new Response(alta.pidioRepresentacion ? texto : null, {
+      status: respuesta.status,
+      statusText: respuesta.statusText,
+      headers: cabecerasRespuesta,
+    }),
+    [...reportes].reverse(),
+  );
 }
 
 /** Libera el cupo de lo borrado, por el id de cada fila que devolvió PostgREST. */

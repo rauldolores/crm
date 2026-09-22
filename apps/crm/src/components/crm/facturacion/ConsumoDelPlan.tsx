@@ -2,6 +2,7 @@ import { useTranslate } from "ra-core";
 
 import type { KontroliaUsage } from "@/lib/kontrolia-auth/facturacion";
 
+import { textoDeAcumulado, textoDeAviso } from "./AvisoDeExcedente";
 import { etiquetaDePeriodo } from "./formato";
 
 /** Nombres legibles de las claves de límite que configura el administrador. */
@@ -11,8 +12,10 @@ const NOMBRES: Record<string, string> = {
   pipelines: "Embudos",
 };
 
-export const nombreDelLimite = (uso: KontroliaUsage): string =>
-  uso.description ?? NOMBRES[uso.key] ?? uso.key;
+export const nombreDelLimite = (uso: {
+  key: string;
+  description?: string | null;
+}): string => uso.description ?? NOMBRES[uso.key] ?? uso.key;
 
 /** Barra de un límite: «37 de 100 este mes». Sin límite, solo el conteo. */
 const BarraDeUso = ({
@@ -29,6 +32,19 @@ const BarraDeUso = ({
       : Math.min(100, Math.round((uso.used / uso.limit) * 100));
   const agotado = uso.limit !== null && uso.used >= uso.limit;
   const cerca = !agotado && porcentaje >= 80;
+  // Con precio por unidad extra, agotar el límite no bloquea: se avisa del
+  // precio y del acumulado del periodo en vez de pintarlo como un tope.
+  const conPrecio =
+    uso.overagePriceAmount !== null && uso.overagePriceAmount !== undefined;
+  const excedente = {
+    key: uso.key,
+    limit: uso.limit,
+    period: uso.period,
+    overagePriceAmount: uso.overagePriceAmount ?? null,
+    overageUnits: uso.overageUnits ?? 0,
+    overageAmount: uso.overageAmount ?? 0,
+    currency: uso.currency ?? "MXN",
+  };
 
   return (
     <div className="flex flex-col gap-1">
@@ -39,7 +55,11 @@ const BarraDeUso = ({
         <span
           className={[
             "shrink-0 tabular-nums",
-            agotado ? "text-destructive" : cerca ? "text-amber-500" : "",
+            agotado && !conPrecio
+              ? "text-destructive"
+              : agotado || cerca
+                ? "text-amber-500"
+                : "",
           ].join(" ")}
         >
           {uso.limit === null
@@ -63,15 +83,25 @@ const BarraDeUso = ({
           <div
             className={[
               "h-full rounded-full transition-all",
-              agotado
+              agotado && !conPrecio
                 ? "bg-destructive"
-                : cerca
+                : agotado || cerca
                   ? "bg-amber-500"
                   : "bg-primary",
             ].join(" ")}
             style={{ width: `${porcentaje}%` }}
           />
         </div>
+      )}
+      {conPrecio && agotado && (
+        <p className="text-xs text-amber-600 dark:text-amber-400">
+          {textoDeAviso(excedente, translate)}
+        </p>
+      )}
+      {conPrecio && excedente.overageUnits > 0 && (
+        <p className="text-xs tabular-nums opacity-80">
+          {textoDeAcumulado(excedente, translate)}
+        </p>
       )}
     </div>
   );

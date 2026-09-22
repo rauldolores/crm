@@ -1,5 +1,6 @@
 import { env } from "@/lib/env";
 import {
+  conAvisoDeExcedente,
   contarUso,
   exigirCupo,
   LIMITE_USUARIOS,
@@ -111,11 +112,14 @@ export async function POST(peticion: Request) {
     return Response.json({ message: error.message }, { status: 500 });
   }
 
-  await Promise.all(
+  const reportes = await Promise.all(
     (creadas ?? []).map((ficha) =>
       contarUso(organizacionId, LIMITE_USUARIOS, ficha.id),
     ),
   );
 
-  return Response.json({ total: miembros.length, agregados: sinFicha.length });
+  return conAvisoDeExcedente(
+    Response.json({ total: miembros.length, agregados: sinFicha.length }),
+    [...reportes].reverse(),
+  );
 }

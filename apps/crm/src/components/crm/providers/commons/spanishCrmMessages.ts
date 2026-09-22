@@ -972,6 +972,16 @@ export const spanishCrmMessages = {
       usage_title: "Consumo",
       usage_of: "%{used} de %{limit} %{period}",
       usage_unlimited: "%{used} · sin límite",
+      overage_notice:
+        "Tus %{limit} %{name} %{period} se agotaron; cada extra cuesta %{price}.",
+      overage_accumulated: "%{units} extra · %{amount} %{period}",
+      overage_price: "extra a %{price} por unidad",
+      overage_periods: {
+        day: "de hoy",
+        month: "del mes",
+        year: "del año",
+        lifetime: "del plan",
+      },
       no_limits: "Tu plan no tiene límites de consumo.",
       status: {
         trialing: "En periodo de prueba",

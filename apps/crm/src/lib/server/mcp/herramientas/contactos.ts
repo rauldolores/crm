@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   contarUso,
+  enExcedente,
   exigirCupo,
   LIMITE_CONTACTOS,
 } from "@/lib/server/kontrolia-auth/consumo";
@@ -200,7 +201,26 @@ export const registrarContactos: RegistradorDeHerramientas = (server, ctx) => {
       if (!resultado.ok) return error(resultado.error);
 
       if (organizacion && resultado.filas[0]) {
-        await contarUso(organizacion, LIMITE_CONTACTOS, resultado.filas[0].id);
+        const uso = await contarUso(
+          organizacion,
+          LIMITE_CONTACTOS,
+          resultado.filas[0].id,
+        );
+        // Con precio por excedente el contacto se crea igual; el agente debe
+        // saber (y decir) que a partir de aquí cada uno se cobra aparte.
+        if (enExcedente(uso)) {
+          const respuesta = filas(resultado.filas);
+          return {
+            ...respuesta,
+            content: [
+              ...respuesta.content,
+              {
+                type: "text" as const,
+                text: `Aviso: los ${uso.limit} contactos del plan se agotaron; cada contacto extra cuesta ${(uso.overagePriceAmount ?? 0) / 100} ${uso.currency}. Este periodo: ${uso.overageUnits} extra, ${uso.overageAmount / 100} ${uso.currency}.`,
+              },
+            ],
+          };
+        }
       }
       return filas(resultado.filas);
     },
