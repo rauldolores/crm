@@ -307,11 +307,15 @@ export const BarraLateral = () => {
               todavía (nada que consumir) queda un enlace de texto plano, para
               que "Plan y facturación" nunca se quede sin una entrada. */}
           {derechos?.subscription ? (
+            // Oscuro a propósito, en los dos temas: es el único bloque de la
+            // barra que no es navegación, y con el mismo fondo que los menús
+            // se leía como un ítem más. Las barras de consumo se tiñen solas
+            // (bg-current/10), así que no hay que tocarlas.
             <Link
               to={FacturacionPage.path}
-              className="mb-4 flex flex-col gap-2 rounded-lg px-2 py-2 text-sidebar-foreground no-underline hover:bg-sidebar-accent"
+              className="mb-4 flex flex-col gap-2 rounded-lg bg-neutral-900 px-3 py-2.5 text-neutral-100 no-underline ring-1 ring-black/5 transition-colors hover:bg-neutral-800 dark:bg-neutral-800 dark:ring-white/10 dark:hover:bg-neutral-700"
             >
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
                 {translate("crm.billing.plan_named", {
                   // El nombre del plan ya suele venir como «Plan Impulso»:
                   // sin esto se leería «Plan Plan Impulso».
