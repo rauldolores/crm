@@ -224,7 +224,12 @@ export const BarraLateral = () => {
     ruta === "/" ? pathname === "/" : pathname.startsWith(ruta);
 
   return (
-    <aside className="relative hidden w-60 shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+    // Pegada a la ventana, no a la página: `self-start` evita que el flex la
+    // estire hasta el alto del contenido —que es lo que la hacía crecer y
+    // dejar el consumo del plan al final de un scroll largo—, y `h-dvh` +
+    // `sticky` la mantienen del alto de la pantalla mientras el contenido se
+    // desplaza al lado.
+    <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col self-start overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
       <div className="relative flex min-h-0 flex-1 flex-col gap-1 p-3">
         <Link
           to="/"
