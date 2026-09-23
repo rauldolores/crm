@@ -1351,7 +1351,7 @@ export const spanishCrmMessages = {
     ai: {
       title: "Inteligencia artificial",
       intro:
-        "La IA que redacta plantillas de correo y resume hilos. Viene incluida: no tienes que contratar nada aparte ni pegar ninguna clave.",
+        "La IA que redacta plantillas de correo, resume hilos de tickets y sugiere prioridad y categoría. Viene incluida: no tienes que contratar nada ni pegar ninguna clave. Si prefieres otro proveedor u otro modelo, pon tu propia cuenta.",
       provider: "Proveedor",
       api_key: "Clave de API",
       api_key_placeholder: "Pega aquí la clave de tu proveedor",
@@ -1366,10 +1366,15 @@ export const spanishCrmMessages = {
       model_other: "Otro",
       model_other_help:
         "Escribe el identificador exacto, tal como lo publica tu proveedor. Úsalo si acaba de salir un modelo que no está en la lista.",
+      account: "Con qué cuenta",
+      account_included: "La IA incluida",
+      account_included_help:
+        "Nuestra cuenta de %{provider} con el modelo %{model}, elegido por su bajo costo. No contratas nada ni pegas ninguna clave, y el modelo lo fijamos nosotros.",
+      account_own: "Mi propia cuenta",
+      account_own_help:
+        "Eliges proveedor y modelo — incluido uno más capaz — con tu clave, y el consumo se factura en tu cuenta del proveedor.",
       active: "Usar la IA con esta configuración",
       saved: "Configuración de IA guardada",
-      included:
-        "Incluida en tu plan, con %{provider}. No necesitas contratar nada ni pegar ninguna clave: enciéndela y ya está.",
       not_configured:
         "La IA no está disponible en esta instalación: falta configurar su clave en el servidor. Mientras tanto, las plantillas se escriben a mano.",
     },

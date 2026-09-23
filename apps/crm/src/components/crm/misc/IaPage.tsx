@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
 import { llamarApi } from "./llamarApi";
@@ -14,14 +21,13 @@ import { MODELOS_POR_PROVEEDOR } from "./modelosDeIa";
 /**
  * Ajustes → Inteligencia artificial.
  *
- * La clave la pone quien instala el CRM (variable de entorno AI_API_KEY), no
- * el cliente: pedirle a una pyme que abra cuenta en Anthropic o en OpenAI y
- * pegue una clave para poder redactar un correo era pedirle demasiado. Aquí
- * solo se enciende o se apaga, y se elige modelo si se quiere otro.
+ * Dos caminos, y el primero es el normal:
  *
- * Una instalación en servidores del cliente que configuró su clave a mano
- * antes de esto sigue funcionando con ella (ver configuracion.ts), pero aquí
- * ya no se pide ni se cambia: se pone en el servidor.
+ * - **La IA incluida**: nuestra clave, con el modelo económico que fijamos
+ *   nosotros. El cliente no contrata nada ni elige modelo — es lo que hace
+ *   que salga a cuenta regalarla.
+ * - **Su propia cuenta**: elige proveedor, pega su clave y entonces sí elige
+ *   el modelo que quiera. Lo paga él.
  */
 
 const PROVEEDORES = [
@@ -33,8 +39,8 @@ const PROVEEDORES = [
 const nombreDelProveedor = (valor: string) =>
   PROVEEDORES.find((item) => item.value === valor)?.label ?? valor;
 
-/** Una opción de modelo: recuadro seleccionable con su explicación debajo. */
-const opcionDeModelo = (elegida: boolean) =>
+/** Una opción seleccionable: recuadro con su explicación debajo. */
+const opcion = (elegida: boolean) =>
   [
     "flex flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left text-sm transition-colors",
     elegida ? "border-primary bg-primary/5" : "hover:bg-accent",
@@ -46,8 +52,10 @@ interface ConfiguracionDeIa {
   modeloPorDefecto: string | null;
   active: boolean;
   tieneClave: boolean;
-  /** Funciona con la clave del despliegue: aquí no se pide ninguna. */
-  incluida: boolean;
+  hayIncluida: boolean;
+  clavePropia: boolean;
+  modeloIncluido: string | null;
+  proveedorIncluido: string | null;
 }
 
 export const IaPage = () => {
@@ -58,7 +66,9 @@ export const IaPage = () => {
   const [guardando, setGuardando] = useState(false);
   const [config, setConfig] = useState<ConfiguracionDeIa | null>(null);
 
-  const [proveedor, setProveedor] = useState<string>("claude");
+  const [propia, setPropia] = useState(false);
+  const [proveedor, setProveedor] = useState<string>("openai");
+  const [clave, setClave] = useState("");
   const [modelo, setModelo] = useState("");
   const [activo, setActivo] = useState(true);
   // "Otro" abre el campo libre: la lista de modelos es de conveniencia, no
@@ -67,12 +77,16 @@ export const IaPage = () => {
 
   const aplicar = useCallback((datos: ConfiguracionDeIa) => {
     setConfig(datos);
-    setProveedor(datos.provider ?? "claude");
-    setModelo(datos.model ?? "");
+    setPropia(datos.clavePropia || !datos.hayIncluida);
+    setProveedor(datos.provider ?? "openai");
+    setModelo(datos.clavePropia ? (datos.model ?? "") : "");
     setActivo(datos.active);
+    setClave("");
     const conocidos = MODELOS_POR_PROVEEDOR[datos.provider ?? ""] ?? [];
     setModeloAMano(
-      Boolean(datos.model) && !conocidos.some((m) => m.value === datos.model),
+      datos.clavePropia &&
+        Boolean(datos.model) &&
+        !conocidos.some((m) => m.value === datos.model),
     );
   }, []);
 
@@ -97,11 +111,16 @@ export const IaPage = () => {
         "/api/ia/configuracion",
         {
           method: "PUT",
-          body: JSON.stringify({
-            provider: proveedor,
-            model: modelo,
-            active: activo,
-          }),
+          body: JSON.stringify(
+            propia
+              ? {
+                  provider: proveedor,
+                  apiKey: clave || undefined,
+                  model: modelo,
+                  active: activo,
+                }
+              : { usarIncluida: true, active: activo },
+          ),
         },
       );
       aplicar(datos);
@@ -113,11 +132,9 @@ export const IaPage = () => {
     }
   };
 
-  if (cargando) return null;
+  if (cargando || !config) return null;
 
-  // No hay nada que pedir: ni proveedor (es el de la clave del despliegue)
-  // ni credencial.
-  const sinClaveEnNingunSitio = !config?.tieneClave;
+  const sinIaEnNingunSitio = !config.tieneClave && !clave;
 
   return (
     <div className="max-w-2xl mx-auto mt-8 mb-16 flex flex-col gap-6">
@@ -128,7 +145,7 @@ export const IaPage = () => {
         </p>
       </div>
 
-      {sinClaveEnNingunSitio && (
+      {sinIaEnNingunSitio && (
         <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
           {translate("crm.ai.not_configured")}
         </p>
@@ -136,79 +153,143 @@ export const IaPage = () => {
 
       <Card>
         <CardContent className="space-y-4 pt-6 text-sm">
-          {config?.incluida && (
-            <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-              {translate("crm.ai.included", {
-                provider: nombreDelProveedor(config.provider ?? ""),
-              })}
-            </p>
-          )}
-
-          {!sinClaveEnNingunSitio && (
+          {config.hayIncluida && (
             <div className="space-y-1.5">
-              <Label>{translate("crm.ai.model")}</Label>
+              <Label>{translate("crm.ai.account")}</Label>
               <div className="flex flex-col gap-1.5">
                 <button
                   type="button"
-                  onClick={() => {
-                    setModelo("");
-                    setModeloAMano(false);
-                  }}
-                  className={opcionDeModelo(!modelo && !modeloAMano)}
+                  onClick={() => setPropia(false)}
+                  className={opcion(!propia)}
                 >
                   <span className="font-medium">
-                    {translate("crm.ai.model_default")}
+                    {translate("crm.ai.account_included")}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {translate("crm.ai.model_default_help")}
+                    {translate("crm.ai.account_included_help", {
+                      provider: nombreDelProveedor(
+                        config.proveedorIncluido ?? "",
+                      ),
+                      model: config.modeloIncluido ?? "",
+                    })}
                   </span>
                 </button>
-
-                {(MODELOS_POR_PROVEEDOR[proveedor] ?? []).map((item) => (
-                  <button
-                    key={item.value}
-                    type="button"
-                    onClick={() => {
-                      setModelo(item.value);
-                      setModeloAMano(false);
-                    }}
-                    className={opcionDeModelo(
-                      !modeloAMano && modelo === item.value,
-                    )}
-                  >
-                    <span className="font-medium">{item.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {item.descripcion}
-                    </span>
-                  </button>
-                ))}
-
                 <button
                   type="button"
-                  onClick={() => {
-                    setModelo("");
-                    setModeloAMano(true);
-                  }}
-                  className={opcionDeModelo(modeloAMano)}
+                  onClick={() => setPropia(true)}
+                  className={opcion(propia)}
                 >
                   <span className="font-medium">
-                    {translate("crm.ai.model_other")}
+                    {translate("crm.ai.account_own")}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {translate("crm.ai.model_other_help")}
+                    {translate("crm.ai.account_own_help")}
                   </span>
                 </button>
               </div>
-
-              {modeloAMano && (
-                <Input
-                  id="modelo-ia"
-                  value={modelo}
-                  placeholder="p. ej. gpt-4.1-mini"
-                  onChange={(evento) => setModelo(evento.target.value)}
-                />
-              )}
             </div>
+          )}
+
+          {propia && (
+            <>
+              <div className="space-y-1.5">
+                <Label>{translate("crm.ai.provider")}</Label>
+                <Select value={proveedor} onValueChange={setProveedor}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVEEDORES.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="clave-ia">{translate("crm.ai.api_key")}</Label>
+                <Input
+                  id="clave-ia"
+                  type="password"
+                  autoComplete="off"
+                  value={clave}
+                  placeholder={
+                    config.clavePropia
+                      ? translate("crm.ai.api_key_saved")
+                      : translate("crm.ai.api_key_placeholder")
+                  }
+                  onChange={(evento) => setClave(evento.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {translate("crm.ai.api_key_help")}
+                </p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>{translate("crm.ai.model")}</Label>
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModelo("");
+                      setModeloAMano(false);
+                    }}
+                    className={opcion(!modelo && !modeloAMano)}
+                  >
+                    <span className="font-medium">
+                      {translate("crm.ai.model_default")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {translate("crm.ai.model_default_help")}
+                    </span>
+                  </button>
+
+                  {(MODELOS_POR_PROVEEDOR[proveedor] ?? []).map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => {
+                        setModelo(item.value);
+                        setModeloAMano(false);
+                      }}
+                      className={opcion(!modeloAMano && modelo === item.value)}
+                    >
+                      <span className="font-medium">{item.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {item.descripcion}
+                      </span>
+                    </button>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModelo("");
+                      setModeloAMano(true);
+                    }}
+                    className={opcion(modeloAMano)}
+                  >
+                    <span className="font-medium">
+                      {translate("crm.ai.model_other")}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {translate("crm.ai.model_other_help")}
+                    </span>
+                  </button>
+                </div>
+
+                {modeloAMano && (
+                  <Input
+                    id="modelo-ia"
+                    value={modelo}
+                    placeholder="p. ej. gpt-4.1-mini"
+                    onChange={(evento) => setModelo(evento.target.value)}
+                  />
+                )}
+              </div>
+            </>
           )}
 
           <div className="flex items-center gap-2">
@@ -221,7 +302,10 @@ export const IaPage = () => {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={guardar} disabled={guardando}>
+            <Button
+              onClick={guardar}
+              disabled={guardando || (propia && !clave && !config.clavePropia)}
+            >
               <Sparkles className="h-4 w-4 mr-1" />
               {translate("ra.action.save")}
             </Button>

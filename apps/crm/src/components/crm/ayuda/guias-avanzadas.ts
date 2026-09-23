@@ -188,13 +188,18 @@ export const AVANZADO: Grupo = {
       id: "inteligencia-artificial",
       titulo: "Inteligencia artificial",
       resumen:
-        "Con qué proveedor de IA se redactan las plantillas de correo. La clave es tuya y el consumo se paga en tu cuenta del proveedor.",
+        "La IA que redacta plantillas, resume tickets y sugiere prioridad. Viene incluida; si quieres otro modelo, pones tu cuenta.",
       ruta: "/inteligencia-artificial",
       bloques: [
         {
           tipo: "parrafo",
           texto:
-            "En Ajustes → Herramientas → Inteligencia artificial eliges proveedor (Claude, OpenAI o DeepSeek), pegas tu clave y, si quieres, un modelo concreto (por defecto usa el recomendado). A partir de ahí, en Plantillas de correo aparece «Generar con IA»: describes el correo en una frase y te lo redacta con los campos del contacto ya colocados. Tú lo revisas y lo guardas.",
+            "Viene incluida y encendida: trabaja con nuestra cuenta y con un modelo económico que fijamos nosotros, sin que contrates nada ni pegues ninguna clave. Con eso funcionan «Generar con IA» en Plantillas de correo (describes el correo en una frase y te lo redacta con los campos del contacto ya colocados), el resumen del hilo de un ticket y la sugerencia de prioridad y categoría al abrirlo.",
+        },
+        {
+          tipo: "parrafo",
+          texto:
+            "Si prefieres otro proveedor (Claude, OpenAI o DeepSeek) o un modelo más capaz, elige «Mi propia cuenta» en Ajustes → Herramientas → Inteligencia artificial, pega tu clave y selecciona el modelo: desde ese momento el consumo se factura en tu cuenta del proveedor. Puedes volver a la incluida cuando quieras, y el interruptor apaga la IA por completo.",
         },
         {
           tipo: "parrafo",

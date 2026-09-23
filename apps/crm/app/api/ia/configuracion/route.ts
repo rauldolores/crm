@@ -3,17 +3,17 @@ import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermiss
 import { getServiceClient } from "@/lib/server/supabase-service";
 import {
   configuracionDeIaVisible,
-  cuentaDeIaDelEntorno,
+  cuentaIncluida,
 } from "@/lib/server/ia/configuracion";
 import { esProveedorDeIa } from "@/lib/server/ia/proveedores";
 
 /**
  * Proveedor de IA de la organización.
  *
- * La clave normal es la del despliegue (AI_API_KEY): aquí la organización
- * solo enciende o apaga la función y, si quiere, elige modelo. Una
- * instalación con clave propia puede seguir mandándola, y entonces se
- * guarda y se prefiere.
+ * Por defecto trabaja con la IA incluida (nuestra llave, modelo fijo): aquí
+ * solo se enciende o se apaga. Quien quiera otro proveedor u otro modelo
+ * manda su propia clave y entonces sí elige las dos cosas; mandar
+ * `usarIncluida: true` vuelve a la nuestra y borra la suya.
  *
  * Fuera de /api/datos por lo mismo que el correo saliente: la tabla guarda la
  * clave y ese puente la serviría a cualquiera que la pidiese. GET devuelve
@@ -54,39 +54,72 @@ export async function PUT(peticion: Request) {
     apiKey?: string;
     model?: string;
     active?: boolean;
+    /** Volver a la IA incluida y olvidar la clave propia. */
+    usarIncluida?: boolean;
   } | null;
 
   const apiKey = (cuerpo?.apiKey ?? "").trim();
   const model = (cuerpo?.model ?? "").trim().slice(0, MAX_MODELO) || null;
-  const entorno = cuentaDeIaDelEntorno();
+  const incluida = cuentaIncluida();
+  const supabase = getServiceClient();
 
-  // El proveedor solo se elige cuando el cliente trae su propia clave; si
-  // trabaja con la del despliegue, es la que manda.
-  const provider = apiKey
+  const { data: actual } = await supabase
+    .from("ai_settings")
+    .select("provider, api_key")
+    .eq("organization_id", organizacionId)
+    .maybeSingle();
+  const teniaClave = Boolean(actual?.api_key);
+
+  const volverALaIncluida = cuerpo?.usarIncluida === true;
+  if (volverALaIncluida && !incluida) {
+    return esError(
+      400,
+      "Esta instalación no tiene IA incluida: configura la clave de tu proveedor.",
+    );
+  }
+
+  // Con clave propia (la nueva o la que ya estaba) se elige proveedor; con la
+  // incluida, el proveedor es el nuestro y el modelo también.
+  const conClavePropia = !volverALaIncluida && (Boolean(apiKey) || teniaClave);
+  const provider = conClavePropia
     ? cuerpo?.provider
-    : (cuerpo?.provider ?? entorno?.provider);
+    : (incluida?.provider ?? cuerpo?.provider);
   if (!esProveedorDeIa(provider)) {
     return esError(400, "Elige un proveedor de IA válido.");
   }
-  if (!apiKey && !entorno) {
+  if (!conClavePropia && !incluida) {
     return esError(
       400,
       "Esta instalación no tiene configurada la clave de IA. Escribe la de tu proveedor o pide que se configure en el servidor.",
+    );
+  }
+  // Cambiar de proveedor exige la clave de ESE proveedor: la anterior no
+  // sirve para hablar con otro, y guardarla dejaría la IA muda sin decirlo.
+  if (conClavePropia && !apiKey && provider !== actual?.provider) {
+    return esError(
+      400,
+      "Para cambiar de proveedor hace falta la clave de ese proveedor.",
     );
   }
 
   const fila: Record<string, unknown> = {
     organization_id: organizacionId,
     provider,
-    model,
+    // El modelo solo es del cliente cuando paga su cuenta; con la incluida
+    // manda el nuestro y no se guarda nada que haga creer lo contrario.
+    model: conClavePropia ? model : null,
     active: cuerpo?.active ?? true,
     updated_at: new Date().toISOString(),
   };
-  // La clave solo se escribe cuando llega una nueva: la pantalla no la recibe
-  // nunca, así que un guardado sin tocarla borraría la que ya estaba.
-  if (apiKey) fila.api_key = apiKey;
+  if (volverALaIncluida) {
+    fila.api_key = null;
+  } else if (apiKey) {
+    // La clave solo se escribe cuando llega una nueva: la pantalla no la
+    // recibe nunca, así que un guardado sin tocarla borraría la que estaba.
+    fila.api_key = apiKey;
+  }
 
-  const { error } = await getServiceClient()
+  const { error } = await supabase
     .from("ai_settings")
     .upsert(fila, { onConflict: "organization_id" });
 
