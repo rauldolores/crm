@@ -179,8 +179,10 @@ async function buscarOCrearContacto(
 ): Promise<number> {
   // Se busca en la vista `contacts_summary`: el correo vive en un jsonb y
   // solo ella expone `email_fts`, la columna con la que se puede filtrar.
+  // Con comodines porque esa columna guarda el jsonb entero como texto
+  // (`["ana@empresa.com"]`), no el correo suelto.
   const encontrados = (await llamarCRM(
-    `contacts_summary?company_id=eq.${companyId}&email_fts=ilike.${encodeURIComponent(email)}&limit=1`,
+    `contacts_summary?company_id=eq.${companyId}&email_fts=ilike.*${encodeURIComponent(email)}*&limit=1`,
     "GET",
   )) as Record<string, unknown>[] | null;
   const existente = Number(encontrados?.[0]?.id);
