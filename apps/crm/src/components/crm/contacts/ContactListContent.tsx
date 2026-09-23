@@ -156,23 +156,28 @@ const ContactItemContent = ({
             </div>
           ) : null}
         </div>
-        {contact.last_seen && (
-          <div className="text-right ml-4">
-            <div
-              className="text-sm text-muted-foreground"
-              title={contact.last_seen}
-            >
-              {translate("crm.common.last_activity_with_date", {
-                date: lastActivity,
-              })}{" "}
-              <Status status={contact.status} />
-            </div>
-            <LeadScoreBadge
-              score={contact.lead_score}
-              className="justify-end mt-1"
-            />
+        {/*
+          La temperatura y el puntaje no dependen de que haya actividad: un
+          contacto recién creado es «frío» con 0, y eso es información, no
+          ausencia de ella. Solo la fecha se calla cuando no hay ninguna.
+        */}
+        <div className="text-right ml-4">
+          <div
+            className="text-sm text-muted-foreground"
+            title={contact.last_seen ?? undefined}
+          >
+            {contact.last_seen
+              ? `${translate("crm.common.last_activity_with_date", {
+                  date: lastActivity,
+                })} `
+              : null}
+            <Status status={contact.status} />
           </div>
-        )}
+          <LeadScoreBadge
+            score={contact.lead_score}
+            className="justify-end mt-1"
+          />
+        </div>
       </Link>
     </div>
   );
