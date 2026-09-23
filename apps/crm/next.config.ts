@@ -10,24 +10,33 @@ import type { NextConfig } from "next";
  * credenciales propias, igual que hace Faqturia. Sin él, la única alternativa
  * era que la base del cliente confiara en el emisor del auth.
  */
+/** Donde vive el CRM hoy. Es el único origen que el cliente OAuth acepta. */
+const DOMINIO_ACTUAL = "https://app.vinqulia.com";
+
+/**
+ * Dominios por los que se entraba antes y que siguen apuntando aquí.
+ * Quitar uno rompe los enlaces que la gente tenga guardados, así que se
+ * quedan hasta que dejen de recibir tráfico.
+ */
+const DOMINIOS_ANTERIORES = ["crm.kontrolia.io", "panel.vinqulia.com"];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Genera PDFs en el servidor con dependencias nativas de Node (fontkit,
   // yoga); empaquetarlo lo rompe. Se carga tal cual desde node_modules.
   serverExternalPackages: ["@react-pdf/renderer"],
-  // El dominio anterior sigue asignado en Vercel y el cliente OAuth solo
-  // acepta panel.vinqulia.com: quien entre por crm.kontrolia.io no podría
-  // iniciar sesión (y comparte cookies con auth.kontrolia.io). Se manda al
-  // dominio actual conservando la ruta.
+  // Los dominios anteriores siguen asignados en Vercel, y el cliente OAuth
+  // solo acepta el actual: quien entre por uno de ellos no podría iniciar
+  // sesión (y crm.kontrolia.io, además, comparte cookies con
+  // auth.kontrolia.io). Se mandan al dominio actual conservando la ruta, para
+  // que un enlace guardado o un marcador siga funcionando.
   async redirects() {
-    return [
-      {
-        source: "/:ruta*",
-        has: [{ type: "host", value: "crm.kontrolia.io" }],
-        destination: "https://panel.vinqulia.com/:ruta*",
-        permanent: true,
-      },
-    ];
+    return DOMINIOS_ANTERIORES.map((host) => ({
+      source: "/:ruta*",
+      has: [{ type: "host" as const, value: host }],
+      destination: `${DOMINIO_ACTUAL}/:ruta*`,
+      permanent: true,
+    }));
   },
 };
 

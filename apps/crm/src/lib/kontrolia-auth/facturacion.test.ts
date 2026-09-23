@@ -30,8 +30,8 @@ afterEach(() => vi.unstubAllGlobals());
 const entrada = {
   applicationSlug: "crm",
   planSlug: "pro",
-  successUrl: "https://panel.vinqulia.com/#/facturacion/ok",
-  cancelUrl: "https://panel.vinqulia.com/#/facturacion",
+  successUrl: "https://app.vinqulia.com/#/facturacion/ok",
+  cancelUrl: "https://app.vinqulia.com/#/facturacion",
 };
 
 describe("startCheckout", () => {

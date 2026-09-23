@@ -16,7 +16,7 @@ import {
  * `{AUTH}/login` hospedada por el auth-server.
  *
  * Esta app vive en un dominio distinto al del auth-server
- * (panel.vinqulia.com vs. auth.kontrolia.io): pasar por su pantalla de login
+ * (app.vinqulia.com vs. auth.kontrolia.io): pasar por su pantalla de login
  * le da sesión de GoTrue a ESE dominio, pero esa cookie no la comparte
  * ningún navegador con este — así que rebotar por ahí nunca le da sesión a
  * esta app. Lo que sí funciona en cualquier dominio es el intercambio del

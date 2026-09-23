@@ -6,6 +6,8 @@ import {
   LayoutDashboard,
 } from "lucide-react";
 
+import { URL_APP } from "../lib/sitio";
+
 import { Contador } from "./Contador";
 import { Escalado } from "./Escalado";
 
@@ -20,6 +22,9 @@ import { Escalado } from "./Escalado";
  * como haría una captura: así nunca desbordan ni recortan datos, y siguen
  * el diseño «Papel» actual (barra lateral clara, superficies planas).
  */
+
+/** El dominio que se dibuja en la barra de direcciones, sin protocolo. */
+const DOMINIO_DE_LA_APP = URL_APP.replace(/^https?:\/\//, "");
 
 /** Ancho y alto naturales de la app en las maquetas, en px. */
 const ANCHO_APP = 1040;
@@ -39,7 +44,7 @@ export const MarcoDelNavegador = ({
       <span className="size-3 rounded-full bg-neutral-300" />
       <span className="size-3 rounded-full bg-neutral-300" />
       <span className="ml-3 hidden flex-1 rounded-md bg-white px-3 py-1 text-xs text-neutral-400 ring-1 ring-neutral-200 sm:block">
-        panel.vinqulia.com
+        {DOMINIO_DE_LA_APP}
       </span>
     </div>
     {children}
