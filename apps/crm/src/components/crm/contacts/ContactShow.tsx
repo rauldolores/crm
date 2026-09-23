@@ -245,7 +245,12 @@ const ContactShowContent = () => {
 
   return (
     <div className="mt-2 mb-2 flex gap-8">
-      <div className="flex-1">
+      {/* `min-w-0` es lo que impide que la columna crezca a lo ancho: sin él
+          un hijo flex mide como mínimo su contenido, y la línea de tiempo
+          trunca con `white-space: nowrap`, así que un evento de texto largo
+          estiraba la columna —y con ella la página entera— en vez de
+          recortarse. */}
+      <div className="min-w-0 flex-1">
         <Card>
           <CardContent>
             <div className="flex">
