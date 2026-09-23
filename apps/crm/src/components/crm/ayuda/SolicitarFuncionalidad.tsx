@@ -1,25 +1,40 @@
 import { Send } from "lucide-react";
-import { useDataProvider, useGetIdentity, useNotify } from "ra-core";
+import { useDataProvider, useGetIdentity, useGetOne, useNotify } from "ra-core";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { nombreDelPlanConIntervalo } from "../facturacion/formato";
+import { useDerechos } from "../facturacion/useDerechos";
+import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
 import type { CrmDataProvider } from "../providers/types";
+import type { Sale } from "../types";
 
 /**
  * «Funcionalidades a tu medida»: el cierre del centro de ayuda.
  *
  * Después de leer todo lo que el CRM hace, quien necesita algo más tiene
- * aquí mismo cómo pedirlo: un formulario corto que llega a la bandeja
- * comercial de KontrolIA (la misma que usa el plan Enterprise), sin salir de
- * la aplicación ni buscar un correo.
+ * aquí mismo cómo pedirlo: un formulario corto que abre un ticket en el
+ * soporte de KontrolIA, sin salir de la aplicación ni buscar un correo.
+ *
+ * Lo que se teclea es solo el texto: quién lo pide, de qué organización, con
+ * qué plan y cuánta gente lo usa se mandan solos. Quien lo lea del otro lado
+ * necesita ese contexto para decidir, y pedírselo al cliente sería hacerle
+ * escribir lo que la aplicación ya sabe.
  */
 export const SolicitarFuncionalidad = () => {
   const dataProvider = useDataProvider<CrmDataProvider>();
   const notify = useNotify();
   const { identity } = useGetIdentity();
+  const { nombreActivo } = useOrganizaciones();
+  const { derechos } = useDerechos();
+  const { data: comercial } = useGetOne<Sale>(
+    "sales",
+    { id: identity?.id ?? 0 },
+    { enabled: identity?.id != null },
+  );
   const [nombre, setNombre] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -34,7 +49,16 @@ export const SolicitarFuncionalidad = () => {
   const handleEnviar = async () => {
     setEnviando(true);
     try {
-      await dataProvider.solicitarFuncionalidad(nombre.trim(), mensaje.trim());
+      await dataProvider.solicitarFuncionalidad({
+        nombre: nombre.trim(),
+        empresa: nombreActivo,
+        email: comercial?.email ?? "",
+        mensaje: mensaje.trim(),
+        plan: derechos?.subscription
+          ? nombreDelPlanConIntervalo(derechos.subscription)
+          : undefined,
+        usuarios: derechos?.usage?.find((uso) => uso.key === "usuarios")?.used,
+      });
       setEnviado(true);
       setMensaje("");
       notify("Solicitud enviada. Te contactamos en breve.", {

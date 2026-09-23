@@ -151,6 +151,56 @@ const tamanoDeEmpresa = (rango: string) =>
     "251+": 251,
   })[rango];
 
+/**
+ * La empresa con ese nombre exacto, o una nueva. El alta de un lead nuevo
+ * (pasoEnterprise) siempre crea, porque cada prospecto es una conversación
+ * distinta; aquí no: quien ya es cliente puede pedir varias mejoras y no
+ * debe acabar repetido en el CRM.
+ */
+async function buscarOCrearEmpresa(nombre: string): Promise<number> {
+  const encontradas = (await llamarCRM(
+    `companies?name=eq.${encodeURIComponent(nombre)}&limit=1`,
+    "GET",
+  )) as Record<string, unknown>[] | null;
+  const existente = Number(encontradas?.[0]?.id);
+  if (existente) return existente;
+
+  const creada = fila(await llamarCRM("companies", "POST", { name: nombre }));
+  const id = Number(creada?.id);
+  if (!id) throw new Error("No se pudo crear la empresa.");
+  return id;
+}
+
+/** El contacto con ese correo dentro de la empresa, o uno nuevo. */
+async function buscarOCrearContacto(
+  nombre: string,
+  email: string,
+  companyId: number,
+): Promise<number> {
+  // Se busca en la vista `contacts_summary`: el correo vive en un jsonb y
+  // solo ella expone `email_fts`, la columna con la que se puede filtrar.
+  const encontrados = (await llamarCRM(
+    `contacts_summary?company_id=eq.${companyId}&email_fts=ilike.${encodeURIComponent(email)}&limit=1`,
+    "GET",
+  )) as Record<string, unknown>[] | null;
+  const existente = Number(encontrados?.[0]?.id);
+  if (existente) return existente;
+
+  const { first_name, last_name } = separarNombre(nombre);
+  const creado = fila(
+    await llamarCRM("contacts", "POST", {
+      first_name,
+      last_name: last_name || undefined,
+      email_jsonb: [{ email, type: "Work" }],
+      company_id: companyId,
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const id = Number(creado?.id);
+  if (!id) throw new Error("No se pudo crear el contacto.");
+  return id;
+}
+
 const separarNombre = (nombre: string) => {
   const partes = nombre.split(/\s+/).filter(Boolean);
   return {
@@ -203,6 +253,7 @@ export async function POST(request: Request) {
     if (paso === "1") return await pasoUno(cuerpo);
     if (paso === "2") return await pasoDos(cuerpo);
     if (paso === "enterprise") return await pasoEnterprise(cuerpo);
+    if (paso === "funcionalidad") return await pasoFuncionalidad(cuerpo);
     return NextResponse.json(
       { ok: false, message: "Paso desconocido." },
       { status: 400 },
@@ -485,6 +536,76 @@ async function pasoEnterprise(cuerpo: Record<string, unknown>) {
   });
 
   return NextResponse.json({ ok: true, leadId: dealId, companyId, contactId });
+}
+
+/**
+ * «Pide una funcionalidad» del centro de ayuda del CRM: un cliente que ya
+ * usa Vinqulia pide una mejora o algo que no existe todavía.
+ *
+ * Acaba en un ticket, no en un correo: así entra en la misma cola que el
+ * resto del soporte, con estado, responsable y prioridad, y no se pierde en
+ * una bandeja. El cuerpo lleva el contexto que quien lo lea necesita para
+ * entenderlo sin escribir de vuelta —quién lo pide, de qué organización, con
+ * qué plan y cuánta gente— y dice en la primera línea que es una petición de
+ * producto, no una incidencia.
+ */
+async function pasoFuncionalidad(cuerpo: Record<string, unknown>) {
+  const nombre = limpiar(cuerpo.nombre, 120);
+  const empresa = limpiar(cuerpo.empresa, 120) || "Sin organización";
+  const email = limpiar(cuerpo.email, 200);
+  const mensaje = limpiar(cuerpo.mensaje, 4000);
+  const plan = limpiar(cuerpo.plan, 120);
+  const organizacionId = limpiar(cuerpo.organizacion_id, 60);
+  const usuarios = limpiar(cuerpo.usuarios, 20);
+
+  if (!nombre || !email || !mensaje) {
+    return NextResponse.json(
+      { ok: false, message: "Faltan datos obligatorios." },
+      { status: 400 },
+    );
+  }
+
+  const companyId = await buscarOCrearEmpresa(empresa);
+  const contactId = await buscarOCrearContacto(nombre, email, companyId);
+
+  // La primera línea del mensaje, como asunto: es lo que se ve en la cola.
+  const primeraLinea = mensaje.split("\n")[0].trim();
+  const resumen =
+    primeraLinea.length > 90 ? `${primeraLinea.slice(0, 87)}…` : primeraLinea;
+
+  const descripcion = [
+    "SOLICITUD DE MEJORA O NUEVA FUNCIONALIDAD — no es una incidencia:",
+    "nada está roto, el cliente pide algo que el CRM todavía no hace.",
+    "",
+    "Canal: centro de ayuda del CRM → «Funcionalidades a tu medida»",
+    `Quién lo pide: ${nombre} (${email})`,
+    `Organización: ${empresa}`,
+    ...(organizacionId ? [`Id de la organización: ${organizacionId}`] : []),
+    ...(plan ? [`Plan: ${plan}`] : []),
+    ...(usuarios ? [`Usuarios en su CRM: ${usuarios}`] : []),
+    "",
+    "Lo que pide, en sus palabras:",
+    mensaje,
+    "",
+    "Siguiente paso sugerido: valorar si entra en el producto, si es un",
+    "desarrollo a medida (presupuestable) o si ya se puede hacer con algo",
+    "que existe, y contestarle por aquí.",
+  ].join("\n");
+
+  const ticket = fila(
+    await llamarCRM("tickets", "POST", {
+      subject: `[product] Mejora: ${resumen || empresa}`,
+      description: descripcion,
+      contact_id: contactId,
+      company_id: companyId,
+      source: "api",
+      ...(RESPONSABLE ? { sales_id: RESPONSABLE } : {}),
+    }),
+  );
+  const ticketId = Number(ticket?.id);
+  if (!ticketId) throw new Error("No se pudo crear el ticket.");
+
+  return NextResponse.json({ ok: true, ticketId, companyId, contactId });
 }
 
 /**

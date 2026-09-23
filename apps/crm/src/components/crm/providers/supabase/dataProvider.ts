@@ -21,6 +21,10 @@ import type {
   TicketNote,
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
+import type {
+  SolicitudDeFuncionalidad,
+  SolicitudEnterprise,
+} from "../../facturacion/solicitudes";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
 import type { DestinoDeOportunidad } from "../commons/moverOportunidad";
@@ -442,22 +446,24 @@ const getDataProviderWithCustomMethods = () => {
         );
       }
     },
-    async contactarPlanEnterprise(nombre: string, mensaje: string) {
-      const respuesta = await llamarApiDelCrm("/api/facturacion/enterprise", {
-        nombre,
-        mensaje,
-      });
+    // Los mismos datos que pide el formulario de vinqulia.com/enterprise:
+    // así la solicitud entra en el CRM comercial como una oportunidad con su
+    // estimación, no como un correo suelto.
+    async contactarPlanEnterprise(solicitud: SolicitudEnterprise) {
+      const respuesta = await llamarApiDelCrm(
+        "/api/facturacion/enterprise",
+        solicitud,
+      );
       if (!respuesta.ok) {
         const cuerpo = await respuesta.json().catch(() => ({}));
         throw new Error(cuerpo.message || "No se pudo enviar el mensaje");
       }
     },
-    // Misma bandeja comercial que el plan Enterprise, con otro asunto: una
-    // petición de funcionalidad desde el centro de ayuda.
-    async solicitarFuncionalidad(nombre: string, mensaje: string) {
+    // Misma ruta, otro destino: la petición de funcionalidad se convierte en
+    // un ticket de soporte en el CRM de Kontrolia.
+    async solicitarFuncionalidad(solicitud: SolicitudDeFuncionalidad) {
       const respuesta = await llamarApiDelCrm("/api/facturacion/enterprise", {
-        nombre,
-        mensaje,
+        ...solicitud,
         tipo: "funcionalidad",
       });
       if (!respuesta.ok) {

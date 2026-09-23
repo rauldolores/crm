@@ -1053,8 +1053,18 @@ export const spanishCrmMessages = {
         details: "Ver qué incluye y estimar tu inversión",
         dialog_title: "Plan Enterprise",
         dialog_description:
-          "Cuéntanos de tu proyecto y te contactamos para armar una propuesta a tu medida.",
+          "Los mismos datos que pide la página de Enterprise. Con esto preparamos la propuesta antes de llamarte; lo que ya sabemos viene puesto.",
         name_field: "Tu nombre",
+        company_field: "Empresa",
+        email_field: "Correo de contacto",
+        email_placeholder: "a@tuempresa.com",
+        phone_field: "Teléfono o WhatsApp (opcional)",
+        mode_field: "Modalidad",
+        mode_cloud: "Nube dedicada — la operamos nosotros",
+        mode_onpremise: "En tus servidores — el dato no sale de tu casa",
+        users_field: "Usuarios que entrarían al CRM",
+        users_help:
+          "De aquí sale la banda de precio. Viene con los que usan tu CRM hoy; cámbialo si van a ser más.",
         message_field: "Cuéntanos de tu proyecto",
         message_placeholder:
           "Infraestructura, integraciones, equipo, plazos… lo que nos ayude a entender qué necesitas.",

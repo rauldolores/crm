@@ -22,6 +22,14 @@ const traducciones: Record<string, string> = {
   "crm.billing.enterprise.dialog_description":
     "Cuéntanos de tu proyecto y te contactamos.",
   "crm.billing.enterprise.name_field": "Tu nombre",
+  "crm.billing.enterprise.company_field": "Empresa",
+  "crm.billing.enterprise.email_field": "Correo de contacto",
+  "crm.billing.enterprise.phone_field": "Teléfono o WhatsApp (opcional)",
+  "crm.billing.enterprise.mode_field": "Modalidad",
+  "crm.billing.enterprise.mode_cloud": "Nube dedicada",
+  "crm.billing.enterprise.mode_onpremise": "En tus servidores",
+  "crm.billing.enterprise.users_field": "Usuarios que entrarían al CRM",
+  "crm.billing.enterprise.users_help": "De aquí sale la banda de precio.",
   "crm.billing.enterprise.message_field": "Cuéntanos de tu proyecto",
   "crm.billing.enterprise.message_placeholder": "Infraestructura, equipo...",
   "crm.billing.enterprise.cancel": "Cancelar",
@@ -34,7 +42,9 @@ const traducciones: Record<string, string> = {
 const contactarPlanEnterprise = vi.fn().mockResolvedValue(undefined);
 
 const dataProvider = {
-  ...fakeDataProvider({}),
+  ...fakeDataProvider({
+    sales: [{ id: "1", first_name: "Raúl", email: "raul@kontrolia.io" }],
+  }),
   contactarPlanEnterprise,
 } as ReturnType<typeof fakeDataProvider> & {
   contactarPlanEnterprise: typeof contactarPlanEnterprise;
@@ -91,26 +101,53 @@ describe("PlanEnterpriseCard", () => {
       .toHaveValue("Raúl Dolores");
   });
 
-  it("no deja enviar sin un mensaje", async () => {
+  it("precarga el correo de la ficha de quien está dentro", async () => {
     const screen = await render(<PlanEnterpriseCard />, { wrapper: Wrapper });
 
     await screen.getByText("Quiero ser contactado").click();
+
+    await expect
+      .element(screen.getByLabelText("Correo de contacto"))
+      .toHaveValue("raul@kontrolia.io");
+  });
+
+  it("no deja enviar sin empresa", async () => {
+    const screen = await render(<PlanEnterpriseCard />, { wrapper: Wrapper });
+
+    await screen.getByText("Quiero ser contactado").click();
+    await screen.getByLabelText("Empresa").fill("");
 
     await expect.element(screen.getByText("Enviar")).toBeDisabled();
   });
 
-  it("envía el nombre y el mensaje, y cierra el diálogo", async () => {
+  it("envía los mismos campos que el formulario del sitio", async () => {
     const screen = await render(<PlanEnterpriseCard />, { wrapper: Wrapper });
 
     await screen.getByText("Quiero ser contactado").click();
+    await screen.getByLabelText("Empresa").fill("Tecmilenio");
+    await screen
+      .getByLabelText("Teléfono o WhatsApp (opcional)")
+      .fill("5512345678");
+    await screen.getByLabelText("Usuarios que entrarían al CRM").fill("120");
+    await screen.getByRole("radio", { name: /En tus servidores/ }).click();
     await screen
       .getByLabelText("Cuéntanos de tu proyecto")
       .fill("Necesitamos infraestructura propia para 500 usuarios.");
     await screen.getByText("Enviar").click();
 
+    await expect
+      .poll(() => contactarPlanEnterprise.mock.calls.length)
+      .toBeGreaterThan(0);
     expect(contactarPlanEnterprise).toHaveBeenCalledWith(
-      "Raúl Dolores",
-      "Necesitamos infraestructura propia para 500 usuarios.",
+      expect.objectContaining({
+        nombre: "Raúl Dolores",
+        empresa: "Tecmilenio",
+        email: "raul@kontrolia.io",
+        telefono: "5512345678",
+        modalidad: "onpremise",
+        usuarios: 120,
+        mensaje: "Necesitamos infraestructura propia para 500 usuarios.",
+      }),
     );
     // El diálogo se cierra solo al terminar con éxito.
     await expect

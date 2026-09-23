@@ -2,6 +2,7 @@ import { Building2, Check, CircleX, ExternalLink, Send } from "lucide-react";
 import {
   useDataProvider,
   useGetIdentity,
+  useGetOne,
   useNotify,
   useTranslate,
 } from "ra-core";
@@ -21,6 +22,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { env } from "@/lib/env";
+
+import type { Sale } from "../types";
+import { useOrganizaciones } from "../layout/SelectorDeOrganizacion";
+import { nombreDelPlanConIntervalo } from "./formato";
+import {
+  MODALIDADES_ENTERPRISE,
+  type ModalidadEnterprise,
+} from "./solicitudes";
+import { useDerechos } from "./useDerechos";
 
 /**
  * No es un plan de KontrolIA Auth: no tiene precio, no pasa por Stripe, no
@@ -117,10 +127,37 @@ const PlanEnterpriseDialog = ({
   const dataProvider = useDataProvider();
   const { identity } = useGetIdentity();
 
+  const { nombreActivo } = useOrganizaciones();
+  const { derechos } = useDerechos();
+  // La ficha de quien está dentro: de ahí sale su correo, que es el que
+  // Kontrolia ya tiene y por el que va a contestar.
+  const { data: comercial } = useGetOne<Sale>(
+    "sales",
+    { id: identity?.id ?? 0 },
+    { enabled: identity?.id != null },
+  );
+
   const [nombre, setNombre] = useState("");
   const [nombreEditadoAMano, setNombreEditadoAMano] = useState(false);
+  const [empresa, setEmpresa] = useState("");
+  const [empresaEditada, setEmpresaEditada] = useState(false);
+  const [email, setEmail] = useState("");
+  const [correoEditado, setCorreoEditado] = useState(false);
+  const [telefono, setTelefono] = useState("");
+  const [modalidad, setModalidad] = useState<ModalidadEnterprise>("nube");
+  const [usuarios, setUsuarios] = useState(1);
+  const [usuariosEditados, setUsuariosEditados] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [enviando, setEnviando] = useState(false);
+
+  // Cuántas personas usan hoy el CRM: es la mejor respuesta de partida a
+  // «cuántos usuarios entrarían», y de ahí sale la banda de precio.
+  const usuariosDelPlan = derechos?.usage?.find(
+    (uso) => uso.key === "usuarios",
+  )?.used;
+  const plan = derechos?.subscription
+    ? nombreDelPlanConIntervalo(derechos.subscription)
+    : "";
 
   // `identity` llega de forma asíncrona: en el momento de abrir el diálogo
   // todavía puede no estar lista. Por eso el nombre se sincroniza con un
@@ -133,6 +170,24 @@ const PlanEnterpriseDialog = ({
     }
   }, [identity?.fullName, nombreEditadoAMano]);
 
+  // La organización activa como empresa, y su consumo como número de
+  // usuarios: lo que ya sabemos no se le vuelve a preguntar a nadie.
+  useEffect(() => {
+    if (!empresaEditada && nombreActivo && nombreActivo !== "Organización") {
+      setEmpresa(nombreActivo);
+    }
+  }, [nombreActivo, empresaEditada]);
+
+  useEffect(() => {
+    if (!correoEditado && comercial?.email) setEmail(comercial.email);
+  }, [comercial?.email, correoEditado]);
+
+  useEffect(() => {
+    if (!usuariosEditados && typeof usuariosDelPlan === "number") {
+      setUsuarios(Math.max(1, usuariosDelPlan));
+    }
+  }, [usuariosDelPlan, usuariosEditados]);
+
   const handleNombreChange = (valor: string) => {
     setNombre(valor);
     setNombreEditadoAMano(true);
@@ -141,13 +196,25 @@ const PlanEnterpriseDialog = ({
   const handleClose = () => {
     setMensaje("");
     setNombreEditadoAMano(false);
+    setEmpresaEditada(false);
+    setCorreoEditado(false);
+    setUsuariosEditados(false);
     onClose();
   };
 
   const handleEnviar = async () => {
     setEnviando(true);
     try {
-      await dataProvider.contactarPlanEnterprise(nombre, mensaje);
+      await dataProvider.contactarPlanEnterprise({
+        nombre: nombre.trim(),
+        empresa: empresa.trim(),
+        email: email.trim(),
+        telefono: telefono.trim(),
+        modalidad,
+        usuarios,
+        mensaje: mensaje.trim(),
+        plan,
+      });
       notify("crm.billing.enterprise.success", { type: "success" });
       handleClose();
     } catch (error) {
@@ -175,17 +242,108 @@ const PlanEnterpriseDialog = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="nombre-enterprise">
-              {translate("crm.billing.enterprise.name_field")}
-            </Label>
-            <Input
-              id="nombre-enterprise"
-              value={nombre}
-              onChange={(e) => handleNombreChange(e.target.value)}
-              maxLength={200}
-            />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="nombre-enterprise">
+                {translate("crm.billing.enterprise.name_field")}
+              </Label>
+              <Input
+                id="nombre-enterprise"
+                value={nombre}
+                onChange={(e) => handleNombreChange(e.target.value)}
+                maxLength={120}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="empresa-enterprise">
+                {translate("crm.billing.enterprise.company_field")}
+              </Label>
+              <Input
+                id="empresa-enterprise"
+                value={empresa}
+                onChange={(e) => {
+                  setEmpresa(e.target.value);
+                  setEmpresaEditada(true);
+                }}
+                maxLength={120}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="email-enterprise">
+                {translate("crm.billing.enterprise.email_field")}
+              </Label>
+              <Input
+                id="email-enterprise"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setCorreoEditado(true);
+                }}
+                placeholder={translate(
+                  "crm.billing.enterprise.email_placeholder",
+                )}
+                maxLength={200}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="telefono-enterprise">
+                {translate("crm.billing.enterprise.phone_field")}
+              </Label>
+              <Input
+                id="telefono-enterprise"
+                type="tel"
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+                placeholder="+52 55 0000 0000"
+                maxLength={50}
+              />
+            </div>
           </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label>{translate("crm.billing.enterprise.mode_field")}</Label>
+              <div className="flex flex-col gap-1.5">
+                {MODALIDADES_ENTERPRISE.map((opcion) => (
+                  <label
+                    key={opcion.valor}
+                    className="flex cursor-pointer items-start gap-2 rounded-md border px-3 py-2 text-sm has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                  >
+                    <input
+                      type="radio"
+                      name="modalidad-enterprise"
+                      value={opcion.valor}
+                      checked={modalidad === opcion.valor}
+                      onChange={() => setModalidad(opcion.valor)}
+                      className="mt-0.5 size-4 accent-primary"
+                    />
+                    <span>{translate(opcion.clave)}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="usuarios-enterprise">
+                {translate("crm.billing.enterprise.users_field")}
+              </Label>
+              <Input
+                id="usuarios-enterprise"
+                type="number"
+                min={1}
+                max={10000}
+                value={usuarios}
+                onChange={(e) => {
+                  setUsuarios(Number(e.target.value) || 1);
+                  setUsuariosEditados(true);
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                {translate("crm.billing.enterprise.users_help")}
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="mensaje-enterprise">
               {translate("crm.billing.enterprise.message_field")}
@@ -197,7 +355,7 @@ const PlanEnterpriseDialog = ({
               placeholder={translate(
                 "crm.billing.enterprise.message_placeholder",
               )}
-              rows={6}
+              rows={4}
               maxLength={4000}
             />
           </div>
@@ -210,7 +368,9 @@ const PlanEnterpriseDialog = ({
           </Button>
           <Button
             onClick={handleEnviar}
-            disabled={!nombre.trim() || !mensaje.trim() || enviando}
+            disabled={
+              !nombre.trim() || !empresa.trim() || !email.trim() || enviando
+            }
           >
             <Send />
             {enviando
