@@ -315,7 +315,12 @@ export const BarraLateral = () => {
               to={FacturacionPage.path}
               className="mb-4 flex flex-col gap-2 rounded-lg bg-neutral-900 px-3 py-2.5 text-neutral-100 no-underline ring-1 ring-black/5 transition-colors hover:bg-neutral-800 dark:bg-neutral-800 dark:ring-white/10 dark:hover:bg-neutral-700"
             >
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+              {/* Vino fijo en ambos temas: la tarjeta es oscura en los dos,
+                  así que el título no depende del tema. Es el tono más
+                  vino que sigue pasando AA a 11px (5.8:1 sobre neutral-900,
+                  4.9:1 sobre neutral-800); un burdeos real (#b91c1c) se
+                  queda en 2.8:1 y deja de leerse. */}
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#d97485]">
                 {translate("crm.billing.plan_named", {
                   // El nombre del plan ya suele venir como «Plan Impulso»:
                   // sin esto se leería «Plan Plan Impulso».
