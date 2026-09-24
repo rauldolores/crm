@@ -4,7 +4,7 @@ category: escalamiento
 audience: agente-comercial
 priority: alta
 source: criterio comercial derivado del producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -12,10 +12,12 @@ sensitivity: pública
 
 Reglas para saber cuándo el agente debe dejar de intentar resolver algo por sí mismo y pasar el lead a una persona del equipo comercial.
 
+**Preguntar el precio ya NO es motivo de escalamiento**: los de lista son públicos y se dicen (ver [[10_precios-y-planes]]). Lo que se escala es todo lo que salga de la lista.
+
 ## Escalar cuando
 
 - El cliente pide una cotización formal.
-- El cliente quiere negociar precio.
+- El cliente quiere negociar precio, o pide un precio Enterprise concreto.
 - Solicita un descuento.
 - Solicita un contrato o condiciones contractuales.
 - Solicita condiciones legales específicas.

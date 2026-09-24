@@ -4,7 +4,7 @@ category: faq
 audience: comercial
 priority: alta
 source: sitio oficial vinqulia.com (texto verbatim de apps/web/app/page.tsx) + producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -109,9 +109,9 @@ CTA: preguntar qué le gustaría personalizar específicamente.
 
 ```
 PREGUNTA: ¿Cuántos usuarios soporta Vinqulia?
-RESPUESTA: el sistema es multi-tenant y está pensado para crecer en número de usuarios y organizaciones, con roles de administrador y miembro gestionados vía KontrolIA Auth. El límite exacto de usuarios por plan no está publicado.
-INFORMACIÓN ADICIONAL: `[REQUIERE CONFIRMACIÓN INTERNA]` — límite exacto de usuarios/plan.
-CTA: preguntar cuántos usuarios tienen hoy y cuántos esperan tener en el corto plazo para cotizar correctamente.
+RESPUESTA: 3 en Impulso, 10 en Pro, 25 en Max y de 50 a ilimitados en Enterprise. Los usuarios, roles y SSO se gestionan vía KontrolIA Auth.
+INFORMACIÓN ADICIONAL: se cambia de plan en cualquier momento y los datos se quedan donde están.
+CTA: preguntar cuántos son hoy y cuántos esperan ser este año.
 ```
 
 ```
@@ -175,25 +175,34 @@ CTA: preguntar qué le gustaría que hiciera la IA concretamente.
 
 ```
 PREGUNTA: ¿Cuánto cuesta Vinqulia?
-RESPUESTA: el precio se cotiza según las necesidades de cada empresa; no existe una tabla de precios pública. Ver [[10_precios-y-planes]].
-INFORMACIÓN ADICIONAL: `[REQUIERE CONFIRMACIÓN INTERNA]` para cualquier cifra específica.
-CTA: ofrecer levantar los datos mínimos para preparar una cotización.
+RESPUESTA: Impulso $499 al mes (3 usuarios), Pro $999 (10 usuarios) y Max $1,999 (25 usuarios), en MXN + IVA. Pagando el año se ahorra ~17 % ($4,990 / $9,990 / $19,990). Enterprise se cotiza, desde $79,000 al año. Ver [[10_precios-y-planes]].
+INFORMACIÓN ADICIONAL: el precio es por plan, no por usuario; se cambia de plan cuando el equipo crece.
+CTA: preguntar cuántas personas lo usarían para recomendar el plan.
+```
+
+### Prueba
+
+```
+PREGUNTA: ¿Puedo probarlo antes de pagar?
+RESPUESTA: sí, 30 días en Impulso desde app.vinqulia.com. Se registra tarjeta al empezar y no se cobra nada hasta que termina; si cancelas antes, no hay cargo.
+INFORMACIÓN ADICIONAL: Pro y Max no tienen prueba; quien viene de la prueba cambia de plan sin perder datos.
+CTA: ofrecer el enlace de registro, o una demo si quiere verlo con sus propios datos primero.
 ```
 
 ### Soporte
 
 ```
 PREGUNTA: ¿Qué soporte incluye Vinqulia?
-RESPUESTA: `[REQUIERE CONFIRMACIÓN INTERNA]` — el sitio oficial no detalla públicamente canales, horarios ni niveles de soporte (SLA).
-INFORMACIÓN ADICIONAL: no inventar un canal o tiempo de respuesta.
-CTA: escalar a un especialista para confirmar el detalle de soporte disponible. Ver [[12_escalamiento]].
+RESPUESTA: soporte estándar en Impulso y Pro, prioritario en Max, y en Enterprise un SLA con responsable asignado. La aplicación trae además un centro de ayuda con guías por pantalla.
+INFORMACIÓN ADICIONAL: canales, horarios y tiempos de respuesta concretos `[REQUIERE DEFINICIÓN INTERNA]` — no inventarlos.
+CTA: escalar si el cliente necesita un SLA por escrito. Ver [[12_escalamiento]].
 ```
 
 ### Contratación
 
 ```
 PREGUNTA: ¿Cómo contrato Vinqulia?
-RESPUESTA: solicitando una demo con el equipo comercial, quien confirma el alcance y prepara una cotización a la medida.
-INFORMACIÓN ADICIONAL: existen tres modalidades comerciales (Vinqulia, Vinqulia + Implementación, Vinqulia + Automatización e IA). Ver [[01_producto]] y [[10_precios-y-planes]].
-CTA: ofrecer agendar la demo directamente.
+RESPUESTA: solo en app.vinqulia.com: te registras, eliges plan y pagas con tarjeta. Impulso empieza con 30 días de prueba (registras tarjeta, no se cobra hasta que termina). Enterprise y la implementación acompañada se cotizan con el equipo.
+INFORMACIÓN ADICIONAL: se factura CFDI con los datos fiscales que registres; mensual o anual, a elección.
+CTA: ofrecer empezar la prueba, o agendar demo si hay datos que migrar o equipo grande.
 ```

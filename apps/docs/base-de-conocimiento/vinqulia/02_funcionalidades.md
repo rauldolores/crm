@@ -4,7 +4,7 @@ category: funcionalidades
 audience: comercial
 priority: alta
 source: sitio oficial vinqulia.com + producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -25,7 +25,7 @@ Beneficio empresarial: una sola fuente de verdad por contacto, accesible para to
 Perfil de usuario que más se beneficia: cualquier equipo comercial con más de un vendedor.
 Ejemplo de uso: un formulario de la web crea automáticamente el contacto con los datos que el visitante llenó.
 Limitaciones conocidas: ninguna documentada públicamente.
-Información que requiere confirmación: límite de contactos por plan — [REQUIERE CONFIRMACIÓN INTERNA].
+Límite por plan: altas nuevas al mes — 150 en Impulso, 400 en Pro, 1,000 en Max, sin límite en Enterprise. La base ya existente no caduca. Ver [[10_precios-y-planes]].
 ```
 
 ## Empresas
@@ -53,7 +53,7 @@ Beneficio empresarial: pipeline siempre actualizado, visible para vendedor y dir
 Perfil de usuario que más se beneficia: dirección comercial (visibilidad) y vendedores (orden del propio trabajo).
 Ejemplo de uso: un embudo de "Ventas nuevas" con etapas Nueva → Propuesta enviada → En negociación → Ganada/Perdida.
 Limitaciones conocidas: ninguna documentada públicamente.
-Información que requiere confirmación: número máximo de embudos o etapas — [REQUIERE CONFIRMACIÓN INTERNA].
+Límite por plan: 1 embudo en Impulso, 5 en Pro, 15 en Max, sin límite en Enterprise. Las etapas de cada embudo no tienen tope publicado.
 ```
 
 ## Embudos múltiples
@@ -145,13 +145,13 @@ Información que requiere confirmación: ninguna relevante.
 ```
 Qué es: un motor de reglas del tipo "cuando pase X, haz Y".
 Qué permite hacer: crear tareas o asignar responsables automáticamente ante eventos comerciales.
-Cómo funciona: se define un disparador (contacto creado, oportunidad creada, cambio de etapa) y una acción (crear tarea con vencimiento, asignar responsable). La regla se aplica a nivel de base de datos, así que funciona sin importar si el dato entró por la aplicación, por la API o por importación.
+Cómo funciona: se define un disparador y una acción. Disparadores: contacto creado, oportunidad creada, oportunidad que llega a una etapa, contrato por renovarse (N días antes), cotización sin respuesta (N días), y de tickets — creado (opcionalmente solo de una prioridad), sin primera respuesta / sin responsable / vencido (N horas) y cerrado. Acciones: crear tarea con vencimiento, asignar responsable, enviar el correo de una plantilla. La regla se aplica a nivel de base de datos, así que funciona sin importar si el dato entró por la aplicación, por la API o por importación.
 Problema que resuelve: seguimiento que depende de que alguien recuerde hacerlo.
 Beneficio empresarial: consistencia de proceso entre vendedores, sin depender de la disciplina individual.
 Perfil de usuario que más se beneficia: equipos con más de un vendedor y procesos que se quieren estandarizar.
 Ejemplo de uso: "Cuando se crea una oportunidad → crear tarea 'Enviar propuesta' en 1 día."
-Limitaciones conocidas: disparadores y acciones documentados públicamente son los listados arriba (no hay evidencia pública de un catálogo más amplio).
-Información que requiere confirmación: catálogo completo de disparadores/acciones adicionales — [REQUIERE CONFIRMACIÓN INTERNA].
+Limitaciones conocidas: las reglas por horas o días se revisan cada hora, no al segundo; cada regla avisa una sola vez por registro.
+Información que requiere confirmación: ninguna relevante — el catálogo de arriba es el completo.
 ```
 
 ## Informes
@@ -164,8 +164,9 @@ Problema que resuelve: la dirección depende de que cada vendedor actualice una 
 Beneficio empresarial: decisiones comerciales basadas en datos reales, no en percepciones.
 Perfil de usuario que más se beneficia: dirección comercial.
 Ejemplo de uso: ver la tasa de conversión del trimestre y cuántas oportunidades se ganaron.
+Catálogo: oportunidades del periodo (total, ganadas, perdidas, conversión), por etapa, ventas ganadas por vendedor y motivos de pérdida; cotizaciones (emitidas, importe cotizado/aceptado/pendiente, tasa de aceptación); y soporte (tickets creados y cerrados, abiertos y vencidos, tiempo medio de primera respuesta y de resolución, cumplimiento de plazos, satisfacción del cliente, reaperturas, por categoría y por responsable). Las dos últimas aparecen solo si la organización usa cotizaciones o tickets.
 Limitaciones conocidas: no es una herramienta de BI avanzada — no venderla como tal.
-Información que requiere confirmación: catálogo completo de informes disponibles — [REQUIERE CONFIRMACIÓN INTERNA].
+Información que requiere confirmación: ninguna relevante.
 ```
 
 ## Vistas guardadas
@@ -200,13 +201,55 @@ Información que requiere confirmación: ninguna relevante.
 
 ```
 Qué es: un registro de incidencia o solicitud de soporte, asociado a un contacto y su empresa.
-Qué permite hacer: dar seguimiento a un problema reportado por un cliente sin mezclarlo con el pipeline de ventas.
-Cómo funciona: se crea manualmente, o mediante un formulario web público de tipo "ticket" (a diferencia del de tipo "lead", que crea un contacto).
+Qué permite hacer: dar seguimiento a un problema reportado por un cliente sin mezclarlo con el pipeline de ventas, con prioridad, responsable y plazos.
+Cómo funciona: se crea a mano, por formulario web público de tipo "ticket", por API o desde un asistente de IA. Tiene prioridad y categoría configurables, responsable, historial de quién cambió qué, cierre con motivo, plazos de atención (SLA por prioridad: horas de primera respuesta y de resolución, con aviso de vencidos), respuesta al cliente por correo desde el propio ticket, fusión de duplicados, enlace a la oportunidad o al contrato, encuesta de satisfacción de una pregunta al cerrar, y vista de tabla o de tablero por estado.
 Problema que resuelve: reportes de soporte que se pierden entre correos y WhatsApp sin quedar registrados.
 Beneficio empresarial: trazabilidad de las solicitudes de soporte por cliente.
 Perfil de usuario que más se beneficia: empresas que dan tanto venta como soporte postventa dentro del mismo equipo.
 Ejemplo de uso: un formulario de "Reportar un problema" en la web del cliente que abre el ticket directamente.
-Limitaciones conocidas: no es un sistema de mesa de ayuda (helpdesk) completo con SLA — es un registro estructurado de incidencias.
+Limitaciones conocidas: no tiene bandeja de correo compartida ni chat en vivo — el hilo se alimenta de notas y de las respuestas por correo.
+Información que requiere confirmación: ninguna relevante.
+```
+
+## Cotizaciones
+
+```
+Qué es: el documento comercial de una oportunidad, con folio propio.
+Qué permite hacer: armar la cotización con sus líneas (concepto, cantidad, precio, descuento, IVA), enviarla por correo y que el cliente la acepte desde un enlace público.
+Cómo funciona: se crea desde la oportunidad, a mano o desde una plantilla. Estados: borrador, enviada, vista, aceptada, rechazada o vencida. El cliente la ve en una página pública, la descarga en PDF y la acepta con su nombre; al aceptarse, la oportunidad pasa a ganada y —con el módulo Clientes activo— nace el contrato o la compra.
+Problema que resuelve: cotizaciones en Word que nadie sabe si el cliente abrió, y ventas que se dan por ganadas sin nada que las respalde.
+Beneficio empresarial: se sabe qué se cotizó, por cuánto y en qué quedó; el importe aceptado llega solo a los informes.
+Perfil de usuario que más se beneficia: quien vende por propuesta escrita.
+Ejemplo de uso: enviar la cotización el lunes, ver que el cliente la abrió el martes y recibir la aceptación el jueves sin llamar.
+Limitaciones conocidas: no emite factura fiscal — eso lo hace el conector de facturación.
+Información que requiere confirmación: ninguna relevante.
+```
+
+## Clientes (contratos, renovaciones y compras)
+
+```
+Qué es: un módulo activable que registra lo que cada empresa ya compró o tiene contratado.
+Qué permite hacer: ver por cliente cuánto lleva comprado, qué tiene contratado, cuánto es recurrente y qué se le renueva pronto.
+Cómo funciona: contratos con periodicidad, importe y fecha de renovación; compras con sus líneas; y una lista de clientes con total comprado, importe recurrente y próxima renovación. Las renovaciones alimentan automatizaciones ("faltan 30 días, crear tarea"), y marca "en riesgo" a quien acumula tickets abiertos o vencidos.
+Problema que resuelve: contratos que se renuevan sin que nadie llame, y clientes que se van sin aviso.
+Beneficio empresarial: ingreso recurrente visible y renovaciones que no se pasan.
+Perfil de usuario que más se beneficia: empresas con servicios, suscripciones o mantenimiento.
+Ejemplo de uso: la dirección abre Clientes y ve las tres renovaciones del mes con su importe.
+Limitaciones conocidas: no es facturación ni cobranza — registra lo vendido, no emite CFDI ni cobra.
+Información que requiere confirmación: ninguna relevante.
+```
+
+## IA generativa incluida
+
+```
+Qué es: la IA que ya viene con el CRM, sin contratar nada aparte.
+Qué permite hacer: redactar una plantilla de correo describiéndola en una frase, resumir el hilo de un ticket (qué pide, qué se hizo, qué falta) y sugerir prioridad y categoría de un ticket nuevo.
+Cómo funciona: usa nuestra cuenta con un modelo económico, así que funciona desde el primer día. Quien prefiera otro proveedor (Claude, OpenAI o DeepSeek) o un modelo más capaz pone su propia clave en Ajustes y paga ese consumo a su proveedor.
+Problema que resuelve: la página en blanco al escribir un correo, y el ticket de veinte notas que hay que leer entero antes de contestar.
+Beneficio empresarial: menos tiempo redactando y contexto inmediato para responder.
+Perfil de usuario que más se beneficia: quien escribe muchos correos parecidos y quien atiende soporte.
+Ejemplo de uso: "escribe un correo de bienvenida para un cliente nuevo de una clínica" y sale redactado con los campos del contacto ya colocados.
+Limitaciones conocidas: es asistencia para redactar y resumir — no decide ni le escribe al cliente sola; lo que revisa una persona es lo que se envía.
 Información que requiere confirmación: ninguna relevante.
 ```
 
@@ -242,14 +285,14 @@ Información que requiere confirmación: límite de filas por importación — [
 
 ```
 Qué es: capacidad de sacar datos de Vinqulia hacia un archivo.
-Qué permite hacer: usar la información fuera del sistema cuando haga falta.
-Cómo funciona: [REQUIERE CONFIRMACIÓN INTERNA] — el sitio oficial no detalla formatos ni alcance de exportación; sí se documenta explícitamente la importación (CSV/JSON).
-Problema que resuelve: —
-Beneficio empresarial: —
-Perfil de usuario que más se beneficia: —
-Ejemplo de uso: —
-Limitaciones conocidas: —
-Información que requiere confirmación: alcance y formato de la exportación — [REQUIERE CONFIRMACIÓN INTERNA].
+Qué permite hacer: bajar a CSV lo que se esté viendo en cualquier lista (contactos, empresas, oportunidades, tickets, cotizaciones, clientes), con los filtros aplicados.
+Cómo funciona: botón "Exportar" en la lista; respeta el filtro y el orden en pantalla. Para sacar todo de forma programática está la API REST.
+Problema que resuelve: la sensación de que los datos quedan secuestrados en el sistema.
+Beneficio empresarial: los datos son del cliente y salen cuando quiera — buen argumento contra el miedo a cambiar de CRM.
+Perfil de usuario que más se beneficia: dirección y quien arma reportes propios en Excel.
+Ejemplo de uso: filtrar las oportunidades ganadas del trimestre y bajarlas a CSV para el cierre contable.
+Limitaciones conocidas: exporta la lista, no los adjuntos de las notas.
+Información que requiere confirmación: ninguna relevante.
 ```
 
 ## Usuarios, roles y permisos
@@ -263,7 +306,7 @@ Beneficio empresarial: administración de acceso centralizada y consistente en t
 Perfil de usuario que más se beneficia: empresas que crecen en número de usuarios u organizaciones.
 Ejemplo de uso: dar de alta a un nuevo vendedor con acceso de miembro, sin permisos de administración.
 Limitaciones conocidas: ninguna documentada públicamente.
-Información que requiere confirmación: catálogo completo de roles/permisos granulares — [REQUIERE CONFIRMACIÓN INTERNA].
+Límite de usuarios por plan: 3 en Impulso, 10 en Pro, 25 en Max, de 50 a ilimitados en Enterprise. El catálogo granular de permisos, `[REQUIERE CONFIRMACIÓN INTERNA]`.
 ```
 
 ## SSO (inicio de sesión único)
@@ -375,5 +418,5 @@ Beneficio empresarial: datos actualizados en tiempo real aunque el vendedor est�
 Perfil de usuario que más se beneficia: fuerza de ventas externa.
 Ejemplo de uso: un vendedor registra una nota de visita desde el teléfono justo después de la reunión.
 Limitaciones conocidas: no se documenta una app nativa de escritorios de aplicaciones (App Store / Google Play) — es interfaz web responsiva.
-Información que requiere confirmación: existencia de app nativa — [REQUIERE CONFIRMACIÓN INTERNA].
+No hay app nativa en App Store ni Google Play: es una PWA instalable desde el navegador.
 ```

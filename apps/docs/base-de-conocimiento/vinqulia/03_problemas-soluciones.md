@@ -4,7 +4,7 @@ category: problemas-soluciones
 audience: comercial
 priority: alta
 source: sitio oficial vinqulia.com + producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -136,12 +136,12 @@ PROBLEMA: El CRM actual es demasiado caro.
 Síntomas: la factura mensual no se justifica frente al uso real que le da el equipo.
 Causa probable: planes por usuario de sistemas internacionales con funciones que la empresa nunca usa.
 Impacto comercial: presión para cancelar el sistema y volver a Excel.
-Solución Vinqulia: cotización a la medida del negocio, sin funciones sobrantes ni licencias por asiento no usadas.
-Funcionalidad relacionada: modalidades comerciales.
-Beneficio: se paga por lo que el negocio realmente necesita.
-Pregunta de discovery: "¿Qué parte de tu CRM actual sientes que no usas?"
-Argumento comercial: no se puede afirmar que Vinqulia sea más barato sin conocer el caso — se recomienda cotizar y comparar. Ver [[10_precios-y-planes]].
-CTA recomendado: ofrecer una cotización personalizada.
+Solución Vinqulia: precio por plan y no por usuario — $499 al mes hasta 3 personas, $999 hasta 10, $1,999 hasta 25.
+Funcionalidad relacionada: planes con precio público. Ver [[10_precios-y-planes]].
+Beneficio: sumar vendedores no sube la factura hasta el siguiente plan.
+Pregunta de discovery: "¿Cuánto pagas hoy y por cuántos usuarios?"
+Argumento comercial: hacer la cuenta con sus números, no afirmar en abstracto que es más barato; si su CRM cobra por asiento, la diferencia se ve sola a partir de 5 personas.
+CTA recomendado: ofrecer los 30 días de prueba para comparar con su operación real.
 ```
 
 ```

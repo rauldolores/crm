@@ -4,7 +4,7 @@ category: discovery-preguntas
 audience: agente-comercial
 priority: media
 source: criterio comercial derivado del producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 

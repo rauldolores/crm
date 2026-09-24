@@ -4,7 +4,7 @@ category: casos-de-uso
 audience: comercial
 priority: media
 source: capacidades reales de Vinqulia + criterio comercial
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -42,7 +42,7 @@ Argumento comercial: el historial de cada cliente queda documentado en el sistem
 
 ```
 Industria: Software
-Problema: leads que llegan por formulario web o prueba gratuita necesitan calificación y seguimiento rápido antes de enfriarse.
+Problema: leads que llegan por formulario web o por el alta de una prueba necesitan calificación y seguimiento rápido antes de enfriarse.
 Proceso actual: leads capturados en una hoja de cálculo o en el propio producto, sin conexión al proceso comercial.
 Proceso propuesto: formularios web conectados directamente a Vinqulia, con lead scoring automático para priorizar.
 Pipeline: embudo de ventas de producto (configuración posible).

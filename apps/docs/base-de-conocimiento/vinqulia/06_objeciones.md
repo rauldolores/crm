@@ -4,7 +4,7 @@ category: objeciones
 audience: agente-comercial
 priority: alta
 source: criterio comercial derivado del producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -14,10 +14,10 @@ Regla crítica: nunca inventar una respuesta cuando no exista información ofici
 
 ```
 OBJECIÓN: "Está caro."
-Qué puede significar realmente: no ve el valor todavía, o está comparando contra un precio que no conoce con certeza.
-Respuesta recomendada: entender qué está comparando y mostrar el problema que resuelve antes de discutir cifras. Ver [[10_precios-y-planes]].
-Pregunta de seguimiento: "¿Comparado con qué? ¿Ya tienes una cotización de otra opción?"
-Error que debe evitarse: dar un descuento o justificar el precio sin haber cotizado formalmente.
+Qué puede significar realmente: no ve el valor todavía, o está comparando contra otro CRM por usuario.
+Respuesta recomendada: aterrizar la cifra — Impulso son $499 al mes para 3 usuarios, Pro $999 para 10; la mayoría de los CRM cobran por usuario, así que a 10 personas la comparación se invierte. Y ofrecer los 30 días de prueba para que lo compruebe sin pagar. Ver [[10_precios-y-planes]].
+Pregunta de seguimiento: "¿Comparado con qué? ¿Cuántos usuarios entrarían?"
+Error que debe evitarse: ofrecer un descuento; los descuentos los aplica un especialista.
 Cuándo escalar: en cuanto el cliente quiera negociar una cifra concreta.
 ```
 
@@ -105,25 +105,25 @@ Cuándo escalar: no aplica — si no hay problema identificado, no forzar el ava
 ```
 OBJECIÓN: "Solo quiero saber el precio."
 Qué puede significar realmente: quiere filtrar rápido si está dentro de su rango antes de invertir tiempo.
-Respuesta recomendada: explicar que el precio se cotiza según necesidad y ofrecer levantar los datos mínimos para cotizar. Ver [[10_precios-y-planes]].
-Pregunta de seguimiento: "Para darte un número real, ¿cuántos usuarios y qué necesidades tendrías?"
-Error que debe evitarse: inventar un rango de precio no verificado.
-Cuándo escalar: si insiste en un número exacto sin dar contexto, escalar a un especialista comercial.
+Respuesta recomendada: dárselo de una: $499, $999 o $1,999 al mes según usuarios y funciones (≈17 % menos pagando el año), Enterprise desde $79,000 al año. Después, recomendar plan. Ver [[10_precios-y-planes]].
+Pregunta de seguimiento: "¿Cuántas personas lo usarían? Con eso te digo cuál te conviene."
+Error que debe evitarse: esconder el precio detrás de un formulario o de una demo — es lo que hace que el lead se vaya.
+Cuándo escalar: solo si pide un precio fuera de tabla (volumen, descuento, Enterprise a medida).
 ```
 
 ```
 OBJECIÓN: "Quiero probarlo."
 Qué puede significar realmente: interés genuino y disposición a avanzar.
-Respuesta recomendada: encaminar hacia agendar una demo con un especialista — no hay evidencia oficial de una prueba gratuita autoservicio.
-Pregunta de seguimiento: "¿Prefieres que te muestre una demo con tus propios datos de ejemplo?"
-Error que debe evitarse: afirmar que existe una prueba gratuita sin confirmarlo. Ver [[10_precios-y-planes]].
-Cuándo escalar: no aplica — es señal de intención de compra alta, avanzar a captura de datos.
+Respuesta recomendada: son 30 días de prueba en Impulso, alta en app.vinqulia.com. Decir de frente que registra tarjeta y que no se cobra nada hasta que termine: enterarse después quema la confianza.
+Pregunta de seguimiento: "¿Quieres empezar tú la prueba o prefieres que te la configuremos con tus datos?"
+Error que debe evitarse: decir "prueba gratis sin tarjeta" — sí pide tarjeta.
+Cuándo escalar: no aplica; si tiene datos que migrar o equipo grande, ofrecer demo además de la prueba.
 ```
 
 ```
 OBJECIÓN: "Necesito instalarlo en mis servidores."
 Qué puede significar realmente: requisito de TI/seguridad para mantener control de los datos.
-Respuesta recomendada: confirmar que existe la modalidad de infraestructura propia del cliente, además del servicio administrado.
+Respuesta recomendada: sí se puede — es Enterprise en modalidad "en tus servidores", desde $99,000 al año más $45,000 de implementación. Ver [[10_precios-y-planes]].
 Pregunta de seguimiento: "¿Ese requisito viene de una política interna o de una obligación regulatoria específica?"
 Error que debe evitarse: dar detalles técnicos de arquitectura sin validación de un especialista.
 Cuándo escalar: siempre — requisito técnico específico. Ver [[12_escalamiento]].

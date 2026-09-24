@@ -4,7 +4,7 @@ category: politicas-comerciales
 audience: agente-comercial
 priority: alta
 source: criterio comercial derivado del producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -12,9 +12,11 @@ sensitivity: pública
 
 Reglas que el agente (humano o IA) debe seguir al conversar con un lead. Donde no existe una política oficial definida, se marca `[REQUIERE DEFINICIÓN INTERNA]` — nunca se inventa.
 
-## Cuándo ofrecer demo
+## Cuándo ofrecer demo — y cuándo la prueba
 
-Ofrecer la demo en cuanto exista interés genuino y al menos un problema identificado — no es necesario agotar todo el guion de discovery primero. Señales para ofrecerla: el visitante pregunta "¿cómo se vería esto con mis datos?", pide precio, o pide ver el producto directamente.
+Hay dos salidas y la prueba suele ser mejor: **30 días en Impulso** con alta autoservicio en app.vinqulia.com (registra tarjeta, no se cobra hasta que termina). Ofrecerla a quien quiere verlo ya y su caso entra en Impulso o Pro.
+
+La **demo con especialista** es para quien tiene equipo grande, datos que migrar, requisitos de TI o pinta de Enterprise. Ofrecer cualquiera de las dos en cuanto haya interés genuino y un problema identificado — sin agotar el guion de discovery.
 
 ## Cuándo pedir datos
 
@@ -22,7 +24,9 @@ Pedir nombre, empresa y forma de contacto solo después de haber dado valor en l
 
 ## Cuándo hablar de precio
 
-Nunca dar una cifra concreta — no existe una tabla pública de precios. Ver [[10_precios-y-planes]]. Si se pregunta directamente, explicar que se cotiza según necesidad y ofrecer levantar los datos mínimos para preparar una cotización.
+Los precios son públicos: se dicen sin rodeos y sin escalar en cuanto el lead pregunte — $499, $999 y $1,999 al mes (o el año con ~17 % de ahorro), y Enterprise desde $79,000 al año. Ver [[10_precios-y-planes]]. Lo que no se improvisa: descuentos fuera de los publicados, condiciones contractuales y precios para volúmenes fuera de tabla.
+
+Recomendar plan por lo que el lead ya dijo (usuarios, embudos, si necesita WhatsApp/automatizaciones), no por precio: Pro es el punto en el que el CRM empieza a trabajar solo.
 
 ## Cuándo ofrecer implementación
 
@@ -50,7 +54,7 @@ Ver la lista completa de disparadores de escalamiento en [[12_escalamiento]]. En
 
 ## Qué nunca prometer
 
-- Precios, descuentos o condiciones contractuales específicas.
+- Descuentos o condiciones contractuales específicas (los precios de lista sí se dicen).
 - Plazos de implementación exactos sin validación del equipo de implementación.
 - Integraciones prearmadas con sistemas específicos (SAP, Salesforce, un ERP particular) sin confirmarlo.
 - Certificaciones de seguridad o cumplimiento normativo no verificadas.
@@ -61,7 +65,7 @@ Ver la lista completa de disparadores de escalamiento en [[12_escalamiento]]. En
 - Funcionalidades que no estén documentadas en este repositorio de conocimiento.
 - Comparaciones de competidores no verificadas. Ver [[07_competidores]].
 - Cifras de impacto o resultado ("aumenta tus ventas X%") no confirmadas.
-- Límites técnicos (usuarios, almacenamiento, tasa de uso de API) no publicados.
+- Límites técnicos no publicados (almacenamiento, tasa de uso de API). Usuarios, contactos nuevos al mes y embudos sí están publicados por plan: ver [[10_precios-y-planes]].
 
 ## Cómo manejar solicitudes especiales
 

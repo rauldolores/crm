@@ -749,31 +749,25 @@ Esta modalidad permite que Vinqulia sea el punto de partida para una transformac
 
 # 28. Precios
 
-Los precios se manejan en pesos mexicanos (MXN).
+Precios públicos en pesos mexicanos (MXN), sin IVA. Se dicen tal cual, sin escalar. El detalle vive en `vinqulia/10_precios-y-planes.md`.
 
-El precio depende principalmente de:
+| Plan | Al mes | Al año | Usuarios | Contactos nuevos/mes | Embudos |
+|---|---|---|---|---|---|
+| Impulso | $499 | $4,990 | 3 | 150 | 1 |
+| Pro | $999 | $9,990 | 10 | 400 | 5 |
+| Max | $1,999 | $19,990 | 25 | 1,000 | 15 |
+| Enterprise | cotizado, desde $79,000 al año | — | 50+ | sin límite | sin límite |
 
-- Tamaño del equipo.
-- Número de usuarios.
-- Alcance del proyecto.
-- Necesidades de implementación.
-- Migración.
-- Integraciones.
-- Automatizaciones.
-- Personalizaciones.
-- Requerimientos de infraestructura.
+- El precio es **por plan, no por usuario**. Pagar el año equivale a 10 mensualidades (~17 % de ahorro).
+- **Prueba: 30 días en Impulso**, con alta autoservicio en app.vinqulia.com. Se registra tarjeta y no se cobra nada hasta que termina.
+- **Enterprise**: licencia anual por banda ($79,000 / $129,000 / $199,000 en nube dedicada; $99,000 / $159,000 / $249,000 en servidores del cliente), más $45,000 de implementación y $1,500/hora para trabajo fuera del alcance base.
+- Se factura CFDI con los datos fiscales del cliente; se cambia de plan cuando el equipo crece y los datos se quedan donde están.
 
-No inventar precios.
+Si un prospecto pregunta "¿Cuánto cuesta Vinqulia?", se le da la cifra y **después** se recomienda plan:
 
-Si un prospecto pregunta:
+**"Impulso son $499 al mes para 3 usuarios, Pro $999 para 10 y Max $1,999 para 25 — o el año con cerca del 17 % de ahorro. ¿Cuántas personas lo usarían? Con eso te digo cuál te conviene, y puedes empezar con 30 días de prueba."**
 
-"¿Cuánto cuesta Vinqulia?"
-
-Responder:
-
-**"El precio se define según el tamaño del equipo y el alcance que necesites. Podemos darte una propuesta después de conocer cómo trabaja actualmente tu equipo y qué necesitas automatizar o integrar."**
-
-El objetivo de la conversación es llevar al prospecto hacia una demo o diagnóstico comercial.
+Lo que NO se improvisa: descuentos fuera de los publicados, condiciones contractuales, plazos de implementación comprometidos y precios para volúmenes fuera de tabla. Eso se escala.
 
 ---
 

@@ -4,7 +4,7 @@ category: intenciones
 audience: agente-comercial
 priority: alta
 source: criterio comercial derivado del producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -24,19 +24,28 @@ CTA: ofrecer profundizar según lo que más le interese (funcionalidades, precio
 ```
 Intención: Quiere precio.
 Señales: "¿cuánto cuesta?", "¿cuál es el precio?", pregunta directa sin contexto previo.
-Información que necesita: entender que se cotiza según necesidad, no hay tabla pública.
-Pregunta recomendada: "Para darte un número real, ¿cuántos usuarios tendrían y qué necesitarían resolver?"
-Respuesta: explicar que el precio se cotiza a la medida; ver [[10_precios-y-planes]] y [[06_objeciones]] ("solo quiero saber el precio").
-CTA: ofrecer levantar los datos mínimos para preparar una cotización.
+Información que necesita: la cifra, sin rodeos.
+Respuesta: $499, $999 o $1,999 al mes según usuarios y funciones (~17 % menos pagando el año); Enterprise desde $79,000 al año. Ver [[10_precios-y-planes]].
+Pregunta recomendada, DESPUÉS de dar el precio: "¿Cuántas personas lo usarían? Con eso te digo cuál te conviene."
+CTA: recomendar plan y ofrecer los 30 días de prueba en Impulso.
 ```
 
 ```
 Intención: Quiere demo.
-Señales: "¿puedo ver el sistema?", "¿tienen una demo?", "quiero probarlo".
+Señales: "¿puedo ver el sistema?", "¿tienen una demo?".
 Información que necesita: cómo y cuándo se agenda.
-Pregunta recomendada: "¿Prefieres que te muestre con datos de ejemplo o directamente coordinamos con un especialista?"
+Pregunta recomendada: "¿Prefieres empezar tú la prueba de 30 días o que un especialista te lo muestre con tus datos?"
 Respuesta: confirmar interés y encaminar a captura de datos de contacto. Ver [[04_playbook-ventas]].
 CTA: agendar demo con un especialista.
+```
+
+```
+Intención: Quiere probarlo ya.
+Señales: "quiero probarlo", "¿hay prueba gratis?", "¿me puedo registrar?".
+Información que necesita: que son 30 días en Impulso, que se registra tarjeta y que no se cobra hasta que termina.
+Pregunta recomendada: "¿Tienes datos que migrar? Si sí, te lo dejamos configurado antes de que empieces."
+Respuesta: enlace de registro en app.vinqulia.com. Ver [[10_precios-y-planes]].
+CTA: registro autoservicio; demo además si hay migración o equipo grande.
 ```
 
 ```

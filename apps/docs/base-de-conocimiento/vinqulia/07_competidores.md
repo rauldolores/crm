@@ -4,7 +4,7 @@ category: competidores
 audience: agente-comercial
 priority: media
 source: conocimiento general de mercado + producto verificado (Vinqulia)
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 

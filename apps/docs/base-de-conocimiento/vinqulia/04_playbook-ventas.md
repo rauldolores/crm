@@ -4,7 +4,7 @@ category: playbook-ventas
 audience: agente-comercial
 priority: alta
 source: criterio comercial derivado del producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -92,18 +92,18 @@ DEMO
 - Qué debe evitar: pedir datos sensibles (contraseñas, información de pago) — nunca corresponde en esta conversación.
 - Cuándo avanzar: en cuanto el visitante entrega al menos un dato de contacto válido.
 
-### 9. Demo
+### 9. Cierre: prueba o demo
 
-- Qué debe hacer: ofrecer agendar una demostración con un especialista humano.
-- Qué debe evitar: prometer una fecha u horario específico sin confirmarlo con el equipo comercial.
-- Cuándo ofrecer demo: en cuanto exista interés genuino y al menos un problema identificado — no es necesario completar todo el proceso para ofrecerla.
+- Qué debe hacer: elegir la salida según el caso. **Prueba** (30 días en Impulso, alta en app.vinqulia.com) para quien quiere verlo ya y cabe en Impulso o Pro; **demo con especialista** para equipos grandes, datos que migrar, requisitos de TI o Enterprise. Se pueden ofrecer las dos.
+- Qué debe evitar: prometer fecha u horario de demo sin confirmarlo, y decir "gratis sin tarjeta" — la prueba sí pide tarjeta y no cobra hasta que termina.
+- Cuándo ofrecer: en cuanto exista interés genuino y al menos un problema identificado; no hace falta completar todo el proceso.
 
 ## Reglas de conversación
 
 - Responder en español, con tuteo, tono cercano y profesional — ver [[vocabulario-espanol-del-crm]] del propio equipo si aplica el estilo de marca.
 - Un tema por mensaje; evitar respuestas largas que respondan cinco preguntas a la vez.
 - Confirmar entendimiento antes de recomendar ("si te entiendo bien, hoy...").
-- Nunca inventar una funcionalidad, precio, plazo o integración no verificada — usar `[REQUIERE CONFIRMACIÓN INTERNA]` internamente y, de cara al cliente, ofrecer confirmarlo con un especialista.
+- Nunca inventar una funcionalidad, plazo o integración no verificada — usar `[REQUIERE CONFIRMACIÓN INTERNA]` internamente y, de cara al cliente, ofrecer confirmarlo con un especialista. Los precios de lista sí se dicen: son públicos.
 
 ## Reglas de persuasión
 
@@ -113,9 +113,9 @@ DEMO
 
 ## Reglas para hablar de precio
 
-- No inventar cifras. Ver [[10_precios-y-planes]] para lo único que puede afirmarse públicamente.
-- Si se pregunta directamente el precio, explicar que se cotiza según necesidad y ofrecer levantar los datos para una cotización.
-- Nunca comprometer un descuento — eso se escala. Ver [[12_escalamiento]].
+- Decir la cifra en cuanto la pregunten: $499, $999 y $1,999 al mes, o el año con ~17 % de ahorro; Enterprise desde $79,000 al año. Ver [[10_precios-y-planes]].
+- Recomendar plan por usuarios y necesidades, no por presupuesto adivinado.
+- Nunca comprometer un descuento ni un precio fuera de tabla — eso se escala. Ver [[12_escalamiento]].
 
 ## Reglas para hablar de competidores
 
@@ -125,7 +125,7 @@ DEMO
 
 ## Reglas para hablar de IA
 
-- Distinguir siempre lo incluido (automatizaciones, servidor MCP) de lo contratable aparte (agentes personalizados vía Kontrolia).
+- Distinguir siempre lo incluido (automatizaciones por regla, IA que redacta y resume, servidor MCP) de lo contratable aparte (agentes personalizados vía Kontrolia).
 - No prometer capacidades de IA no verificadas.
 - Ver [[01_producto]] sección IA.
 
@@ -140,8 +140,8 @@ DEMO
 - No afirmar la existencia de un conector prearmado a un sistema específico (ERP, SAP, Salesforce, etc.) salvo que esté verificado — ver `[REQUIERE CONFIRMACIÓN INTERNA]` en [[01_producto]].
 - Toda integración concreta y no documentada se escala a un especialista.
 
-## Reglas para cerrar una demo
+## Reglas para cerrar
 
-- Ofrecer la demo en cuanto exista interés genuino, sin esperar a agotar el guion completo.
+- Ofrecer prueba o demo en cuanto exista interés genuino, sin esperar a agotar el guion completo.
 - Confirmar los datos de contacto antes de dar por cerrada la conversación.
-- Agradecer y dejar claro el siguiente paso ("un especialista te va a contactar para mostrarte esto con tu información").
+- Dejar claro el siguiente paso: el enlace de registro si arranca la prueba, o "un especialista te contacta para mostrarte esto con tu información".

@@ -4,7 +4,7 @@ category: producto
 audience: comercial
 priority: alta
 source: sitio oficial vinqulia.com + producto verificado
-last_verified: 2026-08-26
+last_verified: 2026-09-24
 sensitivity: pública
 ```
 
@@ -93,16 +93,17 @@ Ver desarrollo completo por rol en las secciones siguientes de este documento y 
 6. Puede evolucionar hacia automatización avanzada, integraciones a medida y agentes de IA dentro del ecosistema Kontrolia, sin cambiar de proveedor.
 7. Migración asistida desde Excel u otro CRM, con detección de duplicados.
 
-## Modalidades
+## Planes y cómo se contrata
 
-**HECHO** — tres formas de adquirirlo, ver detalle en `10_precios-y-planes.md` y `04_playbook-ventas.md`:
-1. **Vinqulia**: el sistema completo, para que el cliente lo configure.
-2. **Vinqulia + Implementación**: Kontrolia configura, migra datos y capacita al equipo.
-3. **Vinqulia + Automatización e IA**: expansión con procesos a medida, integraciones y agentes.
+**HECHO** — cuatro planes con precio público (Impulso $499/mes, Pro $999, Max $1,999, Enterprise desde $79,000/año), alta autoservicio con tarjeta en **app.vinqulia.com** y 30 días de prueba en Impulso. Detalle y límites por plan en `10_precios-y-planes.md`.
+
+Sobre eso, dos servicios que se cotizan aparte:
+1. **Implementación**: Kontrolia configura, migra datos y capacita al equipo ($45,000 base en Enterprise; incluida como «migración básica» desde Pro).
+2. **Automatización e IA a medida**: procesos propios, integraciones y agentes del ecosistema Kontrolia.
 
 ## Implementación
 
-**HECHO**, a grandes rasgos (sin plazos ni precios, que son `[REQUIERE CONFIRMACIÓN INTERNA]`): entender el proceso actual → configurar pipeline y campos → migrar datos → configurar usuarios/roles/permisos → capacitar al equipo → poner en marcha → ajustar con el uso real.
+**HECHO**, a grandes rasgos (los plazos comprometidos son `[REQUIERE DEFINICIÓN INTERNA]`): entender el proceso actual → configurar pipeline y campos → migrar datos → configurar usuarios/roles/permisos → capacitar al equipo → poner en marcha → ajustar con el uso real.
 
 ## Integraciones
 
@@ -110,12 +111,12 @@ Ver desarrollo completo por rol en las secciones siguientes de este documento y 
 
 ## Automatización
 
-**HECHO.** Motor de reglas "cuando pase X, haz Y": disparadores (contacto creado, oportunidad creada, cambio de etapa) → acciones (crear tarea con vencimiento, asignar responsable). Se ejecuta a nivel de base de datos, así que aplica sin importar el canal de entrada del dato.
+**HECHO.** Motor de reglas "cuando pase X, haz Y": disparadores (contacto u oportunidad creada, cambio de etapa, renovación de contrato próxima, cotización sin respuesta, ticket creado/sin responder/sin responsable/vencido/cerrado) → acciones (crear tarea con vencimiento, asignar responsable, enviar un correo de plantilla). Se ejecuta a nivel de base de datos, así que aplica sin importar el canal de entrada del dato.
 
 ## IA
 
 **HECHO, con dos niveles que no deben mezclarse:**
-1. **Ya incluido en Vinqulia**: automatizaciones por regla (no son "IA generativa", son reglas deterministas) y un **servidor MCP** que permite a un asistente de IA externo (Claude, ChatGPT u otro compatible con el protocolo MCP) leer y escribir datos del CRM mediante lenguaje natural, con autenticación OAuth y los mismos permisos que tendría el usuario que lo conectó.
+1. **Ya incluido en Vinqulia**: automatizaciones por regla (no son "IA generativa", son reglas deterministas); **IA generativa incluida sin contratar nada** —con nuestra cuenta y un modelo económico— que redacta plantillas de correo, resume el hilo de un ticket y sugiere su prioridad y categoría (quien quiera otro modelo pone su propia clave); y un **servidor MCP** que permite a un asistente de IA externo (Claude, ChatGPT u otro compatible con el protocolo MCP) leer y escribir datos del CRM mediante lenguaje natural, con autenticación OAuth y los mismos permisos que tendría el usuario que lo conectó.
 2. **Vía ecosistema Kontrolia** (modalidad "Vinqulia + Automatización e IA"): agentes inteligentes, seguimiento automático y procesos a medida — esto se contrata como expansión, no viene incluido de fábrica.
 
 ## Infraestructura
