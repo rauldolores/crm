@@ -12,6 +12,11 @@
 export const spanishCrmMessages = {
   resources: {
     companies: {
+      duplicates: {
+        title: "Ya existe una empresa parecida",
+        same_name: "tiene un nombre parecido",
+        same_company: "parece ser la misma empresa",
+      },
       merge: {
         action: "Fusionar con otra empresa",
         title: "Fusionar empresa",
@@ -183,6 +188,7 @@ export const spanishCrmMessages = {
         title: "Ya existe un contacto parecido",
         same_email: "tiene el mismo correo",
         same_name: "tiene un nombre parecido",
+        same_person: "parece ser la misma persona",
       },
       inputs: {
         genders: {
@@ -471,6 +477,7 @@ export const spanishCrmMessages = {
         classify: "Sugerir prioridad y categoría con IA",
         classify_empty: "Escribe el asunto o la descripción primero",
         classify_error: "No se pudo obtener la sugerencia",
+        classify_confidence: "%{porcentaje} % de seguridad",
       },
       survey: {
         title: "Encuesta de satisfacción",

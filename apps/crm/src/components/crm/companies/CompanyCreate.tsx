@@ -4,6 +4,7 @@ import { CancelButton } from "@/components/admin/cancel-button";
 import { SaveButton } from "@/components/admin/form";
 
 import { CompanyInputs } from "./CompanyInputs";
+import { PosiblesEmpresasDuplicadas } from "./PosiblesEmpresasDuplicadas";
 
 export const CompanyCreate = () => {
   const { identity } = useGetIdentity();
@@ -24,6 +25,7 @@ export const CompanyCreate = () => {
           <Form defaultValues={{ sales_id: identity?.id }}>
             <Card>
               <CardContent>
+                <PosiblesEmpresasDuplicadas />
                 <CompanyInputs />
                 <div
                   role="toolbar"

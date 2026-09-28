@@ -160,6 +160,8 @@ export const AVANZADO: Grupo = {
           tipo: "lista",
           items: [
             "Puedes tener varios formularios (uno por página, por campaña o por servicio) y desactivar cualquiera sin borrarlo.",
+            "El spam evidente (agencias de SEO, envíos automáticos) se descarta solo antes de entrar. Ante la duda, el envío se guarda: preferimos que juzgues tú a perderte un cliente.",
+            "Los tickets que llegan por formulario entran ya con su prioridad y su categoría propuestas, con las listas que tengas en Ajustes → Tickets. Se cambian como cualquier otro campo.",
             "Si prefieres tu propio formulario con tu diseño, envíalo a la API con una clave de API (sección «API y claves»).",
           ],
         },
@@ -205,6 +207,11 @@ export const AVANZADO: Grupo = {
           tipo: "parrafo",
           texto:
             "Aparte de redactar plantillas, un asistente de IA (como Claude) puede trabajar directamente con tus datos del CRM por conversación, gracias al servidor MCP: ver la sección «Asistentes de IA (MCP)».",
+        },
+        {
+          tipo: "parrafo",
+          texto:
+            "Hay una segunda IA que no redacta: solo decide entre opciones que ya existen en tu CRM. Es la que propone la prioridad y la categoría de un ticket, la que descarta el spam de tus formularios públicos y la que, al dar de alta un contacto o una empresa, distingue si de verdad es alguien que ya tienes o solo un nombre parecido. Esa va incluida, no pide clave tuya y no gasta de tu cuenta del proveedor: cuesta una fracción de céntimo por decisión.",
         },
       ],
     },

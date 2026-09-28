@@ -1,4 +1,5 @@
 import { AlertTriangle } from "lucide-react";
+import type { Identifier } from "ra-core";
 import { useTranslate } from "ra-core";
 import { useWatch } from "react-hook-form";
 import { Link } from "react-router";
@@ -6,7 +7,14 @@ import { Link } from "react-router";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import type { EmailAndType } from "../types";
+import type { ContactoDuplicado } from "./useContactDuplicates";
 import { useContactDuplicates } from "./useContactDuplicates";
+
+const MOTIVOS: Record<ContactoDuplicado["motivo"], string> = {
+  correo: "same_email",
+  nombre: "same_name",
+  persona: "same_person",
+};
 
 /**
  * Aviso de posibles duplicados mientras se crea un contacto: si ya existe
@@ -21,11 +29,15 @@ export const PosiblesDuplicados = () => {
   const emailJsonb: EmailAndType[] | undefined = useWatch({
     name: "email_jsonb",
   });
+  const title: string | undefined = useWatch({ name: "title" });
+  const companyId: Identifier | undefined = useWatch({ name: "company_id" });
 
   const duplicados = useContactDuplicates({
     firstName,
     lastName,
     emails: (emailJsonb ?? []).map((e) => e.email),
+    title,
+    companyId,
   });
 
   if (duplicados.length === 0) return null;
@@ -50,11 +62,7 @@ export const PosiblesDuplicados = () => {
                 {contacto.first_name} {contacto.last_name}
               </Link>{" "}
               <span className="text-muted-foreground">
-                {translate(
-                  motivo === "correo"
-                    ? "resources.contacts.duplicates.same_email"
-                    : "resources.contacts.duplicates.same_name",
-                )}
+                {translate(`resources.contacts.duplicates.${MOTIVOS[motivo]}`)}
               </span>
             </li>
           ))}

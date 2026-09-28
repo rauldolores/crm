@@ -3,8 +3,11 @@ import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import react from "@vitejs/plugin-react";
 
-// Three test projects (https://vitest.dev/guide/projects.html):
+// Four test projects (https://vitest.dev/guide/projects.html):
 //   - "app":       React/DOM unit tests, run in a real browser (Playwright/Chromium).
+//   - "server":    módulos de `src/lib/server` que leen `process.env` (claves de
+//                  proveedores). No pueden correr en "app": ahí `process.env` se
+//                  compila a `{}` y `vi.stubEnv` no tiene nada sobre lo que actuar.
 //   - "claude":    agent-harness hook tests, plain Node integration tests that spawn
 //                  the .claude/hooks/*.mjs hooks as subprocesses. No DOM, no browser.
 //   - "functions": Supabase Edge Function tests. Written for Deno with JSR imports;
@@ -69,12 +72,39 @@ export default defineConfig({
             // Harness hook tests are Node-only (they import node:fs / node:path
             // and spawn subprocesses); they run under the "claude" project below.
             ".claude/**",
+            // Código que solo corre en el servidor y lee process.env, que aquí
+            // se sustituye por {} para el navegador: va al proyecto "server".
+            "src/lib/server/ia/**",
+            "src/lib/server/tickets/**",
+            "src/lib/server/duplicados/**",
           ],
           server: {
             deps: {
               external: [/playwright/],
             },
           },
+        },
+      },
+      {
+        resolve: {
+          preserveSymlinks: true,
+          alias: {
+            "@": path.resolve(__dirname, "./src"),
+          },
+        },
+        test: {
+          // Módulos de servidor que leen process.env (claves de proveedores).
+          // El proyecto "app" corre en un navegador de verdad, donde
+          // process.env se compila a {} y `vi.stubEnv` no puede hacer nada.
+          name: "server",
+          globals: true,
+          environment: "node",
+          include: [
+            "src/lib/server/ia/**/*.test.ts",
+            "src/lib/server/tickets/**/*.test.ts",
+            "src/lib/server/duplicados/**/*.test.ts",
+          ],
+          exclude: ["**/node_modules/**"],
         },
       },
       {

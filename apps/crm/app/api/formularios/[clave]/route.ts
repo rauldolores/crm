@@ -1,9 +1,17 @@
+import { hayClasificador } from "@/lib/server/ia/clasificador";
+import { pareceSpam } from "@/lib/server/ia/spam";
 import {
   contarUso,
   exigirCupo,
   LIMITE_CONTACTOS,
 } from "@/lib/server/kontrolia-auth/consumo";
 import { getServiceClient } from "@/lib/server/supabase-service";
+import type { Opcion } from "@/lib/server/tickets/clasificacion";
+import {
+  CONFIANZA_MINIMA_AUTOMATICA,
+  PRIORIDADES_DE_FABRICA,
+  sugerirConModeloDeDecision,
+} from "@/lib/server/tickets/clasificacion";
 
 /**
  * Ruta pública de un formulario de captación: sin sesión, sin
@@ -79,6 +87,46 @@ const construirNotaDeCalificacion = (
 
 const esCorreoValido = (correo: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+
+/**
+ * Prioridad y categoría de un ticket que entra por la web, con las listas de
+ * Ajustes de esa organización.
+ *
+ * Aquí nadie puede pulsar «Sugerir con IA»: quien escribe es el cliente, y
+ * el ticket aterriza con la prioridad por defecto hasta que alguien lo abre.
+ * Solo el modelo de decisión — el proveedor de texto de la organización se
+ * queda fuera a propósito: lo paga ella, por cada envío, y tarda segundos
+ * con un visitante esperando.
+ *
+ * Y con umbral de confianza, porque nadie va a revisar esto antes de que
+ * cuente: ver `CONFIANZA_MINIMA_AUTOMATICA`.
+ */
+async function clasificarTicketEntrante(
+  organizacionId: string,
+  asunto: string,
+  descripcion: string,
+) {
+  if (!hayClasificador()) return null;
+
+  const { data: fila } = await getServiceClient()
+    .from("configuration")
+    .select("config")
+    .eq("organization_id", organizacionId)
+    .maybeSingle();
+  const config = (fila?.config ?? {}) as {
+    ticketPriorities?: Opcion[];
+    ticketCategories?: Opcion[];
+  };
+
+  return sugerirConModeloDeDecision(
+    { subject: asunto, description: descripcion },
+    Array.isArray(config.ticketPriorities)
+      ? config.ticketPriorities
+      : PRIORIDADES_DE_FABRICA,
+    Array.isArray(config.ticketCategories) ? config.ticketCategories : [],
+    CONFIANZA_MINIMA_AUTOMATICA,
+  );
+}
 
 export async function GET(_peticion: Request, { params }: Contexto) {
   const { clave } = await params;
@@ -183,6 +231,32 @@ export async function POST(peticion: Request, { params }: Contexto) {
     );
   }
 
+  // Lo que el señuelo no caza: el spam escrito para parecer un lead. Se
+  // responde 200 sin crear nada, igual que con el señuelo, para no delatar
+  // que se le detectó. Si el filtro no está disponible, deja pasar.
+  if (
+    await pareceSpam({
+      nombre: nombreCompleto,
+      correo,
+      empresa,
+      texto: [
+        asunto,
+        descripcion,
+        mensaje || construirNotaDeCalificacion(datos),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    })
+  ) {
+    // El envío sí se apunta: es lo que mide la ventana de arriba, y sin esto
+    // un bot podría insistir sin gastar nunca su cupo.
+    await supabase.from("public_form_submissions").insert({
+      organization_id: formulario.organization_id,
+      public_form_id: formulario.id,
+    });
+    return Response.json({ ok: true });
+  }
+
   const [primerNombre, ...resto] = nombreCompleto.split(/\s+/);
 
   let companyId: number | undefined;
@@ -284,6 +358,12 @@ export async function POST(peticion: Request, { params }: Contexto) {
   }
 
   if (esTicket) {
+    const sugerencia = await clasificarTicketEntrante(
+      formulario.organization_id,
+      asunto,
+      descripcion,
+    );
+
     const { error: errorTicket } = await supabase.from("tickets").insert({
       organization_id: formulario.organization_id,
       subject: asunto,
@@ -292,6 +372,10 @@ export async function POST(peticion: Request, { params }: Contexto) {
       source: "web_form",
       contact_id: contacto.id,
       company_id: companyId,
+      // Sin sugerencia se dejan los valores por defecto de la tabla, que es
+      // lo que pasaba antes de que esto existiera.
+      ...(sugerencia?.priority ? { priority: sugerencia.priority } : {}),
+      ...(sugerencia?.category ? { category: sugerencia.category } : {}),
     });
     if (errorTicket) {
       return Response.json(

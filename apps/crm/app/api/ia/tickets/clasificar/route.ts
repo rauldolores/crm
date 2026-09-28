@@ -1,13 +1,22 @@
-import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
+import { hayClasificador } from "@/lib/server/ia/clasificador";
 import { cuentaDeIaDeOrganizacion } from "@/lib/server/ia/configuracion";
-import { generarConIa } from "@/lib/server/ia/proveedores";
+import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 import { getServiceClient } from "@/lib/server/supabase-service";
+import type { Opcion } from "@/lib/server/tickets/clasificacion";
+import {
+  clasificarTicket,
+  PRIORIDADES_DE_FABRICA,
+} from "@/lib/server/tickets/clasificacion";
 
 /**
- * Sugerencia de prioridad y categoría para un ticket a partir de su asunto
- * y descripción, usando las listas que la organización configuró en
- * Ajustes → Tickets. Devuelve valores de esas listas (nunca inventados) y
- * el porqué en una frase, para que quien captura decida.
+ * Sugerencia de prioridad y categoría para un ticket a partir de su asunto y
+ * descripción, con las listas que la organización configuró en Ajustes →
+ * Tickets. Devuelve valores de esas listas (nunca inventados) para que quien
+ * captura decida: los campos quedan editables.
+ *
+ * El cómo vive en `lib/server/tickets/clasificacion`, que comparte con el
+ * formulario público de soporte — donde el mismo ticket entra sin que nadie
+ * pueda pulsar un botón.
  */
 
 const MAX_TEXTO = 4000;
@@ -15,43 +24,15 @@ const MAX_TEXTO = 4000;
 const esError = (estado: number, mensaje: string) =>
   Response.json({ message: mensaje }, { status: estado });
 
-interface Opcion {
-  value: string;
-  label: string;
-}
-
-const PRIORIDADES_DE_FABRICA: Opcion[] = [
-  { value: "low", label: "Baja" },
-  { value: "normal", label: "Normal" },
-  { value: "high", label: "Alta" },
-  { value: "urgent", label: "Urgente" },
-];
-
-const instrucciones = (prioridades: Opcion[], categorias: Opcion[]) =>
-  [
-    "Eres el asistente de un equipo de soporte. Clasificas tickets de clientes.",
-    "",
-    "Prioridades posibles (valor = etiqueta), de menor a mayor urgencia:",
-    ...prioridades.map((p) => `${p.value} = ${p.label}`),
-    "",
-    "Categorías posibles (valor = etiqueta):",
-    ...(categorias.length
-      ? categorias.map((c) => `${c.value} = ${c.label}`)
-      : ["(ninguna: deja la categoría vacía)"]),
-    "",
-    "Devuelve SOLO un JSON válido con esta forma exacta:",
-    '{"priority": "<valor de la lista>", "category": "<valor de la lista o cadena vacía>", "motivo": "<una frase en español de México, con tuteo>"}',
-    "",
-    "Criterio de prioridad: urgente si el cliente no puede operar o hay pérdida de dinero en curso; alta si algo importante no funciona pero hay alternativa; normal para dudas y peticiones habituales; baja para mejoras y consultas sin prisa. Usa SOLO valores de las listas.",
-  ].join("\n");
-
 export async function POST(peticion: Request) {
   const auth = await requireKontroliaPermission(peticion, []);
   if (!auth.ok) return auth.response;
   const { organizacionId } = auth.sesion;
 
-  const cuenta = await cuentaDeIaDeOrganizacion(organizacionId);
-  if (!cuenta) {
+  // Sin modelo de decisión en el despliegue ni proveedor de texto en la
+  // organización no hay nada que intentar, y el aviso es accionable: lo
+  // segundo sí lo configura el cliente.
+  if (!hayClasificador() && !(await cuentaDeIaDeOrganizacion(organizacionId))) {
     return esError(
       501,
       "No hay un proveedor de IA configurado. Configúralo en Ajustes → Inteligencia artificial.",
@@ -84,50 +65,13 @@ export async function POST(peticion: Request) {
     ? config.ticketCategories
     : [];
 
-  const resultado = await generarConIa(
-    cuenta,
-    instrucciones(prioridades, categorias),
-    `Asunto: ${subject}\n\nDescripción:\n${description}`,
+  const sugerencia = await clasificarTicket(
+    organizacionId,
+    { subject, description },
+    prioridades,
+    categorias,
   );
-  if (!resultado.ok || !resultado.texto) {
-    return esError(502, resultado.mensaje || "No se pudo clasificar.");
-  }
+  if (!sugerencia) return esError(502, "No se pudo clasificar el ticket.");
 
-  const sugerencia = extraerJson(resultado.texto);
-  if (!sugerencia) {
-    return esError(502, "La IA no devolvió una sugerencia que se pueda leer.");
-  }
-  // Solo valores de las listas: un valor inventado no existiría en Ajustes.
-  const priority = prioridades.some((p) => p.value === sugerencia.priority)
-    ? sugerencia.priority
-    : null;
-  const category = categorias.some((c) => c.value === sugerencia.category)
-    ? sugerencia.category
-    : null;
-  return Response.json({ priority, category, motivo: sugerencia.motivo });
-}
-
-function extraerJson(
-  texto: string,
-): { priority: string; category: string; motivo: string } | null {
-  const sinCerca = texto
-    .replace(/^\s*```(?:json)?/i, "")
-    .replace(/```\s*$/, "")
-    .trim();
-  const inicio = sinCerca.indexOf("{");
-  const fin = sinCerca.lastIndexOf("}");
-  if (inicio === -1 || fin <= inicio) return null;
-  try {
-    const datos = JSON.parse(sinCerca.slice(inicio, fin + 1)) as Record<
-      string,
-      unknown
-    >;
-    return {
-      priority: typeof datos.priority === "string" ? datos.priority : "",
-      category: typeof datos.category === "string" ? datos.category : "",
-      motivo: typeof datos.motivo === "string" ? datos.motivo : "",
-    };
-  } catch {
-    return null;
-  }
+  return Response.json(sugerencia);
 }

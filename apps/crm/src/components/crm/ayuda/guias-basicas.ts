@@ -256,6 +256,7 @@ export const PANTALLAS: Grupo = {
           tipo: "lista",
           items: [
             "El sector y el tamaño se eligen de listas que configuras en Ajustes.",
+            "Al escribir el nombre, si ya tienes dada de alta una empresa que parece la misma («Panadería Lola» y «Panadería Lola S.A. de C.V.»), aparece un aviso con el enlace a su ficha. Tú decides: ir a la que existe o crear la nueva.",
             "Puedes filtrar por sector, tamaño y responsable, y buscar por nombre.",
             "Con el módulo Clientes activo, la ficha de la empresa gana la pestaña «Cliente»: qué ha comprado, qué tiene contratado y cuándo le vence.",
           ],

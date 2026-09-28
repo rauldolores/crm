@@ -32,7 +32,8 @@ export const SugerirConIaButton = () => {
       const sugerencia = await llamarApi<{
         priority: string | null;
         category: string | null;
-        motivo: string;
+        confianza: number | null;
+        motivo: string | null;
       }>("/api/ia/tickets/clasificar", {
         method: "POST",
         body: JSON.stringify({ subject, description }),
@@ -49,8 +50,17 @@ export const SugerirConIaButton = () => {
       const categoria = ticketCategories.find(
         (c) => c.value === sugerencia.category,
       )?.label;
+      // El modelo de decisión no razona en voz alta: en vez del motivo
+      // devuelve lo seguro que está, que para decidir si revisarlo dice más.
+      const porque =
+        sugerencia.motivo ??
+        (typeof sugerencia.confianza === "number"
+          ? translate("resources.tickets.ai.classify_confidence", {
+              porcentaje: Math.round(sugerencia.confianza * 100),
+            })
+          : "");
       notify(
-        [[prioridad, categoria].filter(Boolean).join(" · "), sugerencia.motivo]
+        [[prioridad, categoria].filter(Boolean).join(" · "), porque]
           .filter(Boolean)
           .join(" — "),
         { type: "info", autoHideDuration: 8000 },

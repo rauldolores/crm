@@ -2,11 +2,20 @@ import { useDataProvider } from "ra-core";
 import type { Identifier } from "ra-core";
 import { useEffect, useState } from "react";
 
+import {
+  confirmarDuplicados,
+  UMBRAL_DE_DUPLICADO,
+} from "../misc/confirmarDuplicados";
 import type { Contact } from "../types";
 
 export interface ContactoDuplicado {
   contacto: Contact;
-  motivo: "correo" | "nombre";
+  /**
+   * `correo` es certeza y no se discute. `nombre` es un parecido a secas;
+   * pasa a `persona` cuando el modelo de decisión confirma que, con la
+   * empresa y el puesto delante, se trata de la misma persona.
+   */
+  motivo: "correo" | "nombre" | "persona";
 }
 
 /**
@@ -22,10 +31,15 @@ export function useContactDuplicates({
   firstName,
   lastName,
   emails,
+  title,
+  companyId,
   excludeId,
 }: {
   firstName?: string;
   lastName?: string;
+  /** Puesto y empresa no se buscan: solo ayudan a decidir si es la misma persona. */
+  title?: string;
+  companyId?: Identifier;
   // Un valor de formulario recién iniciado trae filas con email en null
   // (ver defaultEmailJsonb), así que se filtran aquí, no se asume string.
   emails?: (string | null | undefined)[];
@@ -44,7 +58,7 @@ export function useContactDuplicates({
   ];
   // Clave estable para el efecto: solo se vuelve a consultar cuando el
   // nombre o los correos realmente cambian, no en cada render del formulario.
-  const clave = `${nombre}|${correos.join(",")}|${excludeId ?? ""}`;
+  const clave = `${nombre}|${correos.join(",")}|${title ?? ""}|${companyId ?? ""}|${excludeId ?? ""}`;
 
   useEffect(() => {
     if (nombre.length < 3 && correos.length === 0) {
@@ -114,7 +128,38 @@ export function useContactDuplicates({
         // avisa de duplicados esta vez.
       });
 
-      if (!cancelado) setDuplicados([...encontrados.values()]);
+      // Los parecidos de nombre se confirman antes de enseñarlos: dos
+      // homónimos en empresas distintas no son un duplicado, y un aviso que
+      // salta de más deja de leerse. El del correo no se pregunta — ahí no
+      // hay nada que juzgar.
+      const lista = [...encontrados.values()];
+      const porNombre = lista.filter(({ motivo }) => motivo === "nombre");
+      const veredicto = porNombre.length
+        ? await confirmarDuplicados(
+            "contacts",
+            {
+              nombre: firstName?.trim() ?? "",
+              apellidos: lastName?.trim() ?? "",
+              correos,
+              ...(title?.trim() ? { puesto: title.trim() } : {}),
+              ...(companyId ? { empresa_id: String(companyId) } : {}),
+            },
+            porNombre.map(({ contacto }) => Number(contacto.id)),
+          )
+        : {};
+
+      const visibles = lista.flatMap((duplicado) => {
+        if (duplicado.motivo !== "nombre") return [duplicado];
+        const probabilidad = veredicto[Number(duplicado.contacto.id)];
+        // Sin opinión sobre este candidato se queda como estaba: ante la
+        // duda, mejor un aviso de más que perder un duplicado real.
+        if (probabilidad === undefined) return [duplicado];
+        return probabilidad >= UMBRAL_DE_DUPLICADO
+          ? [{ ...duplicado, motivo: "persona" as const }]
+          : [];
+      });
+
+      if (!cancelado) setDuplicados(visibles);
     }, 500);
 
     return () => {

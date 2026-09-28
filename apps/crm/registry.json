@@ -174,11 +174,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/companies/CompanyMergeButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/companies/CompanyShow.tsx",
           "type": "registry:component"
         },
         {
           "path": "src/components/crm/companies/GridList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/companies/PosiblesEmpresasDuplicadas.tsx",
           "type": "registry:component"
         },
         {
@@ -194,7 +202,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/companies/useCompanyDuplicates.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/conectores/ConectoresPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/consts.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/contacts/ArchivarContactoButton.tsx",
           "type": "registry:component"
         },
         {
@@ -314,6 +334,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/cotizaciones/DialogoDeFactura.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/cotizaciones/EditorDeCotizacion.tsx",
           "type": "registry:component"
         },
@@ -323,6 +347,14 @@
         },
         {
           "path": "src/components/crm/cotizaciones/SeccionDeCotizaciones.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/SelectorDeProducto.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/cotizaciones/SubidorDeLogo.tsx",
           "type": "registry:component"
         },
         {
@@ -343,6 +375,10 @@
         },
         {
           "path": "src/components/crm/customers/PanelDeCliente.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/customers/RiesgoDeCliente.tsx",
           "type": "registry:component"
         },
         {
@@ -442,6 +478,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/deals/DealsIterator.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/deals/HistorialDeOportunidad.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/deals/OnlyMineInput.tsx",
           "type": "registry:component"
         },
@@ -451,6 +495,14 @@
         },
         {
           "path": "src/components/crm/deals/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/deals/ingresoAsociado.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/deals/probabilidad.ts",
           "type": "registry:component"
         },
         {
@@ -490,6 +542,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturacion/AvisoDeExcedente.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturacion/ConsumoDelPlan.tsx",
           "type": "registry:component"
         },
@@ -522,7 +578,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturacion/solicitudes.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturacion/useDerechos.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturas/ListaDeFacturas.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturas/descargas.ts",
           "type": "registry:component"
         },
         {
@@ -571,6 +639,14 @@
         },
         {
           "path": "src/components/crm/legal/enlaces.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/linea-de-tiempo/LineaDeTiempo.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/linea-de-tiempo/eventos.ts",
           "type": "registry:component"
         },
         {
@@ -670,6 +746,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/InformeDeSoporte.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/InformesPage.tsx",
           "type": "registry:component"
         },
@@ -683,6 +763,14 @@
         },
         {
           "path": "src/components/crm/misc/MobileBackButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/PiezasDeInforme.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/Pronostico.tsx",
           "type": "registry:component"
         },
         {
@@ -706,6 +794,18 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/confirmarDuplicados.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/disparadoresDeAutomatizacion.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/exportadores.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/fetchWithTimeout.ts",
           "type": "registry:component"
         },
@@ -715,6 +815,10 @@
         },
         {
           "path": "src/components/crm/misc/llamarApi.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/metricasDeSoporte.ts",
           "type": "registry:component"
         },
         {
@@ -834,6 +938,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/productos/ListaDeProductos.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/providers/commons/activity.ts",
           "type": "registry:component"
         },
@@ -843,6 +951,14 @@
         },
         {
           "path": "src/components/crm/providers/commons/canAccess.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/providers/commons/contactTimeline.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/providers/commons/filtroDeArchivados.ts",
           "type": "registry:component"
         },
         {
@@ -858,7 +974,15 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/providers/commons/mergeCompanies.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/providers/commons/mergeContacts.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/providers/commons/moverOportunidad.ts",
           "type": "registry:component"
         },
         {
@@ -978,6 +1102,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/public/EncuestaDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/public/FormularioPublico.tsx",
           "type": "registry:component"
         },
@@ -1039,6 +1167,10 @@
         },
         {
           "path": "src/components/crm/settings/SettingsPageMobile.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/settings/limpiarSla.ts",
           "type": "registry:component"
         },
         {
@@ -1170,11 +1302,43 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/crm/tickets/HistorialDeTicket.tsx",
+          "path": "src/components/crm/tickets/FusionarTicketDialog.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/HiloDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/ResponderPorCorreoButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/ResumenConIa.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/SatisfaccionDeTicket.tsx",
           "type": "registry:component"
         },
         {
           "path": "src/components/crm/tickets/SelectoresDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/SlaDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/SugerirConIaButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TableroDeTickets.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/TarjetaDeTicket.tsx",
           "type": "registry:component"
         },
         {
@@ -1218,6 +1382,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tickets/plazosDeTicket.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/useDescripcionDeEventos.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/tickets/useIndiceDePrioridad.ts",
           "type": "registry:component"
         },
@@ -1254,6 +1426,14 @@
           "type": "registry:hook"
         },
         {
+          "path": "src/lib/conectores/catalogo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/conectores/sat.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/env.ts",
           "type": "registry:lib"
         },
@@ -1271,6 +1451,10 @@
         },
         {
           "path": "src/lib/kontrolia-auth/equipo.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/kontrolia-auth/excedentes.ts",
           "type": "registry:lib"
         },
         {
@@ -1318,6 +1502,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/borradoDeUsuarios.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/borradoDeUsuarios.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/clientes/normalizar.test.ts",
           "type": "registry:lib"
         },
@@ -1331,6 +1523,54 @@
         },
         {
           "path": "src/lib/server/comercialDeLaSesion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/almacen.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/conceptos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/conceptos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/facturas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/faqturia.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/faqturia.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/productos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/registro.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/rutas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/shopify.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/shopify.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/tipos.ts",
           "type": "registry:lib"
         },
         {
@@ -1370,7 +1610,27 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/duplicados/juicio.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/duplicados/juicio.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/exigirCupoDeUsuario.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/clasificador.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/clasificador.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/configuracion.test.ts",
           "type": "registry:lib"
         },
         {
@@ -1386,11 +1646,31 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/ia/spam.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/spam.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/imponerDueno.test.ts",
           "type": "registry:lib"
         },
         {
           "path": "src/lib/server/imponerDueno.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/kontrolia-auth/__screenshots__/consumo.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/kontrolia-auth/configuracionDeUso.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/kontrolia-auth/consumo.test.ts",
           "type": "registry:lib"
         },
         {
@@ -1515,6 +1795,18 @@
         },
         {
           "path": "src/lib/server/supabase-service.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/clasificacion.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/clasificacion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/encuesta.ts",
           "type": "registry:lib"
         },
         {
