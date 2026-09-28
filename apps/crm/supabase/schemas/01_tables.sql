@@ -93,7 +93,13 @@ create table crm.contact_notes (
     attachments jsonb[],
     -- Tipo de actividad (nota, llamada, reunión, whatsapp, correo…); ver
     -- configuration.config.noteTypes.
-    type text not null default 'note'
+    type text not null default 'note',
+    -- La escribió una máquina, no una persona: respuesta de vacaciones,
+    -- boletín, rebote del servidor. Se guarda igual, pero no adelanta
+    -- `last_seen` (que vale 40 puntos de temperatura), porque un contacto de
+    -- vacaciones no es el lead más caliente del embudo. Lo marca el webhook
+    -- de correo entrante con el modelo de decisión.
+    automatic boolean not null default false
 );
 
 create table crm.deals (

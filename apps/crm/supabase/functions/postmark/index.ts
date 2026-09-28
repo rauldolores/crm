@@ -13,6 +13,8 @@ import { extractMailContactData } from "./extractMailContactData.ts";
 import { getExpectedAuthorization } from "./getExpectedAuthorization.ts";
 import { getNoteContent } from "./getNoteContent.ts";
 import { extractAndUploadAttachments } from "./extractAndUploadAttachments.ts";
+import { intencionDelCorreo } from "./intencionDelCorreo.ts";
+import { registrarDecision } from "../_shared/auditoria.ts";
 import { supabaseAdmin } from "../_shared/supabaseAdmin.ts";
 
 const webhookUser = Deno.env.get("POSTMARK_WEBHOOK_USER");
@@ -199,7 +201,14 @@ const handleThreadedReply = async ({
 
   const attachments = await extractAndUploadAttachments(attachmentsRaw);
 
-  const { error: createNoteError } = await supabaseAdmin
+  // ¿Lo escribió una persona? Una respuesta de vacaciones, un boletín o un
+  // rebote entran por aquí igual que una respuesta de verdad, y hasta ahora
+  // todos adelantaban `last_seen`, que vale 40 puntos de temperatura: el
+  // contacto que no ha leído nada acababa arriba del embudo. La nota se
+  // guarda siempre; lo único que cambia es si cuenta como señal de vida.
+  const juicio = await intencionDelCorreo(subject, textBody);
+
+  const { data: nota, error: createNoteError } = await supabaseAdmin
     .from("contact_notes")
     .insert({
       organization_id: contact.organization_id,
@@ -208,7 +217,10 @@ const handleThreadedReply = async ({
       type: "email",
       sales_id: contact.sales_id,
       attachments,
-    });
+      automatic: juicio.automatico,
+    })
+    .select("id")
+    .single();
   if (createNoteError) {
     console.error("threaded reply insert error", createNoteError);
     return new Response(
@@ -217,10 +229,24 @@ const handleThreadedReply = async ({
     );
   }
 
-  await supabaseAdmin
-    .from("contacts")
-    .update({ last_seen: new Date() })
-    .eq("id", contact.id);
+  if (juicio.valor !== null) {
+    await registrarDecision(contact.organization_id, {
+      kind: "email_intent",
+      value: juicio.valor,
+      confianza: juicio.confianza,
+      aplicada: juicio.automatico,
+      ...(nota?.id ? { entidad: { tabla: "contact_notes", id: nota.id } } : {}),
+    });
+  }
+
+  // El disparador de la base ya adelanta `last_seen` con la fecha de la nota,
+  // y ahora se salta las automáticas. Aquí solo se refresca para una persona.
+  if (!juicio.automatico) {
+    await supabaseAdmin
+      .from("contacts")
+      .update({ last_seen: new Date() })
+      .eq("id", contact.id);
+  }
 
   return new Response("OK");
 };
