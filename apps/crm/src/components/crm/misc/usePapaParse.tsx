@@ -49,8 +49,15 @@ export function usePapaParse<T>({
     importIdRef.current += 1;
   }, []);
 
+  /**
+   * `mapeo` renombra las cabeceras al leerlas: `{"Correo": "email_work"}`.
+   * Así un CSV de otro sistema llega al importador con nuestros nombres y
+   * nada de lo que viene después tiene que enterarse. Una cabecera que no
+   * esté en el mapeo se queda tal cual, y entonces nadie la lee: así es como
+   * se dice «esta columna no se importa».
+   */
   const parseCsv = useCallback(
-    (file: File) => {
+    (file: File, mapeo?: Record<string, string>) => {
       setImporter({
         state: "parsing",
       });
@@ -58,6 +65,12 @@ export function usePapaParse<T>({
       const importId = importIdRef.current;
       Papa.parse<T>(file, {
         header: true,
+        ...(mapeo
+          ? {
+              transformHeader: (cabecera: string) =>
+                mapeo[cabecera.trim()] ?? cabecera,
+            }
+          : {}),
         skipEmptyLines: true,
         async complete(results) {
           if (importIdRef.current !== importId) {
@@ -133,12 +146,47 @@ export function usePapaParse<T>({
     [batchSize, processBatch],
   );
 
+  /**
+   * Solo las cabeceras y el primer valor de cada una, para poder proponer el
+   * mapeo antes de importar. `preview: 1` lee una fila y para: el archivo
+   * puede tener cien mil.
+   */
+  const leerCabeceras = useCallback(
+    (file: File) =>
+      new Promise<{ cabeceras: string[]; muestra: Record<string, string> }>(
+        (resolver) => {
+          Papa.parse<Record<string, unknown>>(file, {
+            header: true,
+            skipEmptyLines: true,
+            preview: 1,
+            complete(resultado) {
+              const cabeceras = resultado.meta.fields ?? [];
+              const primera = resultado.data[0] ?? {};
+              const muestra: Record<string, string> = {};
+              for (const cabecera of cabeceras) {
+                const valor = primera[cabecera];
+                if (valor != null && valor !== "") {
+                  muestra[cabecera] = String(valor);
+                }
+              }
+              resolver({ cabeceras, muestra });
+            },
+            error() {
+              resolver({ cabeceras: [], muestra: {} });
+            },
+          });
+        },
+      ),
+    [],
+  );
+
   return useMemo(
     () => ({
       importer,
       parseCsv,
+      leerCabeceras,
       reset,
     }),
-    [importer, parseCsv, reset],
+    [importer, parseCsv, leerCabeceras, reset],
   );
 }

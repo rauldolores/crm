@@ -13,6 +13,12 @@ export interface ContactoDuplicadoDetectado {
 export type ContactImportSchema = {
   first_name: string;
   last_name: string;
+  /**
+   * Nombre y apellidos en una sola columna, que es como lo trae casi
+   * cualquier hoja en español. Solo llega por el mapeo de columnas de la
+   * importación; el CSV de ejemplo sigue trayéndolos separados.
+   */
+  full_name: string;
   gender: string;
   title: string;
   company: string;
@@ -131,8 +137,9 @@ export function useContactImport() {
       // siguiente, lo que con Promise.all no se vería.
       for (const fila of batch) {
         const {
-          first_name,
-          last_name,
+          first_name: nombreDeLaFila,
+          last_name: apellidosDeLaFila,
+          full_name,
           gender,
           title,
           email_work,
@@ -150,6 +157,19 @@ export function useContactImport() {
           tags: tagNames,
           linkedin_url,
         } = fila;
+
+        // Una sola columna con todo el nombre: el primer hueco separa el
+        // nombre de los apellidos, igual que en el formulario público. Solo
+        // se usa si no vinieron ya separados.
+        const [nombreDelCompleto, ...restoDelCompleto] = (full_name ?? "")
+          .trim()
+          .split(/\s+/);
+        const first_name = nombreDeLaFila?.trim()
+          ? nombreDeLaFila
+          : (nombreDelCompleto ?? "");
+        const last_name = apellidosDeLaFila?.trim()
+          ? apellidosDeLaFila
+          : restoDelCompleto.join(" ");
         const email_jsonb = [
           { email: email_work, type: "Work" },
           { email: email_home, type: "Home" },

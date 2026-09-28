@@ -191,6 +191,13 @@ export const spanishCrmMessages = {
           "%{count} contacto podría ser un duplicado |||| %{count} contactos podrían ser duplicados",
         existing_contact: "ver el contacto existente",
         duplicates_more: "y %{count} más.",
+        mapping: {
+          loading: "Viendo a qué corresponde cada columna de tu archivo…",
+          intro:
+            "Tu archivo trae %{smart_count} columna que no es de las nuestras; abajo está a qué la vamos a pasar, revísala antes de importar. |||| Tu archivo trae %{smart_count} columnas que no son de las nuestras; abajo está a qué las vamos a pasar, revísalas antes de importar.",
+          unknown: "No supimos qué es: elígelo tú",
+          skip: "No importar esta columna",
+        },
       },
       duplicates: {
         title: "Ya existe un contacto parecido",
