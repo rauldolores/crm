@@ -190,6 +190,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/companies/SugerirSectorButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/companies/getTranslatedCompanySizeLabel.ts",
           "type": "registry:component"
         },
@@ -507,6 +511,10 @@
         },
         {
           "path": "src/components/crm/deals/stages.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/deals/useMotivoSugerido.ts",
           "type": "registry:component"
         },
         {
@@ -1526,6 +1534,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/companies/sector.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/companies/sector.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/conectores/almacen.ts",
           "type": "registry:lib"
         },
@@ -1607,6 +1623,14 @@
         },
         {
           "path": "src/lib/server/cotizaciones/pdf.tsx",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/deals/motivoDePerdida.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/deals/motivoDePerdida.ts",
           "type": "registry:lib"
         },
         {
