@@ -27,8 +27,11 @@ __screenshots__
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-supabase/.branches
-supabase/.temp
+# Caché del CLI de Supabase. Con `**/` a propósito: estas dos líneas eran
+# `supabase/.temp` a secas, ancladas a la raíz, y dejaron de casar cuando la
+# app se movió a apps/crm/ — por eso .temp acabó commiteado.
+**/supabase/.branches
+**/supabase/.temp
 .supabase-e2e/
 
 dist/
