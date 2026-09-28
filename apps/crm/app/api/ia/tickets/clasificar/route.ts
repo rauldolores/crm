@@ -73,5 +73,9 @@ export async function POST(peticion: Request) {
   );
   if (!sugerencia) return esError(502, "No se pudo clasificar el ticket.");
 
-  return Response.json(sugerencia);
+  // Campo a campo, no `sugerencia` entera: lleva las constancias de auditoría
+  // (`decisiones`), que son para la base de datos y no tienen nada que hacer
+  // en el navegador.
+  const { priority, category, confianza, motivo } = sugerencia;
+  return Response.json({ priority, category, confianza, motivo });
 }

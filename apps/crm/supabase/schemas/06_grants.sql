@@ -224,6 +224,12 @@ grant usage, select on sequence crm.email_outbox_id_seq to anon, authenticated, 
 grant select on table crm.automation_runs to anon, authenticated, service_role;
 grant usage, select on sequence crm.automation_runs_id_seq to anon, authenticated, service_role;
 
+-- Auditoría del clasificador: la organización la lee, solo el servidor
+-- escribe. Sin anon: lleva un extracto del texto de quien escribió.
+grant select on table crm.ai_decisions to authenticated, service_role;
+grant insert on table crm.ai_decisions to service_role;
+grant usage, select on sequence crm.ai_decisions_id_seq to service_role;
+
 -- Ajustes internos: SOLO service_role, guardan el secreto de despacho.
 grant select, insert, update, delete on table crm.internal_settings to service_role;
 revoke all on table crm.internal_settings from anon;

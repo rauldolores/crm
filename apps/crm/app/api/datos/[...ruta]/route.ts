@@ -92,6 +92,12 @@ const RECURSOS_PROHIBIDOS = new Set([
   // Faqturia…). Solo por /api/conectores, que exige administrador y nunca
   // devuelve el secreto.
   "connectors",
+  // Constancias de lo que decidió el clasificador. Este puente escribe con
+  // la clave de servicio, así que servirlas aquí dejaría a cualquiera con
+  // sesión inventar o borrar una constancia — y una auditoría que el
+  // auditado puede editar no sirve de nada. Se leen por /api/ia/decisiones,
+  // que solo lee.
+  "ai_decisions",
 ]);
 
 /** Tablas y vistas que pertenecen a una organización. */

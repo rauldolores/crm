@@ -19,7 +19,13 @@
  */
 
 const PUNTO_FINAL = "https://api.typesafe.ai/v1/systemone";
-const MODELO = "jev-latest";
+
+/**
+ * Exportado para la constancia de auditoría: comparar la confianza de hoy con
+ * la de hace tres meses solo tiene sentido si consta qué modelo respondió.
+ */
+export const MODELO_DE_DECISION = "jev-latest";
+const MODELO = MODELO_DE_DECISION;
 
 // Jev responde en decenas de milisegundos; si tarda más de esto, algo va mal
 // y es mejor seguir sin clasificar que hacer esperar a quien envía el
