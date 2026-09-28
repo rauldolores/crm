@@ -42,6 +42,7 @@ alter table crm.webhook_deliveries enable row level security;
 alter table crm.email_settings enable row level security;
 alter table crm.email_outbox enable row level security;
 alter table crm.automation_runs enable row level security;
+alter table crm.automation_pending enable row level security;
 alter table crm.ai_decisions enable row level security;
 -- Sin politicas, como email_settings: guarda el secreto de despacho.
 alter table crm.internal_settings enable row level security;
@@ -359,6 +360,14 @@ create policy "Email outbox is scoped to the organization" on crm.email_outbox
 -- únicamente el motor (security definer); sin política de escritura no hay
 -- forma de falsear una constancia y silenciar una regla.
 create policy "automation_runs_select_own_org" on crm.automation_runs
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Cola de condiciones por juzgar: solo lectura. Escribe el motor (security
+-- definer) y la resuelve el despachador con la clave de servicio. Una fila
+-- inventada haría que el CRM ejecutara una acción sobre la fila que eligiera
+-- quien la inventó, así que no hay política de escritura.
+create policy "automation_pending_select_own_org" on crm.automation_pending
     for select to authenticated
     using (organization_id = crm.current_organization_id());
 

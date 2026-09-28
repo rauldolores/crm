@@ -98,6 +98,10 @@ const RECURSOS_PROHIBIDOS = new Set([
   // auditado puede editar no sirve de nada. Se leen por /api/ia/decisiones,
   // que solo lee.
   "ai_decisions",
+  // Reglas esperando el juicio del modelo. Insertar aquí una fila a mano
+  // equivaldría a hacer que el CRM ejecute la acción de una regla sobre la
+  // fila que uno elija: el despachador aplica lo que encuentre en la cola.
+  "automation_pending",
 ]);
 
 /** Tablas y vistas que pertenecen a una organización. */

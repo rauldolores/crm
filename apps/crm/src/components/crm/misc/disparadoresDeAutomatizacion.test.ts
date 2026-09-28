@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { Automation } from "../types";
 import {
   admiteAsignarResponsable,
+  admiteCondicion,
   describirDisparador,
   disparadoresDisponibles,
   parametrosDelDisparador,
@@ -107,5 +108,32 @@ describe("describirDisparador", () => {
     expect(deTicket).toContain("ticket_unanswered_named");
     expect(deTicket).toContain('"hours":2');
     expect(deCotizacion).toContain("quote_unanswered_named");
+  });
+
+  test("solo admiten condición los disparadores con texto que leer y que encolan", () => {
+    for (const cuando of [
+      "deals:created",
+      "deals:stage_changed",
+      "tickets:created",
+      "tickets:closed",
+    ]) {
+      expect(admiteCondicion(cuando)).toBe(true);
+    }
+
+    // Un contacto recién creado no tiene texto todavía: su primera nota llega
+    // después, en otra transacción.
+    expect(admiteCondicion("contacts:created")).toBe(false);
+
+    // Y estos los evalúa el cron horario, que no pasa por el motor de eventos
+    // y por tanto no encola nada.
+    for (const cuando of [
+      "tickets:unanswered",
+      "tickets:unassigned",
+      "tickets:overdue",
+      "quotes:unanswered",
+      "contracts:renewal_due",
+    ]) {
+      expect(admiteCondicion(cuando)).toBe(false);
+    }
   });
 });

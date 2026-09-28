@@ -36,6 +36,27 @@ export const disparadoresDisponibles = (
   { id: "tickets:closed", name: "crm.automations.when.ticket_closed" },
 ];
 
+/**
+ * Los disparadores que admiten una condición en español, juzgada por el
+ * modelo de decisión sobre el texto de la fila.
+ *
+ * Solo estos cuatro, y por dos motivos distintos:
+ *
+ * - Hace falta texto que leer. Un contacto recién creado no lo tiene todavía
+ *   —su primera nota llega después, en otra transacción—, así que una
+ *   condición sobre él no podría cumplirse nunca.
+ * - Y hace falta pasar por el motor de eventos (crm.run_automations), que es
+ *   el que encola. Los disparadores por horas y los de renovación y
+ *   cotización los evalúa el cron horario, que todavía no encola.
+ */
+export const admiteCondicion = (cuando: string) =>
+  [
+    "deals:created",
+    "deals:stage_changed",
+    "tickets:created",
+    "tickets:closed",
+  ].includes(cuando);
+
 /** Los disparadores de tickets que se miden en horas (motor por fecha). */
 export const esDisparadorPorHoras = (cuando: string) =>
   ["tickets:unanswered", "tickets:unassigned", "tickets:overdue"].includes(

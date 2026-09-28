@@ -84,6 +84,7 @@ export default defineConfig({
             "src/lib/server/duplicados/**",
             "src/lib/server/deals/**",
             "src/lib/server/companies/**",
+            "src/lib/server/automatizaciones/**",
           ],
           server: {
             deps: {
@@ -112,6 +113,7 @@ export default defineConfig({
             "src/lib/server/duplicados/**/*.test.ts",
             "src/lib/server/deals/**/*.test.ts",
             "src/lib/server/companies/**/*.test.ts",
+            "src/lib/server/automatizaciones/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },

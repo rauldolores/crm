@@ -905,6 +905,7 @@ export const spanishCrmMessages = {
       deleted: "Regla eliminada",
       toggle: "Activar o desactivar",
       sentence: "%{when} → %{then}",
+      condition_named: "Solo si: «%{condition}»",
       fields: {
         name: "Nombre de la regla",
         when: "Cuando",
@@ -929,6 +930,9 @@ export const spanishCrmMessages = {
           "Se revisa cada hora. Solo tickets abiertos; avisa una sola vez por ticket.",
         priority: "Solo con prioridad",
         any_priority: "Cualquier prioridad",
+        condition: "Solo si… (opcional)",
+        condition_help:
+          "Escríbelo como se lo dirías a alguien: «el cliente amenaza con irse», «pide una demostración», «está enojado». La IA lo compara con el asunto y la descripción, y la regla solo actúa si se cumple. Sé concreto y nombra las cosas: la IA no sabe quién es tu competencia, así que «menciona a la competencia» no funciona, pero «menciona a Zoho, HubSpot o Salesforce» sí. Ojo: con condición la regla tarda hasta un minuto en actuar, en vez de al instante, y si la IA no lo ve claro no actúa.",
       },
       when: {
         contact_created: "Se crea un contacto",

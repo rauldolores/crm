@@ -229,6 +229,13 @@ export type SavedView = {
 export type Automation = {
   name: string;
   active: boolean;
+  /**
+   * Condición en español que el modelo de decisión juzga contra el texto de la
+   * fila («el cliente amenaza con irse»). Vacía = regla de siempre. Con
+   * condición la regla actúa con hasta un minuto de retraso, porque el
+   * disparador encola y la aplicación drena. Ver `admiteCondicion`.
+   */
+  condition_text?: string | null;
   trigger_resource: "contacts" | "deals" | "contracts" | "quotes" | "tickets";
   /**
    * renewal_due (contratos), unanswered (cotizaciones) y los de tickets por

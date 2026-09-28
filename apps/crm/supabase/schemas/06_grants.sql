@@ -224,6 +224,11 @@ grant usage, select on sequence crm.email_outbox_id_seq to anon, authenticated, 
 grant select on table crm.automation_runs to anon, authenticated, service_role;
 grant usage, select on sequence crm.automation_runs_id_seq to anon, authenticated, service_role;
 
+-- Cola de condiciones: la organización la lee, solo el servidor escribe.
+grant select on table crm.automation_pending to authenticated, service_role;
+grant insert, update on table crm.automation_pending to service_role;
+grant usage, select on sequence crm.automation_pending_id_seq to service_role;
+
 -- Auditoría del clasificador: la organización la lee, solo el servidor
 -- escribe. Sin anon: lleva un extracto del texto de quien escribió.
 grant select on table crm.ai_decisions to authenticated, service_role;

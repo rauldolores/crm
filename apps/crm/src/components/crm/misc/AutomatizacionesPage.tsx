@@ -25,6 +25,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Automation, EmailTemplate, Sale } from "../types";
 import {
   admiteAsignarResponsable,
+  admiteCondicion,
   describirDisparador,
   disparadoresDisponibles,
   esDisparadorPorHoras,
@@ -178,6 +179,16 @@ const TarjetaDeRegla = ({
             then: entonces,
           })}
         </p>
+        {/* Se enseña tal cual lo escribió quien creó la regla: es la parte que
+            decide si actúa, y leerla es la única forma de entender por qué una
+            vez sí y otra no. */}
+        {regla.condition_text && (
+          <p className="text-xs text-muted-foreground italic">
+            {translate("crm.automations.condition_named", {
+              condition: regla.condition_text,
+            })}
+          </p>
+        )}
       </div>
       <Button
         variant="ghost"
@@ -223,6 +234,11 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
             trigger_resource,
             trigger_event,
             trigger_params: parametrosDelDisparador(cuando, valores),
+            // Vacía = regla de siempre. Se manda null y no "" para que el
+            // disparador la vea ausente con su propio `nullif`.
+            condition_text: admiteCondicion(cuando)
+              ? valores.condition_text?.trim() || null
+              : null,
             action_type: valores.accion,
             action_params: esCorreo
               ? { templateId: valores.templateId }
@@ -356,6 +372,17 @@ const CamposDeLaRegla = () => {
           optionValue="value"
           helperText={false}
           validate={required()}
+        />
+      )}
+      {/* La condición es opcional a propósito: una regla sin ella actúa al
+          instante, y con ella espera a que la IA lea el texto (hasta un
+          minuto). Quien no la necesite no debería pagar ese retraso. */}
+      {admiteCondicion(cuando) && (
+        <TextInput
+          source="condition_text"
+          label="crm.automations.fields.condition"
+          helperText="crm.automations.fields.condition_help"
+          multiline
         />
       )}
 
