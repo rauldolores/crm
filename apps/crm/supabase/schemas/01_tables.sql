@@ -661,7 +661,15 @@ create table crm.tickets (
     ),
     satisfaction_rating smallint check (satisfaction_rating between 1 and 5),
     satisfaction_comment text,
-    satisfaction_at timestamp with time zone
+    satisfaction_at timestamp with time zone,
+    -- De qué habla el comentario (response_time, solution, treatment,
+    -- product, price, praise, other) y si el cliente sigue con algo sin
+    -- resolver. Lo pone el modelo de decisión al responder la encuesta: la
+    -- nota dice que algo va mal, el tema dice qué, y nadie lee trescientos
+    -- comentarios al mes. El seguimiento va aparte de la nota porque un 4
+    -- con algo pendiente es el cliente que se pierde sin que la nota avise.
+    satisfaction_topic text,
+    satisfaction_followup boolean
 );
 
 create index tickets_organization_id_idx on crm.tickets (organization_id);
@@ -671,6 +679,9 @@ create index tickets_last_activity_idx on crm.tickets (organization_id, last_act
 create index tickets_sales_id_idx on crm.tickets (sales_id);
 create index tickets_due_at_idx on crm.tickets (organization_id, due_at) where status <> 'closed';
 create unique index tickets_survey_token_uk on crm.tickets (survey_token);
+create index tickets_satisfaction_topic_idx
+    on crm.tickets (organization_id, satisfaction_topic)
+    where satisfaction_topic is not null;
 
 -- Historial de cambios de un ticket: quién cambió qué y cuándo.
 create table crm.ticket_events (

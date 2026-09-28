@@ -21,6 +21,14 @@ export interface MetricasDeSoporte {
   csat: number | null;
   encuestas: number;
   reaperturas: number;
+  /**
+   * Comentarios de la encuesta por tema (response_time, solution, …), tal
+   * como los clasificó el modelo de decisión al responderla. Vacío en un
+   * despliegue sin clasificador: entonces el informe no pinta la gráfica.
+   */
+  porTemaDeEncuesta: Record<string, number>;
+  /** Encuestas del periodo donde el cliente sigue con algo sin resolver. */
+  seguimientosPendientes: number;
   porCategoria: Record<string, number>;
   abiertosPorResponsable: Record<string, number>;
 }
@@ -66,6 +74,13 @@ export const metricasDeSoporte = (
     (t) => t.satisfaction_rating && enPeriodo(t.satisfaction_at),
   );
 
+  const porTemaDeEncuesta: Record<string, number> = {};
+  for (const t of conEncuesta) {
+    if (!t.satisfaction_topic) continue;
+    porTemaDeEncuesta[t.satisfaction_topic] =
+      (porTemaDeEncuesta[t.satisfaction_topic] ?? 0) + 1;
+  }
+
   const porCategoria: Record<string, number> = {};
   for (const t of creados) {
     const clave = t.category ?? "";
@@ -93,6 +108,13 @@ export const metricasDeSoporte = (
     csat: media(conEncuesta.map((t) => t.satisfaction_rating!)),
     encuestas: conEncuesta.length,
     reaperturas: reaperturas.filter((e) => enPeriodo(e.created_at)).length,
+    porTemaDeEncuesta,
+    // Sin mirar el estado a propósito: la encuesta se manda AL CERRAR, así
+    // que estos tickets están cerrados casi todos. Que el cliente diga que
+    // sigue con el problema justo después de que se diera por resuelto es el
+    // aviso entero, no un detalle a filtrar.
+    seguimientosPendientes: conEncuesta.filter((t) => t.satisfaction_followup)
+      .length,
     porCategoria,
     abiertosPorResponsable,
   };

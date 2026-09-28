@@ -1,4 +1,6 @@
+import { registrarDecisiones } from "../ia/auditoria";
 import { getServiceClient } from "../supabase-service";
+import { clasificarComentario } from "./temaDeEncuesta";
 
 /**
  * Encuesta de satisfacción de un ticket: una pregunta (1 a 5) y un
@@ -78,7 +80,7 @@ export async function registrarSatisfaccion(
   const supabase = getServiceClient();
   const { data: ticket } = await supabase
     .from("tickets")
-    .select("id, satisfaction_at")
+    .select("id, organization_id, satisfaction_at")
     .eq("survey_token", token)
     .maybeSingle();
   if (!ticket) {
@@ -91,16 +93,38 @@ export async function registrarSatisfaccion(
       mensaje: "Esta encuesta ya fue respondida. ¡Gracias!",
     };
   }
+
+  const texto = comentario.trim().slice(0, 1000);
+
+  // De qué habla el comentario, para que el informe pueda decir de qué se
+  // queja la gente en vez de solo cuánto puntúa. Falla hacia no clasificar:
+  // la encuesta se guarda igual, y perderla sí sería un problema — es la
+  // única vez que este cliente va a contestar.
+  const juicio = await clasificarComentario(texto, rating);
+
   const { error } = await supabase
     .from("tickets")
     .update({
       satisfaction_rating: rating,
-      satisfaction_comment: comentario.trim().slice(0, 1000) || null,
+      satisfaction_comment: texto || null,
       satisfaction_at: new Date().toISOString(),
+      satisfaction_topic: juicio.tema,
+      satisfaction_followup: juicio.seguimiento,
     })
     .eq("id", ticket.id);
   if (error) {
     return { ok: false, status: 500, mensaje: "No se pudo guardar." };
   }
+
+  if (juicio.decisiones.length) {
+    await registrarDecisiones(
+      ticket.organization_id as string,
+      juicio.decisiones.map((d) => ({
+        ...d,
+        entidad: { tabla: "tickets", id: ticket.id as number },
+      })),
+    );
+  }
+
   return { ok: true };
 }

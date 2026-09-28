@@ -1622,6 +1622,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/ia/auditoria.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/auditoria.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/ia/clasificador.test.ts",
           "type": "registry:lib"
         },
@@ -1807,6 +1815,14 @@
         },
         {
           "path": "src/lib/server/tickets/encuesta.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/temaDeEncuesta.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/temaDeEncuesta.ts",
           "type": "registry:lib"
         },
         {

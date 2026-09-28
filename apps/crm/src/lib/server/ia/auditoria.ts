@@ -31,7 +31,7 @@ export type TipoDeDecision =
   | "ticket_priority"
   | "ticket_category"
   | "survey_topic"
-  | "survey_severity"
+  | "survey_followup"
   | "email_intent"
   | "duplicate_contact"
   | "duplicate_company"

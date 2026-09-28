@@ -466,6 +466,13 @@ export type Ticket = {
   satisfaction_rating?: number | null;
   satisfaction_comment?: string | null;
   satisfaction_at?: string | null;
+  /**
+   * De qué habla el comentario y si el cliente sigue con algo sin resolver.
+   * Los pone el modelo de decisión al responder la encuesta; nulos cuando no
+   * hubo comentario o no se pudo clasificar. Ver `temaDeEncuesta.ts`.
+   */
+  satisfaction_topic?: string | null;
+  satisfaction_followup?: boolean | null;
 } & Pick<RaRecord, "id">;
 
 /** Un cambio en un ticket: quién cambió qué y cuándo (crm.ticket_events). */

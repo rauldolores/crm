@@ -840,6 +840,18 @@ export const spanishCrmMessages = {
         by_category: "Tickets creados por categoría",
         by_owner: "Tickets abiertos por responsable",
         no_open: "No hay tickets abiertos.",
+        by_topic: "De qué hablan los comentarios de la encuesta",
+        topics: {
+          response_time: "Tardanza en responder",
+          solution: "No quedó resuelto",
+          treatment: "Trato y comunicación",
+          product: "El producto",
+          price: "Precio o cobro",
+          praise: "Agradecimientos",
+          other: "Otros",
+        },
+        followup:
+          "Un cliente dice que sigue con el problema aunque su ticket se cerró. Vale la pena llamarlo. |||| %{smart_count} clientes dicen que siguen con el problema aunque sus tickets se cerraron. Vale la pena llamarlos.",
       },
       quotes: {
         title: "Cotizaciones",
