@@ -1510,6 +1510,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/automatizaciones/condicion.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/automatizaciones/condicion.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/borradoDeUsuarios.test.ts",
           "type": "registry:lib"
         },
