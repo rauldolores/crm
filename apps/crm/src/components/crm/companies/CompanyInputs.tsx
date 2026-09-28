@@ -16,6 +16,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company, Sale } from "../types";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
+import { SugerirSectorButton } from "./SugerirSectorButton";
 
 const isUrl = (url: string) => {
   if (!url) return;
@@ -118,6 +119,7 @@ const CompanyContextInputs = () => {
         optionValue="value"
         helperText={false}
       />
+      <SugerirSectorButton />
       <SelectInput source="size" choices={translatedSizes} helperText={false} />
       <TextInput source="revenue" helperText={false} />
       <TextInput source="tax_identifier" helperText={false} />

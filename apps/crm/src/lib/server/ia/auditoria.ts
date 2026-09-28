@@ -35,7 +35,8 @@ export type TipoDeDecision =
   | "email_intent"
   | "duplicate_contact"
   | "duplicate_company"
-  | "deal_loss_reason";
+  | "deal_loss_reason"
+  | "company_sector";
 
 export interface DecisionDelModelo {
   kind: TipoDeDecision;

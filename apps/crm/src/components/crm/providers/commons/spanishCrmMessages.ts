@@ -12,6 +12,14 @@
 export const spanishCrmMessages = {
   resources: {
     companies: {
+      ai: {
+        sector: "Sugerir sector con IA",
+        sector_empty: "Escribe el nombre de la empresa primero",
+        sector_done: "%{sector} — %{porcentaje} de seguridad",
+        sector_unknown:
+          "Con el nombre y el sitio web no se puede saber a qué se dedica",
+        sector_error: "No se pudo obtener la sugerencia",
+      },
       duplicates: {
         title: "Ya existe una empresa parecida",
         same_name: "tiene un nombre parecido",
@@ -363,6 +371,9 @@ export const spanishCrmMessages = {
           "Estás moviendo «%{name}» a una etapa de pérdida. Anotar el motivo permite ver después dónde se están perdiendo las ventas.",
         confirm: "Guardar y mover",
         skip: "Mover sin motivo",
+        suggesting: "Leyendo las notas de esta oportunidad…",
+        suggested:
+          "Propuesto a partir de las notas (seguridad: %{confianza}). Cámbialo si no es eso.",
       },
       board: {
         show_more_of: "Ver %{count} más de %{total}",
