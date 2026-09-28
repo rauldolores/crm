@@ -306,6 +306,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/contacts/MapeoDeColumnas.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/contacts/PosiblesDuplicados.tsx",
           "type": "registry:component"
         },
@@ -1446,6 +1450,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/importacion/camposDeContacto.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/importacion/camposDeContacto.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/kontrolia-auth/client.ts",
           "type": "registry:lib"
         },
@@ -1699,6 +1711,14 @@
         },
         {
           "path": "src/lib/server/imponerDueno.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/importacion/mapeoDeColumnas.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/importacion/mapeoDeColumnas.ts",
           "type": "registry:lib"
         },
         {
