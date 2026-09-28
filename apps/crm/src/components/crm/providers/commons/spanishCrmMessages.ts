@@ -410,9 +410,6 @@ export const spanishCrmMessages = {
       empty: "Todavía no hay notas",
       author_added: "%{name} añadió una nota",
       you_added: "Añadiste una nota",
-      automatic: "Automático",
-      automatic_hint:
-        "Lo envió una máquina (respuesta de ausencia, boletín o aviso del servidor de correo), así que no cuenta como actividad del contacto.",
       me: "Yo",
       list: {
         error_loading: "Error al cargar las notas",

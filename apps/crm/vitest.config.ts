@@ -17,6 +17,11 @@ import react from "@vitejs/plugin-react";
 // `npm run test:unit:claude` / `npm run test:unit:functions` (neither boots a browser).
 export default defineConfig({
   test: {
+    // Un proyecto sin archivos de prueba no es un fallo: hoy le pasa a
+    // "functions", cuyas unicas pruebas eran del webhook de correo entrante
+    // que se retiro. Sin esto, `npm run test:unit:functions` sale con 1 y
+    // tumba el workflow de CI.
+    passWithNoTests: true,
     projects: [
       {
         plugins: [react()],
@@ -144,6 +149,10 @@ export default defineConfig({
           environment: "node",
           include: ["supabase/functions/**/*.test.ts"],
           exclude: ["**/node_modules/**", ".supabase-e2e/**"],
+          // Hoy no queda ninguna: las únicas eran del webhook de correo
+          // entrante, retirado. El proyecto se queda montado porque sus alias
+          // de `jsr:`/`npm:` son lo que permite probar código de Deno en Node,
+          // y merge_contacts y delete_note_attachments siguen sin pruebas.
         },
       },
     ],

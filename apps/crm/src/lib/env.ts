@@ -53,7 +53,6 @@ export const env = {
   /** Opcionales. */
   googleWorkplaceDomain: process.env.NEXT_PUBLIC_GOOGLE_WORKPLACE_DOMAIN || undefined,
   isDemo: process.env.NEXT_PUBLIC_IS_DEMO === "true",
-  inboundEmail: process.env.NEXT_PUBLIC_INBOUND_EMAIL ?? "",
   disableEmailPasswordAuthentication:
     process.env.NEXT_PUBLIC_DISABLE_EMAIL_PASSWORD_AUTHENTICATION === "true",
 } as const;

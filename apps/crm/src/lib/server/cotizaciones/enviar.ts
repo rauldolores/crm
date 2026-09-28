@@ -1,10 +1,6 @@
 import { rellenarCampos } from "@/components/crm/email/camposDeFusion";
 import { envolverEnPlantilla } from "@/components/crm/email/plantillaBase";
-import { env } from "@/lib/env";
-import {
-  construirResponderA,
-  enviarCorreoDeOrganizacion,
-} from "../correo/enviar";
+import { enviarCorreoDeOrganizacion } from "../correo/enviar";
 import { valoresDeFusion } from "../correo/valoresDeFusion";
 import { getServiceClient } from "../supabase-service";
 import {
@@ -171,17 +167,11 @@ export async function enviarCotizacion(
     ));
   }
 
-  const responderA =
-    env.inboundEmail && cotizacion.contact_id
-      ? construirResponderA(env.inboundEmail, cotizacion.contact_id)
-      : null;
-
   const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
     para,
     asunto,
     textoPlano,
     html,
-    responderA: responderA ?? undefined,
   });
   if (!resultado.ok) {
     return {

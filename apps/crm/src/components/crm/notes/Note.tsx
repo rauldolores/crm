@@ -62,8 +62,6 @@ export const Note = ({
   const ActivityIcon = activityType
     ? getActivityTypeIcon(activityType.value)
     : null;
-  // Solo las notas de contacto lo traen (las escribe el correo entrante).
-  const esAutomatica = "automatic" in note && note.automatic === true;
 
   // Detect if content is truncated
   useEffect(() => {
@@ -129,17 +127,6 @@ export const Note = ({
             <span className="inline-flex items-center gap-1 mr-2 px-1.5 py-0.5 rounded bg-muted text-xs">
               <ActivityIcon className="size-3" />
               {activityType.label}
-            </span>
-          )}
-          {/* Que se vea de un golpe que esto no lo escribió nadie: si no, un
-              «estoy de vacaciones» se lee como una respuesta y alguien se
-              queda esperando a que el cliente conteste otra vez. */}
-          {esAutomatica && (
-            <span
-              className="mr-2 px-1.5 py-0.5 rounded bg-muted text-xs"
-              title={translate("resources.notes.automatic_hint")}
-            >
-              {translate("resources.notes.automatic")}
             </span>
           )}
           {translate(

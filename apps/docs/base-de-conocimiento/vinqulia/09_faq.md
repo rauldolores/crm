@@ -57,9 +57,9 @@ CTA: preguntar si ya cuentan con una cuenta de Twilio configurada.
 
 ```
 PREGUNTA: ¿Puedo enviar y recibir correo desde Vinqulia?
-RESPUESTA: sí, mediante integración con Postmark. Se puede enviar correo desde la ficha del contacto y la respuesta del cliente se archiva sola en esa misma ficha (reply-to inteligente); también se puede capturar correo entrante.
-INFORMACIÓN ADICIONAL: requiere un token de envío de Postmark y un remitente verificado, configurados por el cliente. Ver [[02_funcionalidades]].
-CTA: preguntar si el cliente ya cuenta con una cuenta de Postmark o herramienta de correo transaccional equivalente.
+RESPUESTA: enviar, sí; recibir, no. Se manda correo al contacto desde su ficha (y desde las automatizaciones y las cotizaciones), y queda registrado en su historial. La respuesta del cliente llega al buzón de quien envió, como cualquier correo: Vinqulia no tiene bandeja de entrada.
+INFORMACIÓN ADICIONAL: cada organización configura su proveedor en Ajustes → Correo saliente (Resend, Postmark o SendGrid), con su clave y un remitente de dominio verificado. Ver [[02_funcionalidades]].
+CTA: si el cliente pregunta por bandeja de entrada compartida, anotarlo como requisito y no prometerlo.
 ```
 
 ### API

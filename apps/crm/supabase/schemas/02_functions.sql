@@ -383,11 +383,6 @@ CREATE OR REPLACE FUNCTION "crm"."handle_contact_note_created_or_updated"() RETU
     SET "search_path" TO ''
     AS $$
 begin
-  -- Una nota automática (respuesta de vacaciones, boletín, rebote) no es
-  -- señal de que el contacto esté vivo: no toca last_seen.
-  if coalesce(new.automatic, false) then
-    return new;
-  end if;
   update crm.contacts set last_seen = new.date where contacts.id = new.contact_id and contacts.last_seen < new.date;
   return new;
 end;

@@ -32,7 +32,6 @@ export type TipoDeDecision =
   | "ticket_category"
   | "survey_topic"
   | "survey_followup"
-  | "email_intent"
   | "duplicate_contact"
   | "duplicate_company"
   | "deal_loss_reason"

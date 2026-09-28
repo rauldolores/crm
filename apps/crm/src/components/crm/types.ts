@@ -158,12 +158,6 @@ export type ContactNote = {
   attachments?: AttachmentNote[];
   /** Tipo de actividad: nota, llamada, reunión… (value de un ActivityType). */
   type?: string;
-  /**
-   * La escribió una máquina: respuesta de vacaciones, boletín, rebote. Lo
-   * marca el webhook de correo entrante, y por eso esta nota no adelanta
-   * `last_seen` ni sube la temperatura del contacto.
-   */
-  automatic?: boolean;
 } & Pick<RaRecord, "id">;
 
 export type Deal = {

@@ -367,11 +367,11 @@ No afirmar que Vinqulia incluye gratuitamente una cuenta o número de WhatsApp B
 
 # 11. Correo electrónico
 
-Vinqulia permite gestionar comunicación por correo electrónico desde la ficha del contacto.
+Vinqulia permite **enviar** correo electrónico desde la ficha del contacto, y deja cada envío registrado en su historial como nota tipo «email». Lo mismo usan las automatizaciones y el envío de cotizaciones.
 
-El sistema utiliza Reply-To inteligente para que las respuestas puedan asociarse automáticamente con el contacto correspondiente.
+Cada organización configura su propio proveedor en Ajustes → Correo saliente (Resend, Postmark o SendGrid) con su clave y un remitente de dominio verificado, así que los correos salen desde el dominio de la empresa.
 
-También puede capturar correo entrante mediante copia al buzón de Vinqulia y crear o enriquecer la ficha correspondiente.
+**No recibe correo.** La respuesta del cliente llega al buzón de quien la envió, como cualquier correo: Vinqulia no tiene bandeja de entrada ni archiva respuestas en la ficha. Si un prospecto lo pide, anotarlo como requisito y no prometerlo.
 
 Beneficio:
 
@@ -1340,7 +1340,7 @@ Primero debe identificar el problema.
 
 Ejemplo incorrecto:
 
-"Vinqulia tiene contactos, empresas, Kanban, API, webhooks, Twilio, Postmark, automatizaciones..."
+"Vinqulia tiene contactos, empresas, Kanban, API, webhooks, Twilio, correo, automatizaciones..."
 
 Ejemplo correcto:
 
@@ -1799,7 +1799,7 @@ Puede:
 - Integrarse mediante API REST.
 - Utilizar webhooks.
 - Integrarse con WhatsApp mediante Twilio.
-- Integrarse con correo mediante Postmark.
+- Enviar correo con el proveedor de la empresa (Resend, Postmark o SendGrid).
 - Utilizar SSO.
 - Funcionar en dispositivos móviles.
 - Desplegarse en infraestructura propia.

@@ -31,18 +31,3 @@ export async function puedeEnviarCorreo(
   return Boolean(await cuentaDeEnvioDeOrganizacion(organizacionId));
 }
 
-/**
- * Construye la dirección de Reply-To con el hash de hilo (sub-addressing
- * `local+hash@dominio`) que identifica al contacto, para que la respuesta
- * llegue de vuelta al webhook de entrada ya enlazada a su ficha. Devuelve
- * null si no hay dirección de captura configurada (instalación sin correo
- * entrante): en ese caso se envía sin Reply-To, sin encadenar hilo.
- */
-export function construirResponderA(
-  inboundEmail: string,
-  contactId: string | number,
-): string | null {
-  const [local, dominio] = inboundEmail.split("@");
-  if (!local || !dominio) return null;
-  return `${local}+contacto-${contactId}@${dominio}`;
-}
