@@ -84,6 +84,41 @@ describe("instalarRefrescoOAuth", () => {
     });
   });
 
+  it("acota en el tiempo las dos llamadas, que corren dentro del cerrojo de sesión", async () => {
+    // Arrange
+    const señales: Record<string, AbortSignal | null | undefined> = {};
+    const fetchOriginal = vi.fn(
+      async (entrada: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(entrada);
+        if (url.endsWith("/auth/v1/oauth/token")) {
+          señales.refresco = init?.signal;
+          return respuestaJson({
+            access_token: "nuevo",
+            refresh_token: "nuevo-refresh",
+            expires_in: 3600,
+            token_type: "bearer",
+          });
+        }
+        señales.usuario = init?.signal;
+        return respuestaJson({ id: "usuario-1" });
+      },
+    ) as unknown as typeof fetch;
+    const auth = clienteFalso(fetchOriginal);
+
+    // Act
+    await auth.fetch(`${SUPABASE}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: "el-viejo" }),
+    });
+
+    // Assert: sin tope, una petición colgada en una red mala retiene para
+    // siempre el cerrojo `lock:sb-…-auth-token` que comparten todas las
+    // pestañas, y a partir de ahí ningún inicio de sesión vuelve a funcionar
+    // en ese navegador.
+    expect(señales.refresco).toBeInstanceOf(AbortSignal);
+    expect(señales.usuario).toBeInstanceOf(AbortSignal);
+  });
+
   it("deja pasar sin tocar cualquier otra petición", async () => {
     const fetchOriginal = vi.fn(async () =>
       respuestaJson({ id: "usuario-1" }),
