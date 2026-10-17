@@ -5,6 +5,7 @@ import {
   getKontroliaAccessToken,
   getKontroliaClient,
   logoutKontroliaAuth,
+  urlDeSalidaCentral,
 } from "@/lib/kontrolia-auth/client";
 import { OAUTH_LOGIN_PATH } from "@/lib/kontrolia-auth/oauth";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
@@ -200,7 +201,11 @@ export const getAuthProvider = (): AuthProvider => {
       clearAuthCache();
       if (isKontroliaAuthConfigured()) {
         await logoutKontroliaAuth();
-        return;
+        // Una URL absoluta hace que ra-core navegue con window.location: así se
+        // cierra también la sesión del servidor central. Solo pasa al pulsar
+        // "Salir": cuando checkAuth falla, ra-core manda su propio destino y
+        // este se ignora, así que una sesión vencida no obliga a la contraseña.
+        return urlDeSalidaCentral();
       }
       return baseAuthProvider.logout(params);
     },

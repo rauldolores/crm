@@ -8,6 +8,7 @@
  * persistida en el navegador y se mantienen sincronizadas.
  */
 import { createKontroliaClient, type KontroliaClient } from "@kontrolia/auth";
+import { env } from "@/lib/env";
 import { isKontroliaAuthConfigured, kontroliaAuthConfig } from "./config";
 import { OAUTH_CLIENT_ID } from "./oauth";
 import { instalarRefrescoOAuth } from "./refrescoOAuth";
@@ -121,6 +122,25 @@ export async function switchKontroliaOrganization(
   } catch {
     await conPlazo(c.refresh(), PLAZO_DE_CAMBIO_MS).catch(() => {});
   }
+}
+
+/**
+ * A dónde ir al pulsar "Salir". Cerrar solo la sesión del CRM no basta: la
+ * del servidor central (auth.kontrolia.io) sigue viva en su propia cookie y,
+ * como aprueba solo a las apps de primera parte, el siguiente "Entrar" en ese
+ * navegador pasaba sin contraseña. En una computadora compartida eso le deja
+ * la cuenta al siguiente.
+ *
+ * /api/auth/logout del servidor central cierra la de ese navegador y regresa
+ * a la raíz del CRM (origen de confianza allá), que sin sesión manda a pedir
+ * la contraseña. Sin servidor central configurado devuelve undefined y ra-core
+ * hace lo de siempre (la pantalla de acceso).
+ */
+export function urlDeSalidaCentral(): string | undefined {
+  const base = env.kontroliaAuthServerUrl;
+  if (typeof window === "undefined" || !base) return undefined;
+  const regreso = `${window.location.origin}/`;
+  return `${base.replace(/\/$/, "")}/api/auth/logout?redirect_to=${encodeURIComponent(regreso)}`;
 }
 
 export async function logoutKontroliaAuth(): Promise<void> {
