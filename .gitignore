@@ -79,3 +79,5 @@ next-env.d.ts
 
 # Caché de Python (scripts de skills)
 __pycache__/
+
+.vercel
