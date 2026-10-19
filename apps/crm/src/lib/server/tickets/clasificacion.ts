@@ -1,5 +1,6 @@
+import type { DecisionDelModelo, TipoDeDecision } from "../ia/auditoria";
 import { cuentaDeIaDeOrganizacion } from "../ia/configuracion";
-import type { PreguntaDeJev } from "../ia/clasificador";
+import type { PreguntaDeJev, RespuestaDeJev } from "../ia/clasificador";
 import {
   hayClasificador,
   preguntarAlClasificador,
@@ -42,6 +43,14 @@ export interface SugerenciaDeTicket {
   confianza: number | null;
   /** Una frase, solo cuando viene del proveedor de texto. */
   motivo: string | null;
+  /**
+   * Lo que respondió el modelo de decisión campo a campo, ANTES del umbral,
+   * para que quien llama lo apunte con `registrarDecisiones()`. Lo que el
+   * umbral tira es justo lo que hay que poder revisar después: un campo que
+   * vuelve `null` aquí arriba no dice si el modelo no supo o si supo y no se
+   * le creyó. Vacío por el camino del proveedor de texto, que no da confianza.
+   */
+  decisiones: DecisionDelModelo[];
 }
 
 /**
@@ -154,16 +163,42 @@ export async function sugerirConModeloDeDecision(
     umbral === undefined ||
     (typeof respuesta?.confidence === "number" && respuesta.confidence >= umbral);
 
+  const priority = bastante(prioridad)
+    ? enLaLista(prioridades, prioridad?.choice)
+    : null;
+  const category = bastante(categoria)
+    ? enLaLista(categorias, categoria?.choice)
+    : null;
+
+  const constancia = (
+    kind: TipoDeDecision,
+    respuesta: RespuestaDeJev | undefined,
+    aplicado: string | null,
+  ): DecisionDelModelo[] =>
+    respuesta
+      ? [
+          {
+            kind,
+            value: respuesta.choice ?? null,
+            confianza:
+              typeof respuesta.confidence === "number"
+                ? respuesta.confidence
+                : null,
+            aplicada: aplicado !== null,
+          },
+        ]
+      : [];
+
   return {
-    priority: bastante(prioridad)
-      ? enLaLista(prioridades, prioridad?.choice)
-      : null,
-    category: bastante(categoria)
-      ? enLaLista(categorias, categoria?.choice)
-      : null,
+    priority,
+    category,
     confianza:
       typeof prioridad?.confidence === "number" ? prioridad.confidence : null,
     motivo: null,
+    decisiones: [
+      ...constancia("ticket_priority", prioridad, priority),
+      ...constancia("ticket_category", categoria, category),
+    ],
   };
 }
 
@@ -236,6 +271,7 @@ async function conProveedorDeTexto(
     category: enLaLista(categorias, sugerencia.category),
     confianza: null,
     motivo: sugerencia.motivo || null,
+    decisiones: [],
   };
 }
 

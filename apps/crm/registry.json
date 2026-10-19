@@ -202,6 +202,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/companies/SugerirSectorButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/companies/getTranslatedCompanySizeLabel.ts",
           "type": "registry:component"
         },
@@ -311,6 +315,10 @@
         },
         {
           "path": "src/components/crm/contacts/ExportVCardButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/contacts/MapeoDeColumnas.tsx",
           "type": "registry:component"
         },
         {
@@ -519,6 +527,10 @@
         },
         {
           "path": "src/components/crm/deals/stages.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/deals/useMotivoSugerido.ts",
           "type": "registry:component"
         },
         {
@@ -1454,6 +1466,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/importacion/camposDeContacto.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/importacion/camposDeContacto.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/kontrolia-auth/client.ts",
           "type": "registry:lib"
         },
@@ -1522,6 +1542,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/automatizaciones/condicion.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/automatizaciones/condicion.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/borradoDeUsuarios.test.ts",
           "type": "registry:lib"
         },
@@ -1543,6 +1571,14 @@
         },
         {
           "path": "src/lib/server/comercialDeLaSesion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/companies/sector.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/companies/sector.ts",
           "type": "registry:lib"
         },
         {
@@ -1630,6 +1666,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/deals/motivoDePerdida.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/deals/motivoDePerdida.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/duplicados/juicio.test.ts",
           "type": "registry:lib"
         },
@@ -1639,6 +1683,14 @@
         },
         {
           "path": "src/lib/server/exigirCupoDeUsuario.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/auditoria.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/ia/auditoria.ts",
           "type": "registry:lib"
         },
         {
@@ -1679,6 +1731,14 @@
         },
         {
           "path": "src/lib/server/imponerDueno.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/importacion/mapeoDeColumnas.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/importacion/mapeoDeColumnas.ts",
           "type": "registry:lib"
         },
         {
@@ -1843,6 +1903,14 @@
         },
         {
           "path": "src/lib/server/tickets/encuesta.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/temaDeEncuesta.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/tickets/temaDeEncuesta.ts",
           "type": "registry:lib"
         },
         {

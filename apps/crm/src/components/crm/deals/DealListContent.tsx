@@ -1,5 +1,6 @@
 import { DragDropContext, type OnDragEndResponder } from "@hello-pangea/dnd";
 import isEqual from "lodash/isEqual";
+import type { Identifier } from "ra-core";
 import { useDataProvider, useListContext, useTranslate } from "ra-core";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
@@ -26,6 +27,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 import { DealColumn } from "./DealColumn";
 import { ingresoAsociado } from "./ingresoAsociado";
+import { useMotivoSugerido } from "./useMotivoSugerido";
 import type { DealsByStage } from "./stages";
 import { getDealsByStage } from "./stages";
 
@@ -55,6 +57,7 @@ export const DealListContent = () => {
   const [perdidaPendiente, setPerdidaPendiente] = useState<{
     aplicar: (motivo?: string) => void;
     nombre: string;
+    id: Identifier;
   } | null>(null);
   const [motivoElegido, setMotivoElegido] = useState<string>("");
   // Movimiento a ganada bloqueado por no haber ingreso que lo respalde.
@@ -69,6 +72,19 @@ export const DealListContent = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unorderedDeals, etapas]);
+
+  // Lo que dicen las notas de esa oportunidad, para no dejar el desplegable
+  // vacío: con la prisa se pulsa «Omitir» y luego el informe de pérdidas no
+  // sirve para nada.
+  const { sugerido, cargando: sugiriendo } = useMotivoSugerido(
+    perdidaPendiente?.id ?? null,
+  );
+  useEffect(() => {
+    // Nunca pisa lo que ya eligió una persona.
+    if (sugerido?.loss_reason) {
+      setMotivoElegido((actual) => actual || sugerido.loss_reason!);
+    }
+  }, [sugerido]);
 
   if (isPending) return null;
 
@@ -120,7 +136,11 @@ export const DealListContent = () => {
     );
     if (esPerdida && sourceStage !== destinationStage) {
       setMotivoElegido("");
-      setPerdidaPendiente({ aplicar, nombre: sourceDeal.name });
+      setPerdidaPendiente({
+        aplicar,
+        nombre: sourceDeal.name,
+        id: sourceDeal.id,
+      });
       return;
     }
 
@@ -184,6 +204,26 @@ export const DealListContent = () => {
               ))}
             </SelectContent>
           </Select>
+
+          {/* Se dice que la propuesta viene de las notas y con cuánta
+              seguridad: una persona tiene que poder desconfiar de ella. */}
+          {sugiriendo && (
+            <p className="text-xs text-muted-foreground">
+              {translate("resources.deals.loss.suggesting")}
+            </p>
+          )}
+          {!sugiriendo &&
+            sugerido?.loss_reason &&
+            motivoElegido === sugerido.loss_reason && (
+              <p className="text-xs text-muted-foreground">
+                {translate("resources.deals.loss.suggested", {
+                  confianza:
+                    sugerido.confianza == null
+                      ? "—"
+                      : `${Math.round(sugerido.confianza * 100)} %`,
+                })}
+              </p>
+            )}
 
           <DialogFooter>
             <Button

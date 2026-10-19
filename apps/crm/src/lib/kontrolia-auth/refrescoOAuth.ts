@@ -20,6 +20,25 @@
  * mismo que ya se usa para canjear el código. Se cubre así cada camino que
  * refresca —el temporizador automático, la recuperación al cargar la
  * página, `refreshSession()`, `switchOrganization()`— sin tocar el SDK.
+ *
+ * ## Por qué las dos llamadas llevan tiempo límite
+ *
+ * supabase-js refresca DENTRO de un cerrojo de navegador
+ * (`navigator.locks`, `lock:sb-…-auth-token`) que comparten todas las
+ * pestañas del mismo origen, y el resto de operaciones de sesión esperan ese
+ * cerrojo 10 segundos antes de rendirse con
+ * `DOMException: signal is aborted without reason`.
+ *
+ * Aquí se hacen DOS peticiones seguidas donde el SDK hacía una, así que el
+ * cerrojo se retiene el doble. Y `fetch` no tiene tiempo límite propio: en
+ * una red móvil mala, una sola petición colgada deja el cerrojo tomado para
+ * siempre y a partir de ahí NINGÚN inicio de sesión funciona en ese
+ * navegador — falla exactamente a los 10 s, una y otra vez, hasta cerrar la
+ * pestaña. Pasó en producción el 2026-10-09.
+ *
+ * Con tiempo límite, lo peor que ocurre es que el refresco falle: un `fetch`
+ * abortado llega a supabase-js como `AuthRetryableFetchError`, que reintenta
+ * y NO cierra la sesión. Los dos topes suman menos que los 10 s del cerrojo.
  */
 
 interface ClienteConGoTrue {
@@ -35,6 +54,12 @@ interface OpcionesDeRefresco {
   supabaseAnonKey: string;
   clientId: string;
 }
+
+/** El refresco es imprescindible: se le da el grueso del presupuesto. */
+const LIMITE_REFRESCO_MS = 6000;
+
+/** El usuario es opcional (si falla, la sesión vale igual): tope corto. */
+const LIMITE_USUARIO_MS = 2000;
 
 const urlDe = (entrada: RequestInfo | URL): string => {
   if (typeof entrada === "string") return entrada;
@@ -96,6 +121,7 @@ export function instalarRefrescoOAuth(
         refresh_token: refreshToken,
         client_id: opciones.clientId,
       }),
+      signal: AbortSignal.timeout(LIMITE_REFRESCO_MS),
     });
     if (!respuesta.ok) return respuesta;
 
@@ -108,6 +134,7 @@ export function instalarRefrescoOAuth(
         apikey: opciones.supabaseAnonKey,
         Authorization: `Bearer ${tokens.access_token}`,
       },
+      signal: AbortSignal.timeout(LIMITE_USUARIO_MS),
     })
       .then((r) => (r.ok ? r.json() : null))
       .catch(() => null);

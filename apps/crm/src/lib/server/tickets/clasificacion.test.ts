@@ -57,6 +57,20 @@ describe("sugerirConModeloDeDecision", () => {
       category: "billing",
       confianza: 0.91,
       motivo: null,
+      decisiones: [
+        {
+          kind: "ticket_priority",
+          value: "urgent",
+          confianza: 0.91,
+          aplicada: true,
+        },
+        {
+          kind: "ticket_category",
+          value: "billing",
+          confianza: null,
+          aplicada: true,
+        },
+      ],
     });
   });
 
@@ -210,5 +224,81 @@ describe("umbral de confianza del camino automático", () => {
 
     // Ahí hay una persona mirando: ve el valor y lo corrige si no cuadra.
     expect(sugerencia).toMatchObject({ priority: "urgent", confianza: 0.3 });
+  });
+});
+
+describe("constancia para la auditoría", () => {
+  it("apunta lo que el modelo eligió aunque el umbral lo tire", async () => {
+    responder({
+      prioridad: { type: "choice", choice: "urgent", confidence: 0.95 },
+      categoria: { type: "choice", choice: "billing", confidence: 0.4 },
+    });
+
+    const sugerencia = await sugerirConModeloDeDecision(
+      TEXTO,
+      PRIORIDADES_DE_FABRICA,
+      CATEGORIAS,
+      CONFIANZA_MINIMA_AUTOMATICA,
+    );
+
+    // Sin esto, un campo vacío no distinguiría «no supo» de «supo y no se le
+    // creyó», que es justo lo que hace falta para mover el umbral.
+    expect(sugerencia?.decisiones).toEqual([
+      {
+        kind: "ticket_priority",
+        value: "urgent",
+        confianza: 0.95,
+        aplicada: true,
+      },
+      {
+        kind: "ticket_category",
+        value: "billing",
+        confianza: 0.4,
+        aplicada: false,
+      },
+    ]);
+  });
+
+  it("no inventa una constancia de lo que no se preguntó", async () => {
+    responder({ prioridad: { type: "choice", choice: "normal" } });
+
+    const sugerencia = await sugerirConModeloDeDecision(
+      TEXTO,
+      PRIORIDADES_DE_FABRICA,
+      [],
+    );
+
+    expect(sugerencia?.decisiones).toEqual([
+      {
+        kind: "ticket_priority",
+        value: "normal",
+        confianza: null,
+        aplicada: true,
+      },
+    ]);
+  });
+
+  it("marca como no aplicada una elección que no está en Ajustes", async () => {
+    responder({
+      prioridad: { type: "choice", choice: "catastrofico", confidence: 0.99 },
+    });
+
+    const sugerencia = await sugerirConModeloDeDecision(
+      TEXTO,
+      PRIORIDADES_DE_FABRICA,
+      [],
+    );
+
+    // Confianza altísima en un valor que no existe: la constancia lo guarda
+    // tal cual, porque una racha de estas significa que las listas de esa
+    // organización y los criterios ya no cuadran.
+    expect(sugerencia?.decisiones).toEqual([
+      {
+        kind: "ticket_priority",
+        value: "catastrofico",
+        confianza: 0.99,
+        aplicada: false,
+      },
+    ]);
   });
 });

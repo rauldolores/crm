@@ -13,10 +13,10 @@ import {
  * tiene ese teléfono registrado — si no hay coincidencia, el mensaje se
  * descarta: no hay una organización segura a la que atribuirlo.
  *
- * A diferencia del correo entrante (que crea el contacto si no existe, a
- * partir de un remitente comercial conocido), aquí NO se crea nada nuevo:
- * cualquier número del mundo puede escribirle a este webhook, y crear una
- * ficha sin saber la organización sería imposible de acotar correctamente.
+ * Aquí NO se crea nada nuevo: cualquier número del mundo puede escribirle a
+ * este webhook, y crear una ficha sin saber la organización sería imposible
+ * de acotar correctamente. Este es el único canal de entrada del CRM — el de
+ * correo se retiró (ver .product/requirements/REQ-2026-001.md).
  */
 
 const MAX_MENSAJE = 4096;

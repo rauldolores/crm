@@ -78,7 +78,6 @@ export const CRM_PERMISSIONS: PermissionInput[] = [
   { resource: "configuracion", action: "editar", description: "Editar marca, etapas, categorías, sectores, moneda y tipos" },
 
   // Integraciones
-  { resource: "correo_entrante", action: "configurar", description: "Configurar la captura de correo entrante como notas" },
   { resource: "mcp", action: "usar", description: "Conectar un asistente de IA a los datos del CRM vía MCP" },
   { resource: "importaciones", action: "administrar", description: "Ejecutar y revisar importaciones masivas de datos" },
 ];

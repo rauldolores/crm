@@ -126,4 +126,70 @@ describe("metricasDeSoporte", () => {
     expect(m.abiertosPorResponsable).toEqual({ "9": 1, "": 1 });
     expect(m.reaperturas).toBe(1);
   });
+
+  test("agrupa los comentarios de la encuesta por tema, solo los del periodo", () => {
+    const tickets = [
+      ticket({
+        satisfaction_rating: 2,
+        satisfaction_at: "2026-09-15T00:00:00Z",
+        satisfaction_topic: "response_time",
+      }),
+      ticket({
+        satisfaction_rating: 3,
+        satisfaction_at: "2026-09-16T00:00:00Z",
+        satisfaction_topic: "response_time",
+      }),
+      ticket({
+        satisfaction_rating: 5,
+        satisfaction_at: "2026-09-16T00:00:00Z",
+        satisfaction_topic: "praise",
+      }),
+      // Sin comentario, o sin clasificar: no inventa una categoría vacía.
+      ticket({
+        satisfaction_rating: 4,
+        satisfaction_at: "2026-09-16T00:00:00Z",
+      }),
+      // Fuera del periodo.
+      ticket({
+        satisfaction_rating: 1,
+        satisfaction_at: "2026-06-01T00:00:00Z",
+        satisfaction_topic: "solution",
+      }),
+    ];
+
+    const m = metricasDeSoporte(tickets, [], HACE_30_DIAS, AHORA);
+
+    expect(m.porTemaDeEncuesta).toEqual({ response_time: 2, praise: 1 });
+  });
+
+  test("cuenta los que dicen seguir con el problema aunque el ticket esté cerrado", () => {
+    const tickets = [
+      // La encuesta se manda AL CERRAR, así que el caso normal es este: el
+      // ticket está cerrado y el cliente dice que no.
+      ticket({
+        status: "closed",
+        closed_at: "2026-09-14T00:00:00Z",
+        satisfaction_rating: 4,
+        satisfaction_at: "2026-09-15T00:00:00Z",
+        satisfaction_followup: true,
+      }),
+      ticket({
+        status: "closed",
+        closed_at: "2026-09-14T00:00:00Z",
+        satisfaction_rating: 5,
+        satisfaction_at: "2026-09-15T00:00:00Z",
+        satisfaction_followup: false,
+      }),
+      ticket({
+        status: "closed",
+        closed_at: "2026-09-14T00:00:00Z",
+        satisfaction_rating: 5,
+        satisfaction_at: "2026-09-15T00:00:00Z",
+      }),
+    ];
+
+    const m = metricasDeSoporte(tickets, [], HACE_30_DIAS, AHORA);
+
+    expect(m.seguimientosPendientes).toBe(1);
+  });
 });
