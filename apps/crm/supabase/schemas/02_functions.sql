@@ -725,6 +725,7 @@ begin
   update crm.contracts set company_id = winner_id where company_id = loser_id;
   update crm.purchases set company_id = winner_id where company_id = loser_id;
   update crm.invoices set company_id = winner_id where company_id = loser_id;
+  update crm.contract_events set company_id = winner_id where company_id = loser_id;
   -- Si la ganadora ya tiene afiliado, la atribución vigente de la perdedora
   -- termina aquí: una empresa sólo puede tener una vigente.
   if winner.referred_by_affiliate_id is not null then
@@ -794,6 +795,16 @@ begin
 
   -- 4. Adiós a la perdedora.
   delete from crm.companies where id = loser_id;
+
+  -- 5. Si la perdedora llegaba de una integración (KontrolIA Auth) y la
+  -- ganadora no, la ganadora hereda el vínculo: si no, el siguiente aviso
+  -- volvería a crear la empresa. Va después del borrado por el índice único
+  -- (organization_id, source, external_id).
+  if winner.external_id is null and loser.external_id is not null then
+    update crm.companies
+       set source = loser.source, external_id = loser.external_id
+     where id = winner_id;
+  end if;
 
   perform set_config('crm.cambio_de_afiliado_autorizado', 'off', true);
   return winner_id;

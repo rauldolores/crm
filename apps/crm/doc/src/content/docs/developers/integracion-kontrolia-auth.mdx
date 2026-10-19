@@ -1,0 +1,46 @@
+---
+title: Integración con KontrolIA Auth
+description: Cómo los clientes de KONTROLIA (organizaciones, usuarios, planes y renovaciones) llegan solos a Vinqulia.
+---
+
+KontrolIA Auth (el login y la facturación de AduaniaX, Faqturia, Vinqulia y Nodia Agents) manda un **aviso de plataforma** cada vez que cambia un cliente: su organización, sus usuarios, una suscripción, una renovación o un extra. Vinqulia lo recibe en la organización de KONTROLIA y mantiene al día, sin captura:
+
+| En KontrolIA Auth | En Vinqulia |
+|---|---|
+| Organización | Empresa (`companies`, `source = 'kontrolia_auth'`, `external_id` = id de la organización). Etapa: *cliente* si tiene alguna suscripción viva; *perdido* si ya no le queda ninguna. Una etapa puesta a mano (p. ej. *en riesgo*) no se toca. |
+| Usuarios (miembros) | Contactos de esa empresa (`external_id` = id del usuario). Un usuario quitado o suspendido se **archiva**, no se borra. |
+| Suscripción de cada aplicación | Un contrato por producto (`external_id` = `<organización>:<aplicación>`): plan, extras, vigencia, precio del periodo y forma de cobro (*por contrato* o *con tarjeta*). |
+| Renovación con pago | Compra pagada ligada al contrato, con una línea «Renovación …». |
+| Historial (`subscription_events`) y renovaciones | Historial del contrato (`contract_events`), visible en la pestaña **Cliente** de la empresa. |
+
+Cada aviso trae la **foto completa** del cliente, así que un aviso repetido, perdido o fuera de orden nunca deja mal la copia: todo se reconoce por `source` + `external_id`, y una foto más vieja que la última aplicada (`snapshot.generated_at`) se ignora. Los importes llegan en centavos y se guardan en pesos.
+
+Lo sincronizado **no se edita a mano**: el siguiente aviso lo sobrescribiría. La pestaña Cliente marca la empresa con «Sincronizado con KontrolIA».
+
+## Endpoint
+
+`POST https://app.vinqulia.com/api/integraciones/kontrolia-auth`
+
+- `Authorization: Bearer vnq_…` — una clave de API de Vinqulia de la organización donde deben quedar los clientes (Ajustes → Claves de API). Decide **en qué organización** se guarda.
+- `X-Kontrolia-Signature: t=<unix>,v1=<hex>` — HMAC-SHA256 del cuerpo crudo con el secreto del aviso (tolerancia de 300 s). Prueba que el aviso lo mandó KontrolIA Auth.
+
+Respuestas: `200 {ok, company_id, contacts, contracts, purchases, events}` (o `{ok, ignored: true}` si la foto es más vieja que la ya aplicada); `401` firma o clave inválida; `400` cuerpo no válido; `503` si falta el secreto en el servidor; `500` si algo falló al guardar (KontrolIA Auth reintenta). Cada aviso queda anotado en `crm.integration_events` (solo `service_role`).
+
+## Variable de entorno
+
+```bash
+# Secreto del aviso de plataforma de KontrolIA Auth. Sin él, el receptor
+# responde 503 y no acepta nada: nunca avisos sin firmar.
+KONTROLIA_AUTH_WEBHOOK_SECRET=
+```
+
+## Configurar el aviso en KontrolIA Auth
+
+1. En Vinqulia, en la organización de KONTROLIA, crea una clave de API (`vnq_…`).
+2. En panel.kontrolia.io → **Integraciones → Avisos de plataforma**, crea un aviso:
+   - URL: `https://app.vinqulia.com/api/integraciones/kontrolia-auth`
+   - Encabezado extra: `Authorization: Bearer <la clave vnq_ del paso 1>`
+3. Copia el **secreto** del aviso en la variable `KONTROLIA_AUTH_WEBHOOK_SECRET` del despliegue de Vinqulia (Vercel) y vuelve a desplegar.
+4. Usa «Reenviar todo» (`organization.sync`) para la carga inicial de todos los clientes.
+
+El código: `app/api/integraciones/kontrolia-auth/route.ts` (firma, clave y bitácora), `src/lib/server/integraciones/kontroliaAuth.ts` (de la foto a filas, puro y con pruebas) y `aplicarKontroliaAuth.ts` (guarda con la clave de servicio, siempre filtrando por la organización de la clave).

@@ -1468,6 +1468,29 @@ export const spanishCrmMessages = {
         cancelled: "Cancelada",
         refunded: "Reembolsada",
       },
+      // Clientes de KONTROLIA que llegan solos desde KontrolIA Auth.
+      kontrolia: {
+        synced_badge: "Sincronizado con KontrolIA",
+        synced_help:
+          "Esta empresa, sus usuarios, contratos, renovaciones e historial llegan solos desde KontrolIA Auth y se actualizan con cada cambio allá. No edites a mano lo sincronizado: el siguiente aviso lo sobrescribiría.",
+        auto_contract:
+          "Se actualiza solo desde KontrolIA: los cambios se hacen allá.",
+        plan: "Plan %{plan}",
+        addons: "Extras",
+        addon_included: "incluido",
+        expires_on: "Vence el %{date}",
+        expired_on: "Venció el %{date}",
+        no_end: "Sin fecha de fin",
+        provider_manual: "Por contrato",
+        provider_stripe: "Con tarjeta",
+        per_period: {
+          monthly: "al mes",
+          quarterly: "al trimestre",
+          yearly: "al año",
+          one_time: "pago único",
+        },
+        history: "Historial del contrato",
+      },
     },
     email: {
       title: "Correo saliente",

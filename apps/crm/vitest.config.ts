@@ -77,6 +77,8 @@ export default defineConfig({
             "src/lib/server/ia/**",
             "src/lib/server/tickets/**",
             "src/lib/server/duplicados/**",
+            // Usa node:crypto (firma de los avisos de KontrolIA Auth).
+            "src/lib/server/integraciones/**",
           ],
           server: {
             deps: {
@@ -103,6 +105,7 @@ export default defineConfig({
             "src/lib/server/ia/**/*.test.ts",
             "src/lib/server/tickets/**/*.test.ts",
             "src/lib/server/duplicados/**/*.test.ts",
+            "src/lib/server/integraciones/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },
