@@ -112,17 +112,17 @@ Limitaciones conocidas: requiere una cuenta de Twilio con WhatsApp habilitado co
 Información que requiere confirmación: ninguna relevante — no afirmar que el número/cuenta de WhatsApp viene incluido si el cliente no lo tiene.
 ```
 
-## Correo electrónico (vía Postmark)
+## Correo electrónico (Resend, Postmark o SendGrid)
 
 ```
-Qué es: envío y captura de correo electrónico desde la ficha del contacto.
-Qué permite hacer: mandar un correo real al contacto y que su respuesta se archive sola en la ficha correcta (reply-to inteligente); también capturar correo entrante (por copia al buzón de Vinqulia) como nota.
-Cómo funciona: requiere un token de envío de Postmark y un remitente verificado, configurados por el cliente.
-Problema que resuelve: historial de correo disperso entre las bandejas personales de cada vendedor.
-Beneficio empresarial: el hilo de correo con un cliente queda completo y centralizado, sin copiar y pegar.
+Qué es: envío de correo electrónico desde la ficha del contacto, con el proveedor que elija cada organización.
+Qué permite hacer: mandar un correo real al contacto desde su ficha, con plantilla si se quiere, y que quede registrado como nota tipo «email» en su historial. También lo usan las automatizaciones y el envío de cotizaciones.
+Cómo funciona: en Ajustes → Correo saliente cada organización elige proveedor (Resend, Postmark o SendGrid), pega su clave de API y pone un remitente de un dominio verificado allí. Hay un botón de envío de prueba.
+Problema que resuelve: lo que se le escribió a un cliente no queda registrado en ningún sitio compartido.
+Beneficio empresarial: lo enviado queda en la ficha del cliente, y se envía desde el dominio propio de la empresa.
 Perfil de usuario que más se beneficia: equipos que negocian por correo (propuestas, condiciones).
-Ejemplo de uso: enviar una propuesta comercial por correo desde la ficha de la empresa; la respuesta del cliente se archiva sola.
-Limitaciones conocidas: sin la cuenta de Postmark configurada, el botón de enviar correo queda deshabilitado.
+Ejemplo de uso: enviar una cotización por correo desde la oportunidad, con su enlace para aceptarla.
+Limitaciones conocidas: **solo saliente**. Vinqulia no recibe correo: la respuesta del cliente llega al buzón de quien envió, no a la ficha. Sin proveedor configurado, el botón de enviar queda deshabilitado.
 Información que requiere confirmación: ninguna relevante.
 ```
 

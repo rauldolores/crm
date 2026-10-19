@@ -46,7 +46,7 @@ La idea central que debe transmitir cualquier explicación: **el proceso comerci
 - Pipeline Kanban con varios embudos y etapas configurables.
 - Tareas con responsable y vencimiento.
 - Notas y actividades tipadas (llamada, reunión, correo, WhatsApp…).
-- WhatsApp real (Twilio) y correo (Postmark) integrados en la ficha del contacto.
+- WhatsApp real (Twilio) y envío de correo (Resend, Postmark o SendGrid) desde la ficha del contacto.
 - Formularios web públicos (enlace o iframe) para captar leads, con anti-bot.
 - Automatizaciones por regla (disparador → acción).
 - Informes de conversión, cierre por vendedor y motivos de pérdida.

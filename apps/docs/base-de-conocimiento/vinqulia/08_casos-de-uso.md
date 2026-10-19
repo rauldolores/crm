@@ -20,7 +20,7 @@ Proceso propuesto (configuración posible): un embudo de "Nuevo negocio" con eta
 Pipeline: embudo dedicado a ventas B2B (configuración posible).
 Etapas (configuración posible): Prospección → Diagnóstico → Propuesta → Negociación → Cierre.
 Automatizaciones posibles: tarea de seguimiento automática tras enviar propuesta.
-Integraciones posibles: correo (Postmark) para propuestas formales, API para sincronizar con sistema de facturación.
+Integraciones posibles: envío de correo (Resend, Postmark o SendGrid) para propuestas formales, API para sincronizar con sistema de facturación.
 Beneficios: visibilidad de cuentas con múltiples contactos, historial completo por empresa.
 Preguntas de discovery: "¿Cuántas personas suelen participar en la decisión de compra de tu cliente típico?"
 Argumento comercial: Vinqulia centraliza empresa + contactos + oportunidades, ideal cuando la venta involucra a varias personas del lado del cliente.

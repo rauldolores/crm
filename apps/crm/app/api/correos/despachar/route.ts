@@ -1,9 +1,5 @@
-import { env } from "@/lib/env";
 import { getServiceClient } from "@/lib/server/supabase-service";
-import {
-  construirResponderA,
-  enviarCorreoDeOrganizacion,
-} from "@/lib/server/correo/enviar";
+import { enviarCorreoDeOrganizacion } from "@/lib/server/correo/enviar";
 import { valoresDeFusion } from "@/lib/server/correo/valoresDeFusion";
 import {
   cotizacionPorId,
@@ -177,16 +173,11 @@ export async function POST(peticion: Request) {
       valores,
     );
 
-    const responderA = env.inboundEmail
-      ? construirResponderA(env.inboundEmail, fila.contact_id)
-      : null;
-
     const resultado = await enviarCorreoDeOrganizacion(fila.organization_id, {
       para: correoDelContacto,
       asunto,
       textoPlano,
       html,
-      responderA: responderA ?? undefined,
     });
 
     if (!resultado.ok) {

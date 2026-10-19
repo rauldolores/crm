@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { pareceSpam } from "./spam";
+import { juzgarSpam } from "./spam";
 
 const envio = {
   nombre: "Ana López",
@@ -28,28 +28,42 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("pareceSpam", () => {
+describe("juzgarSpam", () => {
   it("descarta lo que el modelo ve clarísimo", async () => {
     responder(0.97);
-    expect(await pareceSpam(envio)).toBe(true);
+    expect(await juzgarSpam(envio)).toEqual({
+      esSpam: true,
+      probabilidad: 0.97,
+    });
   });
 
   it("deja pasar la duda: el umbral es alto a propósito", async () => {
     responder(0.75);
-    expect(await pareceSpam(envio)).toBe(false);
+    // La probabilidad vuelve igual: es lo que queda apuntado en la auditoría
+    // y lo que permitirá mover el umbral con datos.
+    expect(await juzgarSpam(envio)).toEqual({
+      esSpam: false,
+      probabilidad: 0.75,
+    });
   });
 
   it("deja pasar cuando no hay clave, sin llamar a la API", async () => {
     vi.stubEnv("TYPESAFE_API_KEY", "");
     const fetchMock = responder(0.99);
 
-    expect(await pareceSpam(envio)).toBe(false);
+    expect(await juzgarSpam(envio)).toEqual({
+      esSpam: false,
+      probabilidad: null,
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("deja pasar si la API falla: perder un cliente real es peor", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-    expect(await pareceSpam(envio)).toBe(false);
+    expect(await juzgarSpam(envio)).toEqual({
+      esSpam: false,
+      probabilidad: null,
+    });
   });
 
   it("deja pasar si la respuesta no trae la probabilidad esperada", async () => {
@@ -61,6 +75,9 @@ describe("pareceSpam", () => {
         json: async () => ({ answers: { spam: { type: "noul" } } }),
       }),
     );
-    expect(await pareceSpam(envio)).toBe(false);
+    expect(await juzgarSpam(envio)).toEqual({
+      esSpam: false,
+      probabilidad: null,
+    });
   });
 });

@@ -47,6 +47,15 @@ export const InformeDeSoporte = ({ dias }: { dias: number | null }) => {
 
   if (!tickets?.length) return null;
 
+  // Los temas se ordenan de más a menos: la primera barra es la queja que más
+  // repite la gente, que es lo único que alguien va a leer con prisa.
+  const temas = Object.entries(metricas.porTemaDeEncuesta)
+    .sort(([, a], [, b]) => b - a)
+    .map(([tema, valor]) => ({
+      id: translate(`crm.reports.support.topics.${tema}`),
+      valor,
+    }));
+
   const horas = (valor: number | null) =>
     valor == null
       ? "—"
@@ -131,6 +140,29 @@ export const InformeDeSoporte = ({ dias }: { dias: number | null }) => {
             color="#f1a56a"
           />
         </div>
+
+        {/* Solo cuando hay comentarios clasificados: en un despliegue sin
+            modelo de decisión, o sin encuestas con comentario, una gráfica
+            vacía no diría nada. */}
+        {temas.length > 0 && (
+          <div>
+            <p className="mb-2 text-sm font-medium">
+              {translate("crm.reports.support.by_topic")}
+            </p>
+            <Grafica
+              datos={temas}
+              vacio={translate("crm.reports.empty")}
+              color="#8fb8a8"
+            />
+            {metricas.seguimientosPendientes > 0 && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {translate("crm.reports.support.followup", {
+                  smart_count: metricas.seguimientosPendientes,
+                })}
+              </p>
+            )}
+          </div>
+        )}
 
         <div>
           <p className="mb-2 text-sm font-medium">

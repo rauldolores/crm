@@ -15,7 +15,15 @@ import { FormToolbar } from "@/components/admin/simple-form";
 import { FileInput } from "@/components/admin/file-input";
 import { FileField } from "@/components/admin/file-field";
 
+import {
+  cabecerasDesconocidas,
+  SIN_COLUMNA,
+} from "@/lib/importacion/camposDeContacto";
+
+import { llamarApi } from "../misc/llamarApi";
 import { usePapaParse } from "../misc/usePapaParse";
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import { MapeoDeColumnas } from "./MapeoDeColumnas";
 import type { ContactImportSchema } from "./useContactImport";
 import { useContactImport } from "./useContactImport";
 
@@ -69,13 +77,20 @@ export function ContactImportDialog({
   const {
     importer,
     parseCsv,
+    leerCabeceras,
     reset: resetImporter,
   } = usePapaParse<ContactImportSchema>({
     batchSize: 10,
     processBatch,
   });
+  const { contactCustomFields } = useConfigurationContext();
 
   const [file, setFile] = useState<File | null>(null);
+  // Cabeceras del archivo que no son nuestras, y a qué campo va cada una.
+  const [porMapear, setPorMapear] = useState<string[]>([]);
+  const [mapeo, setMapeo] = useState<Record<string, string>>({});
+  const [sinProponer, setSinProponer] = useState<string[]>([]);
+  const [cargandoMapeo, setCargandoMapeo] = useState(false);
 
   useEffect(() => {
     if (importer.state === "complete") {
@@ -83,18 +98,77 @@ export function ContactImportDialog({
     }
   }, [importer.state, refresh]);
 
-  const handleFileChange = (file: File | null) => {
-    setFile(file);
+  const limpiarMapeo = () => {
+    setPorMapear([]);
+    setMapeo({});
+    setSinProponer([]);
+    setCargandoMapeo(false);
+  };
+
+  const handleFileChange = async (elegido: File | null) => {
+    setFile(elegido);
+    limpiarMapeo();
+    if (!elegido) return;
+
+    const { cabeceras, muestra } = await leerCabeceras(elegido);
+
+    // Las columnas de campos personalizados se reconocen por su etiqueta o
+    // por su clave (ver camposPersonalizadosCsv), así que no hay nada que
+    // mapear en ellas.
+    const personalizados = new Set(
+      contactCustomFields.flatMap((campo) => [campo.label, campo.value]),
+    );
+    const desconocidas = cabecerasDesconocidas(cabeceras).filter(
+      (cabecera) => !personalizados.has(cabecera),
+    );
+    if (!desconocidas.length) return;
+
+    setPorMapear(desconocidas);
+    // Todo a «no importar» de entrada: si la propuesta no llega, el archivo
+    // se importa como se importaba antes en vez de inventarse columnas.
+    setMapeo(Object.fromEntries(desconocidas.map((c) => [c, SIN_COLUMNA])));
+    setCargandoMapeo(true);
+    try {
+      const { columnas } = await llamarApi<{
+        columnas: { cabecera: string; campo: string | null }[];
+      }>("/api/ia/importacion/mapeo", {
+        method: "POST",
+        body: JSON.stringify({ cabeceras: desconocidas, muestra }),
+      });
+      setMapeo((anterior) => ({
+        ...anterior,
+        ...Object.fromEntries(
+          columnas
+            .filter((columna) => columna.campo)
+            .map((columna) => [columna.cabecera, columna.campo as string]),
+        ),
+      }));
+      setSinProponer(
+        columnas.filter((columna) => !columna.campo).map((c) => c.cabecera),
+      );
+    } catch {
+      // Sin propuesta se mapea a mano: no es un error que valga un aviso,
+      // porque la pantalla ya está pidiendo justo eso.
+      setSinProponer(desconocidas);
+    } finally {
+      setCargandoMapeo(false);
+    }
   };
 
   const startImport = () => {
     if (!file) return;
-    parseCsv(file);
+    // Solo las columnas con destino: una en «no importar» se queda con su
+    // nombre original y nadie la lee.
+    const renombres = Object.fromEntries(
+      Object.entries(mapeo).filter(([, campo]) => campo !== SIN_COLUMNA),
+    );
+    parseCsv(file, Object.keys(renombres).length ? renombres : undefined);
   };
 
   const handleClose = () => {
     resetImporter();
     resetDuplicates();
+    limpiarMapeo();
     onClose();
   };
 
@@ -234,6 +308,21 @@ export function ContactImportDialog({
                 >
                   <FileField source="src" title="title" target="_blank" />
                 </FileInput>
+
+                {porMapear.length > 0 && (
+                  <MapeoDeColumnas
+                    cabeceras={porMapear}
+                    valor={mapeo}
+                    cargando={cargandoMapeo}
+                    sinProponer={sinProponer}
+                    alCambiar={(cabecera, campo) =>
+                      setMapeo((anterior) => ({
+                        ...anterior,
+                        [cabecera]: campo,
+                      }))
+                    }
+                  />
+                )}
               </>
             )}
           </div>

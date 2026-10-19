@@ -12,6 +12,14 @@
 export const spanishCrmMessages = {
   resources: {
     companies: {
+      ai: {
+        sector: "Sugerir sector con IA",
+        sector_empty: "Escribe el nombre de la empresa primero",
+        sector_done: "%{sector} — %{porcentaje} de seguridad",
+        sector_unknown:
+          "Con el nombre y el sitio web no se puede saber a qué se dedica",
+        sector_error: "No se pudo obtener la sugerencia",
+      },
       duplicates: {
         title: "Ya existe una empresa parecida",
         same_name: "tiene un nombre parecido",
@@ -183,6 +191,13 @@ export const spanishCrmMessages = {
           "%{count} contacto podría ser un duplicado |||| %{count} contactos podrían ser duplicados",
         existing_contact: "ver el contacto existente",
         duplicates_more: "y %{count} más.",
+        mapping: {
+          loading: "Viendo a qué corresponde cada columna de tu archivo…",
+          intro:
+            "Tu archivo trae %{smart_count} columna que no es de las nuestras; abajo está a qué la vamos a pasar, revísala antes de importar. |||| Tu archivo trae %{smart_count} columnas que no son de las nuestras; abajo está a qué las vamos a pasar, revísalas antes de importar.",
+          unknown: "No supimos qué es: elígelo tú",
+          skip: "No importar esta columna",
+        },
       },
       duplicates: {
         title: "Ya existe un contacto parecido",
@@ -363,6 +378,9 @@ export const spanishCrmMessages = {
           "Estás moviendo «%{name}» a una etapa de pérdida. Anotar el motivo permite ver después dónde se están perdiendo las ventas.",
         confirm: "Guardar y mover",
         skip: "Mover sin motivo",
+        suggesting: "Leyendo las notas de esta oportunidad…",
+        suggested:
+          "Propuesto a partir de las notas (seguridad: %{confianza}). Cámbialo si no es eso.",
       },
       board: {
         show_more_of: "Ver %{count} más de %{total}",
@@ -840,6 +858,18 @@ export const spanishCrmMessages = {
         by_category: "Tickets creados por categoría",
         by_owner: "Tickets abiertos por responsable",
         no_open: "No hay tickets abiertos.",
+        by_topic: "De qué hablan los comentarios de la encuesta",
+        topics: {
+          response_time: "Tardanza en responder",
+          solution: "No quedó resuelto",
+          treatment: "Trato y comunicación",
+          product: "El producto",
+          price: "Precio o cobro",
+          praise: "Agradecimientos",
+          other: "Otros",
+        },
+        followup:
+          "Un cliente dice que sigue con el problema aunque su ticket se cerró. Vale la pena llamarlo. |||| %{smart_count} clientes dicen que siguen con el problema aunque sus tickets se cerraron. Vale la pena llamarlos.",
       },
       quotes: {
         title: "Cotizaciones",
@@ -882,6 +912,7 @@ export const spanishCrmMessages = {
       deleted: "Regla eliminada",
       toggle: "Activar o desactivar",
       sentence: "%{when} → %{then}",
+      condition_named: "Solo si: «%{condition}»",
       fields: {
         name: "Nombre de la regla",
         when: "Cuando",
@@ -906,6 +937,9 @@ export const spanishCrmMessages = {
           "Se revisa cada hora. Solo tickets abiertos; avisa una sola vez por ticket.",
         priority: "Solo con prioridad",
         any_priority: "Cualquier prioridad",
+        condition: "Solo si… (opcional)",
+        condition_help:
+          "Escríbelo como se lo dirías a alguien: «el cliente amenaza con irse», «pide una demostración», «está enojado». La IA lo compara con el asunto y la descripción, y la regla solo actúa si se cumple. Sé concreto y nombra las cosas: la IA no sabe quién es tu competencia, así que «menciona a la competencia» no funciona, pero «menciona a Zoho, HubSpot o Salesforce» sí. Ojo: con condición la regla tarda hasta un minuto en actuar, en vez de al instante, y si la IA no lo ve claro no actúa.",
       },
       when: {
         contact_created: "Se crea un contacto",

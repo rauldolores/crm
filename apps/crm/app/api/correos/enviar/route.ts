@@ -1,20 +1,18 @@
-import { env } from "@/lib/env";
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 import { getServiceClient } from "@/lib/server/supabase-service";
 import {
-  construirResponderA,
   enviarCorreoDeOrganizacion,
   puedeEnviarCorreo,
 } from "@/lib/server/correo/enviar";
 
 /**
  * Envía un correo real a un contacto desde el CRM y deja constancia como una
- * nota tipo "email" en su ficha — la mitad "saliente" del correo
- * bidireccional (la entrante ya la cubre `supabase/functions/postmark/`).
+ * nota tipo "email" en su ficha.
  *
- * El Reply-To lleva el hash de hilo del contacto (ver `construirResponderA`),
- * así que si el destinatario responde, el webhook de entrada la archiva sola
- * en esta misma ficha en vez de crear un contacto nuevo a partir del remitente.
+ * Solo saliente: la respuesta del cliente llega al buzón de quien envió. Hubo
+ * un intento de archivarla sola en la ficha (un Reply-To con hash de hilo
+ * contra una función de correo entrante), retirado porque nunca hubo webhook
+ * al otro lado y las respuestas se perdían.
  *
  * Con `ticketId` es una respuesta al cliente desde un ticket: el asunto lleva
  * «[#id]» para que las respuestas se reconozcan, y el correo queda también
@@ -117,15 +115,11 @@ export async function POST(peticion: Request) {
     .eq("organization_id", organizacionId)
     .maybeSingle();
 
-  const responderA = env.inboundEmail
-    ? construirResponderA(env.inboundEmail, contacto.id)
-    : null;
-
+  // Sin Reply-To: la respuesta va al buzón de quien envió (ver arriba).
   const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
     para: correoDestino,
     asunto,
     textoPlano: texto,
-    responderA: responderA ?? undefined,
   });
 
   if (!resultado.ok) {

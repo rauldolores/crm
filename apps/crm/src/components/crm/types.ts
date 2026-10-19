@@ -229,6 +229,13 @@ export type SavedView = {
 export type Automation = {
   name: string;
   active: boolean;
+  /**
+   * Condición en español que el modelo de decisión juzga contra el texto de la
+   * fila («el cliente amenaza con irse»). Vacía = regla de siempre. Con
+   * condición la regla actúa con hasta un minuto de retraso, porque el
+   * disparador encola y la aplicación drena. Ver `admiteCondicion`.
+   */
+  condition_text?: string | null;
   trigger_resource: "contacts" | "deals" | "contracts" | "quotes" | "tickets";
   /**
    * renewal_due (contratos), unanswered (cotizaciones) y los de tickets por
@@ -466,6 +473,13 @@ export type Ticket = {
   satisfaction_rating?: number | null;
   satisfaction_comment?: string | null;
   satisfaction_at?: string | null;
+  /**
+   * De qué habla el comentario y si el cliente sigue con algo sin resolver.
+   * Los pone el modelo de decisión al responder la encuesta; nulos cuando no
+   * hubo comentario o no se pudo clasificar. Ver `temaDeEncuesta.ts`.
+   */
+  satisfaction_topic?: string | null;
+  satisfaction_followup?: boolean | null;
 } & Pick<RaRecord, "id">;
 
 /** Un cambio en un ticket: quién cambió qué y cuándo (crm.ticket_events). */

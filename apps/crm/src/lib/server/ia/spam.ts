@@ -24,8 +24,23 @@ export interface EnvioDeFormulario {
   texto: string;
 }
 
-export async function pareceSpam(envio: EnvioDeFormulario): Promise<boolean> {
-  if (!hayClasificador()) return false;
+export interface JuicioDeSpam {
+  esSpam: boolean;
+  /**
+   * Probabilidad de 0 a 1, o `null` si no se pudo preguntar. Sale de aquí
+   * para que quien llama la apunte en la auditoría: el valor exacto con el
+   * que se dejó pasar un envío es lo que permite mover el umbral con datos
+   * en vez de a ojo.
+   */
+  probabilidad: number | null;
+}
+
+const DEJAR_PASAR: JuicioDeSpam = { esSpam: false, probabilidad: null };
+
+export async function juzgarSpam(
+  envio: EnvioDeFormulario,
+): Promise<JuicioDeSpam> {
+  if (!hayClasificador()) return DEJAR_PASAR;
 
   const resultado = await preguntarAlClasificador(envio, {
     spam: {
@@ -39,8 +54,10 @@ export async function pareceSpam(envio: EnvioDeFormulario): Promise<boolean> {
       },
     },
   });
-  if (!resultado.ok) return false;
+  if (!resultado.ok) return DEJAR_PASAR;
 
   const probabilidad = resultado.respuestas?.spam?.noul;
-  return typeof probabilidad === "number" && probabilidad >= UMBRAL;
+  if (typeof probabilidad !== "number") return DEJAR_PASAR;
+
+  return { esSpam: probabilidad >= UMBRAL, probabilidad };
 }

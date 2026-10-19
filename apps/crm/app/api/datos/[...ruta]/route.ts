@@ -92,6 +92,16 @@ const RECURSOS_PROHIBIDOS = new Set([
   // Faqturia…). Solo por /api/conectores, que exige administrador y nunca
   // devuelve el secreto.
   "connectors",
+  // Constancias de lo que decidió el clasificador. Este puente escribe con
+  // la clave de servicio, así que servirlas aquí dejaría a cualquiera con
+  // sesión inventar o borrar una constancia — y una auditoría que el
+  // auditado puede editar no sirve de nada. Se leen por /api/ia/decisiones,
+  // que solo lee.
+  "ai_decisions",
+  // Reglas esperando el juicio del modelo. Insertar aquí una fila a mano
+  // equivaldría a hacer que el CRM ejecute la acción de una regla sobre la
+  // fila que uno elija: el despachador aplica lo que encuentre en la cola.
+  "automation_pending",
 ]);
 
 /** Recursos que el puente sirve sólo para lectura. */

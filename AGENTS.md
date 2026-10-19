@@ -97,7 +97,7 @@ src/
 └── App.tsx                 # Application entry point
 
 supabase/
-├── functions/              # Edge functions (user management, inbound email)
+├── functions/              # Edge functions (user management, note attachments)
 ├── migrations/             # Database migrations (auto-generated, do not edit directly)
 └── schemas/                # Declarative schema (source of truth for DB structure)
 ```
@@ -136,7 +136,6 @@ User data syncs between Supabase's `auth.users` table and the CRM's `sales` tabl
 
 Located in `supabase/functions/`:
 - User management (creating/updating users, account disabling)
-- Inbound email webhook processing
 
 #### Data Providers
 

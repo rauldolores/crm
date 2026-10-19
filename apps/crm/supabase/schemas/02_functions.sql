@@ -1241,6 +1241,7 @@ declare
   oportunidad bigint;
   ticket bigint;
   prioridad text;
+  texto_a_juzgar text;
 begin
   if pg_trigger_depth() > 1 then
     return null;
@@ -1274,15 +1275,21 @@ begin
 
   if tg_table_name = 'contacts' then
     contacto := new.id;
+    -- Un contacto recién creado no tiene texto que juzgar: su nota llega
+    -- después, en otra transacción. Por eso la interfaz no ofrece condición
+    -- para este disparador, y aquí queda null.
+    texto_a_juzgar := null;
   elsif tg_table_name = 'deals' then
     etapa := new.stage;
     contacto := new.contact_ids[1];
     oportunidad := new.id;
+    texto_a_juzgar := concat_ws(E'\n\n', new.name, new.description);
   elsif tg_table_name = 'tickets' then
     contacto := new.contact_id;
     oportunidad := new.deal_id;
     ticket := new.id;
     prioridad := new.priority;
+    texto_a_juzgar := concat_ws(E'\n\n', new.subject, new.description);
   end if;
 
   for regla in
@@ -1302,6 +1309,21 @@ begin
       if tg_table_name = 'tickets'
          and nullif(regla.trigger_params ->> 'priority', '') is not null
          and regla.trigger_params ->> 'priority' is distinct from prioridad then
+        continue;
+      end if;
+
+      -- Con condición no se actúa aquí: se encola para que la aplicación le
+      -- pregunte al modelo. Sin texto que juzgar la regla no se cumple nunca,
+      -- así que no se encola nada (mejor que encolar para responder «no»).
+      if nullif(regla.condition_text, '') is not null then
+        if nullif(texto_a_juzgar, '') is not null then
+          insert into crm.automation_pending
+            (organization_id, automation_id, contact_id, deal_id, ticket_id,
+             sales_id, texto)
+          values
+            (org, regla.id, contacto, oportunidad, ticket,
+             new.sales_id, texto_a_juzgar);
+        end if;
         continue;
       end if;
 
@@ -1895,3 +1917,124 @@ begin
   return new;
 end;
 $$;
+
+-- Aplica (o descarta) una fila de la cola. La llama el despachador con la
+-- clave de servicio después de preguntarle al modelo.
+--
+-- Todo el trabajo de escritura se queda aquí, en SQL, donde ya vivía: la ruta
+-- solo aporta el juicio. Y es idempotente — una fila ya resuelta no se vuelve
+-- a aplicar, porque un reintento no debe mandar dos correos.
+create or replace function crm.resolver_condicion_de_automatizacion(
+    pendiente_id bigint,
+    se_cumple boolean,
+    confianza numeric default null
+) returns boolean
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  fila crm.automation_pending;
+  regla crm.automations;
+  responsable bigint;
+begin
+  select * into fila
+    from crm.automation_pending
+   where id = pendiente_id
+     and resolved_at is null
+   for update;
+
+  if not found then
+    return false;
+  end if;
+
+  update crm.automation_pending
+     set resolved_at = now(),
+         matched = se_cumple,
+         confidence = confianza
+   where id = pendiente_id;
+
+  if not se_cumple then
+    return true;
+  end if;
+
+  select * into regla
+    from crm.automations
+   where id = fila.automation_id
+     and organization_id = fila.organization_id
+     and active;
+
+  -- La regla pudo apagarse o borrarse mientras la fila esperaba: entonces no
+  -- se actúa, que es lo que habría querido quien la apagó.
+  if not found then
+    return true;
+  end if;
+
+  if regla.action_type = 'assign_owner' then
+    responsable := nullif(regla.action_params ->> 'salesId', '')::bigint;
+    if responsable is not null then
+      if fila.ticket_id is not null then
+        update crm.tickets set sales_id = responsable where id = fila.ticket_id;
+      elsif fila.deal_id is not null then
+        update crm.deals set sales_id = responsable where id = fila.deal_id;
+      elsif fila.contact_id is not null then
+        update crm.contacts set sales_id = responsable where id = fila.contact_id;
+      end if;
+    end if;
+  else
+    perform crm.aplicar_accion_de_automatizacion(
+      regla, fila.contact_id, fila.deal_id, null, null, fila.sales_id,
+      fila.ticket_id
+    );
+  end if;
+
+  return true;
+end;
+$$;
+
+revoke all on function crm.resolver_condicion_de_automatizacion(bigint, boolean, numeric) from public;
+grant all on function crm.resolver_condicion_de_automatizacion(bigint, boolean, numeric) to service_role;
+
+-- Avisa a la aplicación de que hay condiciones que juzgar. Calcado de
+-- crm.despachar_correos, por el mismo motivo: la llamada al clasificador
+-- vive en TypeScript y Postgres no puede hacerla.
+create or replace function crm.despachar_condiciones() returns integer
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  pendientes integer;
+  destino text;
+  secreto text;
+begin
+  select count(*) into pendientes
+    from crm.automation_pending
+   where resolved_at is null
+     and attempts < max_attempts
+     and next_attempt_at <= now();
+
+  if pendientes = 0 then
+    return 0;
+  end if;
+
+  select value into destino from crm.internal_settings where key = 'app_url';
+  select value into secreto from crm.internal_settings where key = 'dispatch_secret';
+
+  if destino is null or secreto is null then
+    return 0;
+  end if;
+
+  perform net.http_post(
+    url := rtrim(destino, '/') || '/api/automatizaciones/condiciones',
+    body := '{}'::jsonb,
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'X-Vinqulia-Despacho', secreto
+    ),
+    timeout_milliseconds := 30000
+  );
+
+  return pendientes;
+end;
+$$;
+
+grant all on function crm.despachar_condiciones() to service_role;

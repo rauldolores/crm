@@ -1,5 +1,6 @@
+import { registrarDecisiones } from "@/lib/server/ia/auditoria";
 import { hayClasificador } from "@/lib/server/ia/clasificador";
-import { pareceSpam } from "@/lib/server/ia/spam";
+import { juzgarSpam } from "@/lib/server/ia/spam";
 import {
   contarUso,
   exigirCupo,
@@ -234,20 +235,41 @@ export async function POST(peticion: Request, { params }: Contexto) {
   // Lo que el señuelo no caza: el spam escrito para parecer un lead. Se
   // responde 200 sin crear nada, igual que con el señuelo, para no delatar
   // que se le detectó. Si el filtro no está disponible, deja pasar.
-  if (
-    await pareceSpam({
-      nombre: nombreCompleto,
-      correo,
-      empresa,
-      texto: [
-        asunto,
-        descripcion,
-        mensaje || construirNotaDeCalificacion(datos),
-      ]
-        .filter(Boolean)
-        .join("\n\n"),
-    })
-  ) {
+  const textoJuzgado = [
+    asunto,
+    descripcion,
+    mensaje || construirNotaDeCalificacion(datos),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const juicio = await juzgarSpam({
+    nombre: nombreCompleto,
+    correo,
+    empresa,
+    texto: textoJuzgado,
+  });
+
+  // El juicio se apunta con probabilidad y todo, se descarte o no: el lado
+  // que se deja pasar es lo que dice si el umbral está bien puesto, y el que
+  // se descarta no deja ningún otro rastro — por eso solo ahí se guarda un
+  // extracto de lo que escribió, que es lo único con lo que alguien podría
+  // revisar después si se tiró un cliente de verdad.
+  if (juicio.probabilidad !== null) {
+    await registrarDecisiones(formulario.organization_id, [
+      {
+        kind: "form_spam",
+        value: juicio.esSpam ? "true" : "false",
+        confianza: juicio.probabilidad,
+        aplicada: juicio.esSpam,
+        ...(juicio.esSpam
+          ? { detalle: `${nombreCompleto} <${correo}>: ${textoJuzgado}` }
+          : {}),
+      },
+    ]);
+  }
+
+  if (juicio.esSpam) {
     // El envío sí se apunta: es lo que mide la ventana de arriba, y sin esto
     // un bot podría insistir sin gastar nunca su cupo.
     await supabase.from("public_form_submissions").insert({
@@ -364,23 +386,42 @@ export async function POST(peticion: Request, { params }: Contexto) {
       descripcion,
     );
 
-    const { error: errorTicket } = await supabase.from("tickets").insert({
-      organization_id: formulario.organization_id,
-      subject: asunto,
-      description: descripcion,
-      status: "open",
-      source: "web_form",
-      contact_id: contacto.id,
-      company_id: companyId,
-      // Sin sugerencia se dejan los valores por defecto de la tabla, que es
-      // lo que pasaba antes de que esto existiera.
-      ...(sugerencia?.priority ? { priority: sugerencia.priority } : {}),
-      ...(sugerencia?.category ? { category: sugerencia.category } : {}),
-    });
-    if (errorTicket) {
+    const { data: ticket, error: errorTicket } = await supabase
+      .from("tickets")
+      .insert({
+        organization_id: formulario.organization_id,
+        subject: asunto,
+        description: descripcion,
+        status: "open",
+        source: "web_form",
+        contact_id: contacto.id,
+        company_id: companyId,
+        // Sin sugerencia se dejan los valores por defecto de la tabla, que es
+        // lo que pasaba antes de que esto existiera.
+        ...(sugerencia?.priority ? { priority: sugerencia.priority } : {}),
+        ...(sugerencia?.category ? { category: sugerencia.category } : {}),
+      })
+      .select("id")
+      .single();
+    if (errorTicket || !ticket) {
       return Response.json(
         { message: "No se pudo abrir el ticket." },
         { status: 500 },
+      );
+    }
+
+    // Qué eligió el modelo y con cuánta confianza, campo a campo, apuntado
+    // contra el ticket: así se puede ver después si una prioridad la puso una
+    // máquina dudando, y con la serie entera se decide si mover el umbral. El
+    // texto no se guarda aquí — está en el ticket, que es donde hay que
+    // mirarlo.
+    if (sugerencia?.decisiones.length) {
+      await registrarDecisiones(
+        formulario.organization_id,
+        sugerencia.decisiones.map((d) => ({
+          ...d,
+          entidad: { tabla: "tickets", id: ticket.id as number },
+        })),
       );
     }
   } else {
