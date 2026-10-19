@@ -697,6 +697,7 @@ declare
   loser crm.companies%rowtype;
   winner_affiliate bigint;
   loser_affiliate bigint;
+  afiliado_final bigint;
 begin
   if loser_id = winner_id then
     raise exception 'Una empresa no se puede fusionar consigo misma';
@@ -710,6 +711,10 @@ begin
     raise exception 'Las empresas son de organizaciones distintas';
   end if;
 
+  -- La fusión mueve atribuciones a propósito: se autoriza para toda la
+  -- transacción (ver crm.conservar_afiliado_de_referencia).
+  perform set_config('crm.cambio_de_afiliado_autorizado', 'on', true);
+
   -- 1. Todo lo que apunta a la perdedora pasa a la ganadora. Borrarla sin
   -- esto arrastraría contactos, oportunidades y tickets (on delete cascade)
   -- o dejaría cotizaciones y facturas sin empresa (set null).
@@ -720,6 +725,14 @@ begin
   update crm.contracts set company_id = winner_id where company_id = loser_id;
   update crm.purchases set company_id = winner_id where company_id = loser_id;
   update crm.invoices set company_id = winner_id where company_id = loser_id;
+  -- Si la ganadora ya tiene afiliado, la atribución vigente de la perdedora
+  -- termina aquí: una empresa sólo puede tener una vigente.
+  if winner.referred_by_affiliate_id is not null then
+    update crm.affiliate_attributions
+       set status = 'reemplazada', ended_at = now(), end_reason = 'Fusión de empresas'
+     where company_id = loser_id and status = 'vigente';
+  end if;
+  update crm.affiliate_attributions set company_id = winner_id where company_id = loser_id;
 
   -- 2. Afiliados: la ganadora conserva el suyo. Si no tiene, hereda el de
   -- la perdedora; si las dos tienen, los referidos por el de la perdedora
@@ -732,6 +745,8 @@ begin
     else
       update crm.companies set referred_by_affiliate_id = winner_affiliate
         where referred_by_affiliate_id = loser_affiliate;
+      update crm.affiliate_attributions set affiliate_id = winner_affiliate
+        where affiliate_id = loser_affiliate;
     end if;
   end if;
 
@@ -766,9 +781,21 @@ begin
     created_at = least(winner.created_at, loser.created_at)
   where id = winner_id;
 
+  -- 3b. Historial: si las dos traían atribución distinta, la de la
+  -- perdedora deja de estar vigente (ganó la de la ganadora).
+  select referred_by_affiliate_id into afiliado_final from crm.companies where id = winner_id;
+  update crm.affiliate_attributions
+     set status = 'reemplazada',
+         ended_at = now(),
+         end_reason = 'Fusión de empresas'
+   where company_id = winner_id
+     and status = 'vigente'
+     and affiliate_id is distinct from afiliado_final;
+
   -- 4. Adiós a la perdedora.
   delete from crm.companies where id = loser_id;
 
+  perform set_config('crm.cambio_de_afiliado_autorizado', 'off', true);
   return winner_id;
 end;
 $$;
@@ -1580,6 +1607,7 @@ declare
   contacto bigint;
   empresa bigint;
   codigo text;
+  comision numeric;
 begin
   if old.stage is not distinct from new.stage then
     return null;
@@ -1625,16 +1653,18 @@ begin
     end if;
 
     codigo := crm.generar_codigo_referido_disponible(org, contacto);
+    -- Tasa del programa: la configurada en el módulo, o 15%.
+    comision := coalesce((cfg ->> 'defaultCommission')::numeric, 15);
 
-    insert into crm.affiliates (organization_id, contact_id, company_id, deal_id, referral_code)
-    values (org, contacto, empresa, new.id, codigo)
+    insert into crm.affiliates (organization_id, contact_id, company_id, deal_id, referral_code, commission_percentage)
+    values (org, contacto, empresa, new.id, codigo, comision)
     on conflict (organization_id, contact_id) do update
       set company_id = excluded.company_id,
           deal_id = excluded.deal_id,
           updated_at = now();
-      -- referral_code no se toca en el conflicto: si el contacto ya era
-      -- afiliado, conserva el código que ya tenía (posiblemente
-      -- personalizado), en vez de reemplazarlo por el recién generado.
+      -- Ni referral_code ni commission_percentage se tocan en el conflicto:
+      -- si el contacto ya era afiliado conserva su código y la tasa que se
+      -- le haya negociado.
   exception when others then
     null;
   end;
@@ -1646,23 +1676,162 @@ $$;
 grant all on function crm.gestionar_modulo_afiliados() to authenticated;
 grant all on function crm.gestionar_modulo_afiliados() to service_role;
 
--- La atribución de un cliente a un afiliado es de PRIMER TOQUE: una vez
--- asignada no se reasigna. Sin esto, cualquier edición posterior de la
--- empresa (o un segundo formulario con otro código de referido) podría
--- cambiar a quién le toca la comisión de un cliente que ya estaba atribuido.
---
--- Sí se permite quitarla explícitamente poniéndola a NULL: es la vía para
--- corregir una atribución equivocada.
+-- La única puerta para cambiar a qué afiliado pertenece un cliente: aplica
+-- el primer toque por enlace, exige motivo al reasignar a mano y escribe el
+-- historial (crm.affiliate_attributions). Ver la migración
+-- 20261019032939_afiliados_fase_1.sql.
+create or replace function crm.asignar_afiliado(
+    p_organizacion uuid,
+    p_empresa bigint,
+    p_afiliado bigint,
+    p_origen text,
+    p_actor bigint default null,
+    p_motivo text default null,
+    p_aplicacion text default null
+) returns text
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  v_org uuid;
+  v_actual bigint;
+  v_codigo text;
+  v_motivo text := nullif(trim(coalesce(p_motivo, '')), '');
+begin
+  if p_origen not in ('enlace', 'manual', 'importacion') then
+    raise exception 'Origen de atribución desconocido: %', p_origen
+      using errcode = '22023';
+  end if;
+
+  select organization_id, referred_by_affiliate_id
+    into v_org, v_actual
+    from crm.companies
+   where id = p_empresa
+     for update;
+
+  -- Misma respuesta si no existe o es de otra organización: no se revela
+  -- la existencia de identificadores ajenos.
+  if v_org is null or v_org <> p_organizacion then
+    raise exception 'Empresa no encontrada' using errcode = 'P0002';
+  end if;
+
+  if p_afiliado is null and p_origen <> 'manual' then
+    raise exception 'Un enlace o una importación siempre traen afiliado'
+      using errcode = '22023';
+  end if;
+
+  if p_afiliado is not null then
+    select referral_code into v_codigo
+      from crm.affiliates
+     where id = p_afiliado
+       and organization_id = p_organizacion
+       and active;
+    if v_codigo is null then
+      raise exception 'Afiliado no encontrado o inactivo' using errcode = 'P0002';
+    end if;
+  end if;
+
+  if p_afiliado is not distinct from v_actual then
+    return 'sin_cambios';
+  end if;
+
+  -- Empresa sin afiliado: la liga cualquiera de los orígenes.
+  if v_actual is null then
+    perform set_config('crm.cambio_de_afiliado_autorizado', 'on', true);
+    update crm.companies set referred_by_affiliate_id = p_afiliado where id = p_empresa;
+    perform set_config('crm.cambio_de_afiliado_autorizado', 'off', true);
+
+    insert into crm.affiliate_attributions
+        (organization_id, company_id, affiliate_id, referral_code, source, status,
+         origin_application, actor_sales_id, reason)
+    values
+        (p_organizacion, p_empresa, p_afiliado, v_codigo, p_origen, 'vigente',
+         p_aplicacion, p_actor, v_motivo);
+    return 'asignada';
+  end if;
+
+  -- Ya tenía otro afiliado. Por enlace o importación gana el primer toque:
+  -- se deja constancia del intento y no cambia nada.
+  if p_origen <> 'manual' then
+    insert into crm.affiliate_attributions
+        (organization_id, company_id, affiliate_id, referral_code, source, status,
+         origin_application, actor_sales_id, reason, ended_at)
+    values
+        (p_organizacion, p_empresa, p_afiliado, v_codigo, p_origen, 'rechazada',
+         p_aplicacion, p_actor, 'La empresa ya tenía afiliado (primer toque)', now());
+    return 'rechazada';
+  end if;
+
+  -- Cambio o retiro manual: sólo con motivo, y queda a nombre de quien lo hizo.
+  if v_motivo is null then
+    raise exception 'Hace falta un motivo para cambiar o quitar el afiliado de un cliente'
+      using errcode = '22023';
+  end if;
+
+  update crm.affiliate_attributions
+     set status = case when p_afiliado is null then 'retirada' else 'reemplazada' end,
+         ended_at = now(),
+         ended_by_sales_id = p_actor,
+         end_reason = v_motivo
+   where company_id = p_empresa
+     and status = 'vigente';
+
+  perform set_config('crm.cambio_de_afiliado_autorizado', 'on', true);
+  update crm.companies set referred_by_affiliate_id = p_afiliado where id = p_empresa;
+  perform set_config('crm.cambio_de_afiliado_autorizado', 'off', true);
+
+  if p_afiliado is null then
+    return 'retirada';
+  end if;
+
+  insert into crm.affiliate_attributions
+      (organization_id, company_id, affiliate_id, referral_code, source, status,
+       origin_application, actor_sales_id, reason)
+  values
+      (p_organizacion, p_empresa, p_afiliado, v_codigo, 'manual', 'vigente',
+       p_aplicacion, p_actor, v_motivo);
+  return 'reasignada';
+end;
+$$;
+
+-- Recibe la organización como parámetro, así que nunca puede quedar al
+-- alcance de un cliente: sólo la llaman rutas de servidor que ya validaron
+-- la sesión (/api/afiliados/asignar, /api/afiliados/atribuir).
+revoke all on function crm.asignar_afiliado(uuid, bigint, bigint, text, bigint, text, text) from public, anon, authenticated;
+grant execute on function crm.asignar_afiliado(uuid, bigint, bigint, text, bigint, text, text) to service_role;
+
+-- La atribución de un cliente a un afiliado sólo cambia por
+-- crm.asignar_afiliado (o crm.merge_companies), que marcan la transacción
+-- con crm.cambio_de_afiliado_autorizado. Cualquier otra escritura se rechaza
+-- con error: antes un cambio se revertía en silencio y quien lo hacía creía
+-- haberlo guardado.
 create or replace function crm.conservar_afiliado_de_referencia() returns trigger
     language plpgsql
     set search_path = ''
     as $$
 begin
-  if old.referred_by_affiliate_id is not null
-     and new.referred_by_affiliate_id is not null
-     and new.referred_by_affiliate_id is distinct from old.referred_by_affiliate_id
-  then
-    new.referred_by_affiliate_id := old.referred_by_affiliate_id;
+  if coalesce(current_setting('crm.cambio_de_afiliado_autorizado', true), '') = 'on' then
+    return new;
+  end if;
+
+  if tg_op = 'INSERT' then
+    if new.referred_by_affiliate_id is not null then
+      raise exception 'El afiliado de un cliente se asigna con crm.asignar_afiliado, no al crear la empresa'
+        using errcode = '42501';
+    end if;
+    return new;
+  end if;
+
+  if new.referred_by_affiliate_id is distinct from old.referred_by_affiliate_id then
+    -- Borrar un afiliado deja sus empresas en NULL (on delete set null);
+    -- eso no es un cambio de atribución que haya que autorizar.
+    if new.referred_by_affiliate_id is null
+       and not exists (select 1 from crm.affiliates where id = old.referred_by_affiliate_id)
+    then
+      return new;
+    end if;
+    raise exception 'El afiliado de un cliente sólo se cambia con crm.asignar_afiliado'
+      using errcode = '42501';
   end if;
   return new;
 end;

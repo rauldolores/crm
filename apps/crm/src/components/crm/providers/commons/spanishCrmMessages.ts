@@ -1628,7 +1628,7 @@ export const spanishCrmMessages = {
         commercial_title: "Condiciones comerciales",
         default_commission: "Comisión por defecto (%)",
         default_commission_help:
-          "Se usa como punto de partida al crear un afiliado nuevo; se puede ajustar por afiliado después.",
+          "Se usa como punto de partida al crear un afiliado nuevo (15% si lo dejas vacío); se puede negociar otra por afiliado después.",
         url_title: "URL de referidos",
         url_template: "Plantilla de la URL",
         url_template_help:
@@ -1651,6 +1651,77 @@ export const spanishCrmMessages = {
         referral_url: "URL de referidos",
         referral_url_not_configured:
           "Configura la plantilla de URL en Módulos > Afiliados > Configurar módulo para verla aquí.",
+        mode: "Modo de trabajo",
+        mode_help:
+          "Comisionista: Kontrolia le cobra al cliente y le paga comisión al afiliado. Revendedor: el afiliado compra con descuento y le cobra él al cliente.",
+        mode_comisionista: "Comisionista",
+        mode_revendedor: "Revendedor",
+        commission_months: "Meses con comisión",
+        commission_months_help:
+          "Cuántos meses genera comisión cada cliente desde su primer pago. Vacío = de por vida.",
+        commission_months_lifetime: "De por vida",
+        commission_months_value: "%{smart_count} mes |||| %{smart_count} meses",
+      },
+      clients: {
+        title: "Clientes ligados",
+        empty:
+          "Este afiliado todavía no tiene clientes. Se ligan desde la ficha de cada empresa, o solos cuando alguien llega con su enlace de referido.",
+        linked_on: "Ligado el %{date}",
+        history_title: "Historial de atribuciones",
+        history_empty: "Sin movimientos todavía.",
+        by: "por %{name}",
+        reason: "Motivo: %{reason}",
+        end_reason: "Terminó: %{reason}",
+        source: {
+          enlace: "Enlace de referido",
+          manual: "Manual",
+          importacion: "Importación",
+          fusion: "Fusión de empresas",
+        },
+        status: {
+          vigente: "Vigente",
+          reemplazada: "Reemplazada",
+          retirada: "Retirada",
+          rechazada: "Rechazada (ya tenía afiliado)",
+        },
+      },
+      rates: {
+        title: "Tasas por solución",
+        intro:
+          "Si se negoció una tasa distinta para alguna solución, regístrala aquí. Las demás usan la comisión general del afiliado.",
+        empty: "Todas las soluciones usan la comisión general.",
+        add: "Agregar tasa",
+        application: "Solución",
+        percentage: "Comisión (%)",
+        saved: "Tasa guardada",
+        deleted: "Tasa eliminada",
+        applications: {
+          facturacion: "Faqturia (facturación)",
+          crm: "Vinqulia (CRM)",
+          "nodia-agents": "Nodia Agents",
+          aduaniax: "AduaniaX (comercio exterior)",
+          diagnostico: "Diagnóstico Kontrolia",
+        },
+      },
+      company: {
+        title: "Afiliado",
+        none: "Sin afiliado",
+        link: "Ligar a un afiliado",
+        change: "Cambiar",
+        remove: "Quitar",
+        dialog_title_link: "Ligar este cliente a un afiliado",
+        dialog_title_change: "Cambiar el afiliado de este cliente",
+        dialog_title_remove: "Quitar el afiliado de este cliente",
+        dialog_intro_change:
+          "Las comisiones que ya generó se quedan con el afiliado actual; sólo lo que pague a partir de ahora cuenta para el nuevo.",
+        affiliate: "Afiliado",
+        reason: "Motivo",
+        reason_help:
+          "Obligatorio: queda en el historial para resolver cualquier aclaración con los afiliados.",
+        save: "Guardar",
+        saved: "Afiliado guardado",
+        removed: "Afiliado quitado",
+        filter: "Afiliado",
       },
       commissions: {
         title: "Negocio referido",

@@ -507,10 +507,51 @@ export type Affiliate = {
   referral_code: string;
   commission_percentage?: number | null;
   active: boolean;
+  /** comisionista: Kontrolia cobra y paga comisión. revendedor: compra con descuento. */
+  mode?: AffiliateMode;
+  /** Meses que cada cliente genera comisión. null = de por vida. */
+  commission_months?: number | null;
   kontrolia_auth_user_id?: string | null;
   sales_id?: Identifier | null;
   created_at?: string;
   updated_at?: string;
+} & Pick<RaRecord, "id">;
+
+export type AffiliateMode = "comisionista" | "revendedor";
+
+/** Soluciones del ecosistema con tasa propia (crm.affiliate_rates). */
+export type AffiliateApplication =
+  | "facturacion"
+  | "crm"
+  | "nodia-agents"
+  | "aduaniax"
+  | "diagnostico";
+
+/** Excepción a la tasa general de un afiliado para una solución. */
+export type AffiliateRate = {
+  affiliate_id: Identifier;
+  application_slug: AffiliateApplication;
+  percentage: number;
+  created_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Una vez que una empresa quedó (o intentó quedar) ligada a un afiliado
+ * (crm.affiliate_attributions, solo lectura: lo escribe la base).
+ */
+export type AffiliateAttribution = {
+  company_id: Identifier;
+  affiliate_id?: Identifier | null;
+  referral_code?: string | null;
+  source: "enlace" | "manual" | "importacion" | "fusion";
+  status: "vigente" | "reemplazada" | "retirada" | "rechazada";
+  origin_application?: string | null;
+  actor_sales_id?: Identifier | null;
+  reason?: string | null;
+  created_at: string;
+  ended_at?: string | null;
+  ended_by_sales_id?: Identifier | null;
+  end_reason?: string | null;
 } & Pick<RaRecord, "id">;
 
 /**

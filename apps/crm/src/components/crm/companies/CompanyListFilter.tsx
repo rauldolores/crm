@@ -1,4 +1,4 @@
-import { Building, Tag, Truck, Users } from "lucide-react";
+import { Building, Handshake, Tag, Truck, Users } from "lucide-react";
 import {
   FilterLiveForm,
   useGetIdentity,
@@ -13,10 +13,21 @@ import { FilterCategory } from "../filters/FilterCategory";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
+import type { Affiliate } from "../types";
 
 export const CompanyListFilter = () => {
   const { identity } = useGetIdentity();
-  const { companySectors } = useConfigurationContext();
+  const { companySectors, modules } = useConfigurationContext();
+  const conAfiliados = !!modules.affiliates?.active;
+  const { data: afiliados } = useGetList<Affiliate>(
+    "affiliates",
+    {
+      filter: { active: true },
+      pagination: { page: 1, perPage: 10 },
+      sort: { field: "referral_code", order: "ASC" },
+    },
+    { enabled: conAfiliados },
+  );
   const translate = useTranslate();
   const { data: etiquetas } = useGetList("tags", {
     pagination: { page: 1, perPage: 10 },
@@ -70,6 +81,22 @@ export const CompanyListFilter = () => {
           value={{ sales_id: identity?.id }}
         />
       </FilterCategory>
+
+      {conAfiliados && !!afiliados?.length && (
+        <FilterCategory
+          icon={<Handshake className="h-4 w-4" />}
+          label="crm.affiliates.company.filter"
+        >
+          {afiliados.map((afiliado) => (
+            <ToggleFilterButton
+              className="w-full justify-between"
+              key={afiliado.id}
+              label={afiliado.referral_code}
+              value={{ referred_by_affiliate_id: afiliado.id }}
+            />
+          ))}
+        </FilterCategory>
+      )}
 
       {!!etiquetas?.length && (
         <FilterCategory

@@ -5,6 +5,7 @@ import {
   getKontroliaAccessToken,
   getKontroliaClient,
   logoutKontroliaAuth,
+  urlDeSalidaCentral,
 } from "@/lib/kontrolia-auth/client";
 import { OAUTH_LOGIN_PATH } from "@/lib/kontrolia-auth/oauth";
 import { isKontroliaAuthConfigured } from "@/lib/kontrolia-auth/config";
@@ -199,8 +200,29 @@ export const getAuthProvider = (): AuthProvider => {
     logout: async (params) => {
       clearAuthCache();
       if (isKontroliaAuthConfigured()) {
+        // Si hay sesión, esto es un "Salir" de verdad y hay algo que cerrar en
+        // el servidor central. Si no la hay, a ra-core le llegó un visitante
+        // anónimo y solo hay que mandarlo a identificarse.
+        //
+        // La distinción NO es cosmética: devolver siempre la URL del servidor
+        // central ciclaba la aplicación entera. `CoreAdminRoutes` monta
+        // `<Route path="*" element={<LogoutOnMount/>}/>` como comodín para
+        // anónimos, y `LogoutOnMount` llama a `logout()` SIN destino, así que
+        // ra-core usa el que devuelve esta función (ver `useLogout`:
+        // `redirectFromCaller || redirectFromLogout || loginUrl`). Resultado:
+        // raíz → /api/auth/logout del central → 307 de vuelta a la raíz →
+        // anónimo otra vez → bucle infinito de recargas, sin llegar nunca a la
+        // pantalla de acceso. Pasó en producción del 2026-10-16 al 19.
+        //
+        // No basta con mirar `checkAuth`: ahí ra-core sí manda su propio
+        // destino, por eso el fallo solo se veía por la ruta comodín.
+        const habiaSesion = Boolean(await getKontroliaAccessToken());
         await logoutKontroliaAuth();
-        return;
+        // Una URL absoluta hace que ra-core navegue con window.location, que es
+        // lo que cierra también la sesión del servidor central. Con la sesión ya
+        // vencida se devuelve undefined y ra-core va a su pantalla de acceso,
+        // así que caducar no obliga a volver a escribir la contraseña.
+        return habiaSesion ? urlDeSalidaCentral() : undefined;
       }
       return baseAuthProvider.logout(params);
     },

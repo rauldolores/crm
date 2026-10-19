@@ -26,6 +26,7 @@ import { getContactTimeline } from "../commons/contactTimeline";
 import { getCompanyAvatar } from "../commons/getCompanyAvatar";
 import { getContactAvatar } from "../commons/getContactAvatar";
 import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
+import { asignarAfiliado } from "../commons/asignarAfiliado";
 import { mergeCompanies } from "../commons/mergeCompanies";
 import { mergeContacts } from "../commons/mergeContacts";
 import {
@@ -281,6 +282,13 @@ export const createDataProvider = ({
     },
     mergeCompanies: async (loserId: Identifier, winnerId: Identifier) => {
       return mergeCompanies(loserId, winnerId, baseDataProvider);
+    },
+    asignarAfiliado: async (
+      companyId: Identifier,
+      affiliateId: Identifier | null,
+      reason?: string,
+    ) => {
+      return asignarAfiliado(companyId, affiliateId, reason, baseDataProvider);
     },
     moverOportunidad: async (
       deal: Deal,

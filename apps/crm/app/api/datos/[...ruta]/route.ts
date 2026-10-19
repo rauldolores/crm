@@ -104,6 +104,19 @@ const RECURSOS_PROHIBIDOS = new Set([
   "automation_pending",
 ]);
 
+/** Recursos que el puente sirve sólo para lectura. */
+const SOLO_LECTURA = new Set(["affiliate_attributions"]);
+
+/**
+ * Recursos del programa de afiliados que un afiliado vinculado no ve: las
+ * tasas y el historial de atribuciones son de la administración del
+ * programa, no del afiliado.
+ */
+const AJENOS_AL_AFILIADO = new Set([
+  "affiliate_rates",
+  "affiliate_attributions",
+]);
+
 /** Tablas y vistas que pertenecen a una organización. */
 const CON_DUENO = new Set([
   "automations",
@@ -130,6 +143,8 @@ const CON_DUENO = new Set([
   "contact_timeline",
   "affiliates",
   "affiliate_commissions",
+  "affiliate_rates",
+  "affiliate_attributions",
   "email_templates",
   "email_outbox",
   "contracts",
@@ -218,6 +233,25 @@ async function reenviar(peticion: Request, ruta: string[]) {
     return esError(404, "Recurso no disponible.");
   }
 
+  // Las funciones de la base (/rpc/...) no pasan por este puente. Corren con
+  // la clave de servicio y varias reciben identificadores sin comprobar la
+  // organización de quien llama (merge_companies, asignar_afiliado…); cada
+  // una tiene su propia ruta /api que sí la comprueba.
+  if (ruta.includes("rpc")) {
+    return esError(404, "Recurso no disponible.");
+  }
+
+  // El historial de atribuciones de afiliados sólo lo escribe la base
+  // (crm.asignar_afiliado). Servirlo para escritura con la clave de servicio
+  // dejaría a cualquiera inventar o borrar la evidencia de una disputa.
+  if (
+    SOLO_LECTURA.has(recurso) &&
+    peticion.method !== "GET" &&
+    peticion.method !== "HEAD"
+  ) {
+    return esError(405, "Este recurso es de solo lectura.");
+  }
+
   // PostgREST permite incrustar relaciones (?select=*,sales(*)); una clave
   // de API nunca puede, para que su alcance real sea siempre el recurso de
   // la URL y no dependa de lo que ese recurso tenga como FK.
@@ -235,6 +269,9 @@ async function reenviar(peticion: Request, ruta: string[]) {
     organizacionId,
     usuarioId,
   );
+  if (salesIdDelAfiliado != null && AJENOS_AL_AFILIADO.has(recurso)) {
+    return esError(404, "Recurso no disponible.");
+  }
 
   const parametros = new URLSearchParams(origen.search);
 

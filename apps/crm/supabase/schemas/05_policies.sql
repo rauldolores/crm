@@ -342,6 +342,28 @@ create policy "Affiliates can see their own row" on crm.affiliates
     for select to authenticated
     using (kontrolia_auth_user_id = auth.uid());
 
+alter table crm.affiliate_rates enable row level security;
+create policy "Affiliate rates are scoped to the organization" on crm.affiliate_rates
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Affiliate rates are created in the organization" on crm.affiliate_rates
+    for insert to authenticated
+    with check (organization_id = crm.current_organization_id());
+create policy "Affiliate rates are updated within the organization" on crm.affiliate_rates
+    for update to authenticated
+    using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Affiliate rates are deleted within the organization" on crm.affiliate_rates
+    for delete to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Historial de atribuciones: sólo lectura. Lo escriben crm.asignar_afiliado y
+-- crm.merge_companies (security definer).
+alter table crm.affiliate_attributions enable row level security;
+create policy "Affiliate attributions are scoped to the organization" on crm.affiliate_attributions
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+
 -- Webhook deliveries
 -- Solo lectura, para poder consultar qué se envió y qué falló. La cola la
 -- escribe el disparador y la gestiona el despachador, ambos SECURITY DEFINER;

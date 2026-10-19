@@ -70,6 +70,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/affiliates/AffiliateClients.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/affiliates/AffiliateEdit.tsx",
           "type": "registry:component"
         },
@@ -79,6 +83,10 @@
         },
         {
           "path": "src/components/crm/affiliates/AffiliateList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/AffiliateRates.tsx",
           "type": "registry:component"
         },
         {
@@ -135,6 +143,10 @@
         },
         {
           "path": "src/components/crm/companies/AutocompleteCompanyInput.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/companies/CompanyAffiliate.tsx",
           "type": "registry:component"
         },
         {
@@ -958,6 +970,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/providers/commons/asignarAfiliado.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/providers/commons/attachments.ts",
           "type": "registry:component"
         },
@@ -1511,6 +1527,10 @@
         },
         {
           "path": "src/lib/server/afiliadoDeLaSesion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/afiliados/asignarAfiliado.ts",
           "type": "registry:lib"
         },
         {
