@@ -314,7 +314,10 @@ select
     coalesce(k.nb_one_time_contracts, 0) as nb_one_time_contracts,
     coalesce(k.one_time_amount, 0) as one_time_amount,
     coalesce(g.nb_won_deals, 0) as nb_won_deals,
-    coalesce(g.won_amount, 0) as won_amount
+    coalesce(g.won_amount, 0) as won_amount,
+    -- De dónde viene la empresa (kontrolia_auth = se sincroniza sola).
+    c.source,
+    c.external_id
 from crm.companies c
 left join lateral (
     select count(*) as nb_purchases,

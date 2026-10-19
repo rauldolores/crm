@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import {
   Form,
   RecordContextProvider,
@@ -30,6 +30,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type {
   Company,
   Contract,
+  ContractEvent,
   CustomerSummary,
   Purchase,
   PurchaseItem,
@@ -44,7 +45,15 @@ import { RiesgoDeCliente } from "./RiesgoDeCliente";
  * Desde aquí también se registran a mano un contrato o una compra. Es el
  * camino para quien no tenga un sistema externo conectado; quien lo tenga,
  * lo alimenta por la API de ingesta y aquí solo consulta.
+ *
+ * Las empresas que llegan de KontrolIA Auth (los clientes de KONTROLIA) se
+ * sincronizan solas: sus contratos dicen qué plan tienen en cada producto,
+ * con extras, vigencia y forma de cobro, y su historial llega del origen.
+ * Lo sincronizado no se edita aquí: el siguiente aviso lo sobrescribiría.
  */
+
+/** Origen de lo que sincroniza KontrolIA Auth (ver /api/integraciones). */
+const ORIGEN_KONTROLIA = "kontrolia_auth";
 
 const PERIODOS = [
   { id: "monthly", name: "crm.customers.period.monthly" },
@@ -80,6 +89,10 @@ const useImporte = () => {
 
 const fecha = (valor?: string | null) =>
   valor ? new Date(`${valor}T00:00:00`).toLocaleDateString() : "—";
+
+/** Fecha de un instante (timestamptz), como la ve quien consulta. */
+const fechaDeInstante = (valor?: string | null) =>
+  valor ? new Date(valor).toLocaleDateString() : "—";
 
 /**
  * Recurrente es lo que tiene periodicidad. Un contrato de pago único —o uno
@@ -130,17 +143,44 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
     pagination: { page: 1, perPage: 100 },
   });
 
+  const { data: historial } = useGetList<ContractEvent>("contract_events", {
+    filter: { company_id: empresa.id },
+    sort: { field: "occurred_at", order: "DESC" },
+    pagination: { page: 1, perPage: 100 },
+  });
+
+  const sincronizada =
+    resumen?.source === ORIGEN_KONTROLIA ||
+    (contratos ?? []).some((c) => c.source === ORIGEN_KONTROLIA);
+
   return (
     <div className="flex flex-col gap-6 pt-2">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <RecordContextProvider value={empresa}>
-          <EtapaDeCliente />
-        </RecordContextProvider>
+        <div className="flex flex-wrap items-center gap-2">
+          <RecordContextProvider value={empresa}>
+            <EtapaDeCliente />
+          </RecordContextProvider>
+          {sincronizada && (
+            <Badge
+              variant="outline"
+              title={translate("crm.customers.kontrolia.synced_help")}
+            >
+              <RefreshCw />
+              {translate("crm.customers.kontrolia.synced_badge")}
+            </Badge>
+          )}
+        </div>
         <div className="flex gap-2">
           <NuevoContrato empresaId={empresa.id} />
           <NuevaCompra empresaId={empresa.id} />
         </div>
       </div>
+
+      {sincronizada && (
+        <p className="text-xs text-muted-foreground">
+          {translate("crm.customers.kontrolia.synced_help")}
+        </p>
+      )}
 
       {resumen && <RiesgoDeCliente resumen={resumen} />}
 
@@ -228,11 +268,149 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
           ))
         )}
       </section>
+
+      {/* El historial lo escribe la integración (KontrolIA Auth): cambios de
+          plan, renovaciones, extras y cortesías, del más nuevo al más viejo. */}
+      {!!historial?.length && (
+        <section className="space-y-2">
+          <h6 className="text-sm font-semibold">
+            {translate("crm.customers.kontrolia.history")}
+          </h6>
+          <ul className="divide-y rounded-md border text-sm">
+            {historial.map((evento) => (
+              <FilaDeHistorial
+                key={evento.id}
+                evento={evento}
+                contrato={(contratos ?? []).find(
+                  (c) => c.id === evento.contract_id,
+                )}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+};
+
+/** Nombre del producto: lo que va antes del « · » en el nombre del contrato. */
+const productoDe = (contrato: Contract) =>
+  contrato.name.split(" · ")[0] || contrato.application_slug || contrato.name;
+
+const FilaDeHistorial = ({
+  evento,
+  contrato,
+}: {
+  evento: ContractEvent;
+  contrato?: Contract;
+}) => {
+  const importe = useImporte();
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+      <div>
+        <p className="font-medium">{evento.title}</p>
+        <p className="text-xs text-muted-foreground">
+          {fechaDeInstante(evento.occurred_at)}
+          {contrato ? ` · ${productoDe(contrato)}` : ""}
+        </p>
+      </div>
+      {evento.amount != null && (
+        <span className="font-medium">{importe(evento.amount)}</span>
+      )}
+    </li>
+  );
+};
+
+/**
+ * Contrato de un producto de KONTROLIA (llega de KontrolIA Auth): plan,
+ * extras, vigencia, precio del periodo y forma de cobro.
+ */
+const FilaDeProducto = ({ contrato }: { contrato: Contract }) => {
+  const translate = useTranslate();
+  const importe = useImporte();
+  const activo = contrato.status === "active";
+  const vigencia = activo
+    ? contrato.renews_on
+      ? translate("crm.customers.kontrolia.expires_on", {
+          date: fecha(contrato.renews_on),
+        })
+      : translate("crm.customers.kontrolia.no_end")
+    : contrato.ended_on
+      ? translate("crm.customers.kontrolia.expired_on", {
+          date: fecha(contrato.ended_on),
+        })
+      : translate("crm.customers.kontrolia.no_end");
+  const cobro =
+    contrato.provider === "stripe"
+      ? translate("crm.customers.kontrolia.provider_stripe")
+      : contrato.provider === "manual"
+        ? translate("crm.customers.kontrolia.provider_manual")
+        : null;
+  const periodo = contrato.billing_period ?? "one_time";
+  const extras = contrato.addons ?? [];
+
+  return (
+    <div className="space-y-2 rounded-md border p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">{productoDe(contrato)}</p>
+          {contrato.plan_name && (
+            <Badge variant="secondary">
+              {translate("crm.customers.kontrolia.plan", {
+                plan: contrato.plan_name,
+              })}
+            </Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-medium">
+            {importe(contrato.amount)}{" "}
+            <span className="text-xs font-normal text-muted-foreground">
+              {translate(`crm.customers.kontrolia.per_period.${periodo}`)}
+            </span>
+          </span>
+          <Badge variant={activo ? "default" : "secondary"}>
+            {translate(`crm.customers.contract_status.${contrato.status}`)}
+          </Badge>
+        </div>
+      </div>
+
+      {extras.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1">
+          <span className="text-xs text-muted-foreground">
+            {translate("crm.customers.kontrolia.addons")}:
+          </span>
+          {extras.map((extra, i) => (
+            <Badge key={extra.addon_id ?? extra.slug ?? i} variant="outline">
+              {extra.name ?? extra.slug}
+              {extra.included
+                ? ` · ${translate("crm.customers.kontrolia.addon_included")}`
+                : ""}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      <p className="text-xs text-muted-foreground">
+        {[vigencia, cobro].filter(Boolean).join(" · ")}
+        {contrato.notes ? ` · ${contrato.notes}` : ""}
+      </p>
+      {contrato.source === ORIGEN_KONTROLIA && (
+        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+          <RefreshCw className="h-3 w-3" />
+          {translate("crm.customers.kontrolia.auto_contract")}
+        </p>
+      )}
     </div>
   );
 };
 
 const FilaDeContrato = ({ contrato }: { contrato: Contract }) => {
+  if (contrato.application_slug) return <FilaDeProducto contrato={contrato} />;
+  return <FilaDeContratoManual contrato={contrato} />;
+};
+
+const FilaDeContratoManual = ({ contrato }: { contrato: Contract }) => {
   const translate = useTranslate();
   const importe = useImporte();
   return (

@@ -338,6 +338,43 @@ export type Contract = {
   sales_id?: Identifier | null;
   created_at?: string;
   updated_at?: string;
+  /** Integración con KontrolIA Auth: de qué producto es y qué plan tiene. */
+  application_slug?: string | null;
+  plan_slug?: string | null;
+  plan_name?: string | null;
+  /** manual = por contrato; stripe = con tarjeta. */
+  provider?: string | null;
+  addons?: ContractAddon[] | null;
+} & Pick<RaRecord, "id">;
+
+/** Extra de un contrato tal como lo manda KontrolIA Auth (importes en centavos). */
+export type ContractAddon = {
+  addon_id?: string | null;
+  slug?: string | null;
+  name?: string | null;
+  /** Incluido en el plan (sin costo aparte). */
+  included?: boolean | null;
+  price_amount?: number | null;
+  currency?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  contract_amount?: number | null;
+  contract_currency?: string | null;
+};
+
+/** Historial del contrato: lo escribe la integración, nadie a mano. */
+export type ContractEvent = {
+  contract_id?: Identifier | null;
+  company_id?: Identifier | null;
+  type: string;
+  occurred_at: string;
+  title: string;
+  detail?: Record<string, unknown>;
+  amount?: number | null;
+  currency?: string | null;
+  source: string;
+  external_id: string;
+  created_at?: string;
 } & Pick<RaRecord, "id">;
 
 export type Purchase = {
@@ -390,6 +427,9 @@ export type CustomerSummary = {
   open_tickets: number;
   overdue_tickets: number;
   at_risk: boolean;
+  /** De dónde viene la empresa (kontrolia_auth = se sincroniza sola). */
+  source?: string | null;
+  external_id?: string | null;
 } & Pick<RaRecord, "id">;
 
 /** Webhook saliente de la organización. */

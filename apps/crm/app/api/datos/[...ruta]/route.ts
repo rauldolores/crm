@@ -92,6 +92,9 @@ const RECURSOS_PROHIBIDOS = new Set([
   // Faqturia…). Solo por /api/conectores, que exige administrador y nunca
   // devuelve el secreto.
   "connectors",
+  // Bitácora de avisos de integraciones (KontrolIA Auth): solo la escribe y
+  // la lee el servidor, con la clave de servicio.
+  "integration_events",
   // Constancias de lo que decidió el clasificador. Este puente escribe con
   // la clave de servicio, así que servirlas aquí dejaría a cualquiera con
   // sesión inventar o borrar una constancia — y una auditoría que el
@@ -104,8 +107,12 @@ const RECURSOS_PROHIBIDOS = new Set([
   "automation_pending",
 ]);
 
-/** Recursos que el puente sirve sólo para lectura. */
-const SOLO_LECTURA = new Set(["affiliate_attributions"]);
+/**
+ * Recursos que el puente sirve sólo para lectura. `contract_events` es el
+ * historial que escribe la integración con KontrolIA Auth: tocarlo a mano lo
+ * desmentiría frente al sistema de origen.
+ */
+const SOLO_LECTURA = new Set(["affiliate_attributions", "contract_events"]);
 
 /**
  * Recursos del programa de afiliados que un afiliado vinculado no ve: las
@@ -148,6 +155,7 @@ const CON_DUENO = new Set([
   "email_templates",
   "email_outbox",
   "contracts",
+  "contract_events",
   "purchases",
   "purchase_items",
   "customer_summary",

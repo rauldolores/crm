@@ -49,6 +49,10 @@ alter table crm.internal_settings enable row level security;
 alter table crm.contracts enable row level security;
 alter table crm.purchases enable row level security;
 alter table crm.purchase_items enable row level security;
+alter table crm.contract_events enable row level security;
+-- Sin políticas, como internal_settings: la bitácora de avisos de
+-- integraciones solo la toca service_role.
+alter table crm.integration_events enable row level security;
 
 -- Companies
 create policy "Companies are scoped to the organization" on crm.companies
@@ -420,6 +424,16 @@ create policy "Purchases are updated within the organization" on crm.purchases
     for update to authenticated using (organization_id = crm.current_organization_id())
     with check (organization_id = crm.current_organization_id());
 create policy "Purchases are deleted within the organization" on crm.purchases
+    for delete to authenticated using (organization_id = crm.current_organization_id());
+
+create policy "Contract events are scoped to the organization" on crm.contract_events
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Contract events are created in the organization" on crm.contract_events
+    for insert to authenticated with check (organization_id = crm.current_organization_id());
+create policy "Contract events are updated within the organization" on crm.contract_events
+    for update to authenticated using (organization_id = crm.current_organization_id())
+    with check (organization_id = crm.current_organization_id());
+create policy "Contract events are deleted within the organization" on crm.contract_events
     for delete to authenticated using (organization_id = crm.current_organization_id());
 
 create policy "Purchase items are scoped to the organization" on crm.purchase_items

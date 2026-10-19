@@ -1742,7 +1742,23 @@
           "type": "registry:lib"
         },
         {
-          "path": "src/lib/server/kontrolia-auth/__screenshots__/consumo.test.ts",
+          "path": "src/lib/server/integraciones/aplicarKontroliaAuth.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/integraciones/firma.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/integraciones/firma.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/integraciones/kontroliaAuth.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/integraciones/kontroliaAuth.ts",
           "type": "registry:lib"
         },
         {
