@@ -26,6 +26,9 @@ export default (): Db => {
   db.public_form_submissions = [];
   db.tickets = [];
   db.ticket_notes = [];
+  db.affiliates = [];
+  db.affiliate_rates = [];
+  db.affiliate_attributions = [];
   db.configuration = [
     {
       id: 1,

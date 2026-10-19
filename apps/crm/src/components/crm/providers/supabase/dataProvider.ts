@@ -27,6 +27,7 @@ import type {
 } from "../../facturacion/solicitudes";
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
+import type { ResultadoDeAsignacionDeAfiliado } from "../commons/asignarAfiliado";
 import type { DestinoDeOportunidad } from "../commons/moverOportunidad";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient, getUrlDeDatos } from "./supabase";
@@ -400,6 +401,29 @@ const getDataProviderWithCustomMethods = () => {
         const cuerpo = await respuesta.json().catch(() => ({}));
         throw new Error(
           cuerpo.message || "No se pudieron fusionar las empresas",
+        );
+      }
+      return respuesta.json();
+    },
+    /**
+     * Liga una empresa a un afiliado, la cambia de afiliado o se lo quita
+     * (affiliateId null). La base aplica las reglas y escribe el historial
+     * (crm.asignar_afiliado); ver /api/afiliados/asignar.
+     */
+    async asignarAfiliado(
+      companyId: Identifier,
+      affiliateId: Identifier | null,
+      reason?: string,
+    ): Promise<{ resultado: ResultadoDeAsignacionDeAfiliado }> {
+      const respuesta = await llamarApiDelCrm("/api/afiliados/asignar", {
+        companyId,
+        affiliateId,
+        reason,
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(
+          cuerpo.message || "No se pudo guardar el afiliado del cliente",
         );
       }
       return respuesta.json();

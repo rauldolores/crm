@@ -1,7 +1,8 @@
-import { regex, required } from "ra-core";
+import { maxValue, minValue, regex, required } from "ra-core";
 import { NumberInput } from "@/components/admin/number-input";
 import { TextInput } from "@/components/admin/text-input";
 import { BooleanInput } from "@/components/admin/boolean-input";
+import { SelectInput } from "@/components/admin/select-input";
 
 const validarCodigoDeReferido = regex(
   /^[a-z0-9]+(-[a-z0-9]+)*$/,
@@ -22,10 +23,27 @@ export const AffiliateInputs = () => (
       helperText="crm.affiliates.fields.referral_code_help"
       validate={[required(), validarCodigoDeReferido]}
     />
+    <SelectInput
+      source="mode"
+      label="crm.affiliates.fields.mode"
+      helperText="crm.affiliates.fields.mode_help"
+      choices={[
+        { id: "comisionista", name: "crm.affiliates.fields.mode_comisionista" },
+        { id: "revendedor", name: "crm.affiliates.fields.mode_revendedor" },
+      ]}
+      validate={required()}
+    />
     <NumberInput
       source="commission_percentage"
       label="crm.affiliates.fields.commission_percentage"
       helperText={false}
+      validate={[minValue(0), maxValue(100)]}
+    />
+    <NumberInput
+      source="commission_months"
+      label="crm.affiliates.fields.commission_months"
+      helperText="crm.affiliates.fields.commission_months_help"
+      validate={minValue(1)}
     />
     <BooleanInput
       source="active"

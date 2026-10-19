@@ -16,6 +16,11 @@ import {
 } from "ra-core";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import {
+  AffiliateAttributionHistory,
+  AffiliateClients,
+} from "./AffiliateClients";
+import { AffiliateRates } from "./AffiliateRates";
 import type { Affiliate, AffiliateCommission } from "../types";
 
 export const AffiliateShow = () => (
@@ -97,6 +102,31 @@ const AffiliateShowContent = () => {
                     : "—"}
                 </p>
               </div>
+              <div>
+                <p className="text-muted-foreground mb-1">
+                  {translate("crm.affiliates.fields.mode")}
+                </p>
+                <p>
+                  {translate(
+                    `crm.affiliates.fields.mode_${record.mode ?? "comisionista"}`,
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">
+                  {translate("crm.affiliates.fields.commission_months")}
+                </p>
+                <p>
+                  {record.commission_months
+                    ? translate(
+                        "crm.affiliates.fields.commission_months_value",
+                        { smart_count: record.commission_months },
+                      )
+                    : translate(
+                        "crm.affiliates.fields.commission_months_lifetime",
+                      )}
+                </p>
+              </div>
               {record.kontrolia_auth_user_id && (
                 <div>
                   <p className="text-muted-foreground mb-1">
@@ -141,6 +171,15 @@ const AffiliateShowContent = () => {
 
             <Separator className="my-4" />
             <NegocioReferido afiliadoId={record.id} />
+
+            <Separator className="my-4" />
+            <AffiliateClients afiliadoId={record.id} />
+
+            <Separator className="my-4" />
+            <AffiliateRates afiliadoId={record.id} />
+
+            <Separator className="my-4" />
+            <AffiliateAttributionHistory afiliadoId={record.id} />
           </CardContent>
         </Card>
       </div>
