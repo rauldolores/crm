@@ -1,4 +1,7 @@
 import type {
+  Affiliate,
+  AffiliateAttribution,
+  AffiliateRate,
   Automation,
   Company,
   Contact,
@@ -38,6 +41,9 @@ export interface Db {
   tasks: Task[];
   tickets: Ticket[];
   ticket_notes: TicketNote[];
+  affiliates: Affiliate[];
+  affiliate_rates: AffiliateRate[];
+  affiliate_attributions: AffiliateAttribution[];
   quotes: Quote[];
   quote_items: QuoteItem[];
   configuration: Array<{ id: number; config: ConfigurationContextValue }>;

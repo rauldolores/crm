@@ -12,6 +12,7 @@ import { AsideSection } from "../misc/AsideSection";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company } from "../types";
 import { TagsListEdit } from "../contacts/TagsListEdit";
+import { CompanyAffiliate } from "./CompanyAffiliate";
 import { CompanyMergeButton } from "./CompanyMergeButton";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
@@ -44,6 +45,8 @@ export const CompanyAside = ({ link = "edit" }: CompanyAsideProps) => {
       <ContextInfo record={record} />
 
       <AdditionalInfo record={record} />
+
+      {link !== "edit" && <CompanyAffiliate />}
 
       <CamposPersonalizadosField entidad="company" />
 
