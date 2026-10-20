@@ -13,7 +13,6 @@ import {
   fechaDe,
   importeDeContrato,
   planDeLaFoto,
-  tituloDeMovimiento,
   unirCorreos,
   type FotoKontroliaAuth,
   type SuscripcionKontroliaAuth,
@@ -440,53 +439,80 @@ describe("compras", () => {
 });
 
 describe("historial", () => {
-  it("títulos en español por tipo", () => {
-    const f = foto();
-    expect(tituloDeMovimiento(f.history[0], f.subscriptions)).toBe(
-      "Plan asignado: Completo",
-    );
-    expect(tituloDeMovimiento(f.history[1], f.subscriptions)).toBe(
-      "Extra agregado: Manifestación de valor",
-    );
-    const m = (type: string) => ({ ...f.history[0], type, payload: {} });
-    expect(tituloDeMovimiento(m("manual.updated"))).toBe(
-      "Vigencia o contrato editado",
-    );
-    expect(tituloDeMovimiento(m("manual.renewed"))).toBe("Renovación");
-    expect(tituloDeMovimiento(m("manual.granted_free_months"))).toBe(
-      "Meses de cortesía",
-    );
-    expect(tituloDeMovimiento(m("addon.removal_scheduled"))).toBe(
-      "Extra programado para quitarse",
-    );
-    expect(tituloDeMovimiento(m("stripe.invoice.paid"))).toBe(
-      "Cobro con tarjeta: invoice.paid",
-    );
-    expect(tituloDeMovimiento(m("otro.evento"))).toBe("otro.evento");
-  });
-
-  it("un evento por movimiento y uno por renovación, con llaves estables", () => {
+  it("solo lo que dice qué cambió, con llaves estables", () => {
     const eventos = eventosDeLaFoto(foto());
+    // La renovación sin pago ni fechas no dice nada: no se guarda.
     expect(eventos.map((e) => e.fila.external_id)).toEqual([
       "h1",
       "42",
       "renewal:ren-1",
-      "renewal:ren-sin-pago",
+    ]);
+    expect(eventos.map((e) => e.fila.title)).toEqual([
+      "Plan asignado: Completo",
+      "Extra agregado: Manifestación de valor",
+      "Renovación pagada: vigencia 31 dic 2025 → 31 dic 2026 · $505,000.00 MXN · ref. SPEI 123",
     ]);
     const pagada = eventos[2];
     expect(pagada.application_slug).toBe("aduaniax");
     expect(pagada.fila).toMatchObject({
       type: "renewal",
-      title: "Renovación pagada",
-      amount: 505000,
-      currency: "MXN",
+      amount: null,
       occurred_at: "2026-12-20T18:00:00Z",
     });
-    expect(eventos[3].fila).toMatchObject({ amount: null, currency: null });
     expect(eventos[0].fila.detail).toMatchObject({
-      planSlug: "completo",
-      provider: "manual",
+      texto: null,
+      datos: { planSlug: "completo", provider: "manual" },
     });
+  });
+
+  it("no repite una renovación que ya trae el historial", () => {
+    const f = foto();
+    f.history.push({
+      id: "h-ren",
+      type: "manual.renewed",
+      occurred_at: "2026-12-20T18:00:00Z",
+      provider: "manual",
+      subscription_id: "sub-adx",
+      application_slug: "aduaniax",
+      plan_slug: "completo",
+      plan_name: "Completo",
+      payload: { renewal_id: "ren-1", amount: 50500000, currency: "MXN" },
+    });
+    const ids = eventosDeLaFoto(f).map((e) => e.fila.external_id);
+    expect(ids).toContain("h-ren");
+    expect(ids).not.toContain("renewal:ren-1");
+  });
+
+  it("nombra el plan con el catálogo de planes de la foto", () => {
+    const f = AvisoKontroliaAuth.parse({
+      ...structuredClone(aviso),
+      snapshot: {
+        ...structuredClone(aviso.snapshot),
+        renewals: [],
+        plans: [
+          {
+            id: "0b5c1a52-1f7e-4d55-9a3e-5b4a3c2d1e0f",
+            slug: "immex",
+            name: "IMMEX",
+            application_slug: "aduaniax",
+          },
+        ],
+        history: [
+          {
+            id: "h9",
+            type: "subscribed",
+            occurred_at: "2026-10-01T00:00:00Z",
+            payload: {
+              planId: "0b5c1a52-1f7e-4d55-9a3e-5b4a3c2d1e0f",
+              interval: "year",
+            },
+          },
+        ],
+      },
+    }).snapshot;
+    expect(eventosDeLaFoto(f).map((e) => e.fila.title)).toEqual([
+      "Contrató con tarjeta: IMMEX (anual)",
+    ]);
   });
 });
 
@@ -497,7 +523,7 @@ describe("planDeLaFoto", () => {
     expect(plan.contactos).toHaveLength(2);
     expect(plan.contratos).toHaveLength(2);
     expect(plan.compras).toHaveLength(1);
-    expect(plan.eventos).toHaveLength(4);
+    expect(plan.eventos).toHaveLength(3);
   });
 
   it("una foto sin usuarios ni suscripciones también es válida", () => {

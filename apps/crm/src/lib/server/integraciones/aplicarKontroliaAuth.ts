@@ -354,6 +354,37 @@ async function guardarEventos(
       "Guardar el historial",
     );
   }
+
+  // Lo que ya no sale en la foto (ruido de versiones anteriores, renglones
+  // que no dicen qué cambió) se quita. Solo de esta empresa y de esta
+  // integración: lo demás del historial no se toca.
+  const vigentes = new Set(
+    plan.eventos.map(({ fila }) => String(fila.external_id)),
+  );
+  const guardadas = (exigir(
+    await db
+      .from("contract_events")
+      .select("external_id")
+      .eq("organization_id", org)
+      .eq("company_id", companyId)
+      .eq("source", ORIGEN_KONTROLIA_AUTH),
+    "Leer el historial guardado",
+  ) ?? []) as { external_id: string }[];
+  const sobrantes = guardadas
+    .map((g) => g.external_id)
+    .filter((id) => !vigentes.has(id));
+  for (let i = 0; i < sobrantes.length; i += 100) {
+    exigir(
+      await db
+        .from("contract_events")
+        .delete()
+        .eq("organization_id", org)
+        .eq("company_id", companyId)
+        .eq("source", ORIGEN_KONTROLIA_AUTH)
+        .in("external_id", sobrantes.slice(i, i + 100)),
+      "Quitar del historial lo que ya no va",
+    );
+  }
   return filas.length;
 }
 

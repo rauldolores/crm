@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { describirHistorial } from "./movimientos";
 
 /**
  * Integración con KontrolIA Auth: de la foto de un cliente a filas del CRM.
@@ -94,6 +95,18 @@ const Renovacion = z.object({
   paid_at: texto,
   notes: texto,
   created_at: texto,
+  // Pago registrado cuando el periodo ya estaba cubierto (no movió la vigencia).
+  covered: z.boolean().nullish(),
+  external_ref: texto,
+});
+
+// Catálogo de planes para nombrar los ids y slugs que traen los movimientos.
+// Opcional: una foto de antes de que KontrolIA Auth lo mandara no lo trae.
+const PlanDeLaFoto = z.object({
+  id: texto,
+  slug: texto,
+  name: texto,
+  application_slug: texto,
 });
 
 const Movimiento = z.object({
@@ -120,6 +133,7 @@ const Foto = z.object({
   subscriptions: z.array(Suscripcion).default([]),
   renewals: z.array(Renovacion).default([]),
   history: z.array(Movimiento).default([]),
+  plans: z.array(PlanDeLaFoto).nullish(),
 });
 
 export const AvisoKontroliaAuth = z.object({
@@ -461,109 +475,78 @@ export function compraDeRenovacion(
 
 // ── Historial ───────────────────────────────────────────────────────────
 
-/** Nombre del extra por su slug, con lo que traen las suscripciones. */
-function nombreDeExtra(
-  slug: unknown,
-  suscripciones: SuscripcionKontroliaAuth[],
-): string | null {
-  if (typeof slug !== "string" || !slug) return null;
-  for (const s of suscripciones) {
-    const extra = s.addons?.find((a) => a.slug === slug);
-    if (extra?.name) return extra.name;
-  }
-  return slug;
-}
-
-export function tituloDeMovimiento(
-  m: MovimientoKontroliaAuth,
-  suscripciones: SuscripcionKontroliaAuth[] = [],
-): string {
-  const payload = m.payload ?? {};
-  const extra = nombreDeExtra(
-    payload.addonSlug ?? payload.addon_slug,
-    suscripciones,
-  );
-  const conExtra = (base: string) => (extra ? `${base}: ${extra}` : base);
-
-  if (m.type.startsWith("stripe.")) {
-    return `Cobro con tarjeta: ${m.type.slice("stripe.".length)}`;
-  }
-  if (m.type.includes("courtesy") || m.type.includes("free_months")) {
-    return "Meses de cortesía";
-  }
-  switch (m.type) {
-    case "manual.assigned": {
-      const plan =
-        m.plan_name ??
-        (typeof payload.planSlug === "string" ? payload.planSlug : null) ??
-        m.plan_slug;
-      return plan ? `Plan asignado: ${plan}` : "Plan asignado";
-    }
-    case "manual.updated":
-      return "Vigencia o contrato editado";
-    case "manual.renewed":
-      return "Renovación";
-    case "addon.added":
-      return conExtra("Extra agregado");
-    case "addon.removed":
-      return conExtra("Extra quitado");
-    case "addon.removal_scheduled":
-      return conExtra("Extra programado para quitarse");
-    case "addon.updated":
-      return conExtra("Extra editado");
-    default:
-      return m.type;
-  }
-}
-
 export interface EventoDeseado {
   application_slug: string | null;
   fila: Record<string, unknown>;
 }
 
+/**
+ * Renglones del historial del contrato. Solo lo que dice en concreto qué
+ * cambió (ver movimientos.ts): lo demás no se guarda, y quien guarda borra
+ * lo que ya no salga aquí. El texto va en `title` y, si hay más, en
+ * `detail.texto`; `detail.datos` conserva lo que mandó el origen.
+ */
 export function eventosDeLaFoto(foto: FotoKontroliaAuth): EventoDeseado[] {
-  const eventos: EventoDeseado[] = foto.history.map((m) => ({
-    application_slug: m.application_slug ?? null,
-    fila: {
-      type: m.type,
-      occurred_at: m.occurred_at,
-      title: tituloDeMovimiento(m, foto.subscriptions),
-      detail: {
-        ...(m.payload ?? {}),
-        ...(m.provider ? { provider: m.provider } : {}),
-        ...(m.plan_slug ? { plan_slug: m.plan_slug } : {}),
-      },
-      amount: null,
-      currency: null,
-      source: ORIGEN_KONTROLIA_AUTH,
-      external_id: m.id,
-    },
-  }));
+  const planes = [
+    ...(foto.plans ?? []),
+    ...foto.subscriptions.map((s) => s.plan),
+  ];
+  const extras = foto.subscriptions.flatMap((s) => s.addons ?? []);
+  const renglones = describirHistorial(foto.history, foto.renewals, {
+    planes,
+    extras,
+  });
 
-  for (const r of foto.renewals) {
-    eventos.push({
-      application_slug: r.application_slug ?? null,
+  return renglones.map(({ movimiento: m, renovacion: r, descripcion }) => {
+    if (m) {
+      return {
+        application_slug: m.application_slug ?? null,
+        fila: {
+          type: m.type,
+          occurred_at: m.occurred_at,
+          title: descripcion.title,
+          detail: {
+            texto: descripcion.detail,
+            datos: {
+              ...(m.payload ?? {}),
+              ...(m.provider ? { provider: m.provider } : {}),
+              ...(m.plan_slug ? { plan_slug: m.plan_slug } : {}),
+            },
+          },
+          // El importe ya va en el título; aquí no se repite.
+          amount: null,
+          currency: null,
+          source: ORIGEN_KONTROLIA_AUTH,
+          external_id: m.id,
+        },
+      };
+    }
+    const ren = r!;
+    return {
+      application_slug: ren.application_slug ?? null,
       fila: {
         type: "renewal",
         occurred_at:
-          r.created_at ??
-          (r.paid_at ? `${r.paid_at}T12:00:00Z` : foto.generated_at),
-        title: "Renovación pagada",
+          ren.created_at ??
+          (ren.paid_at ? `${ren.paid_at}T12:00:00Z` : foto.generated_at),
+        title: descripcion.title,
         detail: {
-          previous_period_end: r.previous_period_end ?? null,
-          new_period_end: r.new_period_end ?? null,
-          payment_reference: r.payment_reference ?? null,
-          paid_at: r.paid_at ?? null,
-          notes: r.notes ?? null,
+          texto: descripcion.detail,
+          datos: {
+            previous_period_end: ren.previous_period_end ?? null,
+            new_period_end: ren.new_period_end ?? null,
+            payment_reference: ren.payment_reference ?? null,
+            paid_at: ren.paid_at ?? null,
+            notes: ren.notes ?? null,
+          },
         },
-        amount: aPesos(r.amount),
-        currency: r.amount != null ? r.currency || "MXN" : null,
+        amount: null,
+        currency: null,
         source: ORIGEN_KONTROLIA_AUTH,
-        external_id: `renewal:${r.id}`,
+        external_id: `renewal:${ren.id}`,
       },
-    });
-  }
-  return eventos;
+    };
+  });
 }
 
 // ── Plan completo ───────────────────────────────────────────────────────

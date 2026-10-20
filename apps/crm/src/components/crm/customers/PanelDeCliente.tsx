@@ -314,10 +314,15 @@ const FilaDeHistorial = ({
   contrato?: Contract;
 }) => {
   const importe = useImporte();
+  // El título ya dice qué cambió; `detail.texto` agrega lo demás (motivo,
+  // notas, contrato). Nunca se enseña el tipo crudo del origen.
+  const texto =
+    typeof evento.detail?.texto === "string" ? evento.detail.texto : null;
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-      <div>
+      <div className="min-w-0">
         <p className="font-medium">{evento.title}</p>
+        {texto && <p className="text-xs">{texto}</p>}
         <p className="text-xs text-muted-foreground">
           {fechaDeInstante(evento.occurred_at)}
           {contrato ? ` · ${productoDe(contrato)}` : ""}
