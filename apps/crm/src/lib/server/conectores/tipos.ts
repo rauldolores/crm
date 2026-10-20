@@ -55,6 +55,10 @@ export interface LineaAFacturar {
   tasaIva: number;
   /** Referencia del producto en el catálogo, si la línea salió de uno. */
   sku: string | null;
+  /** Clave de producto o servicio del SAT; si falta, la del conector. */
+  claveProdServ?: string;
+  /** Clave de unidad del SAT; si falta, la del conector. */
+  claveUnidad?: string;
 }
 
 export interface PeticionDeFactura {
@@ -66,6 +70,15 @@ export interface PeticionDeFactura {
   /** Forma y método de pago SAT; si faltan, los del conector. */
   formaPago?: string;
   metodoPago?: string;
+  /**
+   * Clave para que el proveedor no timbre dos veces la misma factura si la
+   * petición se repite (un reintento tras un corte, por ejemplo).
+   */
+  claveDeIdempotencia?: string;
+  /** Texto libre que el proveedor imprime en la factura (el periodo). */
+  notas?: string;
+  /** Fecha límite de pago (AAAA-MM-DD), para las de pago diferido (PPD). */
+  fechaDeVencimiento?: string;
 }
 
 export type EstadoDeFactura = "stamped" | "draft" | "cancelled" | "error";
@@ -81,6 +94,11 @@ export interface FacturaEmitida {
   issuedAt: string | null;
   /** Por qué no se timbró, cuando status es draft o error. */
   error: string | null;
+  /**
+   * La factura tal como la devolvió el proveedor, para quien necesite más
+   * que lo normalizado (el módulo de facturación lee el pago registrado).
+   */
+  detalle?: Record<string, unknown>;
 }
 
 export interface ConectorDeFacturacion {

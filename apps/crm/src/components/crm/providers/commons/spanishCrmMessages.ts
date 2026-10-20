@@ -1605,6 +1605,170 @@ export const spanishCrmMessages = {
         "La factura se creó pero no se timbró; revísala en tu proveedor.",
       invoiced_as: "Facturada como %{folio}",
     },
+    // Módulo de facturación: las ventas de contratos y cobros con tarjeta.
+    // (crm.billing es el plan de Vinqulia de la propia organización.)
+    customer_billing: {
+      settings: {
+        title: "Facturación",
+        intro:
+          "Cómo se facturan solos tus contratos y los cobros con tarjeta: claves del SAT, el texto del concepto, el IVA y si cada factura se revisa antes de timbrarse.",
+        connector_ok: "Facturas con %{name}.",
+        connector_missing:
+          "Todavía no hay un proveedor de facturación conectado: sin él no se puede timbrar nada.",
+        connector_link: "Conectar en Conectores",
+        general: "Ajustes generales",
+        general_help: "Valen para todos los productos que no tengan los suyos.",
+        product_uses_general: "Usa los ajustes generales.",
+        customize: "Ajustes propios",
+        remove_custom: "Volver a los generales",
+        remove_custom_confirm:
+          "¿Quitar los ajustes propios de este producto? Usará los generales.",
+        products: "Por producto",
+        no_products:
+          "Aún no hay contratos con producto. Los productos aparecen aquí cuando llegan sus contratos.",
+        saved: "Ajustes de facturación guardados",
+        fields: {
+          clave_prod_serv: "Clave de producto o servicio del SAT",
+          clave_prod_serv_help:
+            "8 dígitos. 81112106 es «Proveedores de servicios de aplicación».",
+          clave_unidad: "Unidad del SAT",
+          clave_unidad_help: "E48 es «Unidad de servicio».",
+          concept_template: "Texto del concepto",
+          concept_template_help:
+            "Puedes usar {producto} (el nombre del producto), {plan} (el plan contratado) y {periodo} (por ejemplo «enero 2027» o «ene 2027 – dic 2027»).",
+          tax_rate: "IVA (%)",
+          prices_include_tax: "Los precios de los contratos ya incluyen IVA",
+          prices_include_tax_help:
+            "Apagado: al precio del contrato se le suma el IVA. Los cobros con tarjeta siempre lo incluyen.",
+          metodo_pago_transferencia: "Método de pago por transferencia",
+          forma_pago_transferencia: "Forma de pago por transferencia",
+          forma_pago_tarjeta: "Forma de pago con tarjeta",
+          days_before: "Días antes de la renovación",
+          days_before_help:
+            "Cuántos días antes de que renueve un contrato sale su factura del periodo siguiente.",
+          mode: "Al crear cada factura",
+          mode_review: "Revisar antes de timbrar",
+          mode_auto: "Timbrar sola",
+          mode_help:
+            "«Timbrar sola» solo aplica a los contratos que tengan encendido «Facturar automáticamente».",
+          active: "Facturar este producto",
+          active_help:
+            "Apagado: sus contratos no se facturan solos. Los cobros con tarjeta siguen llegando a la bandeja.",
+        },
+        methods: {
+          PPD: "PPD · Pago en parcialidades o diferido",
+          PUE: "PUE · Pago en una sola exhibición",
+        },
+        webhook: {
+          title: "Avisos de Faqturia",
+          intro:
+            "Para que el pago y la cancelación de cada factura lleguen solos, crea en Faqturia un webhook a esta dirección con los eventos de facturas y pega aquí su secreto. Sin él, se revisa cada hora.",
+          url: "Dirección del aviso",
+          secret: "Secreto del aviso",
+          secret_placeholder: "Pega el secreto que te dio Faqturia",
+          secret_kept:
+            "Ya hay un secreto guardado — escribe uno nuevo solo para cambiarlo.",
+          configured: "Configurado",
+          not_configured: "Sin configurar",
+          save: "Guardar secreto",
+          saved: "Secreto del aviso guardado",
+          copy: "Copiar",
+          copied: "Dirección copiada",
+        },
+      },
+      inbox: {
+        title: "Por facturar",
+        intro:
+          "Las facturas de tus contratos y de los cobros con tarjeta antes de timbrarse. Revisa, completa lo que falte y timbra.",
+        tabs: {
+          pending_review: "Por revisar",
+          missing_data: "Falta información",
+          error: "Con error",
+          stamped: "Timbradas recientes",
+        },
+        empty: {
+          pending_review: "No hay facturas por revisar.",
+          missing_data: "Ninguna factura espera datos fiscales.",
+          error: "Ninguna factura tiene error.",
+          stamped: "Todavía no hay facturas timbradas desde aquí.",
+        },
+        fields: {
+          customer: "Cliente",
+          product: "Producto",
+          period: "Periodo",
+          total: "Total",
+          origin: "Origen",
+          status: "Estado",
+          payment: "Pago",
+          due_on: "Vence",
+        },
+        origin: {
+          contract: "Contrato",
+          card: "Tarjeta",
+          credits: "Créditos",
+          manual: "A mano",
+          quote: "Cotización",
+        },
+        missing: "Falta:",
+        open_company: "Completar en la empresa",
+        approve: "Aprobar y timbrar",
+        retry: "Reintentar",
+        discard: "Descartar",
+        view: "Ver",
+        hide: "Ocultar",
+        discard_title: "Descartar factura",
+        discard_help:
+          "La factura no se timbrará. Escribe por qué, para quien la revise después.",
+        discard_reason: "Motivo",
+        discard_confirm: "Descartar",
+        discarded: "Factura descartada",
+        stamped: "Factura timbrada",
+        no_product: "Sin contrato",
+        lines: "Renglones",
+        subtotal: "Subtotal",
+        tax: "IVA",
+      },
+      problems: {
+        customer: "la empresa del cliente",
+        name: "la razón social",
+        rfc: "el RFC",
+        tax_regime: "el régimen fiscal",
+        cfdi_use: "el uso del CFDI",
+        zipcode: "el código postal fiscal",
+        amount: "el importe",
+      },
+      billing_status: {
+        pending_review: "Por revisar",
+        missing_data: "Falta información",
+        queued: "En cola para timbrar",
+        stamping: "Timbrando",
+        stamped: "Timbrada",
+        error: "Con error",
+        cancelled: "Cancelada",
+        discarded: "Descartada",
+      },
+      payment_status: {
+        unpaid: "Sin pagar",
+        partial: "Pagada en parte",
+        paid: "Pagada",
+      },
+      company: {
+        title: "Facturas",
+        empty: "Sin facturas todavía.",
+        paid: "Pagado",
+        auto: "Facturar automáticamente",
+        auto_help:
+          "Encendido: la factura del periodo siguiente se arma sola %{days} días antes de la renovación.",
+        next_on: "Se facturará el %{date}",
+        next_card: "Se cobra con tarjeta: su factura sale sola al cobrarse.",
+        bill_now: "Facturar ahora",
+        bill_now_confirm:
+          "¿Armar ya la factura del periodo que sigue y, si los datos fiscales están completos, timbrarla?",
+        enabled: "Facturación automática encendida",
+        disabled: "Facturación automática apagada",
+        go_inbox: "Ver en Por facturar",
+      },
+    },
     modules: {
       title: "Módulos",
       catalog: {

@@ -2049,3 +2049,50 @@ end;
 $$;
 
 grant all on function crm.despachar_condiciones() to service_role;
+
+-- Módulo de facturación: despierta cada hora (pg_cron, ver la migración
+-- 20261020010644_modulo_facturacion) a /api/facturacion/procesar, que planea
+-- las facturas de los contratos, timbra las aprobadas y pregunta a Faqturia
+-- por las que siguen sin pagar. Lee la dirección (`app_url`) y el secreto
+-- (`billing_cron_secret`) de crm.internal_settings: sin secreto, o sin
+-- ninguna organización con Faqturia conectada, no hace nada.
+create or replace function crm.despachar_facturacion() returns integer
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  destino text;
+  secreto text;
+begin
+  select value into destino from crm.internal_settings where key = 'app_url';
+  select value into secreto from crm.internal_settings where key = 'billing_cron_secret';
+
+  if coalesce(destino, '') = '' or coalesce(secreto, '') = '' then
+    return 0;
+  end if;
+
+  if not exists (
+    select 1 from crm.connectors
+     where family = 'invoicing' and provider = 'faqturia'
+  ) then
+    return 0;
+  end if;
+
+  perform net.http_post(
+    url := rtrim(destino, '/') || '/api/facturacion/procesar',
+    body := '{}'::jsonb,
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'X-Vinqulia-Facturacion', secreto
+    ),
+    timeout_milliseconds := 60000
+  );
+
+  return 1;
+end;
+$$;
+
+revoke all on function crm.despachar_facturacion() from public;
+revoke all on function crm.despachar_facturacion() from anon;
+revoke all on function crm.despachar_facturacion() from authenticated;
+grant execute on function crm.despachar_facturacion() to service_role;

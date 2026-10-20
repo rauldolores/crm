@@ -19,6 +19,7 @@ import {
   embudosQuitados,
   idsDe,
 } from "@/lib/server/limitesDelPuente";
+import { quitarCamposProtegidos } from "@/lib/server/facturacion/camposProtegidos";
 import { restringirAPropios } from "@/lib/server/restringirAPropios";
 import { getServiceClient } from "@/lib/server/supabase-service";
 
@@ -111,8 +112,20 @@ const RECURSOS_PROHIBIDOS = new Set([
  * Recursos que el puente sirve sólo para lectura. `contract_events` es el
  * historial que escribe la integración con KontrolIA Auth: tocarlo a mano lo
  * desmentiría frente al sistema de origen.
+ *
+ * Módulo de facturación: las facturas, sus renglones y los ajustes de
+ * facturación los escribe solo el servidor, por /api/facturacion/* (que
+ * exige administrador para todo lo que mueve dinero) y por los conectores.
+ * Escribirlos aquí con la clave de servicio dejaría a cualquiera con sesión
+ * marcar como pagada una factura o cambiar el IVA.
  */
-const SOLO_LECTURA = new Set(["affiliate_attributions", "contract_events"]);
+const SOLO_LECTURA = new Set([
+  "affiliate_attributions",
+  "contract_events",
+  "invoices",
+  "invoice_items",
+  "billing_settings",
+]);
 
 /**
  * Recursos del programa de afiliados que un afiliado vinculado no ve: las
@@ -163,6 +176,8 @@ const CON_DUENO = new Set([
   "quote_items",
   "products",
   "invoices",
+  "invoice_items",
+  "billing_settings",
 ]);
 
 /**
@@ -332,6 +347,10 @@ async function reenviar(peticion: Request, ruta: string[]) {
           : null;
 
       cuerpo = imponerDueno(texto, organizacionId, responsable);
+
+      // Campos que solo cambia una ruta propia con sus comprobaciones
+      // (contracts.billing_enabled, ver camposProtegidos).
+      cuerpo = quitarCamposProtegidos(recurso, cuerpo);
 
       // Tablas con historial: quién hizo el cambio, para el disparador que
       // lo registra. Ver imponerActor.

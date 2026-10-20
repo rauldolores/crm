@@ -30,6 +30,8 @@ import { ListaDeCotizaciones } from "../cotizaciones/ListaDeCotizaciones";
 import { ConectoresPage } from "../conectores/ConectoresPage";
 import { ListaDeProductos } from "../productos/ListaDeProductos";
 import { ListaDeFacturas } from "../facturas/ListaDeFacturas";
+import { PorFacturarPage } from "../facturas/PorFacturarPage";
+import { AjustesDeFacturacionPage } from "../facturas/AjustesDeFacturacionPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
 import { OrganizacionesPage } from "../organizaciones/OrganizacionesPage";
@@ -328,6 +330,11 @@ const DesktopAdmin = (
         <Route path={FacturacionPage.path} element={<FacturacionPage />} />
         <Route path={CotizacionesPage.path} element={<CotizacionesPage />} />
         <Route path={ConectoresPage.path} element={<ConectoresPage />} />
+        <Route path={PorFacturarPage.path} element={<PorFacturarPage />} />
+        <Route
+          path={AjustesDeFacturacionPage.path}
+          element={<AjustesDeFacturacionPage />}
+        />
         <Route
           path={AffiliatesConfigPage.path}
           element={<AffiliatesConfigPage />}
@@ -358,6 +365,8 @@ const DesktopAdmin = (
           [record?.serie, record?.folio].filter(Boolean).join("-")
         }
       />
+      <Resource name="invoice_items" />
+      <Resource name="billing_settings" />
       <Resource name="affiliate_commissions" />
       <Resource name="contact_notes" />
       <Resource name="deal_notes" />

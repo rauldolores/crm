@@ -1,4 +1,4 @@
-import { Handshake, Package, ReceiptText, Users } from "lucide-react";
+import { Handshake, Inbox, Package, ReceiptText, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -21,6 +21,8 @@ export interface ModuleDefinition {
    * Conectores). Se activa solo al conectarlo y se apaga al desconectarlo.
    */
   connector?: "products" | "invoicing";
+  /** Más entradas del menú lateral que aparecen con el módulo activo. */
+  extraLinks?: { nameKey: string; path: string; icon: LucideIcon }[];
 }
 
 export const MODULE_REGISTRY: ModuleDefinition[] = [
@@ -53,5 +55,13 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
     icon: ReceiptText,
     path: "/invoices",
     connector: "invoicing",
+    // La bandeja del módulo de facturación: lo que falta timbrar.
+    extraLinks: [
+      {
+        nameKey: "crm.customer_billing.inbox.title",
+        path: "/por-facturar",
+        icon: Inbox,
+      },
+    ],
   },
 ];

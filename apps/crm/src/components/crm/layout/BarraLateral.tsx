@@ -138,12 +138,20 @@ export const BarraLateral = () => {
   // afectar el sistema" del lado de la navegación.
   const seccionesDeModulos: Seccion[] = MODULE_REGISTRY.filter(
     (modulo) => modules[modulo.key]?.active,
-  ).map((modulo) => ({
-    etiqueta: translate(modulo.nameKey),
-    ruta: modulo.path,
-    Icono: modulo.icon,
-    recurso: modulo.key,
-  }));
+  ).flatMap((modulo) => [
+    {
+      etiqueta: translate(modulo.nameKey),
+      ruta: modulo.path,
+      Icono: modulo.icon,
+      recurso: modulo.key,
+    },
+    ...(modulo.extraLinks ?? []).map((enlace) => ({
+      etiqueta: translate(enlace.nameKey),
+      ruta: enlace.path,
+      Icono: enlace.icon,
+      recurso: modulo.key,
+    })),
+  ]);
 
   const secciones: Seccion[] = [
     {

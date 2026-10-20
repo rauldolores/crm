@@ -296,3 +296,16 @@ revoke all on table crm.invoices from authenticated;
 grant select on table crm.invoices to anon, authenticated;
 grant select, insert, update, delete on table crm.invoices to service_role;
 grant usage, select on sequence crm.invoices_id_seq to anon, authenticated, service_role;
+
+-- Módulo de facturación: renglones y ajustes, solo lectura para la
+-- organización; los escribe el servidor.
+revoke all on table crm.invoice_items from anon;
+revoke all on table crm.invoice_items from authenticated;
+grant select on table crm.invoice_items to authenticated;
+grant select, insert, update, delete on table crm.invoice_items to service_role;
+grant usage, select on sequence crm.invoice_items_id_seq to service_role;
+revoke all on table crm.billing_settings from anon;
+revoke all on table crm.billing_settings from authenticated;
+grant select on table crm.billing_settings to authenticated;
+grant select, insert, update, delete on table crm.billing_settings to service_role;
+grant usage, select on sequence crm.billing_settings_id_seq to service_role;
