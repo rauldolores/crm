@@ -610,6 +610,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturas/AccesoDeFactura.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturas/AjustesDeFacturacionPage.tsx",
           "type": "registry:component"
         },
@@ -1699,6 +1703,14 @@
         },
         {
           "path": "src/lib/server/exigirCupoDeUsuario.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/acceso.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/acceso.ts",
           "type": "registry:lib"
         },
         {
