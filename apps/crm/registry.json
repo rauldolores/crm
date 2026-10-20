@@ -1870,6 +1870,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/integraciones/movimientos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/integraciones/movimientos.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/kontrolia-auth/configuracionDeUso.ts",
           "type": "registry:lib"
         },
