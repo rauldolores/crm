@@ -610,11 +610,27 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturas/AjustesDeFacturacionPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturas/ListaDeFacturas.tsx",
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturas/PorFacturarPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturas/SeccionDeFacturas.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturas/descargas.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturas/formatoDeFacturas.ts",
           "type": "registry:component"
         },
         {
@@ -1683,6 +1699,86 @@
         },
         {
           "path": "src/lib/server/exigirCupoDeUsuario.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/acciones.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/ajustes.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/camposProtegidos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/camposProtegidos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/cobros.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/conciliar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/contratos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/emitir.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/faqturiaEstado.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/faqturiaEstado.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/guardar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/periodos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/periodos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/planear.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/planear.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/procesar.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/rutas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/tarjeta.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/tarjeta.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/tipos.ts",
           "type": "registry:lib"
         },
         {
