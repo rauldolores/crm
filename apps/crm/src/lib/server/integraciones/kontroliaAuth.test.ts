@@ -369,6 +369,29 @@ describe("contratos", () => {
     ).toBe(false);
   });
 
+  it("guarda los días de gracia solo si la suscripción está en gracia", () => {
+    const sinGracia = contratoDeSuscripcion(ORG, suscripcion(0));
+    expect(sinGracia).toMatchObject({ in_grace: false, grace_until: null });
+
+    const enGracia = contratoDeSuscripcion(ORG, {
+      ...suscripcion(0),
+      in_grace: true,
+      grace_until: "2027-01-10T05:59:59Z",
+      manual_grace_days: 10,
+    });
+    expect(enGracia).toMatchObject({
+      in_grace: true,
+      grace_until: "2027-01-10T05:59:59Z",
+    });
+
+    const yaNo = contratoDeSuscripcion(ORG, {
+      ...suscripcion(0),
+      in_grace: false,
+      grace_until: "2027-01-10T05:59:59Z",
+    });
+    expect(yaNo).toMatchObject({ in_grace: false, grace_until: null });
+  });
+
   it("sin precio pactado usa el de lista: el anual o doce mensualidades", () => {
     const base = suscripcion(0);
     const sinPacto = { ...base, contract: null };

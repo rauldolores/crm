@@ -44,6 +44,17 @@ export type EstadoDeBandeja =
 
 export type EstadoDePago = "unpaid" | "partial" | "paid";
 
+/**
+ * Renovar el acceso al pagar: qué pasó con la vigencia en KontrolIA Auth
+ * cuando la factura de un contrato por transferencia quedó pagada.
+ */
+export type EstadoDeAcceso =
+  | "not_applicable"
+  | "pending"
+  | "renewed"
+  | "error"
+  | "skipped";
+
 /** Lo que falta para timbrar; la pantalla lo traduce. */
 export type ProblemaFiscal =
   | "customer"

@@ -8,7 +8,7 @@ Las ventas de KONTROLIA se facturan **desde Vinqulia**, con el conector de factu
 ## Reglas
 
 - **Una factura por producto.** Cada contrato es un producto («AduaniaX · IMMEX»); sus extras (`contracts.addons`) van como renglones de la misma factura. Un extra incluido en el plan no se cobra.
-- **Contrato por transferencia:** la factura del periodo que sigue sale **15 días antes** de `renews_on` (configurable), con método **PPD** y forma **99**, y vence el día de la renovación. Periodo = `[renews_on, renews_on + periodicidad)`. El acceso se renueva cuando se paga (fase 2, todavía no).
+- **Contrato por transferencia:** la factura del periodo que sigue sale **15 días antes** de `renews_on` (configurable), con método **PPD** y forma **99**, y vence el día de la renovación. Periodo = `[renews_on, renews_on + periodicidad)`. El acceso se renueva cuando se **paga** (ver [Renovar el acceso al pagar](#renovar-el-acceso-al-pagar)).
 - **Cobro con tarjeta:** cuando KontrolIA Auth avisa que cobró (`payment.succeeded`), la factura sale **ya pagada**: método **PUE**, forma **04** (configurable) y total = lo cobrado. El cobro con tarjeta incluye el IVA, así que el subtotal se despeja del total.
 - **Claves del SAT** por omisión `81112106` / `E48`, configurables por producto.
 - **Modo por producto:** «Revisar antes de timbrar» (por omisión: la factura espera en la bandeja) o «Timbrar sola».
@@ -32,6 +32,8 @@ Aprobar, reintentar, descartar, «Facturar ahora», el interruptor del contrato 
 | `crm.invoices` | Además de las de cotización: `origin` (`contract`, `card`, `credits`), `contract_id`, `period_start`/`period_end`, `billing_status` (`pending_review`, `missing_data`, `queued`, `stamping`, `stamped`, `error`, `cancelled`, `discarded`), `payment_method`/`payment_form`, `payment_status` (`unpaid`, `partial`, `paid`), `paid_amount`, `paid_at`, `due_on`, `subtotal`, `tax`, `source_ref`, `problems`. `external_id` es nulo mientras la factura no llega a Faqturia. |
 | `crm.invoice_items` | Renglones (precio antes de IVA, claves del SAT por renglón). |
 | `crm.connectors.webhook_secret` | Secreto del aviso de Faqturia (solo `service_role`). |
+| `crm.invoices.access_*`, `payment_reference` | Renovar el acceso al pagar: `access_status` (`not_applicable`, `pending`, `renewed`, `error`, `skipped`), `access_renewed_until`, `access_error`, `access_attempts`, `access_updated_at`, `access_next_attempt_at`; referencia del pago registrado a mano. |
+| `crm.contracts.in_grace`, `grace_until` | Días de gracia de la suscripción, de la foto de KontrolIA Auth. |
 
 **Idempotencia:** índice único `(organization_id, contract_id, period_start, origin)` (una factura por contrato y periodo, aunque el proceso corra cada hora o se pulse «Facturar ahora» dos veces) y `(organization_id, origin, source_ref)` (un cobro, una factura, aunque KontrolIA Auth reintente). Para timbrar, la factura se «toma» con un cambio condicional `queued → stamping`, y a Faqturia se le manda `Idempotency-Key` (factura + intentos pedidos por una persona + huella de los datos): si el proceso se cae a mitad, el reintento recibe la misma factura en vez de timbrar otra. Una factura que se queda «timbrando» más de 15 minutos vuelve a la cola.
 
@@ -69,6 +71,62 @@ El estado de pago **nunca retrocede** (una factura PUE de tarjeta ya pagada sigu
 
 Llega por el mismo receptor de KontrolIA Auth (`/api/integraciones/kontrolia-auth`, ver [Integración con KontrolIA Auth](./integracion-kontrolia-auth/)). Se aplica la foto como en cualquier aviso y luego se registra la factura del cobro: contrato por `external_id = <organización>:<application.slug>`, total = `amountPaid / 100`, renglones de `payload.lines` si todos son positivos y suman lo cobrado (si no —un prorrateo trae líneas negativas—, uno solo con la plantilla), referencia = `payload.invoiceId` (o `sessionId` en créditos). En créditos (`kind = 'credits'`) el concepto es «Paquete de {units} {limitKey}». Un cobro de cero no se factura. Si puede timbrarse sola, se timbra después de responder (`after`), para no pasar de los 10 s que espera KontrolIA Auth.
 
+## Renovar el acceso al pagar
+
+Regla del dueño: el acceso a un producto que se cobra **por contrato** (transferencia) se extiende cuando su factura queda **pagada**, no cuando se timbra. Los cobros con tarjeta y de créditos no aplican (`access_status = 'not_applicable'`): KontrolIA Auth ya renovó al cobrar.
+
+**Cuándo aplica** (`debeRenovarAcceso`): factura con `origin = 'contract'`, `billing_status = 'stamped'`, `payment_status = 'paid'`, con `period_start`/`period_end`, de un contrato con `source = 'kontrolia_auth'` y `provider = 'manual'`. Una factura de contrato pagada que no cumple (por ejemplo, un contrato propio del CRM) queda `not_applicable` y la pantalla no dice nada.
+
+**Cuándo se pide:**
+
+- **Aviso de Faqturia** (`invoice.paid`): si la factura pasa a pagada, queda `pending` y, **después de responder** (`after`), se le pide a KontrolIA Auth.
+- **Revisión de cada hora:** lo que la conciliación con Faqturia acaba de marcar pagado, las `pending` que nadie atiende (sin intento o con uno de hace más de 5 minutos) y las `error` cuyo `access_next_attempt_at` ya llegó (hasta 20 por organización). Además barre las facturas de contrato pagadas y timbradas sin `access_status` (por ejemplo, pagadas antes de timbrarse).
+- **«Registrar pago»** (administrador, `POST /api/facturacion/facturas/:id` con `{"accion":"registrar_pago","pagada_el":"AAAA-MM-DD","referencia":"…"}`): para una timbrada que se cobró fuera de Faqturia. La deja pagada por el total (`paid_amount = total`, `paid_at`, `payment_reference`) y renueva en el mismo paso. Faqturia no se entera: el complemento de pago de una PPD se emite allá. Un aviso posterior de Faqturia nunca regresa el pago (el pago no retrocede).
+- **«Reintentar»** (administrador, `{"accion":"renovar_acceso"}`): para una `pending`, `error` o `skipped`; cuenta los intentos de cero.
+
+**Qué se manda:**
+
+```http
+POST {KONTROLIA_AUTH_SERVER_URL}/api/platform/subscriptions/renew
+Authorization: Bearer kpk_live_…
+
+{
+  "organizationId": "<uuid de la organización en KontrolIA Auth>",
+  "application": "aduaniax",
+  "months": 12,
+  "periodStart": "2027-01-01",
+  "periodEnd": "2027-12-31",
+  "amount": 3480000,
+  "currency": "MXN",
+  "paymentReference": "A-120",
+  "paidAt": "2026-12-20T18:00:00.000Z",
+  "notes": "Factura A-120 pagada · Ref. SPEI 123",
+  "externalRef": "vinqulia:invoice:41"
+}
+```
+
+`organizationId` y `application` salen de `contracts.external_id` (`<organización>:<aplicación>`, se corta en el primer `:`); `months` de `billing_period` (mensual 1, trimestral 3, anual 12); el periodo, el importe (`round(total × 100)`, centavos) y la moneda de la factura; `paymentReference` = serie-folio (o el UUID). KontrolIA Auth es idempotente por `externalRef`; de este lado, cada intento «toma» la factura con un cambio condicional sobre `access_updated_at`.
+
+**Qué se guarda** en `crm.invoices`:
+
+| Respuesta | `access_status` | Reintento |
+|---|---|---|
+| `200` (o `{already: true}`) | `renewed`, con `access_renewed_until = subscription.currentPeriodEnd` | — |
+| `409` (suscripción con tarjeta o terminada) | `skipped`, con el `error` de KontrolIA Auth en `access_error` | No; solo «Reintentar» |
+| Red, `5xx`, `408`, `429`, `401`/`403` (clave rechazada) | `error` | Sí, cada 1, 2, 4… hasta 24 h; 10 intentos (`access_attempts`), luego solo «Reintentar» |
+| Otro `4xx` (datos rechazados) o contrato sin llave/periodicidad | `error` | No; solo «Reintentar» |
+| Sin `KONTROLIA_PLATFORM_API_KEY` | `error` («no está configurada») | Cada hora, sin gastar intentos, en cuanto se configure |
+
+**Días de gracia.** La foto de KontrolIA Auth puede traer por suscripción `in_grace`, `grace_until` y `manual_grace_days`; se guardan en `contracts.in_grace` y `contracts.grace_until` (solo si está en gracia). En la ficha, el contrato dice «Acceso vigente hasta el …» y, en gracia, «Pago pendiente: acceso hasta el …» en ámbar. El puente `/api/datos` no deja escribir `in_grace` ni `grace_until`.
+
+**Dónde se ve:** en cada factura (pestaña Cliente y Por facturar): «Acceso renovado hasta el …», «Renovando acceso…», «No se pudo renovar el acceso: …» con «Reintentar» (solo administradores) o «No aplica: cobro con tarjeta»; y «Registrar pago» en las timbradas sin pagar.
+
+```bash
+# Vercel (servidor de Vinqulia). La URL ya existe para el consumo del plan.
+KONTROLIA_AUTH_SERVER_URL=https://auth.kontrolia.io
+KONTROLIA_PLATFORM_API_KEY=kpk_live_…
+```
+
 ## Código
 
-`src/lib/server/facturacion/`: `planear.ts`, `periodos.ts`, `tarjeta.ts`, `faqturiaEstado.ts`, `ajustes.ts` (puros, con pruebas en el proyecto `server` de Vitest) y los ejecutores `guardar.ts`, `contratos.ts`, `cobros.ts`, `emitir.ts`, `conciliar.ts`, `procesar.ts`, `acciones.ts`. Rutas: `app/api/facturacion/{procesar,ajustes,facturas/[id],contratos/[id]}` y `app/api/integraciones/faqturia`. Pantallas: `src/components/crm/facturas/{PorFacturarPage,AjustesDeFacturacionPage,SeccionDeFacturas}.tsx`.
+`src/lib/server/facturacion/`: `planear.ts`, `periodos.ts`, `tarjeta.ts`, `faqturiaEstado.ts`, `ajustes.ts` (puros, con pruebas en el proyecto `server` de Vitest) y los ejecutores `guardar.ts`, `contratos.ts`, `cobros.ts`, `emitir.ts`, `conciliar.ts`, `procesar.ts`, `acciones.ts`, `acceso.ts` (renovar el acceso al pagar; su parte pura con pruebas en `acceso.test.ts`). Rutas: `app/api/facturacion/{procesar,ajustes,facturas/[id],contratos/[id]}` y `app/api/integraciones/faqturia`. Pantallas: `src/components/crm/facturas/{PorFacturarPage,AjustesDeFacturacionPage,SeccionDeFacturas,AccesoDeFactura}.tsx`.

@@ -1,6 +1,7 @@
 import { conectorActivo } from "../conectores/almacen";
 import { esConectorDeFacturacion } from "../conectores/registro";
 import { getServiceClient } from "../supabase-service";
+import { renovarAccesosPendientes } from "./acceso";
 import { conciliarAbiertas } from "./conciliar";
 import { planearFacturasDeContratos } from "./contratos";
 import { emitirFactura } from "./emitir";
@@ -14,7 +15,9 @@ import { hoyEnMexico } from "./periodos";
  *   2. revisa otra vez las que esperaban datos fiscales;
  *   3. regresa a la cola las que se quedaron «timbrando» por un corte;
  *   4. timbra las que están en la cola (con tope por corrida);
- *   5. pregunta a Faqturia por las timbradas que siguen sin pagar.
+ *   5. pregunta a Faqturia por las timbradas que siguen sin pagar;
+ *   6. pide a KontrolIA Auth renovar el acceso de las facturas de contrato
+ *      ya pagadas (pendientes y con error que toca reintentar).
  * Una organización que falla no detiene a las demás.
  */
 
@@ -31,6 +34,8 @@ export interface ResumenDeOrganizacion {
   timbradas: number;
   con_error: number;
   conciliadas: number;
+  accesos_renovados: number;
+  accesos_con_error: number;
   error?: string;
 }
 
@@ -47,6 +52,8 @@ const procesarOrganizacion = async (
     timbradas: 0,
     con_error: 0,
     conciliadas: 0,
+    accesos_renovados: 0,
+    accesos_con_error: 0,
   };
 
   const plan = await planearFacturasDeContratos(org, hoy, db);
@@ -95,6 +102,12 @@ const procesarOrganizacion = async (
     );
     resumen.conciliadas = cambiadas;
   }
+
+  // Al final: lo que la revisión de arriba acaba de marcar pagado también
+  // entra en esta misma corrida.
+  const acceso = await renovarAccesosPendientes(db, org);
+  resumen.accesos_renovados = acceso.renovadas;
+  resumen.accesos_con_error = acceso.con_error;
   return resumen;
 };
 
@@ -125,6 +138,8 @@ export const procesarFacturacion = async (
         timbradas: 0,
         con_error: 0,
         conciliadas: 0,
+        accesos_renovados: 0,
+        accesos_con_error: 0,
         error: error instanceof Error ? error.message : String(error),
       });
     }

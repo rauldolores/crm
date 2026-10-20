@@ -74,6 +74,12 @@ const Suscripcion = z.object({
     .nullish(),
   courtesy: z.object({ months: numero, until: texto, reason: texto }).nullish(),
   addons: z.array(Extra).nullish(),
+  // Días de gracia: venció sin pago y el acceso sigue hasta grace_until.
+  // Opcionales: una foto de antes de que KontrolIA Auth los mandara no los
+  // trae.
+  in_grace: z.boolean().nullish(),
+  grace_until: texto,
+  manual_grace_days: numero,
 });
 
 const Renovacion = z.object({
@@ -397,6 +403,8 @@ export function contratoDeSuscripcion(
     plan_name: s.plan.name ?? null,
     provider: s.provider ?? null,
     addons: s.addons ?? [],
+    in_grace: s.in_grace === true,
+    grace_until: s.in_grace === true ? (s.grace_until ?? null) : null,
     notes: notasDeContrato(s),
     source: ORIGEN_KONTROLIA_AUTH,
     external_id: llaveDeContrato(orgId, s.application_slug),

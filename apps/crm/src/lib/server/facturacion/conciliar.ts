@@ -9,6 +9,7 @@ import {
   type Db,
   type FacturaDeBandeja,
 } from "./guardar";
+import { marcarAccesoAlPagar } from "./acceso";
 import {
   cambiosDesdeFaqturia,
   DetalleDeFaqturia,
@@ -42,7 +43,7 @@ export const actualizarDesdeFaqturia = async (
   if (!actual) return null;
 
   const cambios = cambiosDesdeFaqturia(detalle, actual);
-  return exigir(
+  const nueva = exigir(
     await db
       .from("invoices")
       .update(cambios)
@@ -52,6 +53,14 @@ export const actualizarDesdeFaqturia = async (
       .single(),
     "Actualizar la factura con el aviso",
   ) as FacturaDeBandeja;
+
+  // Quedó pagada: si es de un contrato de KontrolIA Auth por transferencia,
+  // su acceso queda «pendiente» de renovar (lo pide quien llamó, o el
+  // proceso de cada hora).
+  if (nueva.payment_status === "paid" && !nueva.access_status) {
+    nueva.access_status = await marcarAccesoAlPagar(db, org, nueva);
+  }
+  return nueva;
 };
 
 /** Ventana de la revisión: más vieja que esto ya no se pregunta sola. */

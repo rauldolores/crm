@@ -347,6 +347,9 @@ export type Contract = {
   addons?: ContractAddon[] | null;
   /** Módulo de facturación: si el contrato se factura solo. */
   billing_enabled?: boolean;
+  /** Venció sin pago y KontrolIA Auth le da días de gracia hasta grace_until. */
+  in_grace?: boolean;
+  grace_until?: string | null;
 } & Pick<RaRecord, "id">;
 
 /** Extra de un contrato tal como lo manda KontrolIA Auth (importes en centavos). */
@@ -824,7 +827,23 @@ export type Invoice = {
   problems?: string[] | null;
   approved_at?: string | null;
   discard_reason?: string | null;
+  /** Referencia del pago registrado a mano. */
+  payment_reference?: string | null;
+  /** Renovar el acceso al pagar (contratos de KontrolIA Auth por transferencia). */
+  access_status?: InvoiceAccessStatus | null;
+  access_renewed_until?: string | null;
+  access_error?: string | null;
+  access_attempts?: number | null;
+  access_updated_at?: string | null;
+  access_next_attempt_at?: string | null;
 } & Pick<RaRecord, "id">;
+
+export type InvoiceAccessStatus =
+  | "not_applicable"
+  | "pending"
+  | "renewed"
+  | "error"
+  | "skipped";
 
 /** Renglón de una factura que armó el CRM (precio antes de IVA). */
 export type InvoiceItem = {

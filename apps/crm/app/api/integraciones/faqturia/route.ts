@@ -1,3 +1,6 @@
+import { after } from "next/server";
+
+import { renovarAcceso } from "@/lib/server/facturacion/acceso";
 import { actualizarDesdeFaqturia } from "@/lib/server/facturacion/conciliar";
 import {
   AvisoDeFaqturia,
@@ -20,6 +23,10 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * La organización de Faqturia es la misma que la de Vinqulia (las dos
  * usan las organizaciones de KontrolIA Auth): con `organization_id` se
  * encuentra el conector y con su secreto se comprueba la firma.
+ *
+ * Si el aviso deja PAGADA la factura de un contrato de KontrolIA Auth por
+ * transferencia, después de responder se pide a KontrolIA Auth renovar su
+ * acceso (ver facturacion/acceso.ts).
  *
  * Respuestas: 200 (aplicado o ignorado), 401 firma inválida, 404 sin
  * conector de Faqturia con secreto para esa organización, 400 cuerpo no
@@ -89,6 +96,20 @@ export async function POST(peticion: Request) {
     if (!factura) {
       // Una factura hecha en Faqturia a mano, no desde Vinqulia.
       return Response.json({ ok: true, ignored: true, reason: "unknown" });
+    }
+    // Quedó pagada la factura de un contrato de KontrolIA Auth por
+    // transferencia: se pide la renovación del acceso después de responder,
+    // para no hacer esperar a Faqturia. Si falla, la retoma el proceso de
+    // cada hora.
+    if (factura.access_status === "pending") {
+      const facturaId = factura.id;
+      after(async () => {
+        try {
+          await renovarAcceso(organizacion, facturaId, { db });
+        } catch (error) {
+          console.error("[facturación] acceso sin renovar", facturaId, error);
+        }
+      });
     }
     return Response.json({
       ok: true,

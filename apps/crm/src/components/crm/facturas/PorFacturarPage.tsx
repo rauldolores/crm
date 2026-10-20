@@ -31,6 +31,7 @@ import type {
   InvoiceBillingStatus,
   InvoiceItem,
 } from "../types";
+import { BotonRegistrarPago, EstadoDeAccesoDeFactura } from "./AccesoDeFactura";
 import { BotonesDeDescarga } from "./ListaDeFacturas";
 import {
   fechaCorta,
@@ -293,6 +294,7 @@ export const FilaDeFactura = ({
           {estado === "error" && factura.error && (
             <p className="text-xs text-destructive">{factura.error}</p>
           )}
+          <EstadoDeAccesoDeFactura factura={factura} alCambiar={alCambiar} />
           {estado === "discarded" && factura.discard_reason && (
             <p className="text-xs text-muted-foreground">
               {factura.discard_reason}
@@ -357,6 +359,7 @@ export const FilaDeFactura = ({
         {estado === "stamped" && (
           <BotonesDeDescarga factura={factura} compactos />
         )}
+        <BotonRegistrarPago factura={factura} alCambiar={alCambiar} />
         <Button size="sm" variant="ghost" onClick={() => setAbierta((a) => !a)}>
           {abierta ? (
             <ChevronUp className="h-4 w-4" />

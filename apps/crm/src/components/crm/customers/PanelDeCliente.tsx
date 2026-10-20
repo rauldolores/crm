@@ -26,6 +26,7 @@ import { NumberInput } from "@/components/admin/number-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { TextInput } from "@/components/admin/text-input";
 
+import { fechaDeVigencia } from "../facturas/formatoDeFacturas";
 import {
   FacturacionDelContrato,
   SeccionDeFacturas,
@@ -403,6 +404,15 @@ const FilaDeProducto = ({ contrato }: { contrato: Contract }) => {
         {[vigencia, cobro].filter(Boolean).join(" · ")}
         {contrato.notes ? ` · ${contrato.notes}` : ""}
       </p>
+      {contrato.in_grace && (
+        <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
+          {contrato.grace_until
+            ? translate("crm.customers.kontrolia.in_grace", {
+                date: fechaDeVigencia(contrato.grace_until),
+              })
+            : translate("crm.customers.kontrolia.in_grace_no_date")}
+        </p>
+      )}
       {contrato.source === ORIGEN_KONTROLIA && (
         <p className="flex items-center gap-1 text-xs text-muted-foreground">
           <RefreshCw className="h-3 w-3" />
