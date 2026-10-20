@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { llamarApi } from "../misc/llamarApi";
 import type { BillingSettings, Company, Contract, Invoice } from "../types";
+import { BotonRegistrarPago, EstadoDeAccesoDeFactura } from "./AccesoDeFactura";
 import { BotonesDeDescarga } from "./ListaDeFacturas";
 import { PorFacturarPage } from "./PorFacturarPage";
 import {
@@ -165,7 +166,11 @@ export const FacturacionDelContrato = ({
 
 export const SeccionDeFacturas = ({ empresa }: { empresa: Company }) => {
   const translate = useTranslate();
-  const { data: facturas, isPending } = useGetList<Invoice>("invoices", {
+  const {
+    data: facturas,
+    isPending,
+    refetch,
+  } = useGetList<Invoice>("invoices", {
     filter: { company_id: empresa.id, "billing_status@neq": "discarded" },
     sort: { field: "created_at", order: "DESC" },
     pagination: { page: 1, perPage: 50 },
@@ -212,6 +217,10 @@ export const SeccionDeFacturas = ({ empresa }: { empresa: Company }) => {
                         )}`
                       : ""}
                   </p>
+                  <EstadoDeAccesoDeFactura
+                    factura={factura}
+                    alCambiar={() => refetch()}
+                  />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium tabular-nums">
@@ -233,6 +242,10 @@ export const SeccionDeFacturas = ({ empresa }: { empresa: Company }) => {
                   <Badge variant={VARIANTE_DE_BANDEJA[estado]}>
                     {translate(`crm.customer_billing.billing_status.${estado}`)}
                   </Badge>
+                  <BotonRegistrarPago
+                    factura={factura}
+                    alCambiar={() => refetch()}
+                  />
                   <BotonesDeDescarga factura={factura} compactos />
                 </div>
               </li>

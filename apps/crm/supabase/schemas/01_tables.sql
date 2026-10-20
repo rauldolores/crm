@@ -496,7 +496,11 @@ create table crm.contracts (
     addons jsonb not null default '[]'::jsonb,
     -- Módulo de facturación: si este contrato se factura solo. Apagado por
     -- omisión: nada se factura sin que alguien lo encienda.
-    billing_enabled boolean not null default false
+    billing_enabled boolean not null default false,
+    -- La suscripción venció sin pago y KontrolIA Auth le da días de gracia
+    -- (llegan en la foto): el acceso sigue hasta grace_until.
+    in_grace boolean not null default false,
+    grace_until timestamp with time zone
 );
 
 -- Compras: los HECHOS puntuales (una factura, un pedido, un cobro).
@@ -710,7 +714,21 @@ create table crm.invoices (
     approved_at timestamp with time zone,
     discard_reason text,
     -- Entra en la clave de idempotencia que se manda al proveedor.
-    stamp_attempts integer not null default 0
+    stamp_attempts integer not null default 0,
+    -- Renovar el acceso al pagar (contratos por transferencia de KontrolIA
+    -- Auth): si ya se pidió a KontrolIA Auth extender la vigencia, hasta
+    -- cuándo quedó, por qué falló y cuándo se reintenta solo (nulo = ya no).
+    access_status text
+        constraint invoices_access_status_check
+        check (access_status is null or access_status in (
+            'not_applicable', 'pending', 'renewed', 'error', 'skipped')),
+    access_renewed_until timestamp with time zone,
+    access_error text,
+    access_attempts integer not null default 0,
+    access_updated_at timestamp with time zone,
+    access_next_attempt_at timestamp with time zone,
+    -- Referencia del pago registrado a mano («Registrar pago»).
+    payment_reference text
 );
 alter table crm.invoices
     add constraint invoices_connector_id_fkey foreign key (connector_id) references crm.connectors(id) on delete set null,
@@ -729,6 +747,7 @@ create unique index invoices_origin_source_ref_uk
 create index invoices_billing_status_idx on crm.invoices (organization_id, billing_status);
 create index invoices_company_id_idx on crm.invoices (company_id);
 create index invoices_contract_id_idx on crm.invoices (contract_id);
+create index invoices_access_status_idx on crm.invoices (organization_id, access_status);
 
 -- Renglones de las facturas que arma el CRM (contratos y cobros). Precio
 -- unitario antes de IVA; claves del SAT por renglón.

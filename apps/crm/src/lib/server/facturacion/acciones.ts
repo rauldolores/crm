@@ -1,5 +1,6 @@
 import { ErrorDeConector } from "../conectores/tipos";
 import { getServiceClient } from "../supabase-service";
+import { marcarAccesoAlPagar } from "./acceso";
 import { emitirFactura, type ResultadoDeEmision } from "./emitir";
 import {
   COLUMNAS_DE_FACTURA,
@@ -207,4 +208,79 @@ export const aprobarSiSePuede = async (
     factura,
     mensaje: mensajes[factura.billing_status ?? ""] ?? null,
   };
+};
+
+/** «2026-10-20» se lee como mediodía en México; un instante, tal cual. */
+export const instanteDelPago = (valor: string): string | null => {
+  const limpio = valor.trim();
+  const texto = /^\d{4}-\d{2}-\d{2}$/.test(limpio)
+    ? `${limpio}T12:00:00-06:00`
+    : limpio;
+  const ms = Date.parse(texto);
+  if (Number.isNaN(ms)) return null;
+  return new Date(ms).toISOString();
+};
+
+/**
+ * «Registrar pago»: un administrador marca pagada una factura timbrada que
+ * se cobró fuera de Faqturia (o cuyo complemento de pago todavía no llega).
+ * Queda pagada por el total y, si es de un contrato de KontrolIA Auth por
+ * transferencia, su acceso queda pendiente de renovar.
+ *
+ * Faqturia no se entera: el complemento de pago de una PPD se emite allá.
+ * Un aviso posterior de Faqturia nunca regresa el pago (el pago no
+ * retrocede, ver faqturiaEstado.ts).
+ */
+export const registrarPago = async (
+  org: string,
+  id: number,
+  datos: { pagadaEl: string; referencia?: string | null },
+  db: Db = getServiceClient(),
+): Promise<FacturaDeBandeja> => {
+  const factura = await leer(db, org, id);
+  if (factura.billing_status !== "stamped") {
+    throw new ErrorDeConector(
+      "Solo se registra el pago de una factura timbrada.",
+      409,
+    );
+  }
+  if (factura.payment_status === "paid") {
+    throw new ErrorDeConector("Esta factura ya está pagada.", 409);
+  }
+  const pagadaEl = instanteDelPago(datos.pagadaEl);
+  if (!pagadaEl) {
+    throw new ErrorDeConector("La fecha del pago no es válida.", 400);
+  }
+  if (Date.parse(pagadaEl) > Date.now() + 86_400_000) {
+    throw new ErrorDeConector("La fecha del pago no puede ser futura.", 400);
+  }
+  const referencia = datos.referencia?.trim().slice(0, 200) || null;
+
+  let cambio = db
+    .from("invoices")
+    .update({
+      payment_status: "paid",
+      paid_amount: Number(factura.total ?? 0),
+      paid_at: pagadaEl,
+      payment_reference: referencia,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("organization_id", org)
+    .eq("id", id)
+    .eq("billing_status", "stamped");
+  cambio = factura.payment_status
+    ? cambio.eq("payment_status", factura.payment_status)
+    : cambio.is("payment_status", null);
+  const fila = exigir(
+    await cambio.select(COLUMNAS_DE_FACTURA).maybeSingle(),
+    "Registrar el pago",
+  ) as FacturaDeBandeja | null;
+  if (!fila) {
+    throw new ErrorDeConector(
+      "La factura cambió mientras tanto. Recarga la página.",
+      409,
+    );
+  }
+  fila.access_status = await marcarAccesoAlPagar(db, org, fila);
+  return fila;
 };

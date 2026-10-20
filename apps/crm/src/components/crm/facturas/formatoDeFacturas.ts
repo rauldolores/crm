@@ -44,3 +44,17 @@ export const VARIANTE_DE_BANDEJA: Record<
   cancelled: "outline",
   discarded: "outline",
 };
+
+/**
+ * Fecha de un instante (timestamptz) en hora de México: una vigencia que
+ * termina «2028-01-01T05:59:59Z» es el 31 de diciembre allá.
+ */
+export const fechaDeVigencia = (valor?: string | null): string =>
+  valor
+    ? new Date(valor).toLocaleDateString(LOCALE, {
+        timeZone: "America/Mexico_City",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";

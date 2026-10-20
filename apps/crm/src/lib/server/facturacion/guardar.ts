@@ -10,6 +10,7 @@ import type {
   AjustesDeFacturacion,
   ContratoAFacturar,
   EmpresaFiscal,
+  EstadoDeAcceso,
   EstadoDeBandeja,
   FacturaPlaneada,
   ProblemaFiscal,
@@ -36,7 +37,7 @@ export const exigir = <T>(
 
 /** Las columnas de crm.invoices que usan el servidor y la bandeja. */
 export const COLUMNAS_DE_FACTURA =
-  "id, organization_id, connector_id, provider, quote_id, company_id, contract_id, external_id, uuid, serie, folio, status, total, subtotal, tax, currency, issued_at, error, origin, billing_status, payment_method, payment_form, payment_status, paid_amount, paid_at, due_on, period_start, period_end, source_ref, problems, approved_by, approved_at, discard_reason, stamp_attempts, created_at, updated_at";
+  "id, organization_id, connector_id, provider, quote_id, company_id, contract_id, external_id, uuid, serie, folio, status, total, subtotal, tax, currency, issued_at, error, origin, billing_status, payment_method, payment_form, payment_status, paid_amount, paid_at, due_on, period_start, period_end, source_ref, problems, approved_by, approved_at, discard_reason, stamp_attempts, access_status, access_renewed_until, access_error, access_attempts, access_updated_at, access_next_attempt_at, payment_reference, created_at, updated_at";
 
 export interface FacturaDeBandeja {
   id: number;
@@ -73,6 +74,13 @@ export interface FacturaDeBandeja {
   approved_at: string | null;
   discard_reason: string | null;
   stamp_attempts: number;
+  access_status: EstadoDeAcceso | null;
+  access_renewed_until: string | null;
+  access_error: string | null;
+  access_attempts: number;
+  access_updated_at: string | null;
+  access_next_attempt_at: string | null;
+  payment_reference: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -276,6 +284,12 @@ export const guardarFacturaPlaneada = async (
     period_end: plan.period_end,
     source_ref: plan.source_ref,
     problems: problemas,
+    // Un cobro con tarjeta o de créditos ya renovó el acceso en KontrolIA
+    // Auth al cobrarse: no hay nada que pedirle al pagar.
+    access_status:
+      plan.origin === "card" || plan.origin === "credits"
+        ? "not_applicable"
+        : null,
   };
 
   let alta = await db

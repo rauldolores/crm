@@ -14,6 +14,21 @@ describe("quitarCamposProtegidos", () => {
     ).toEqual({ name: "X" });
   });
 
+  it("quita los días de gracia, que solo escribe KontrolIA Auth", () => {
+    expect(
+      JSON.parse(
+        quitarCamposProtegidos(
+          "contracts",
+          JSON.stringify({
+            name: "X",
+            in_grace: true,
+            grace_until: "2027-01-10T00:00:00Z",
+          }),
+        ),
+      ),
+    ).toEqual({ name: "X" });
+  });
+
   it("también en una lista", () => {
     expect(
       JSON.parse(

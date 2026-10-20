@@ -6,7 +6,9 @@
  * contrato.
  */
 export const CAMPOS_PROTEGIDOS: Record<string, string[]> = {
-  contracts: ["billing_enabled"],
+  // in_grace y grace_until los escribe solo la integración con KontrolIA
+  // Auth: a mano dirían que alguien tiene acceso que allá no tiene.
+  contracts: ["billing_enabled", "in_grace", "grace_until"],
 };
 
 /**
