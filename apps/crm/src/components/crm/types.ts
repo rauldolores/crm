@@ -345,6 +345,8 @@ export type Contract = {
   /** manual = por contrato; stripe = con tarjeta. */
   provider?: string | null;
   addons?: ContractAddon[] | null;
+  /** Módulo de facturación: si el contrato se factura solo. */
+  billing_enabled?: boolean;
 } & Pick<RaRecord, "id">;
 
 /** Extra de un contrato tal como lo manda KontrolIA Auth (importes en centavos). */
@@ -765,13 +767,35 @@ export type Product = {
 
 export type InvoiceStatus = "stamped" | "draft" | "cancelled" | "error";
 
-/** Una factura emitida por el proveedor conectado (Faqturia…). */
+export type InvoiceOrigin =
+  | "quote"
+  | "contract"
+  | "card"
+  | "credits"
+  | "manual";
+
+export type InvoiceBillingStatus =
+  | "pending_review"
+  | "missing_data"
+  | "queued"
+  | "stamping"
+  | "stamped"
+  | "error"
+  | "cancelled"
+  | "discarded";
+
+export type InvoicePaymentStatus = "unpaid" | "partial" | "paid";
+
+/**
+ * Una factura emitida por el proveedor conectado (Faqturia…), o en la
+ * bandeja «Por facturar» antes de timbrarse (sin id externo todavía).
+ */
 export type Invoice = {
   organization_id?: string;
   provider: string;
   quote_id: Identifier | null;
   company_id: Identifier | null;
-  external_id: string;
+  external_id: string | null;
   uuid: string | null;
   serie: string | null;
   folio: string | null;
@@ -781,7 +805,56 @@ export type Invoice = {
   issued_at: string | null;
   error: string | null;
   created_at: string;
+  updated_at?: string;
+  contract_id?: Identifier | null;
+  period_start?: string | null;
+  period_end?: string | null;
+  origin?: InvoiceOrigin;
+  billing_status?: InvoiceBillingStatus | null;
+  payment_method?: "PPD" | "PUE" | null;
+  payment_form?: string | null;
+  payment_status?: InvoicePaymentStatus | null;
+  paid_amount?: number | string | null;
+  paid_at?: string | null;
+  due_on?: string | null;
+  subtotal?: number | string | null;
+  tax?: number | string | null;
+  source_ref?: string | null;
+  /** Lo que falta para timbrar: rfc, tax_regime, cfdi_use, zipcode… */
+  problems?: string[] | null;
+  approved_at?: string | null;
+  discard_reason?: string | null;
 } & Pick<RaRecord, "id">;
+
+/** Renglón de una factura que armó el CRM (precio antes de IVA). */
+export type InvoiceItem = {
+  invoice_id: Identifier;
+  position: number;
+  description: string;
+  product_ref: string | null;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
+  clave_prod_serv: string;
+  clave_unidad: string;
+  tax_rate: number | string;
+} & Pick<RaRecord, "id">;
+
+/** Ajustes de facturación de un producto ('*' = los generales). */
+export type BillingSettings = {
+  product_key: string;
+  clave_prod_serv: string;
+  clave_unidad: string;
+  concept_template: string;
+  tax_rate: number;
+  prices_include_tax: boolean;
+  metodo_pago_transferencia: "PPD" | "PUE";
+  forma_pago_transferencia: string;
+  forma_pago_tarjeta: string;
+  days_before: number;
+  mode: "review" | "auto";
+  active: boolean;
+};
 
 export type QuoteItem = {
   quote_id: Identifier;

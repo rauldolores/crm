@@ -458,6 +458,16 @@ create policy "Products are scoped to the organization" on crm.products
 create policy "Invoices are scoped to the organization" on crm.invoices
     for select to authenticated using (organization_id = crm.current_organization_id());
 
+-- Módulo de facturación: renglones de factura y ajustes por producto. La
+-- organización los lee; los escribe el servidor (rutas que exigen
+-- administrador), igual que las facturas.
+alter table crm.invoice_items enable row level security;
+alter table crm.billing_settings enable row level security;
+create policy "Invoice items are scoped to the organization" on crm.invoice_items
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Billing settings are scoped to the organization" on crm.billing_settings
+    for select to authenticated using (organization_id = crm.current_organization_id());
+
 -- Cotizaciones
 alter table crm.quotes enable row level security;
 alter table crm.quote_items enable row level security;

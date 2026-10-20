@@ -1,5 +1,6 @@
 import {
   Blocks,
+  FileCheck2,
   Globe,
   Mail,
   Plug,
@@ -22,6 +23,7 @@ import { IaPage } from "../misc/IaPage";
 import { CatalogoPage } from "../modules/CatalogoPage";
 import { ConectoresPage } from "../conectores/ConectoresPage";
 import { CotizacionesPage } from "../cotizaciones/CotizacionesPage";
+import { AjustesDeFacturacionPage } from "../facturas/AjustesDeFacturacionPage";
 
 interface Herramienta {
   titulo: string;
@@ -94,6 +96,12 @@ export const HerramientasDeAdministracion = () => {
       descripcion: translate("crm.connectors.intro"),
       ruta: ConectoresPage.path,
       Icono: Plug,
+    },
+    {
+      titulo: translate("crm.customer_billing.settings.title"),
+      descripcion: translate("crm.customer_billing.settings.intro"),
+      ruta: AjustesDeFacturacionPage.path,
+      Icono: FileCheck2,
     },
   ];
 

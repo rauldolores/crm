@@ -26,6 +26,10 @@ import { NumberInput } from "@/components/admin/number-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { TextInput } from "@/components/admin/text-input";
 
+import {
+  FacturacionDelContrato,
+  SeccionDeFacturas,
+} from "../facturas/SeccionDeFacturas";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type {
   Company,
@@ -269,6 +273,10 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
         )}
       </section>
 
+      {/* Módulo de facturación: lo que se le ha facturado, de contratos,
+          cobros con tarjeta y cotizaciones. */}
+      <SeccionDeFacturas empresa={empresa} />
+
       {/* El historial lo escribe la integración (KontrolIA Auth): cambios de
           plan, renovaciones, extras y cortesías, del más nuevo al más viejo. */}
       {!!historial?.length && (
@@ -401,6 +409,7 @@ const FilaDeProducto = ({ contrato }: { contrato: Contract }) => {
           {translate("crm.customers.kontrolia.auto_contract")}
         </p>
       )}
+      {esRecurrente(contrato) && <FacturacionDelContrato contrato={contrato} />}
     </div>
   );
 };
@@ -414,25 +423,30 @@ const FilaDeContratoManual = ({ contrato }: { contrato: Contract }) => {
   const translate = useTranslate();
   const importe = useImporte();
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3 text-sm">
-      <div>
-        <p className="font-medium">{contrato.name}</p>
-        <p className="text-xs text-muted-foreground">
-          {contrato.billing_period
-            ? translate(`crm.customers.period.${contrato.billing_period}`)
-            : translate("crm.customers.period.one_time")}
-          {contrato.renews_on && esRecurrente(contrato)
-            ? ` · ${translate("crm.customers.renews_on")} ${fecha(contrato.renews_on)}`
-            : ""}
-          {contrato.source !== "manual" ? ` · ${contrato.source}` : ""}
-        </p>
+    <div className="space-y-2 rounded-md border p-3 text-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="font-medium">{contrato.name}</p>
+          <p className="text-xs text-muted-foreground">
+            {contrato.billing_period
+              ? translate(`crm.customers.period.${contrato.billing_period}`)
+              : translate("crm.customers.period.one_time")}
+            {contrato.renews_on && esRecurrente(contrato)
+              ? ` · ${translate("crm.customers.renews_on")} ${fecha(contrato.renews_on)}`
+              : ""}
+            {contrato.source !== "manual" ? ` · ${contrato.source}` : ""}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="font-medium">{importe(contrato.amount)}</span>
+          <Badge
+            variant={contrato.status === "active" ? "default" : "secondary"}
+          >
+            {translate(`crm.customers.contract_status.${contrato.status}`)}
+          </Badge>
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="font-medium">{importe(contrato.amount)}</span>
-        <Badge variant={contrato.status === "active" ? "default" : "secondary"}>
-          {translate(`crm.customers.contract_status.${contrato.status}`)}
-        </Badge>
-      </div>
+      {esRecurrente(contrato) && <FacturacionDelContrato contrato={contrato} />}
     </div>
   );
 };

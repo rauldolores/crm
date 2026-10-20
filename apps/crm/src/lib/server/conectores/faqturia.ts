@@ -49,8 +49,8 @@ export const conceptoDeFaqturia = (
   cantidad: linea.cantidad,
   precio_unitario: linea.precioUnitario,
   descuento: linea.descuento,
-  clave_sat: ajustes.clave_prod_serv,
-  clave_unidad_sat: ajustes.clave_unidad,
+  clave_sat: linea.claveProdServ || ajustes.clave_prod_serv,
+  clave_unidad_sat: linea.claveUnidad || ajustes.clave_unidad,
   ...(linea.sku ? { identificador_externo: linea.sku } : {}),
   // Sin `impuestos`, Faqturia no calcula IVA para el concepto; con él,
   // traslada la tasa indicada.
@@ -68,7 +68,12 @@ const estadoDe = (
   timbrada: boolean,
 ): FacturaEmitida["status"] => {
   if (factura.status === "cancelada") return "cancelled";
-  if (timbrada || factura.status === "timbrada" || factura.status === "pagada")
+  if (
+    timbrada ||
+    factura.status === "timbrada" ||
+    factura.status === "parcialmente_pagada" ||
+    factura.status === "pagada"
+  )
     return "stamped";
   return "draft";
 };
@@ -86,6 +91,7 @@ export const facturaDeFaqturia = (
   status: estadoDe(factura, opciones.timbrada),
   issuedAt: factura.fecha_timbrado ?? factura.fecha_emision ?? null,
   error: opciones.error ?? null,
+  detalle: factura as unknown as Record<string, unknown>,
 });
 
 export class ConectorFaqturia implements ConectorDeFacturacion {
@@ -233,6 +239,11 @@ export class ConectorFaqturia implements ConectorDeFacturacion {
       error?: { message?: string } | string;
     }>("/invoices", {
       method: "POST",
+      // Misma clave + mismo cuerpo: Faqturia devuelve la factura original en
+      // vez de timbrar otra (24 h). Es lo que hace seguro reintentar.
+      ...(peticion.claveDeIdempotencia
+        ? { headers: { "Idempotency-Key": peticion.claveDeIdempotencia } }
+        : {}),
       body: JSON.stringify({
         client_id: clienteId,
         serie: this.ajustes.serie || "A",
@@ -243,6 +254,10 @@ export class ConectorFaqturia implements ConectorDeFacturacion {
         conceptos: peticion.lineas.map((linea) =>
           conceptoDeFaqturia(linea, ajustes),
         ),
+        ...(peticion.notas ? { notas: peticion.notas.slice(0, 2000) } : {}),
+        ...(peticion.fechaDeVencimiento
+          ? { fecha_vencimiento: peticion.fechaDeVencimiento }
+          : {}),
         auto_stamp: true,
       }),
     });

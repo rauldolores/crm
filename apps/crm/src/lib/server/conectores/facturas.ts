@@ -115,6 +115,14 @@ export const facturarCotizacion = async (
         currency: emitida.currency,
         issued_at: emitida.issuedAt,
         error: emitida.error,
+        // Módulo de facturación: el estado que leen la bandeja y la ficha.
+        origin: "quote",
+        billing_status:
+          emitida.status === "stamped"
+            ? "stamped"
+            : emitida.status === "cancelled"
+              ? "cancelled"
+              : "error",
         updated_at: ahora,
       },
       { onConflict: "organization_id,provider,external_id" },
@@ -195,6 +203,12 @@ export const refrescarFactura = async (
       serie: fresca.serie,
       folio: fresca.folio,
       status: fresca.status,
+      billing_status:
+        fresca.status === "stamped"
+          ? "stamped"
+          : fresca.status === "cancelled"
+            ? "cancelled"
+            : "error",
       total: fresca.total || factura.total,
       issued_at: fresca.issuedAt,
       error: fresca.status === "stamped" ? null : factura.error,

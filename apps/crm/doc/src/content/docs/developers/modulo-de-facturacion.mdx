@@ -1,0 +1,74 @@
+---
+title: Módulo de facturación
+description: Cómo Vinqulia factura con Faqturia los contratos por transferencia y los cobros con tarjeta de KONTROLIA.
+---
+
+Las ventas de KONTROLIA se facturan **desde Vinqulia**, con el conector de facturación (Faqturia). KontrolIA Auth solo da acceso, maneja planes y cobra con tarjeta (Stripe): **nunca factura**.
+
+## Reglas
+
+- **Una factura por producto.** Cada contrato es un producto («AduaniaX · IMMEX»); sus extras (`contracts.addons`) van como renglones de la misma factura. Un extra incluido en el plan no se cobra.
+- **Contrato por transferencia:** la factura del periodo que sigue sale **15 días antes** de `renews_on` (configurable), con método **PPD** y forma **99**, y vence el día de la renovación. Periodo = `[renews_on, renews_on + periodicidad)`. El acceso se renueva cuando se paga (fase 2, todavía no).
+- **Cobro con tarjeta:** cuando KontrolIA Auth avisa que cobró (`payment.succeeded`), la factura sale **ya pagada**: método **PUE**, forma **04** (configurable) y total = lo cobrado. El cobro con tarjeta incluye el IVA, así que el subtotal se despeja del total.
+- **Claves del SAT** por omisión `81112106` / `E48`, configurables por producto.
+- **Modo por producto:** «Revisar antes de timbrar» (por omisión: la factura espera en la bandeja) o «Timbrar sola».
+- **Datos fiscales** de la empresa: razón social (`name`), RFC (`tax_identifier`), régimen (`tax_regime`), uso del CFDI (`cfdi_use`) y código postal (`zipcode`). Si falta alguno no se timbra: la factura queda en «Falta información» y se crea una **tarea** para el responsable de la cuenta (con el primer contacto sin archivar de la empresa; sin contacto no hay tarea). Cada hora se vuelve a revisar: cuando la empresa los tiene, la factura sigue sola.
+- **Nada se factura solo** para un contrato que no tenga encendido «Facturar automáticamente» (`contracts.billing_enabled`, apagado en todos los contratos al instalar). Tu propia organización, que existe como cliente en tu CRM, no se factura a sí misma salvo que alguien lo encienda.
+- **Los cobros con tarjeta siempre se registran** (aunque el contrato no tenga la facturación encendida) en «Por revisar», para que ningún cobro se quede sin CFDI sin que nadie lo vea. Solo se timbran solos si el contrato la tiene encendida y su producto está en «Timbrar sola».
+
+## Dónde se ve
+
+- **Ajustes → Facturación** (`/modulos/facturacion`): ajustes generales (`product_key = '*'`) y por producto (`application_slug`): claves del SAT, texto del concepto (`{producto}`, `{plan}`, `{periodo}`), IVA, si los precios ya incluyen IVA, método y forma por transferencia, forma con tarjeta, días antes y modo. También el secreto del aviso de Faqturia.
+- **Por facturar** (`/por-facturar`, en el menú con el módulo Facturas activo): pestañas Por revisar, Falta información, Con error y Timbradas recientes, con Aprobar y timbrar, Reintentar, Descartar (con motivo) y Ver renglones.
+- **Empresa → pestaña Cliente:** sección Facturas (folio, periodo, total, pagado, estado de pago, estado, PDF/XML) y, en cada contrato con periodicidad, el interruptor «Facturar automáticamente», la fecha en que saldrá la siguiente (`renews_on − días antes`) y «Facturar ahora».
+
+Aprobar, reintentar, descartar, «Facturar ahora», el interruptor del contrato y los ajustes exigen ser **administrador** de la organización. El puente `/api/datos` sirve `invoices`, `invoice_items` y `billing_settings` de **solo lectura** y no deja escribir `contracts.billing_enabled`.
+
+## Datos
+
+| Tabla | Qué guarda |
+|---|---|
+| `crm.billing_settings` | Ajustes por producto (`'*'` = generales). |
+| `crm.invoices` | Además de las de cotización: `origin` (`contract`, `card`, `credits`), `contract_id`, `period_start`/`period_end`, `billing_status` (`pending_review`, `missing_data`, `queued`, `stamping`, `stamped`, `error`, `cancelled`, `discarded`), `payment_method`/`payment_form`, `payment_status` (`unpaid`, `partial`, `paid`), `paid_amount`, `paid_at`, `due_on`, `subtotal`, `tax`, `source_ref`, `problems`. `external_id` es nulo mientras la factura no llega a Faqturia. |
+| `crm.invoice_items` | Renglones (precio antes de IVA, claves del SAT por renglón). |
+| `crm.connectors.webhook_secret` | Secreto del aviso de Faqturia (solo `service_role`). |
+
+**Idempotencia:** índice único `(organization_id, contract_id, period_start, origin)` (una factura por contrato y periodo, aunque el proceso corra cada hora o se pulse «Facturar ahora» dos veces) y `(organization_id, origin, source_ref)` (un cobro, una factura, aunque KontrolIA Auth reintente). Para timbrar, la factura se «toma» con un cambio condicional `queued → stamping`, y a Faqturia se le manda `Idempotency-Key` (factura + intentos pedidos por una persona + huella de los datos): si el proceso se cae a mitad, el reintento recibe la misma factura en vez de timbrar otra. Una factura que se queda «timbrando» más de 15 minutos vuelve a la cola.
+
+## Qué se le manda a Faqturia
+
+`POST /api/external/invoices` con: `client_id` (el cliente con ese RFC; si no existe se crea), `serie` del conector, `uso_cfdi` de la empresa, `forma_pago` y `metodo_pago` de la factura, `moneda`, `conceptos` (`descripcion`, `cantidad`, `precio_unitario`, `clave_sat`, `clave_unidad_sat`, `impuestos.traslados = [{impuesto: "002", tasaOCuota}]`), `notas` («Periodo: enero 2027»), `fecha_vencimiento` (solo PPD) y `auto_stamp: true`, con la cabecera `Idempotency-Key`.
+
+## Proceso de cada hora
+
+`POST /api/facturacion/procesar`, protegido con la cabecera `X-Vinqulia-Facturacion` (comparada en tiempo constante con `FACTURACION_CRON_SECRET`). Por cada organización con Faqturia conectada: arma las facturas de los contratos a los que ya les toca, revisa otra vez las que esperaban datos fiscales, regresa a la cola las atoradas, timbra hasta 10 de la cola y pregunta a Faqturia por las timbradas sin pagar de los últimos 120 días (hasta 25).
+
+Lo despierta la base: `crm.despachar_facturacion()` por pg_cron (`7 * * * *`) hace POST a `<app_url>/api/facturacion/procesar`. La dirección y el secreto **no** están en la migración: se leen de `crm.internal_settings`; sin secreto, la función no hace nada.
+
+```sql
+-- Una sola vez, en el SQL de Supabase (app_url ya existe; revisa que sea la de producción).
+insert into crm.internal_settings (key, value)
+values ('billing_cron_secret', '<el mismo valor que FACTURACION_CRON_SECRET>')
+on conflict (key) do update set value = excluded.value, updated_at = now();
+
+update crm.internal_settings set value = 'https://app.vinqulia.com' where key = 'app_url';
+```
+
+```bash
+# Vercel (servidor de Vinqulia)
+FACTURACION_CRON_SECRET=
+```
+
+## Avisos de Faqturia
+
+`POST https://app.vinqulia.com/api/integraciones/faqturia`. En Faqturia crea un webhook a esa dirección con los eventos `invoice.created`, `invoice.stamped`, `invoice.canceled`, `invoice.paid` e `invoice.partially_paid`, y pega su secreto en Ajustes → Facturación. La firma `X-Webhook-Signature: t=<unix>,v1=<hex HMAC-SHA256(secreto, "<t>.<cuerpo>")>` se comprueba sobre el cuerpo crudo (300 s de tolerancia). El `organization_id` de Faqturia es el mismo que el de Vinqulia (las dos usan las organizaciones de KontrolIA Auth): con él se encuentra el conector y su secreto.
+
+El estado de pago **nunca retrocede** (una factura PUE de tarjeta ya pagada sigue pagada aunque Faqturia no tenga el pago registrado), la cancelación es definitiva y un aviso atrasado no regresa una factura timbrada a borrador. Respuestas: `200` (aplicado o ignorado), `401` firma inválida, `404` sin Faqturia conectado con secreto, `400` cuerpo no válido, `500` si falló al guardar (Faqturia reintenta).
+
+## Cobros con tarjeta (`payment.succeeded`)
+
+Llega por el mismo receptor de KontrolIA Auth (`/api/integraciones/kontrolia-auth`, ver [Integración con KontrolIA Auth](./integracion-kontrolia-auth/)). Se aplica la foto como en cualquier aviso y luego se registra la factura del cobro: contrato por `external_id = <organización>:<application.slug>`, total = `amountPaid / 100`, renglones de `payload.lines` si todos son positivos y suman lo cobrado (si no —un prorrateo trae líneas negativas—, uno solo con la plantilla), referencia = `payload.invoiceId` (o `sessionId` en créditos). En créditos (`kind = 'credits'`) el concepto es «Paquete de {units} {limitKey}». Un cobro de cero no se factura. Si puede timbrarse sola, se timbra después de responder (`after`), para no pasar de los 10 s que espera KontrolIA Auth.
+
+## Código
+
+`src/lib/server/facturacion/`: `planear.ts`, `periodos.ts`, `tarjeta.ts`, `faqturiaEstado.ts`, `ajustes.ts` (puros, con pruebas en el proyecto `server` de Vitest) y los ejecutores `guardar.ts`, `contratos.ts`, `cobros.ts`, `emitir.ts`, `conciliar.ts`, `procesar.ts`, `acciones.ts`. Rutas: `app/api/facturacion/{procesar,ajustes,facturas/[id],contratos/[id]}` y `app/api/integraciones/faqturia`. Pantallas: `src/components/crm/facturas/{PorFacturarPage,AjustesDeFacturacionPage,SeccionDeFacturas}.tsx`.
