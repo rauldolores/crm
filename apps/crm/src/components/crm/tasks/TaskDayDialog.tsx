@@ -48,7 +48,7 @@ export const TaskDayDialog = ({
         </DialogHeader>
 
         <ResourceContextProvider value="tasks">
-          <div className="flex flex-col gap-4 pt-2">
+          <div className="@container flex flex-col divide-y divide-border pt-2">
             {tasks.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 {translate("resources.tasks.calendar.day_empty")}
