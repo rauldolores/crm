@@ -2018,6 +2018,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/soporte/consumo.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/soporte/consumo.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/soporte/tiempos.test.ts",
           "type": "registry:lib"
         },
