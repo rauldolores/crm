@@ -370,6 +370,15 @@ export const spanishCrmMessages = {
       weighted: "%{amount} ponderado",
       weighted_help:
         "Importe × probabilidad de cierre de la etapa (%{probability} %). Se configura en Ajustes → Oportunidades.",
+      contact_info: {
+        title: "Datos de contacto",
+        view_company: "Ver empresa",
+        deal_contacts: "Contactos de la oportunidad",
+        company_contacts: "Contactos de la empresa",
+        no_contacts:
+          "Esta empresa todavía no tiene contactos. Agrégalos desde la ficha de la empresa.",
+        no_company_data: "Sin teléfono ni sitio web registrados.",
+      },
       history: {
         title: "Historial",
         empty: "Sin cambios registrados.",

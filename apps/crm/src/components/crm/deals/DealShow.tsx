@@ -15,7 +15,6 @@ import {
 } from "ra-core";
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EditButton } from "@/components/admin/edit-button";
-import { ReferenceArrayField } from "@/components/admin/reference-array-field";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,7 @@ import { NotesIterator } from "../notes/NotesIterator";
 import { HistorialDeOportunidad } from "./HistorialDeOportunidad";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
-import { ContactList } from "./ContactList";
+import { DatosDeContacto } from "./DatosDeContacto";
 import { findDealLabel, formatISODateString } from "./dealUtils";
 import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 import { TagsListEdit } from "../contacts/TagsListEdit";
@@ -181,21 +180,9 @@ const DealShowContent = () => {
 
           <RenovacionDeLaOportunidad deal={record} />
 
-          {!!record.contact_ids?.length && (
-            <div className="m-4">
-              <div className="flex flex-col min-h-12 mr-10">
-                <span className="text-xs text-muted-foreground tracking-wide">
-                  {translate("resources.deals.fields.contact_ids")}
-                </span>
-                <ReferenceArrayField
-                  source="contact_ids"
-                  reference="contacts_summary"
-                >
-                  <ContactList />
-                </ReferenceArrayField>
-              </div>
-            </div>
-          )}
+          <div className="m-4">
+            <DatosDeContacto deal={record} />
+          </div>
 
           {record.description && (
             <div className="m-4 whitespace-pre-line">
