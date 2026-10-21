@@ -101,9 +101,31 @@ export interface FacturaEmitida {
   detalle?: Record<string, unknown>;
 }
 
+/** Qué catálogo del SAT se consulta al proveedor. */
+export type CatalogoDelSat = "productos-servicios" | "unidades";
+
+/** Una fila de un catálogo del SAT, ya normalizada. */
+export interface ClaveDelSat {
+  clave: string;
+  descripcion: string;
+  /** Solo en unidades: «kg», «l», «m». */
+  simbolo?: string | null;
+}
+
 export interface ConectorDeFacturacion {
   readonly familia: "invoicing";
   probar(): Promise<ResultadoDePrueba>;
+  /**
+   * Busca en un catálogo del SAT del proveedor. Opcional: lo implementa quien
+   * lo exponga en su API, y la pantalla cae a un campo de texto con quien no.
+   *
+   * El catálogo de claves de producto tiene más de 52.000 filas, así que
+   * nunca se trae entero: se busca al teclear y se devuelve una página.
+   */
+  buscarEnCatalogoDelSat?(
+    catalogo: CatalogoDelSat,
+    texto: string,
+  ): Promise<ClaveDelSat[]>;
   emitirFactura(peticion: PeticionDeFactura): Promise<FacturaEmitida>;
   recuperarFactura(externalId: string): Promise<FacturaEmitida>;
   /** URL temporal para descargar el PDF o el XML del proveedor. */
