@@ -107,6 +107,10 @@ export const AVANZADO: Grupo = {
             ["Se crea una oportunidad", "Lo mismo"],
             ["Una oportunidad llega a la etapa «X»", "Lo mismo"],
             [
+              "Una oportunidad lleva N días en la etapa «X» de un embudo, sin moverse",
+              "Lo mismo. Se revisa cada hora y actúa una vez por cada estancia en la etapa: si sale y vuelve, cuenta de nuevo.",
+            ],
+            [
               "Faltan N días para que se renueve un contrato (módulo Clientes)",
               "Crear una tarea o enviar un correo al contacto de esa empresa con actividad más reciente. Se revisa cada hora y no se repite.",
             ],

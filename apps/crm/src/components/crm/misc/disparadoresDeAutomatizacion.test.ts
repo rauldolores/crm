@@ -38,6 +38,12 @@ describe("disparadoresDisponibles", () => {
     expect(sinModulo).not.toContain("contracts:renewal_due");
     expect(conModulo).toContain("contracts:renewal_due");
   });
+
+  test("ofrece «lleva días en una etapa» para las oportunidades", () => {
+    expect(disparadoresDisponibles({}).map((d) => d.id)).toContain(
+      "deals:stalled",
+    );
+  });
 });
 
 describe("admiteAsignarResponsable", () => {
@@ -47,6 +53,10 @@ describe("admiteAsignarResponsable", () => {
     expect(admiteAsignarResponsable("tickets:closed")).toBe(false);
     expect(admiteAsignarResponsable("quotes:unanswered")).toBe(false);
     expect(admiteAsignarResponsable("contracts:renewal_due")).toBe(false);
+  });
+
+  test("sí se puede reasignar una oportunidad estancada", () => {
+    expect(admiteAsignarResponsable("deals:stalled")).toBe(true);
   });
 });
 
@@ -73,6 +83,29 @@ describe("parametrosDelDisparador", () => {
     expect(
       parametrosDelDisparador("deals:stage_changed", { stage: "won" }),
     ).toEqual({ stage: "won" });
+  });
+
+  test("«lleva días en una etapa» guarda embudo, etapa y días como número", () => {
+    expect(
+      parametrosDelDisparador("deals:stalled", {
+        pipeline: "prospeccion-fria",
+        stage: "whatsapp",
+        daysInStage: "3",
+      }),
+    ).toEqual({
+      pipeline: "prospeccion-fria",
+      stage: "whatsapp",
+      daysInStage: 3,
+    });
+  });
+
+  test("sin días, «lleva días en una etapa» usa 3, como el motor", () => {
+    expect(
+      parametrosDelDisparador("deals:stalled", {
+        pipeline: "ventas",
+        stage: "proposal-sent",
+      }).daysInStage,
+    ).toBe(3);
   });
 });
 
@@ -110,6 +143,40 @@ describe("describirDisparador", () => {
     expect(deCotizacion).toContain("quote_unanswered_named");
   });
 
+  test("una oportunidad estancada nombra los días, la etapa y el embudo", () => {
+    const frase = describirDisparador(
+      regla({
+        trigger_resource: "deals",
+        trigger_event: "stalled",
+        trigger_params: {
+          pipeline: "prospeccion-fria",
+          stage: "lost",
+          daysInStage: 7,
+        },
+      }),
+      translate,
+      { etapa: "Descartado", embudo: "Prospección fría" },
+    );
+
+    expect(frase).toBe(
+      'crm.automations.when.deal_stalled_named {"days":7,"stage":"Descartado","pipeline":"Prospección fría"}',
+    );
+  });
+
+  test("una regla estancada sin embudo no inventa uno", () => {
+    const frase = describirDisparador(
+      regla({
+        trigger_resource: "deals",
+        trigger_event: "stalled",
+        trigger_params: { stage: "won", daysInStage: 2 },
+      }),
+      translate,
+      { etapa: "Ganada" },
+    );
+
+    expect(frase).toContain("deal_stalled_any_pipeline");
+  });
+
   test("solo admiten condición los disparadores con texto que leer y que encolan", () => {
     for (const cuando of [
       "deals:created",
@@ -132,6 +199,7 @@ describe("describirDisparador", () => {
       "tickets:overdue",
       "quotes:unanswered",
       "contracts:renewal_due",
+      "deals:stalled",
     ]) {
       expect(admiteCondicion(cuando)).toBe(false);
     }

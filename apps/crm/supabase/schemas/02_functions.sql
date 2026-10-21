@@ -1377,6 +1377,7 @@ declare
   contrato record;
   cotizacion record;
   ticket record;
+  oportunidad record;
   contacto bigint;
   dias integer;
   horas integer;
@@ -1533,6 +1534,82 @@ begin
         else
           perform crm.aplicar_accion_de_automatizacion(
             regla, ticket.contact_id, ticket.deal_id, null, null, ticket.sales_id, ticket.id
+          );
+        end if;
+        disparadas := disparadas + 1;
+      exception when others then
+        null;
+      end;
+    end loop;
+  end loop;
+
+  -- Oportunidades que llevan N días en la misma etapa sin moverse.
+  --
+  -- La entrada en la etapa sale del historial (deal_events): el último
+  -- «created» o «stage» que la dejó donde está. Una oportunidad anterior al
+  -- historial cae en su created_at.
+  --
+  -- Se filtra por embudo además de por etapa porque los embudos comparten
+  -- los nombres internos de etapa (opportunity, won, lost…): sin el embudo,
+  -- «7 días en Oportunidad» saltaría en todos a la vez. Una regla sin embudo
+  -- (guardada a mano) mira todos.
+  --
+  -- Una vez por estancia: due_on es el día en que entró. Si sale de la etapa
+  -- y vuelve, hay estancia nueva y la regla vuelve a contar.
+  for regla in
+    select * from crm.automations
+     where active
+       and trigger_resource = 'deals'
+       and trigger_event = 'stalled'
+       and nullif(trigger_params ->> 'stage', '') is not null
+  loop
+    dias := case
+      when regla.trigger_params ->> 'daysInStage' ~ '^[0-9]+$'
+      then (regla.trigger_params ->> 'daysInStage')::integer
+      else 3
+    end;
+
+    for oportunidad in
+      select d.id, d.contact_ids[1] as contacto, d.sales_id, entrada.desde
+        from crm.deals d
+        cross join lateral (
+          select coalesce(
+            (select max(ev.created_at)
+               from crm.deal_events ev
+              where ev.deal_id = d.id
+                and ev.field in ('created', 'stage')
+                and ev.new_value = d.stage),
+            d.created_at
+          ) as desde
+        ) entrada
+       where d.organization_id = regla.organization_id
+         and d.archived_at is null
+         and d.stage = regla.trigger_params ->> 'stage'
+         and (
+           nullif(regla.trigger_params ->> 'pipeline', '') is null
+           or d.pipeline = regla.trigger_params ->> 'pipeline'
+         )
+         and entrada.desde <= now() - (dias || ' days')::interval
+         and not exists (
+           select 1 from crm.automation_runs r
+            where r.automation_id = regla.id
+              and r.deal_id = d.id
+              and r.due_on = entrada.desde::date
+         )
+    loop
+      begin
+        insert into crm.automation_runs
+          (organization_id, automation_id, deal_id, due_on)
+        values (regla.organization_id, regla.id, oportunidad.id, oportunidad.desde::date);
+
+        if regla.action_type = 'assign_owner' then
+          update crm.deals
+             set sales_id = nullif(regla.action_params ->> 'salesId', '')::bigint
+           where id = oportunidad.id
+             and nullif(regla.action_params ->> 'salesId', '') is not null;
+        else
+          perform crm.aplicar_accion_de_automatizacion(
+            regla, oportunidad.contacto, oportunidad.id, null, null, oportunidad.sales_id
           );
         end if;
         disparadas := disparadas + 1;

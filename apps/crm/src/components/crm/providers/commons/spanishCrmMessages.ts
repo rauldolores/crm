@@ -1023,6 +1023,10 @@ export const spanishCrmMessages = {
         hours_after: "Tras cuántas horas",
         hours_after_help:
           "Se revisa cada hora. Solo tickets abiertos; avisa una sola vez por ticket.",
+        pipeline: "Embudo",
+        days_in_stage: "Tras cuántos días en la etapa",
+        days_in_stage_help:
+          "Se revisa cada hora. Cuenta desde que la oportunidad entró en la etapa; las archivadas no cuentan. Actúa una vez por cada estancia: si sale de la etapa y vuelve, empieza a contar de nuevo.",
         priority: "Solo con prioridad",
         any_priority: "Cualquier prioridad",
         condition: "Solo si… (opcional)",
@@ -1034,6 +1038,11 @@ export const spanishCrmMessages = {
         deal_created: "Se crea una oportunidad",
         deal_stage: "Una oportunidad llega a una etapa",
         deal_stage_named: "Una oportunidad llega a «%{stage}»",
+        deal_stalled: "Una oportunidad lleva días en la misma etapa",
+        deal_stalled_named:
+          "Una oportunidad lleva %{days} días en «%{stage}» (%{pipeline})",
+        deal_stalled_any_pipeline:
+          "Una oportunidad lleva %{days} días en «%{stage}»",
         renewal_due: "Se acerca la renovación de un contrato",
         renewal_due_named:
           "Faltan %{days} días para que se renueve un contrato",

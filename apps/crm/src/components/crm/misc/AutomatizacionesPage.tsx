@@ -23,6 +23,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Automation, EmailTemplate, Sale } from "../types";
+import { CamposDeEtapaEstancada } from "./CamposDeEtapaEstancada";
 import {
   admiteAsignarResponsable,
   admiteCondicion,
@@ -107,7 +108,8 @@ const TarjetaDeRegla = ({
   const notify = useNotify();
   const [update] = useUpdate();
   const [deleteOne] = useDelete();
-  const { dealStages, ticketPriorities } = useConfigurationContext();
+  const { dealStages, dealPipelines, ticketPriorities } =
+    useConfigurationContext();
   const { data: comerciales } = useGetList<Sale>("sales", {
     pagination: { page: 1, perPage: 200 },
     sort: { field: "last_name", order: "ASC" },
@@ -122,9 +124,17 @@ const TarjetaDeRegla = ({
       String(plantilla.id) === String(regla.action_params?.templateId),
   )?.name;
 
+  // Con embudo, la etiqueta de la etapa sale de ESE embudo: los embudos
+  // comparten nombres internos, y la de la lista global podría ser la de otro
+  // («Perdida» donde este embudo dice «Descartado»).
+  const embudo = dealPipelines.find(
+    (candidato) => candidato.value === regla.trigger_params?.pipeline,
+  );
+  const etapas = embudo?.stages ?? dealStages;
   const cuando = describirDisparador(regla, translate, {
+    embudo: embudo?.label ?? regla.trigger_params?.pipeline,
     etapa:
-      dealStages.find((etapa) => etapa.value === regla.trigger_params?.stage)
+      etapas.find((etapa) => etapa.value === regla.trigger_params?.stage)
         ?.label ?? regla.trigger_params?.stage,
     prioridad: ticketPriorities.find(
       (p) => p.value === regla.trigger_params?.priority,
@@ -277,6 +287,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
         daysBefore: 30,
         daysAfter: 3,
         hoursAfter: 4,
+        daysInStage: 3,
       }}
     >
       <div className="flex flex-col gap-4">
@@ -374,6 +385,7 @@ const CamposDeLaRegla = () => {
           validate={required()}
         />
       )}
+      {cuando === "deals:stalled" && <CamposDeEtapaEstancada />}
       {/* La condición es opcional a propósito: una regla sin ella actúa al
           instante, y con ella espera a que la IA lea el texto (hasta un
           minuto). Quien no la necesite no debería pagar ese retraso. */}
