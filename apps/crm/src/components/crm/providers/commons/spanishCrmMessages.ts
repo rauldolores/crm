@@ -305,6 +305,8 @@ export const spanishCrmMessages = {
           "No se pudo comprobar si te escribió hace poco. Envíale una plantilla, que llega siempre.",
         no_templates:
           "Todavía no hay plantillas aprobadas. Créalas en Twilio (Content Template Builder) y mándalas a aprobar a WhatsApp: aparecerán aquí en cuanto Meta las apruebe.",
+        not_mobile:
+          "Este número no está marcado como móvil. Si es un fijo, el WhatsApp no le llegará; si es un celular, márcalo como «Móvil» en la ficha.",
       },
       filters: {
         before_last_month: "Antes del mes pasado",

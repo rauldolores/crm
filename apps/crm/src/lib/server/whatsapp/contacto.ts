@@ -1,9 +1,13 @@
+import type { TelefonoDeLaFicha } from "@/lib/whatsapp/telefono";
+import { telefonoParaWhatsapp } from "@/lib/whatsapp/telefono";
+
 import { getServiceClient } from "../supabase-service";
 
 /**
  * El contacto al que se va a escribir, con el teléfono al que se envía: el
- * primero de su ficha, igual que el botón. Se lee con la clave de servicio,
- * así que la organización se comprueba aquí a mano — un id de otra
+ * marcado como móvil o, si no hay, el primero de su ficha — la misma regla
+ * que enseña el diálogo (`telefonoParaWhatsapp`). Se lee con la clave de
+ * servicio, así que la organización se comprueba aquí a mano — un id de otra
  * organización responde «no encontrado», no «prohibido», para no confirmar
  * que existe.
  */
@@ -31,8 +35,9 @@ export async function contactoParaWhatsapp(
     return { ok: false, estado: 404, mensaje: "Contacto no encontrado." };
   }
 
-  const telefono = ((contacto.phone_jsonb ?? []) as { number?: string }[])[0]
-    ?.number;
+  const telefono = telefonoParaWhatsapp(
+    contacto.phone_jsonb as TelefonoDeLaFicha[] | null,
+  )?.numero;
   if (!telefono) {
     return {
       ok: false,
