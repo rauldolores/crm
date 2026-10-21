@@ -1,5 +1,9 @@
 import { env } from "@/lib/env";
 import {
+  type AplicacionDelRol,
+  esRolDeEstaApp,
+} from "@/lib/kontrolia-auth/rolesDeLaApp";
+import {
   conAvisoDeExcedente,
   contarUso,
   exigirCupo,
@@ -19,6 +23,10 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  *   (CORS); de servidor a servidor no hay esa barrera.
  * - Dar de alta las fichas exige escribir en `sales` con la clave de
  *   servicio, imponiendo la organización del token.
+ *
+ * Solo se da de alta a quien tiene algún rol de esta aplicación: la
+ * organización es de todo el ecosistema de KontrolIA, y quien solo usa
+ * Faqturia (o solo es Owner/Admin de la organización) no entra al CRM.
  *
  * Idempotente: los miembros que ya tienen ficha se ignoran.
  *
@@ -42,7 +50,7 @@ export async function POST(peticion: Request) {
   };
 
   // Mismo contrato que usa el SDK (@kontrolia/auth): GET con Bearer, y la
-  // respuesta trae { members: [{ userId, email, name }], hasMore, total }.
+  // respuesta trae { members: [{ userId, email, name, roles }], hasMore, total }.
   const parametros = new URLSearchParams({ organizationId: organizacionId });
   if (datos.buscar) parametros.set("search", datos.buscar);
 
@@ -59,9 +67,16 @@ export async function POST(peticion: Request) {
   }
 
   const cuerpo = (await respuesta.json().catch(() => ({}))) as {
-    members?: { userId: string; email: string; name: string | null }[];
+    members?: {
+      userId: string;
+      email: string;
+      name: string | null;
+      roles?: { application?: AplicacionDelRol | null }[];
+    }[];
   };
-  const miembros = cuerpo.members ?? [];
+  const miembros = (cuerpo.members ?? []).filter((miembro) =>
+    (miembro.roles ?? []).some(esRolDeEstaApp),
+  );
 
   const supabase = getServiceClient();
   const { data: fichas } = await supabase

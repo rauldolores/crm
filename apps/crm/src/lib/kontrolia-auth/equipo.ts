@@ -14,12 +14,15 @@ import { decodeAccessToken } from "@kontrolia/auth";
 
 import { env } from "@/lib/env";
 import { getKontroliaAccessToken } from "./client";
+import { type AplicacionDelRol, esRolDeEstaApp } from "./rolesDeLaApp";
 
 export interface RolDisponible {
   id: string;
   name: string;
   slug: string;
   application_id: string | null;
+  /** Aplicación del rol; null en los roles de organización (Owner, Admin…). */
+  application?: AplicacionDelRol | null;
 }
 
 export interface Miembro {
@@ -89,7 +92,7 @@ export async function organizacionActivaId(): Promise<string | null> {
   return decodeAccessToken(token)?.organization_id ?? null;
 }
 
-/** Los roles que se pueden asignar al invitar a esta organización. */
+/** Los roles de esta aplicación que se pueden asignar al invitar. */
 export async function listarRolesDisponibles(
   organizationId: string,
 ): Promise<RolDisponible[]> {
@@ -98,7 +101,7 @@ export async function listarRolesDisponibles(
     { generico: "No se pudo consultar los roles de tu organización." },
   );
   const cuerpo = (await respuesta.json()) as { roles?: RolDisponible[] };
-  return cuerpo.roles ?? [];
+  return (cuerpo.roles ?? []).filter(esRolDeEstaApp);
 }
 
 /** Invita por correo a la organización, con el rol indicado. */

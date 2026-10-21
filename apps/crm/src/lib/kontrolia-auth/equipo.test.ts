@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/env", () => ({
-  env: { kontroliaAuthServerUrl: "https://auth.kontrolia.io" },
+  env: {
+    kontroliaAuthServerUrl: "https://auth.kontrolia.io",
+    kontroliaApplicationSlug: "crm",
+  },
 }));
 
 vi.mock("./client", () => ({
@@ -65,11 +68,17 @@ describe("organizacionActivaId", () => {
 });
 
 describe("listarRolesDisponibles", () => {
+  const rolDelCrm = {
+    id: "r1",
+    name: "Administrador de Kontrolia CRM",
+    application: { name: "Kontrolia CRM", slug: "crm" },
+  };
+
   it("consulta /api/roles con el token del usuario y la organización en la query", async () => {
     getTokenMock.mockResolvedValue("token-de-usuario");
     // auth-server envuelve la lista: { roles: [...] }.
     const fetchMock = capturarPeticion({
-      json: async () => ({ roles: [{ id: "r1", name: "Administrador" }] }),
+      json: async () => ({ roles: [rolDelCrm] }),
     });
 
     const roles = await listarRolesDisponibles("org-1");
@@ -79,7 +88,30 @@ describe("listarRolesDisponibles", () => {
       "https://auth.kontrolia.io/api/roles?organizationId=org-1",
     );
     expect(opciones.headers.Authorization).toBe("Bearer token-de-usuario");
-    expect(roles).toEqual([{ id: "r1", name: "Administrador" }]);
+    expect(roles).toEqual([rolDelCrm]);
+  });
+
+  it("deja fuera los roles de otras aplicaciones y los de organización", async () => {
+    getTokenMock.mockResolvedValue("token-de-usuario");
+    capturarPeticion({
+      json: async () => ({
+        roles: [
+          { id: "r0", name: "Owner", application: null },
+          rolDelCrm,
+          {
+            id: "r2",
+            name: "Administrador de Faqturia",
+            application: { name: "Faqturia", slug: "faqturia" },
+          },
+        ],
+      }),
+    });
+
+    const roles = await listarRolesDisponibles("org-1");
+
+    expect(roles.map((rol) => rol.name)).toEqual([
+      "Administrador de Kontrolia CRM",
+    ]);
   });
 
   it("lanza si no hay sesión, sin llamar a fetch", async () => {
