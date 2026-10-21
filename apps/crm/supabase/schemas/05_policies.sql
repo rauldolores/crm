@@ -515,3 +515,15 @@ alter table crm.renewal_runs enable row level security;
 create policy "renewal_runs_select_own_org" on crm.renewal_runs
     for select to authenticated
     using (organization_id = crm.current_organization_id());
+
+-- Uso del cliente y clientes en riesgo: solo lectura. Escriben la
+-- integración (service_role) y crm.revisar_clientes_en_riesgo().
+alter table crm.customer_usage enable row level security;
+create policy "customer_usage_select_own_org" on crm.customer_usage
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+
+alter table crm.customer_risk enable row level security;
+create policy "customer_risk_select_own_org" on crm.customer_risk
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());

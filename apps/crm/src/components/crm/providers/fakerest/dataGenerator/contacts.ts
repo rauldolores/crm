@@ -107,6 +107,8 @@ export const generateContacts = (db: Db, size = 500): Required<Contact>[] => {
       status_is_automatic: true,
       status_set_at: "",
       archived_at: null,
+      source: null,
+      external_id: null,
     };
   });
 };

@@ -30,6 +30,8 @@ import type {
 import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
 import { AjustesDeTickets } from "./AjustesDeTickets";
 import { AjustesDeRenovaciones } from "./AjustesDeRenovaciones";
+import { AjustesDeRiesgo } from "./AjustesDeRiesgo";
+import { ajustesDeRiesgo } from "../customers/usoDelCliente";
 import {
   ajustesDeRenovaciones,
   limpiarRenovaciones,
@@ -53,6 +55,11 @@ const SECTIONS = [
     id: "renewals",
     label: "crm.settings.renewals.title",
     fallback: "Renewals",
+  },
+  {
+    id: "risk",
+    label: "crm.settings.risk.title",
+    fallback: "At-risk customers",
   },
   { id: "notes", label: "resources.notes.name", fallback: "Notes" },
   { id: "tasks", label: "resources.tasks.name", fallback: "Tasks" },
@@ -222,6 +229,8 @@ const transformFormValues = (data: Record<string, any>) => {
       // Oportunidades de renovación: valores limpios, y el embudo que agregó
       // el sistema se conserva (no cuenta contra el límite del plan).
       renewals: limpiarRenovaciones(data.renewals, data.renewals),
+      // Clientes en riesgo: valores limpios (los de fábrica donde falten).
+      risk: ajustesDeRiesgo(data.risk),
       currency: data.currency,
       companySectors: ensureValues(data.companySectors),
       dealCategories: ensureValues(data.dealCategories),
@@ -285,6 +294,7 @@ const SettingsForm = () => {
       quoteTemplates: config.quoteTemplates,
       quoteIssuer: config.quoteIssuer,
       renewals: ajustesDeRenovaciones(config.renewals),
+      risk: ajustesDeRiesgo(config.risk),
       currency: config.currency,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
@@ -523,6 +533,8 @@ const SettingsFormFields = () => {
 
         <AjustesDeRenovaciones />
 
+        <AjustesDeRiesgo />
+
         <AjustesDeTickets />
 
         {/* Tasks */}
@@ -592,6 +604,7 @@ const SettingsFormFields = () => {
                   quoteTemplates: config.quoteTemplates,
                   quoteIssuer: config.quoteIssuer,
                   renewals: limpiarRenovaciones({}, config.renewals),
+                  risk: ajustesDeRiesgo({}),
                 })
               }
             >

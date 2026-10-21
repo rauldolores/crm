@@ -44,6 +44,7 @@ import type {
 import { RenovacionDelContrato } from "../renovaciones/RenovacionDelContrato";
 import { EtapaDeCliente } from "./EtapaDeCliente";
 import { RiesgoDeCliente } from "./RiesgoDeCliente";
+import { AvisoDeRiesgo, SeccionDeUso } from "./SeccionDeUso";
 
 /**
  * Pestaña «Cliente» de la ficha de empresa: todo lo que ha hecho con
@@ -196,6 +197,8 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
         </p>
       )}
 
+      {sincronizada && <AvisoDeRiesgo empresa={empresa} />}
+
       {resumen && <RiesgoDeCliente resumen={resumen} />}
 
       {resumen && (
@@ -239,6 +242,12 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
       )}
 
       <Separator />
+
+      {/* Clientes de KONTROLIA: usuarios activos, último acceso y consumo
+          del mes por producto (llega de KontrolIA Auth). */}
+      {sincronizada && (
+        <SeccionDeUso empresa={empresa} contratos={contratos ?? []} />
+      )}
 
       <section className="space-y-2">
         <h6 className="text-sm font-semibold">

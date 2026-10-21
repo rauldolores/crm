@@ -349,6 +349,8 @@ const DesktopAdmin = (
       <Resource name="customer_summary" {...customers} />
       <Resource name="contracts" />
       <Resource name="contract_events" />
+      <Resource name="customer_usage" />
+      <Resource name="customer_risk" />
       <Resource name="purchases" />
       <Resource name="purchase_items" />
       <Resource

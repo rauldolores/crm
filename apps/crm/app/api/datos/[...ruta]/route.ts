@@ -131,6 +131,12 @@ const SOLO_LECTURA = new Set([
   // Catálogo de bolsas de soporte: global (sin organización), lo cambia
   // solo una migración.
   "soporte_bolsas",
+  // Uso de los clientes de KONTROLIA: lo escribe la integración con
+  // KontrolIA Auth. Las marcas de «cliente en riesgo» las pone y las quita
+  // solo crm.revisar_clientes_en_riesgo(): editarlas a mano haría que el
+  // sistema regresara (o dejara de regresar) etapas que no puso él.
+  "customer_usage",
+  "customer_risk",
 ]);
 
 /**
@@ -179,6 +185,8 @@ const CON_DUENO = new Set([
   "purchases",
   "purchase_items",
   "customer_summary",
+  "customer_usage",
+  "customer_risk",
   "quotes",
   "quote_items",
   "products",

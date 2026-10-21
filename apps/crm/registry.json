@@ -406,7 +406,15 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/customers/SeccionDeUso.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/customers/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/customers/usoDelCliente.ts",
           "type": "registry:component"
         },
         {
@@ -1210,6 +1218,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/settings/AjustesDeRiesgo.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/settings/AjustesDeTickets.tsx",
           "type": "registry:component"
         },
@@ -1630,10 +1642,6 @@
           "type": "registry:lib"
         },
         {
-          "path": "src/lib/server/conectores/__screenshots__/faqturia.test.ts",
-          "type": "registry:lib"
-        },
-        {
           "path": "src/lib/server/conectores/almacen.ts",
           "type": "registry:lib"
         },
@@ -1923,10 +1931,6 @@
         },
         {
           "path": "src/lib/server/integraciones/movimientos.ts",
-          "type": "registry:lib"
-        },
-        {
-          "path": "src/lib/server/kontrolia-auth/__screenshots__/consumo.test.ts",
           "type": "registry:lib"
         },
         {

@@ -330,3 +330,16 @@ revoke all on table crm.renewal_runs from authenticated;
 grant select on table crm.renewal_runs to authenticated;
 grant select, insert, update, delete on table crm.renewal_runs to service_role;
 grant usage, select on sequence crm.renewal_runs_id_seq to service_role;
+
+-- Uso del cliente y clientes en riesgo: solo lectura para la organización.
+revoke all on table crm.customer_usage from anon;
+revoke all on table crm.customer_usage from authenticated;
+grant select on table crm.customer_usage to authenticated;
+grant select, insert, update, delete on table crm.customer_usage to service_role;
+grant usage, select on sequence crm.customer_usage_id_seq to service_role;
+
+revoke all on table crm.customer_risk from anon;
+revoke all on table crm.customer_risk from authenticated;
+grant select on table crm.customer_risk to authenticated;
+grant select, insert, update, delete on table crm.customer_risk to service_role;
+grant usage, select on sequence crm.customer_risk_id_seq to service_role;
