@@ -230,4 +230,48 @@ describe("agruparUso", () => {
     // Sin contrato, el producto se nombra por su clave.
     expect(productos[0].nombre).toBe("aduaniax");
   });
+
+  it("los límites de «total» y del año salen en curso, sin mes anterior", () => {
+    const { mesActual, productos } = agruparUso([
+      fila({
+        application_slug: "crm",
+        limit_key: "usuarios",
+        period: "lifetime",
+        period_start: "1970-01-01",
+        is_current: true,
+        used: 3,
+        included: 25,
+      }),
+      fila({
+        application_slug: "crm",
+        limit_key: "contactos",
+        period: "month",
+        period_start: "2026-10-01",
+        is_current: true,
+        used: 1,
+      }),
+    ]);
+    // El mes del encabezado no lo mueve el 1970 de los de «total».
+    expect(mesActual).toBe("2026-10-01");
+    const usuarios = productos[0].limites.find(
+      (l) => l.limit_key === "usuarios",
+    )!;
+    expect(usuarios.periodo).toBe("lifetime");
+    expect(usuarios.actual?.used).toBe(3);
+    expect(usuarios.anterior).toBeNull();
+  });
+
+  it("solo límites de «total»: no hay mes en el encabezado", () => {
+    const { mesActual, productos } = agruparUso([
+      fila({
+        application_slug: "nodia-agents",
+        limit_key: "bots",
+        period: "lifetime",
+        period_start: "1970-01-01",
+        is_current: true,
+      }),
+    ]);
+    expect(mesActual).toBeNull();
+    expect(productos[0].limites[0].actual).not.toBeNull();
+  });
 });

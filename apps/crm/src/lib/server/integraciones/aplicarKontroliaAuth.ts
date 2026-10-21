@@ -4,7 +4,6 @@ import {
   ETAPA_EN_RIESGO,
   etapaDelCliente,
   llaveDeUso,
-  mesesDeUso,
   ORIGEN_KONTROLIA_AUTH,
   planDeLaFoto,
   REF_KONTROLIA_AUTH,
@@ -431,22 +430,20 @@ async function guardarEventos(
 }
 
 /**
- * Uso del mes actual y del anterior (crm.customer_usage). Lo que trae la
- * foto se guarda; del mes actual se quita lo que ya no viene (un límite que
- * salió del plan) y lo anterior al mes pasado se borra. Sin `usage` en la
- * foto no se toca nada.
+ * Uso del cliente (crm.customer_usage): el periodo en curso de cada límite y
+ * el mes anterior de los mensuales. La foto es la verdad completa: lo que
+ * trae se guarda y lo que ya no viene se quita (un mes viejo, un límite que
+ * salió del plan). Sin `usage` en la foto no se toca nada.
  */
 async function guardarUso(
   db: Db,
   org: string,
   companyId: number,
   plan: ReturnType<typeof planDeLaFoto>,
-  generadaEn: string,
   ahora: string,
 ): Promise<number> {
   if (plan.uso === null) return 0;
-  const { actual, anterior } = mesesDeUso(generadaEn, plan.uso);
-  const vigentes = plan.uso.filter((u) => u.period_start >= anterior);
+  const vigentes = plan.uso;
 
   if (vigentes.length) {
     exigir(
@@ -466,32 +463,21 @@ async function guardarUso(
     );
   }
 
-  exigir(
-    await db
-      .from("customer_usage")
-      .delete()
-      .eq("organization_id", org)
-      .eq("company_id", companyId)
-      .lt("period_start", anterior),
-    "Quitar el uso de meses viejos",
-  );
-
   const llaves = new Set(vigentes.map(llaveDeUso));
-  const delMes = (exigir(
+  const guardado = (exigir(
     await db
       .from("customer_usage")
       .select("id, application_slug, limit_key, period_start")
       .eq("organization_id", org)
-      .eq("company_id", companyId)
-      .eq("period_start", actual),
-    "Leer el uso del mes",
+      .eq("company_id", companyId),
+    "Leer el uso guardado",
   ) ?? []) as {
     id: number;
     application_slug: string;
     limit_key: string;
     period_start: string;
   }[];
-  const sobrantes = delMes
+  const sobrantes = guardado
     .filter((fila) => !llaves.has(llaveDeUso(fila)))
     .map((fila) => fila.id);
   if (sobrantes.length) {
@@ -526,7 +512,6 @@ export async function aplicarKontroliaAuth(
     org,
     companyId,
     plan,
-    foto.generated_at,
     ahora,
   );
   return {

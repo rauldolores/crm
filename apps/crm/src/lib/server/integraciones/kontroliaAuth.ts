@@ -131,6 +131,8 @@ export const UsoKontroliaAuth = z.object({
   description: texto,
   period: texto,
   period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  // true = el periodo que corre ahora; falta en fotos viejas.
+  current: z.boolean().nullish(),
   used: z.number(),
   // null = sin límite.
   included: numero,
@@ -589,6 +591,10 @@ export interface UsoDeseado {
   limit_key: string;
   description: string | null;
   period_start: string;
+  /** month, year, day o lifetime. */
+  period: string;
+  /** El periodo que corre ahora. */
+  is_current: boolean;
   used: number;
   included: number | null;
   /** En pesos. */
@@ -598,13 +604,6 @@ export interface UsoDeseado {
 
 /** Primer día del mes (AAAA-MM-01) de una fecha AAAA-MM-DD. */
 const inicioDeMes = (dia: string) => `${dia.slice(0, 7)}-01`;
-
-/** Primer día del mes anterior a `inicio` (AAAA-MM-01). */
-export function mesAnterior(inicio: string): string {
-  const [anio, mes] = inicio.split("-").map(Number);
-  const fecha = new Date(Date.UTC(anio, mes - 2, 1));
-  return fecha.toISOString().slice(0, 10);
-}
 
 /** Producto × límite × mes: lo que hace único un renglón de uso. */
 export const llaveDeUso = (
@@ -620,15 +619,30 @@ export const llaveDeUso = (
 export function usoDeLaFoto(foto: FotoKontroliaAuth): UsoDeseado[] | null {
   if (!Array.isArray(foto.usage)) return null;
   const porLlave = new Map<string, UsoDeseado>();
-  for (const crudo of foto.usage) {
-    const renglon = UsoKontroliaAuth.safeParse(crudo);
-    if (!renglon.success) continue;
-    const u = renglon.data;
+  const renglones = foto.usage.flatMap((crudo) => {
+    const r = UsoKontroliaAuth.safeParse(crudo);
+    return r.success ? [r.data] : [];
+  });
+  // Sin `current` (foto vieja): en los meses vale el más reciente; los demás
+  // periodos solo llegan en curso.
+  const ultimoMes = renglones
+    .filter((u) => (u.period || "month") === "month")
+    .reduce((mayor, u) => {
+      const mes = inicioDeMes(u.period_start);
+      return mes > mayor ? mes : mayor;
+    }, "");
+  for (const u of renglones) {
+    const periodo = u.period || "month";
+    const inicio =
+      periodo === "month" ? inicioDeMes(u.period_start) : u.period_start;
     const fila: UsoDeseado = {
       application_slug: u.application_slug,
       limit_key: u.limit_key,
       description: u.description?.trim() || null,
-      period_start: inicioDeMes(u.period_start),
+      period_start: inicio,
+      period: periodo,
+      is_current:
+        u.current ?? (periodo === "month" ? inicio === ultimoMes : true),
       used: u.used,
       included: u.included ?? null,
       overage_price_amount: aPesos(u.overage_price_amount),
@@ -637,23 +651,6 @@ export function usoDeLaFoto(foto: FotoKontroliaAuth): UsoDeseado[] | null {
     porLlave.set(llaveDeUso(fila), fila);
   }
   return [...porLlave.values()];
-}
-
-/**
- * Los dos meses que se conservan: el actual (el más reciente entre el mes de
- * la foto, en hora de México, y el más nuevo que traiga el uso) y el
- * anterior. Lo más viejo se borra.
- */
-export function mesesDeUso(
-  generadaEn: string,
-  uso: Pick<UsoDeseado, "period_start">[],
-): { actual: string; anterior: string } {
-  const deLaFoto = inicioDeMes(fechaDe(generadaEn) ?? generadaEn.slice(0, 10));
-  const actual = uso.reduce(
-    (mayor, u) => (u.period_start > mayor ? u.period_start : mayor),
-    deLaFoto,
-  );
-  return { actual, anterior: mesAnterior(actual) };
 }
 
 // ── Plan completo ───────────────────────────────────────────────────────

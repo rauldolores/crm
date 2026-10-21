@@ -12,8 +12,6 @@ import {
   eventosDeLaFoto,
   fechaDe,
   importeDeContrato,
-  mesAnterior,
-  mesesDeUso,
   planDeLaFoto,
   unirCorreos,
   usoDeLaFoto,
@@ -593,6 +591,8 @@ describe("uso", () => {
         limit_key: "ctm_paginas",
         description: "Páginas escaneadas",
         period_start: "2026-10-01",
+        period: "month",
+        is_current: true,
         used: 120,
         included: 200,
         overage_price_amount: 10,
@@ -631,29 +631,43 @@ describe("uso", () => {
     expect(usoDeLaFoto(conUso([]))).toEqual([]);
   });
 
-  it("el mes anterior cruza el año", () => {
-    expect(mesAnterior("2026-01-01")).toBe("2025-12-01");
-    expect(mesAnterior("2026-10-01")).toBe("2026-09-01");
-  });
-
-  it("conserva el mes de la foto (hora de México) y el anterior", () => {
-    expect(mesesDeUso("2026-10-20T18:00:00Z", [])).toEqual({
-      actual: "2026-10-01",
-      anterior: "2026-09-01",
-    });
-    // 1 de noviembre a las 3:00 UTC todavía es 31 de octubre en México.
-    expect(mesesDeUso("2026-11-01T03:00:00Z", [])).toEqual({
-      actual: "2026-10-01",
-      anterior: "2026-09-01",
-    });
-  });
-
-  it("si el uso trae un mes más nuevo que la foto, ese es el actual", () => {
-    expect(
-      mesesDeUso("2026-11-01T03:00:00Z", [
-        { period_start: "2026-10-01" },
-        { period_start: "2026-11-01" },
+  it("guarda el periodo y si está en curso, como lo manda la foto", () => {
+    const uso = usoDeLaFoto(
+      conUso([
+        { ...renglon, current: true },
+        { ...renglon, period_start: "2026-09-01", current: false },
+        {
+          ...renglon,
+          limit_key: "usuarios",
+          period: "lifetime",
+          period_start: "1970-01-01",
+          current: true,
+        },
       ]),
-    ).toEqual({ actual: "2026-11-01", anterior: "2026-10-01" });
+    )!;
+    expect(
+      uso.map((u) => [u.limit_key, u.period, u.period_start, u.is_current]),
+    ).toEqual([
+      ["ctm_paginas", "month", "2026-10-01", true],
+      ["ctm_paginas", "month", "2026-09-01", false],
+      ["usuarios", "lifetime", "1970-01-01", true],
+    ]);
+  });
+
+  it("sin «current» (foto vieja) el mes más reciente es el que corre", () => {
+    const uso = usoDeLaFoto(
+      conUso([
+        renglon,
+        { ...renglon, period_start: "2026-09-01" },
+        { ...renglon, limit_key: "anual", period: "year", period_start: "2026-01-01" },
+        { ...renglon, limit_key: "sin_periodo", period: null },
+      ]),
+    )!;
+    expect(uso.map((u) => [u.limit_key, u.period, u.is_current])).toEqual([
+      ["ctm_paginas", "month", true],
+      ["ctm_paginas", "month", false],
+      ["anual", "year", true],
+      ["sin_periodo", "month", true],
+    ]);
   });
 });

@@ -206,10 +206,12 @@ export const consumo = (
   };
 };
 
-/** Un límite de un producto: el mes actual y el anterior. */
+/** Un límite de un producto: el periodo en curso y, si es mensual, el mes anterior. */
 export interface LimiteDeUso {
   limit_key: string;
   descripcion: string;
+  /** month, year, day o lifetime. */
+  periodo: string;
   actual: CustomerUsage | null;
   anterior: CustomerUsage | null;
 }
@@ -229,32 +231,44 @@ const nombreDeProducto = (slug: string, contratos: Contract[]): string => {
   return contrato?.name.split(" · ")[0] || slug;
 };
 
+const periodoDe = (f: CustomerUsage) => f.period || "month";
+
 /**
- * El uso agrupado por producto: cada límite con su consumo del mes actual
- * (el más reciente que haya) y del anterior. Productos por nombre; límites
- * por descripción.
+ * El uso agrupado por producto: cada límite con su consumo del periodo en
+ * curso y, en los mensuales, del mes anterior. Los límites de «total» o del
+ * año salen solo en curso. Productos por nombre; límites por descripción.
  */
 export const agruparUso = (
   filas: CustomerUsage[],
   contratos: Contract[] = [],
 ): { mesActual: string | null; productos: UsoDeProducto[] } => {
   if (!filas.length) return { mesActual: null, productos: [] };
-  const mesActual = filas.reduce(
-    (mayor, f) => (f.period_start > mayor ? f.period_start : mayor),
-    filas[0].period_start,
-  );
-  const previo = mesAnterior(mesActual);
+  const meses = filas.filter((f) => periodoDe(f) === "month");
+  const mesActual = meses.length
+    ? meses.reduce(
+        (mayor, f) => (f.period_start > mayor ? f.period_start : mayor),
+        meses[0].period_start,
+      )
+    : null;
+  const previo = mesActual ? mesAnterior(mesActual) : null;
 
   const porProducto = new Map<string, Map<string, LimiteDeUso>>();
   for (const fila of filas) {
-    const esActual = fila.period_start === mesActual;
-    if (!esActual && fila.period_start !== previo) continue;
+    const periodo = periodoDe(fila);
+    const esActual =
+      periodo === "month"
+        ? fila.period_start === mesActual
+        : fila.is_current !== false;
+    if (!esActual && (periodo !== "month" || fila.period_start !== previo)) {
+      continue;
+    }
     const limites =
       porProducto.get(fila.application_slug) ?? new Map<string, LimiteDeUso>();
     porProducto.set(fila.application_slug, limites);
     const limite = limites.get(fila.limit_key) ?? {
       limit_key: fila.limit_key,
       descripcion: fila.description || fila.limit_key,
+      periodo,
       actual: null,
       anterior: null,
     };

@@ -401,8 +401,12 @@ export type CustomerUsage = {
   application_slug: string;
   limit_key: string;
   description?: string | null;
-  /** Primer día del mes (AAAA-MM-01). */
+  /** Primer día del periodo (AAAA-MM-01 en los meses; 1970-01-01 en «total»). */
   period_start: string;
+  /** month, year, day o lifetime. */
+  period?: string | null;
+  /** El periodo que corre ahora (el mes anterior va en false). */
+  is_current?: boolean | null;
   used: number;
   included?: number | null;
   overage_price_amount?: number | null;
