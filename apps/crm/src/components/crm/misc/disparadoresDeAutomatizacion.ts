@@ -20,6 +20,7 @@ export const disparadoresDisponibles = (
   { id: "contacts:created", name: "crm.automations.when.contact_created" },
   { id: "deals:created", name: "crm.automations.when.deal_created" },
   { id: "deals:stage_changed", name: "crm.automations.when.deal_stage" },
+  { id: "deals:stalled", name: "crm.automations.when.deal_stalled" },
   ...(modules.customers?.active
     ? [
         {
@@ -88,6 +89,13 @@ export const parametrosDelDisparador = (
   if (esDisparadorPorHoras(cuando)) {
     return { hoursAfter: Number(valores.hoursAfter ?? 4) };
   }
+  if (cuando === "deals:stalled") {
+    return {
+      pipeline: valores.pipeline,
+      stage: valores.stage,
+      daysInStage: Number(valores.daysInStage ?? 3),
+    };
+  }
   if (evento === "stage_changed" && valores.stage) {
     return { stage: valores.stage };
   }
@@ -101,7 +109,7 @@ export const parametrosDelDisparador = (
 export const describirDisparador = (
   regla: Automation,
   translate: ReturnType<typeof useTranslate>,
-  etiquetas: { etapa?: string; prioridad?: string },
+  etiquetas: { etapa?: string; prioridad?: string; embudo?: string },
 ): string => {
   const clave = `${regla.trigger_resource}:${regla.trigger_event}`;
   const params = regla.trigger_params ?? {};
@@ -118,6 +126,17 @@ export const describirDisparador = (
       return translate("crm.automations.when.deal_stage_named", {
         stage: etiquetas.etapa ?? "",
       });
+    case "deals:stalled":
+      return translate(
+        etiquetas.embudo
+          ? "crm.automations.when.deal_stalled_named"
+          : "crm.automations.when.deal_stalled_any_pipeline",
+        {
+          days: params.daysInStage ?? 3,
+          stage: etiquetas.etapa ?? "",
+          pipeline: etiquetas.embudo ?? "",
+        },
+      );
     case "contacts:created":
       return translate("crm.automations.when.contact_created");
     case "deals:created":

@@ -247,13 +247,14 @@ export type Automation = {
   condition_text?: string | null;
   trigger_resource: "contacts" | "deals" | "contracts" | "quotes" | "tickets";
   /**
-   * renewal_due (contratos), unanswered (cotizaciones) y los de tickets por
-   * horas (unanswered, unassigned, overdue) los evalúa el cron horario, no
-   * un disparador.
+   * renewal_due (contratos), unanswered (cotizaciones), los de tickets por
+   * horas (unanswered, unassigned, overdue) y stalled (oportunidades que
+   * llevan días en una etapa) los evalúa el cron horario, no un disparador.
    */
   trigger_event:
     | "created"
     | "stage_changed"
+    | "stalled"
     | "renewal_due"
     | "unanswered"
     | "unassigned"
@@ -261,6 +262,14 @@ export type Automation = {
     | "closed";
   trigger_params: {
     stage?: string;
+    /**
+     * Embudo de la etapa (deals:stalled). Hace falta porque los embudos
+     * comparten los nombres internos de etapa: sin él, la regla saltaría en
+     * todos los que tengan una etapa con ese nombre.
+     */
+    pipeline?: string;
+    /** Días en la misma etapa sin moverse (deals:stalled). */
+    daysInStage?: number;
     daysBefore?: number;
     daysAfter?: number;
     hoursAfter?: number;
