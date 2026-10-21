@@ -527,3 +527,8 @@ alter table crm.customer_risk enable row level security;
 create policy "customer_risk_select_own_org" on crm.customer_risk
     for select to authenticated
     using (organization_id = crm.current_organization_id());
+
+-- Horas de soporte reportadas a KontrolIA Auth (20261021140000_soporte_reporta_a_auth).
+alter table crm.soporte_reportes_auth enable row level security;
+create policy "Support usage reports are scoped to the organization" on crm.soporte_reportes_auth
+    for select to authenticated using (organization_id = crm.current_organization_id());

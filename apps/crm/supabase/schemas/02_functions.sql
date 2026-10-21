@@ -2934,3 +2934,103 @@ revoke all on function crm.revisar_clientes_en_riesgo() from public, anon, authe
 
 grant execute on function crm.ajustes_de_riesgo(jsonb) to service_role;
 grant execute on function crm.revisar_clientes_en_riesgo() to service_role;
+
+-- Horas de soporte reportadas a KontrolIA Auth (20261021140000_soporte_reporta_a_auth).
+create or replace function crm.soporte_reportar_a_auth() returns trigger
+    language plpgsql
+    security definer
+    set search_path = ''
+    as $$
+declare
+  empresa record;
+  aplicacion text;
+  org_auth uuid;
+  app_auth uuid;
+  mes_crm date := date_trunc('month', new.fecha_atencion)::date;
+  mes_auth date;
+  minutos integer;
+  horas integer;
+  ya integer;
+  diferencia integer;
+  anotar_estado text;
+  anotar_detalle text;
+begin
+  -- Solo lo que consume horas (las fallas del sistema no se cuentan).
+  if not new.consume then
+    return null;
+  end if;
+
+  select c.source, c.external_id into empresa from crm.companies c where c.id = new.company_id;
+  select ct.application_slug into aplicacion from crm.contracts ct where ct.id = new.contract_id;
+
+  if to_regprocedure('kontrolia_auth.record_usage(uuid,uuid,text,integer,text)') is null then
+    return null; -- instalación sin KontrolIA Auth en la misma base
+  end if;
+
+  -- Una empresa a la vez: dos registros simultáneos no reportan la misma
+  -- diferencia.
+  perform pg_advisory_xact_lock(hashtext('crm.soporte_reportar_a_auth'), new.company_id::integer);
+
+  -- Minutos que consumen en el mes, de los tiempos de esta empresa ligados a
+  -- un contrato de la misma app (correcciones incluidas).
+  select coalesce(sum(t.minutos), 0)::integer into minutos
+    from crm.soporte_tiempos t
+    left join crm.contracts ct on ct.id = t.contract_id
+   where t.company_id = new.company_id
+     and t.consume
+     and t.fecha_atencion >= mes_crm
+     and t.fecha_atencion < (mes_crm + interval '1 month')::date
+     and ct.application_slug is not distinct from aplicacion;
+  horas := ceil(greatest(minutos, 0) / 60.0)::integer;
+
+  select coalesce(sum(r.horas_reportadas), 0)::integer into ya
+    from crm.soporte_reportes_auth r
+   where r.company_id = new.company_id
+     and r.application_slug is not distinct from aplicacion
+     and r.mes = mes_crm
+     and r.estado = 'REPORTADO';
+  diferencia := horas - ya;
+
+  if aplicacion is null then
+    anotar_estado := 'OMITIDO';
+    anotar_detalle := 'El ticket no tiene contrato: no se sabe a qué app reportar.';
+  elsif empresa.source is distinct from 'kontrolia_auth' or empresa.external_id is null then
+    anotar_estado := 'OMITIDO';
+    anotar_detalle := 'La empresa no está ligada a una organización de KontrolIA Auth.';
+  else
+    mes_auth := kontrolia_auth.usage_period_start('month');
+    select a.id into app_auth from kontrolia_auth.applications a where a.slug = aplicacion;
+    begin
+      org_auth := empresa.external_id::uuid;
+    exception when others then
+      org_auth := null;
+    end;
+    if app_auth is null or org_auth is null then
+      anotar_estado := 'OMITIDO';
+      anotar_detalle := format('No existe la app %s o la organización %s en KontrolIA Auth.', aplicacion, empresa.external_id);
+    elsif mes_auth is distinct from mes_crm then
+      anotar_estado := 'OMITIDO';
+      anotar_detalle := format('La atención es de %s y Auth ya cuenta %s: no se reporta a otro mes.',
+                               to_char(mes_crm, 'YYYY-MM'), to_char(mes_auth, 'YYYY-MM'));
+    elsif diferencia = 0 then
+      anotar_estado := 'SIN_CAMBIO';
+    else
+      begin
+        perform kontrolia_auth.record_usage(org_auth, app_auth, 'soporte', diferencia,
+                                            'crm-soporte-tiempo:' || new.id);
+        anotar_estado := 'REPORTADO';
+      exception when others then
+        anotar_estado := 'ERROR';
+        anotar_detalle := sqlerrm;
+      end;
+    end if;
+  end if;
+
+  insert into crm.soporte_reportes_auth (organization_id, tiempo_id, company_id, application_slug, mes,
+                                         minutos_del_mes, horas_del_mes, horas_reportadas, estado, detalle)
+  values (new.organization_id, new.id, new.company_id, aplicacion, mes_crm,
+          minutos, horas, case when anotar_estado = 'REPORTADO' then diferencia else 0 end,
+          anotar_estado, anotar_detalle);
+  return null;
+end;
+$$;
