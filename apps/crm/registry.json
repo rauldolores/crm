@@ -1158,6 +1158,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/renovaciones/RenovacionDelContrato.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/renovaciones/renovaciones.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/root/CRM.tsx",
           "type": "registry:component"
         },
@@ -1191,6 +1199,10 @@
         },
         {
           "path": "src/components/crm/sales/useGetSalesName.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/settings/AjustesDeRenovaciones.tsx",
           "type": "registry:component"
         },
         {
