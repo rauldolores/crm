@@ -1458,8 +1458,12 @@ create table crm.customer_usage (
     application_slug text not null,
     limit_key text not null,
     description text,
-    -- Primer día del mes que se mide.
+    -- Primer día del periodo que se mide (1970-01-01 en los de "total").
     period_start date not null,
+    -- Tipo de periodo: month, year, day o lifetime.
+    period text not null default 'month',
+    -- Es el periodo en curso (el mes anterior va en false).
+    is_current boolean not null default true,
     used numeric not null default 0,
     -- Lo que incluye el plan; null = sin límite.
     included numeric,

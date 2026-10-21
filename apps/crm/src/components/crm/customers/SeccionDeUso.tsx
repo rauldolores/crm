@@ -164,7 +164,20 @@ const FilaDeConsumo = ({ limite }: { limite: LimiteDeUso }) => {
   return (
     <div className="space-y-1">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span>{limite.descripcion}</span>
+        <span>
+          {limite.descripcion}
+          {limite.periodo !== "month" && (
+            <span className="ml-1 text-xs text-muted-foreground">
+              {translate(
+                limite.periodo === "lifetime"
+                  ? "crm.customers.usage.period_total"
+                  : limite.periodo === "year"
+                    ? "crm.customers.usage.period_year"
+                    : "crm.customers.usage.period_day",
+              )}
+            </span>
+          )}
+        </span>
         <span className="font-medium">
           {limite.actual
             ? texto(limite.actual)
