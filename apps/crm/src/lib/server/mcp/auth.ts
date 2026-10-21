@@ -22,6 +22,8 @@ export interface AuthInfo {
   userId: string;
   role?: string;
   clientId?: string;
+  /** Organización activa en KontrolIA Auth (claim `organization_id`). */
+  organizationId?: string;
 }
 
 export async function validateToken(req: Request): Promise<AuthInfo | null> {
@@ -40,6 +42,7 @@ export async function validateToken(req: Request): Promise<AuthInfo | null> {
       userId: payload.sub,
       role: payload.role as string | undefined,
       clientId: payload.client_id as string | undefined,
+      organizationId: payload.organization_id as string | undefined,
     };
   } catch {
     return null;
