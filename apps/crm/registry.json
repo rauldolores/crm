@@ -326,6 +326,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/contacts/PlantillaDeWhatsappInputs.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/contacts/PosiblesDuplicados.tsx",
           "type": "registry:component"
         },
@@ -466,7 +470,7 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/crm/deals/ContactList.tsx",
+          "path": "src/components/crm/deals/DatosDeContacto.tsx",
           "type": "registry:component"
         },
         {
@@ -778,6 +782,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/DesempenoDelEquipo.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/EditSheet.tsx",
           "type": "registry:component"
         },
@@ -875,6 +883,10 @@
         },
         {
           "path": "src/components/crm/misc/metricasDeSoporte.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/metricasDelEquipo.ts",
           "type": "registry:component"
         },
         {
@@ -1015,6 +1027,10 @@
         },
         {
           "path": "src/components/crm/providers/commons/contactTimeline.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/providers/commons/datosDeInformes.ts",
           "type": "registry:component"
         },
         {
@@ -1582,6 +1598,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/kontrolia-auth/rolesDeLaApp.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/afiliadoDeLaSesion.test.ts",
           "type": "registry:lib"
         },
@@ -1906,6 +1926,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/informes/leerPorPaginas.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/informes/leerPorPaginas.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/integraciones/aplicarKontroliaAuth.ts",
           "type": "registry:lib"
         },
@@ -2102,7 +2130,35 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/twilioWhatsapp.test.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/twilioWhatsapp.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/whatsapp/contacto.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/whatsapp/contacto.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/whatsapp/plantillas.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/whatsapp/plantillas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/whatsapp/ventana.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/whatsapp/ventana.ts",
           "type": "registry:lib"
         },
         {
@@ -2115,6 +2171,18 @@
         },
         {
           "path": "src/lib/toSlug.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/whatsapp/plantillas.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/whatsapp/plantillas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/whatsapp/telefono.ts",
           "type": "registry:lib"
         },
         {
