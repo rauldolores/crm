@@ -217,3 +217,16 @@ create trigger set_quote_sales_id_trigger
 create trigger notify_webhooks_quotes
     after insert or update or delete on crm.quotes
     for each row execute function crm.notify_webhooks();
+
+-- Tiempos de soporte: solo de alta.
+create trigger preparar_soporte_tiempo_trigger
+    before insert on crm.soporte_tiempos
+    for each row execute function crm.preparar_soporte_tiempo();
+
+create trigger soporte_tiempos_inmutables_trigger
+    before update or delete on crm.soporte_tiempos
+    for each row execute function crm.soporte_tiempos_inmutables();
+
+create trigger soporte_tiempos_autorizacion_trigger
+    before insert on crm.soporte_tiempos
+    for each row execute function crm.exigir_autorizacion_de_hora_extra();

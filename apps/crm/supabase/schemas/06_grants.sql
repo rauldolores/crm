@@ -309,3 +309,16 @@ revoke all on table crm.billing_settings from authenticated;
 grant select on table crm.billing_settings to authenticated;
 grant select, insert, update, delete on table crm.billing_settings to service_role;
 grant usage, select on sequence crm.billing_settings_id_seq to service_role;
+
+-- Tiempos de soporte: lectura y alta (el MCP escribe como authenticated).
+revoke all on table crm.soporte_tiempos from anon;
+revoke all on table crm.soporte_tiempos from authenticated;
+grant select, insert on table crm.soporte_tiempos to authenticated;
+grant select, insert, update, delete on table crm.soporte_tiempos to service_role;
+grant usage, select on sequence crm.soporte_tiempos_id_seq to authenticated, service_role;
+
+-- Bolsas de soporte: catálogo, solo lo escribe el servidor.
+revoke all on table crm.soporte_bolsas from anon;
+revoke all on table crm.soporte_bolsas from authenticated;
+grant select on table crm.soporte_bolsas to authenticated;
+grant select, insert, update, delete on table crm.soporte_bolsas to service_role;

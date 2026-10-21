@@ -11,6 +11,11 @@ import {
 import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { avisarExcedenteDe } from "@/lib/kontrolia-auth/excedentes";
 import type {
+  CorreccionDeTiempo,
+  RegistroDeTiempoEntrada,
+  ResumenDeSoporte,
+} from "@/lib/soporteTiempos";
+import type {
   ContactNote,
   Deal,
   DealNote,
@@ -457,6 +462,39 @@ const getDataProviderWithCustomMethods = () => {
           cuerpo.message || "No se pudieron fusionar los tickets",
         );
       }
+    },
+    async registrarTiempoSoporte(registro: RegistroDeTiempoEntrada) {
+      const respuesta = await llamarApiDelCrm("/api/tickets/tiempos", registro);
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudo registrar el tiempo");
+      }
+    },
+    async corregirTiempoSoporte(correccion: CorreccionDeTiempo) {
+      const respuesta = await llamarApiDelCrm(
+        "/api/tickets/tiempos/corregir",
+        correccion,
+      );
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudo corregir el tiempo");
+      }
+    },
+    async resumenDeSoporte(
+      companyId: Identifier,
+      mes?: string,
+    ): Promise<ResumenDeSoporte> {
+      const respuesta = await llamarApiDelCrm("/api/tickets/tiempos/resumen", {
+        companyId: Number(companyId),
+        mes,
+      });
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      if (!respuesta.ok) {
+        throw new Error(
+          cuerpo.message || "No se pudo calcular el resumen de soporte",
+        );
+      }
+      return cuerpo as ResumenDeSoporte;
     },
     async enviarWhatsapp(contactId: Identifier, mensaje: string) {
       const respuesta = await llamarApiDelCrm("/api/whatsapp/enviar", {

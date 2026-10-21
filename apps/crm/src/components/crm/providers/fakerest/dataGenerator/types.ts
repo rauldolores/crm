@@ -17,6 +17,7 @@ import type {
   Task,
   Ticket,
   TicketNote,
+  SoporteTiempo,
   Webhook,
 } from "../../../types";
 import type { ConfigurationContextValue } from "../../../root/ConfigurationContext";
@@ -41,6 +42,7 @@ export interface Db {
   tasks: Task[];
   tickets: Ticket[];
   ticket_notes: TicketNote[];
+  soporte_tiempos: SoporteTiempo[];
   affiliates: Affiliate[];
   affiliate_rates: AffiliateRate[];
   affiliate_attributions: AffiliateAttribution[];

@@ -33,6 +33,7 @@ import {
   ResolucionDeTicket,
 } from "./TicketBadges";
 import { TicketsIterator } from "./TicketsIterator";
+import { TiemposDeTicket } from "./TiemposDeTicket";
 
 export const TicketShow = () => (
   <ShowBase>
@@ -184,6 +185,11 @@ const TicketShowContent = () => {
               </div>
             </div>
 
+            <Separator className="my-4" />
+            <TiemposDeTicket
+              ticketId={Number(record.id)}
+              companyId={record.company_id}
+            />
             <Separator className="my-4" />
             <InfiniteListBase
               resource="ticket_notes"
