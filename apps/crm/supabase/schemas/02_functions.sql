@@ -721,6 +721,9 @@ begin
   update crm.contacts set company_id = winner_id where company_id = loser_id;
   update crm.deals set company_id = winner_id where company_id = loser_id;
   update crm.tickets set company_id = winner_id where company_id = loser_id;
+  -- Los tiempos de soporte no se editan, salvo para seguir a su ticket a la
+  -- ganadora (ver crm.soporte_tiempos_inmutables). Van después de los tickets.
+  update crm.soporte_tiempos set company_id = winner_id where company_id = loser_id;
   update crm.quotes set company_id = winner_id where company_id = loser_id;
   update crm.contracts set company_id = winner_id where company_id = loser_id;
   update crm.purchases set company_id = winner_id where company_id = loser_id;
@@ -2096,3 +2099,174 @@ revoke all on function crm.despachar_facturacion() from public;
 revoke all on function crm.despachar_facturacion() from anon;
 revoke all on function crm.despachar_facturacion() from authenticated;
 grant execute on function crm.despachar_facturacion() to service_role;
+
+-- Tiempos de soporte: al guardar se copian ticket, empresa y contrato, y se
+-- validan las correcciones; después, nada se edita ni se borra.
+create or replace function crm.preparar_soporte_tiempo() returns trigger
+    language plpgsql
+    set search_path = ''
+    as $$
+declare
+  ticket record;
+  original crm.soporte_tiempos;
+  hoy date := (now() at time zone 'America/Mexico_City')::date;
+begin
+  select t.organization_id, t.company_id, t.contract_id into ticket
+    from crm.tickets t where t.id = new.ticket_id;
+  if not found then
+    raise exception 'El ticket % no existe.', new.ticket_id;
+  end if;
+  -- Con la clave de servicio no hay organización en el token: manda la del
+  -- ticket. Con sesión, tiene que ser la misma.
+  if new.organization_id is null then
+    new.organization_id := ticket.organization_id;
+  elsif new.organization_id is distinct from ticket.organization_id then
+    raise exception 'El ticket % no existe.', new.ticket_id;
+  end if;
+
+  new.company_id := ticket.company_id;
+  new.contract_id := ticket.contract_id;
+  new.created_at := now();
+
+  if new.atendio is null then
+    select s.id into new.atendio
+      from crm.sales s
+     where s.user_id = auth.uid() and s.organization_id = new.organization_id;
+  elsif not exists (
+    select 1 from crm.sales s
+     where s.id = new.atendio and s.organization_id = new.organization_id
+  ) then
+    raise exception 'Quien atendió no es de esta organización.';
+  end if;
+
+  if new.corrige_a is not null then
+    select * into original from crm.soporte_tiempos where id = new.corrige_a;
+    if not found or original.organization_id is distinct from new.organization_id
+       or original.ticket_id <> new.ticket_id then
+      raise exception 'El registro que quieres corregir no es de este ticket.';
+    end if;
+    if original.corrige_a is not null then
+      raise exception 'Una corrección no se corrige: registra el tiempo de nuevo.';
+    end if;
+    -- El registro en contra anula al original en el mismo mes y con la
+    -- misma regla de consumo; lo demás (la cifra buena) es un registro nuevo.
+    new.minutos := -original.minutos;
+    new.consume := original.consume;
+    new.motivo_no_consume := original.motivo_no_consume;
+    new.fecha_atencion := original.fecha_atencion;
+    new.company_id := original.company_id;
+    new.contract_id := original.contract_id;
+    new.autorizado_por := null;
+    new.autorizado_en := null;
+    new.descripcion_cliente := coalesce(
+      nullif(btrim(new.descripcion_cliente), ''),
+      'Corrección del registro del ' || to_char(original.fecha_atencion, 'DD/MM/YYYY')
+    );
+  elsif new.fecha_atencion > hoy then
+    raise exception 'La fecha de atención no puede ser futura.';
+  end if;
+
+  return new;
+end;
+$$;
+
+-- Única excepción: la fusión de empresas mueve los tiempos de la perdedora a
+-- la ganadora, y solo si la empresa nueva es la que ya tiene el ticket.
+create or replace function crm.soporte_tiempos_inmutables() returns trigger
+    language plpgsql
+    set search_path = ''
+    as $$
+begin
+  if tg_op = 'UPDATE'
+     and (to_jsonb(new) - 'company_id') = (to_jsonb(old) - 'company_id')
+     and new.company_id = (select t.company_id from crm.tickets t where t.id = new.ticket_id) then
+    return new;
+  end if;
+  raise exception 'Los registros de tiempo no se editan ni se borran: corrígelos con un registro en contra.';
+end;
+$$;
+-- `mes` es cualquier día del mes. La bolsa sale de los extras vigentes ese
+-- mes en los contratos de la empresa (mismo criterio que la facturación:
+-- fechas del extra y fin del contrato). Si tiene dos bolsas (dos apps), se
+-- suman.
+create or replace function crm.soporte_resumen(p_company_id bigint, p_mes date)
+    returns table (
+        mes date,
+        bolsas text[],
+        minutos_incluidos integer,
+        minutos_usados integer,
+        minutos_de_mas integer,
+        minutos_no_consumen integer,
+        precio_hora_de_mas_centavos integer,
+        registros integer
+    )
+    language sql stable
+    security invoker
+    set search_path = ''
+as $$
+  with periodo as (
+    select date_trunc('month', p_mes)::date as inicio,
+           (date_trunc('month', p_mes) + interval '1 month - 1 day')::date as fin
+  ),
+  bolsa as (
+    select array_agg(b.slug order by b.slug) as slugs,
+           sum(b.minutos_al_mes)::integer as minutos,
+           max(b.precio_hora_de_mas_centavos)::integer as precio
+      from crm.contracts c
+      cross join periodo p
+      cross join lateral jsonb_array_elements(
+        case when jsonb_typeof(c.addons) = 'array' then c.addons else '[]'::jsonb end
+      ) as extra
+      join crm.soporte_bolsas b on b.slug = extra ->> 'slug'
+     where c.company_id = p_company_id
+       and (c.started_on is null or c.started_on <= p.fin)
+       and (c.ended_on is null or c.ended_on >= p.inicio)
+       and (left(extra ->> 'starts_at', 10) is null or left(extra ->> 'starts_at', 10) <= p.fin::text)
+       and (left(extra ->> 'ends_at', 10) is null or left(extra ->> 'ends_at', 10) > p.inicio::text)
+  ),
+  uso as (
+    select coalesce(sum(t.minutos) filter (where t.consume), 0)::integer as usados,
+           coalesce(sum(t.minutos) filter (where not t.consume), 0)::integer as no_consumen,
+           count(*)::integer as registros
+      from crm.soporte_tiempos t, periodo p
+     where t.company_id = p_company_id
+       and t.fecha_atencion between p.inicio and p.fin
+  )
+  select p.inicio,
+         coalesce(bolsa.slugs, '{}'),
+         coalesce(bolsa.minutos, 0),
+         uso.usados,
+         greatest(uso.usados - coalesce(bolsa.minutos, 0), 0),
+         uso.no_consumen,
+         bolsa.precio,
+         uso.registros
+    from periodo p, bolsa, uso;
+$$;
+
+revoke all on function crm.soporte_resumen(bigint, date) from public;
+grant execute on function crm.soporte_resumen(bigint, date) to authenticated, service_role;
+-- Si la empresa tiene bolsa ese mes y este registro la rebasa, hace falta
+-- quién del cliente lo autorizó. Sin bolsa no se exige nada: todavía no se
+-- ha decidido cómo se cobra el soporte a quien no la tiene. Corre después
+-- de crm.preparar_soporte_tiempo (orden alfabético de los disparadores),
+-- con la empresa ya copiada del ticket.
+create or replace function crm.exigir_autorizacion_de_hora_extra() returns trigger
+    language plpgsql
+    set search_path = ''
+    as $$
+declare
+  resumen record;
+begin
+  if new.corrige_a is not null or not new.consume or new.minutos <= 0
+     or new.autorizado_por is not null then
+    return new;
+  end if;
+  select * into resumen from crm.soporte_resumen(new.company_id, new.fecha_atencion);
+  if resumen.minutos_incluidos > 0
+     and resumen.minutos_usados + new.minutos > resumen.minutos_incluidos then
+    raise exception 'Este tiempo pasa de la bolsa del cliente (quedan % min este mes): indica quién del cliente autorizó la hora de más.',
+      greatest(resumen.minutos_incluidos - resumen.minutos_usados, 0);
+  end if;
+  return new;
+end;
+$$;

@@ -90,6 +90,8 @@ export default defineConfig({
             "src/lib/server/importacion/**",
             // Módulo de facturación: usa node:crypto y process.env.
             "src/lib/server/facturacion/**",
+            // Tiempos de soporte: código del servidor, se prueba en Node.
+            "src/lib/server/soporte/**",
           ],
           server: {
             deps: {
@@ -122,6 +124,7 @@ export default defineConfig({
             "src/lib/server/automatizaciones/**/*.test.ts",
             "src/lib/server/importacion/**/*.test.ts",
             "src/lib/server/facturacion/**/*.test.ts",
+            "src/lib/server/soporte/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },

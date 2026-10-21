@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  MOTIVOS_NO_CONSUME,
+  primerError,
+  registroDeTiempoSchema,
+} from "@/lib/soporteTiempos";
 import { acotarLimite, construirSet, error, responder } from "./nucleo";
 import type { RegistradorDeHerramientas } from "./registro";
 
@@ -96,10 +101,107 @@ export const registrarSoporte: RegistradorDeHerramientas = (server, ctx) => {
                     'id', n.id, 'fecha', n.date, 'texto', n.text
                   ) order by n.date desc)
                   from ticket_notes n where n.ticket_id = t.id
-                ), '[]'::jsonb) as notas
+                ), '[]'::jsonb) as notas,
+                coalesce((
+                  select jsonb_agg(jsonb_build_object(
+                    'id', s.id, 'fecha', s.fecha_atencion, 'minutos', s.minutos,
+                    'consume', s.consume, 'motivo_no_consume', s.motivo_no_consume,
+                    'descripcion_cliente', s.descripcion_cliente,
+                    'nota_interna', s.nota_interna, 'atendio', s.atendio,
+                    'corrige_a', s.corrige_a
+                  ) order by s.created_at desc)
+                  from soporte_tiempos s where s.ticket_id = t.id
+                ), '[]'::jsonb) as tiempos
            from tickets t where t.id = $1`,
         [id],
       ),
+  );
+
+  server.registerTool(
+    "resumen_soporte",
+    {
+      title: "Bolsa de soporte del mes",
+      description:
+        "Bolsa de horas de soporte de una empresa en un mes: minutos incluidos, usados, de más y los que no consumen (fallas del sistema, cortesías). El mes cuenta en hora de México.",
+      inputSchema: z.object({
+        empresaId: z.number(),
+        mes: z
+          .string()
+          .regex(/^\d{4}-\d{2}$/)
+          .optional()
+          .describe("AAAA-MM. Por defecto, el mes en curso."),
+      }),
+      annotations: { readOnlyHint: true },
+    },
+    async ({ empresaId, mes }: { empresaId: number; mes?: string }) =>
+      responder(
+        ctx,
+        `select * from soporte_resumen($1, coalesce($2::date,
+           (now() at time zone 'America/Mexico_City')::date))`,
+        [empresaId, mes ? `${mes}-01` : null],
+      ),
+  );
+
+  server.registerTool(
+    "registrar_tiempo_soporte",
+    {
+      title: "Registrar tiempo de soporte",
+      description:
+        "Registra cuánto tiempo se dedicó a un ticket y qué se hizo. Descuenta de la bolsa de horas del cliente salvo que consume sea false (falla del sistema, cortesía). Quien registra queda como quien atendió. Los registros no se editan ni se borran.",
+      inputSchema: z.object({
+        ticketId: z.number(),
+        minutos: z.number().describe("Minutos enteros, mayor que 0."),
+        descripcionCliente: z
+          .string()
+          .describe("Qué se hizo, en palabras para el cliente: él lo leerá."),
+        notaInterna: z
+          .string()
+          .optional()
+          .describe("Detalle interno; el cliente nunca lo ve."),
+        consume: z
+          .boolean()
+          .optional()
+          .describe("Si descuenta de la bolsa. Por defecto, true."),
+        motivoNoConsume: z
+          .enum(MOTIVOS_NO_CONSUME)
+          .optional()
+          .describe("Obligatorio cuando consume es false."),
+        fechaAtencion: z
+          .string()
+          .optional()
+          .describe("AAAA-MM-DD en hora de México. Por defecto, hoy."),
+        autorizadoPor: z
+          .string()
+          .optional()
+          .describe("Quién del cliente autorizó la hora de más, si pasa de la bolsa."),
+      }),
+    },
+    async (args: Record<string, unknown>) => {
+      const validacion = registroDeTiempoSchema.safeParse(args);
+      if (!validacion.success) return error(primerError(validacion.error));
+      const r = validacion.data;
+      return responder(
+        ctx,
+        `insert into soporte_tiempos
+           (ticket_id, minutos, descripcion_cliente, nota_interna, consume,
+            motivo_no_consume, fecha_atencion, autorizado_por, autorizado_en)
+         values ($1, $2, $3, $4, $5, $6,
+                 coalesce($7::date, (now() at time zone 'America/Mexico_City')::date),
+                 $8, $9)
+         returning id, ticket_id, company_id, fecha_atencion, minutos, consume`,
+        [
+          r.ticketId,
+          r.minutos,
+          r.descripcionCliente,
+          r.notaInterna,
+          r.consume,
+          r.motivoNoConsume,
+          r.fechaAtencion ?? null,
+          r.autorizadoPor,
+          r.autorizadoEn,
+        ],
+      );
+    },
   );
 
   server.registerTool(

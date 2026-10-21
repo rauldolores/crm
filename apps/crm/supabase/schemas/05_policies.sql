@@ -496,3 +496,15 @@ create policy "Quote items are deleted within the organization" on crm.quote_ite
     for delete to authenticated using (organization_id = crm.current_organization_id());
 
 -- Las secuencias solo las toca la función (security definer): sin políticas.
+
+-- Tiempos de soporte: lectura y alta; sin edición ni borrado.
+alter table crm.soporte_tiempos enable row level security;
+create policy "Support time is scoped to the organization" on crm.soporte_tiempos
+    for select to authenticated using (organization_id = crm.current_organization_id());
+create policy "Support time is created in the organization" on crm.soporte_tiempos
+    for insert to authenticated with check (organization_id = crm.current_organization_id());
+
+-- Bolsas de soporte: catálogo global, solo lectura.
+alter table crm.soporte_bolsas enable row level security;
+create policy "Support plans are readable" on crm.soporte_bolsas
+    for select to authenticated using (true);
