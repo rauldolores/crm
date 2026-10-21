@@ -104,7 +104,14 @@ select
     c.organization_id,
     c.custom_fields,
     c.tags,
-    c.referred_by_affiliate_id
+    c.referred_by_affiliate_id,
+    -- Al final a propósito: `create or replace view` solo admite columnas
+    -- nuevas al final, y meterla en medio aborta con «cannot change name of
+    -- view column». La ficha de empresa lee de esta vista y el panel de
+    -- cliente deja cambiar la etapa ahí mismo; sin esta columna el cambio se
+    -- guardaba en crm.companies pero al refrescar volvía vacío, porque el
+    -- registro recargado ya no traía el campo.
+    c.lifecycle_stage
 from crm.companies c
     left join crm.deals d on c.id = d.company_id
     left join crm.contacts co on c.id = co.company_id
