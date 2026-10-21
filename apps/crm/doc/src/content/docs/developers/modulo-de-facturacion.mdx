@@ -26,14 +26,14 @@ Aprobar, reintentar, descartar, «Facturar ahora», el interruptor del contrato 
 
 ## Datos
 
-| Tabla | Qué guarda |
-|---|---|
-| `crm.billing_settings` | Ajustes por producto (`'*'` = generales). |
-| `crm.invoices` | Además de las de cotización: `origin` (`contract`, `card`, `credits`), `contract_id`, `period_start`/`period_end`, `billing_status` (`pending_review`, `missing_data`, `queued`, `stamping`, `stamped`, `error`, `cancelled`, `discarded`), `payment_method`/`payment_form`, `payment_status` (`unpaid`, `partial`, `paid`), `paid_amount`, `paid_at`, `due_on`, `subtotal`, `tax`, `source_ref`, `problems`. `external_id` es nulo mientras la factura no llega a Faqturia. |
-| `crm.invoice_items` | Renglones (precio antes de IVA, claves del SAT por renglón). |
-| `crm.connectors.webhook_secret` | Secreto del aviso de Faqturia (solo `service_role`). |
-| `crm.invoices.access_*`, `payment_reference` | Renovar el acceso al pagar: `access_status` (`not_applicable`, `pending`, `renewed`, `error`, `skipped`), `access_renewed_until`, `access_error`, `access_attempts`, `access_updated_at`, `access_next_attempt_at`; referencia del pago registrado a mano. |
-| `crm.contracts.in_grace`, `grace_until` | Días de gracia de la suscripción, de la foto de KontrolIA Auth. |
+| Tabla                                        | Qué guarda                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `crm.billing_settings`                       | Ajustes por producto (`'*'` = generales).                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `crm.invoices`                               | Además de las de cotización: `origin` (`contract`, `card`, `credits`), `contract_id`, `period_start`/`period_end`, `billing_status` (`pending_review`, `missing_data`, `queued`, `stamping`, `stamped`, `error`, `cancelled`, `discarded`), `payment_method`/`payment_form`, `payment_status` (`unpaid`, `partial`, `paid`), `paid_amount`, `paid_at`, `due_on`, `subtotal`, `tax`, `source_ref`, `problems`. `external_id` es nulo mientras la factura no llega a Faqturia. |
+| `crm.invoice_items`                          | Renglones (precio antes de IVA, claves del SAT por renglón).                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `crm.connectors.webhook_secret`              | Secreto del aviso de Faqturia (solo `service_role`).                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `crm.invoices.access_*`, `payment_reference` | Renovar el acceso al pagar: `access_status` (`not_applicable`, `pending`, `renewed`, `error`, `skipped`), `access_renewed_until`, `access_error`, `access_attempts`, `access_updated_at`, `access_next_attempt_at`; referencia del pago registrado a mano.                                                                                                                                                                                                                   |
+| `crm.contracts.in_grace`, `grace_until`      | Días de gracia de la suscripción, de la foto de KontrolIA Auth.                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 **Idempotencia:** índice único `(organization_id, contract_id, period_start, origin)` (una factura por contrato y periodo, aunque el proceso corra cada hora o se pulse «Facturar ahora» dos veces) y `(organization_id, origin, source_ref)` (un cobro, una factura, aunque KontrolIA Auth reintente). Para timbrar, la factura se «toma» con un cambio condicional `queued → stamping`, y a Faqturia se le manda `Idempotency-Key` (factura + intentos pedidos por una persona + huella de los datos): si el proceso se cae a mitad, el reintento recibe la misma factura en vez de timbrar otra. Una factura que se queda «timbrando» más de 15 minutos vuelve a la cola.
 
@@ -109,13 +109,13 @@ Authorization: Bearer kpk_live_…
 
 **Qué se guarda** en `crm.invoices`:
 
-| Respuesta | `access_status` | Reintento |
-|---|---|---|
-| `200` (o `{already: true}`) | `renewed`, con `access_renewed_until = subscription.currentPeriodEnd` | — |
-| `409` (suscripción con tarjeta o terminada) | `skipped`, con el `error` de KontrolIA Auth en `access_error` | No; solo «Reintentar» |
-| Red, `5xx`, `408`, `429`, `401`/`403` (clave rechazada) | `error` | Sí, cada 1, 2, 4… hasta 24 h; 10 intentos (`access_attempts`), luego solo «Reintentar» |
-| Otro `4xx` (datos rechazados) o contrato sin llave/periodicidad | `error` | No; solo «Reintentar» |
-| Sin `KONTROLIA_PLATFORM_API_KEY` | `error` («no está configurada») | Cada hora, sin gastar intentos, en cuanto se configure |
+| Respuesta                                                       | `access_status`                                                       | Reintento                                                                              |
+| --------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `200` (o `{already: true}`)                                     | `renewed`, con `access_renewed_until = subscription.currentPeriodEnd` | —                                                                                      |
+| `409` (suscripción con tarjeta o terminada)                     | `skipped`, con el `error` de KontrolIA Auth en `access_error`         | No; solo «Reintentar»                                                                  |
+| Red, `5xx`, `408`, `429`, `401`/`403` (clave rechazada)         | `error`                                                               | Sí, cada 1, 2, 4… hasta 24 h; 10 intentos (`access_attempts`), luego solo «Reintentar» |
+| Otro `4xx` (datos rechazados) o contrato sin llave/periodicidad | `error`                                                               | No; solo «Reintentar»                                                                  |
+| Sin `KONTROLIA_PLATFORM_API_KEY`                                | `error` («no está configurada»)                                       | Cada hora, sin gastar intentos, en cuanto se configure                                 |
 
 **Días de gracia.** La foto de KontrolIA Auth puede traer por suscripción `in_grace`, `grace_until` y `manual_grace_days`; se guardan en `contracts.in_grace` y `contracts.grace_until` (solo si está en gracia). En la ficha, el contrato dice «Acceso vigente hasta el …» y, en gracia, «Pago pendiente: acceso hasta el …» en ámbar. El puente `/api/datos` no deja escribir `in_grace` ni `grace_until`.
 
@@ -127,6 +127,69 @@ KONTROLIA_AUTH_SERVER_URL=https://auth.kontrolia.io
 KONTROLIA_PLATFORM_API_KEY=kpk_live_…
 ```
 
+## Oportunidades de renovación
+
+Antes de cada renovación, Vinqulia abre **sola** una oportunidad en el embudo «Renovaciones» con el importe del contrato y una tarea para el responsable de la cuenta; la cierra sola cuando la renovación ocurre o se pierde. No depende del conector de Faqturia: es SQL puro que corre `pg_cron` cada hora (minuto 12), `crm.generar_oportunidades_de_renovacion()`, migración `20261021051708_oportunidades_de_renovacion.sql`.
+
+**Cuándo se abre.** Contrato `status = 'active'`, con `billing_period` mensual, trimestral o anual y `renews_on` de hoy en adelante, cuando hoy ≥ `renews_on` − ventana:
+
+| Periodicidad | Ventana de fábrica                                        |
+| ------------ | --------------------------------------------------------- |
+| Anual        | 60 días                                                   |
+| Trimestral   | 30 días (decisión de diseño: entre el mensual y el anual) |
+| Mensual      | 15 días                                                   |
+
+Solo contratos por transferencia (`provider` distinto de `stripe`; los dados de alta a mano en el CRM no tienen `provider` y sí entran). Los de tarjeta se renuevan solos al cobrarse; entran solo si la organización enciende «Incluir contratos que se cobran con tarjeta».
+
+**Qué abre.** Una oportunidad por contrato × fecha de renovación (`deals.contract_id` + `deals.renewal_for` = el `renews_on` que se renueva; índice único completo `deals_renewal_uk`). Constancia en `crm.renewal_runs`: si alguien borra la oportunidad, no se vuelve a abrir para esa fecha.
+
+- Nombre: `Renovación · <nombre del contrato> [· <plan si no viene ya en el nombre>] · vence 15 dic 2026`.
+- Embudo de renovaciones, primera etapa; importe = `round(contracts.amount)`: `deals.amount` es entero en **pesos** (moneda de la organización), igual que el contrato; si el contrato es en otra moneda se dice en la descripción.
+- Cierre esperado = `renews_on`; contactos = hasta 5 contactos no archivados de la empresa (el de actividad más reciente primero); responsable = el de la empresa (`companies.sales_id`) o, si no tiene, el del contrato.
+- Una tarea al primer contacto: «Contactar para renovar «…» antes del …», tipo Llamada (si existe), vence 7 días antes de la renovación (o hoy, si ya es menos).
+
+**Cuándo se cierra** (solo oportunidades no archivadas que no estén ya en una etapa ganada o perdida de su embudo; se mueven con `crm.move_deal`, así que el historial `deal_events` registra el cambio de etapa como «sistema»):
+
+- **Ganada** si `contracts.renews_on` ya pasó de `renewal_for` (KontrolIA Auth renovó o alguien movió la fecha), o si la factura de ese contrato con `period_start = renewal_for` está pagada (`payment_status = 'paid'`, no cancelada).
+- **Perdida** con motivo `contrato-cancelado` («Contrato cancelado») si el contrato quedó `cancelled`; con `vencio-sin-renovar` («Venció sin renovar») si quedó `expired`, o si sigue activo con la misma fecha, ya pasó y el acceso terminó: sin días de gracia (`in_grace = false`) en los de KontrolIA Auth, o 5 días después en los demás.
+- Si el embudo no tiene etapa perdida, se archiva con el motivo. La que ya movió una persona no se vuelve a tocar.
+
+**Embudo y motivos.** La primera vez que hay algo que abrir en una organización, `crm.asegurar_embudo_de_renovaciones()` agrega a `config.dealPipelines` el embudo `renovaciones` (si no existe ya uno con ese value): «Por contactar» (60 %), «Propuesta enviada» (80 %), «Renovada» (ganada) y «No renovó» (perdida). Si la organización nunca guardó sus embudos, escribe antes el de «Ventas» tal como lo sintetiza la aplicación. Agrega también los dos motivos de pérdida si la organización ya guardó los suyos (si no, ya vienen en los de fábrica). Anota `config.renewals.systemPipeline`: el puente no cuenta ese embudo contra el límite de embudos del plan. Si un administrador lo quita, vuelve a aparecer la siguiente vez que haga falta abrir una oportunidad.
+
+**Ajustes** (Ajustes → Renovaciones, solo administradores, como el resto de la configuración): `config.renewals = {active, daysBeforeYearly, daysBeforeQuarterly, daysBeforeMonthly, includeCardContracts, pipeline, systemPipeline}`. Lo que falte o no sirva (días fuera de 0 a 366) vale lo de fábrica, con la misma regla en la base (`crm.ajustes_de_renovaciones`) y en la pantalla (`src/components/crm/renovaciones/renovaciones.ts`). Apagado no abre nuevas, pero sigue cerrando las ya abiertas.
+
+**Dónde se ve.** En la pestaña Cliente, cada contrato con periodicidad dice «Renovación: oportunidad en «etapa» · ver oportunidad» o «la oportunidad se abrirá el …». En la ficha de la oportunidad: «Renovación del contrato «…» · vence el …» con enlace a la empresa. `deals.contract_id` y `deals.renewal_for` son campos protegidos en el puente `/api/datos`.
+
+**Cuidado:** una renovación ganada cuenta en «Ganado en oportunidades» del cliente y, si la empresa vino de un afiliado, en su comisión (`affiliate_commissions`), como cualquier oportunidad ganada.
+
+### Prueba a mano (SQL)
+
+En un proyecto de pruebas, con un contrato anual por transferencia que renueve en 30 días:
+
+```sql
+-- 1. Abre: debe devolver abiertas = 1 y crear la oportunidad y la tarea.
+select crm.generar_oportunidades_de_renovacion();
+select id, name, pipeline, stage, amount, contract_id, renewal_for
+  from crm.deals where contract_id = :contrato;
+select * from crm.renewal_runs where contract_id = :contrato;
+select config -> 'dealPipelines', config -> 'renewals'
+  from crm.configuration where organization_id = :org;
+
+-- 2. Idempotente: otra corrida no abre nada (abiertas = 0).
+select crm.generar_oportunidades_de_renovacion();
+
+-- 3. Ganada: mover la fecha de renovación (o pagar la factura del periodo).
+update crm.contracts set renews_on = renews_on + interval '1 year' where id = :contrato;
+select crm.generar_oportunidades_de_renovacion();  -- ganadas = 1
+select stage from crm.deals where contract_id = :contrato;  -- renovada
+select field, old_value, new_value from crm.deal_events
+ where deal_id = (select id from crm.deals where contract_id = :contrato order by id limit 1);
+
+-- 4. Perdida: con otro contrato, cancelarlo.
+update crm.contracts set status = 'cancelled' where id = :otro;
+select crm.generar_oportunidades_de_renovacion();  -- perdidas = 1, motivo contrato-cancelado
+```
+
 ## Código
 
-`src/lib/server/facturacion/`: `planear.ts`, `periodos.ts`, `tarjeta.ts`, `faqturiaEstado.ts`, `ajustes.ts` (puros, con pruebas en el proyecto `server` de Vitest) y los ejecutores `guardar.ts`, `contratos.ts`, `cobros.ts`, `emitir.ts`, `conciliar.ts`, `procesar.ts`, `acciones.ts`, `acceso.ts` (renovar el acceso al pagar; su parte pura con pruebas en `acceso.test.ts`). Rutas: `app/api/facturacion/{procesar,ajustes,facturas/[id],contratos/[id]}` y `app/api/integraciones/faqturia`. Pantallas: `src/components/crm/facturas/{PorFacturarPage,AjustesDeFacturacionPage,SeccionDeFacturas,AccesoDeFactura}.tsx`.
+`src/lib/server/facturacion/`: `planear.ts`, `periodos.ts`, `tarjeta.ts`, `faqturiaEstado.ts`, `ajustes.ts` (puros, con pruebas en el proyecto `server` de Vitest) y los ejecutores `guardar.ts`, `contratos.ts`, `cobros.ts`, `emitir.ts`, `conciliar.ts`, `procesar.ts`, `acciones.ts`, `acceso.ts` (renovar el acceso al pagar; su parte pura con pruebas en `acceso.test.ts`). Rutas: `app/api/facturacion/{procesar,ajustes,facturas/[id],contratos/[id]}` y `app/api/integraciones/faqturia`. Pantallas: `src/components/crm/facturas/{PorFacturarPage,AjustesDeFacturacionPage,SeccionDeFacturas,AccesoDeFactura}.tsx`. Renovaciones: `src/components/crm/renovaciones/` (`RenovacionDelContrato.tsx`; reglas puras con pruebas en `renovaciones.test.ts`) y `src/components/crm/settings/AjustesDeRenovaciones.tsx`.

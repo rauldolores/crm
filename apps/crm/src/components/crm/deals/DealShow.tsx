@@ -34,6 +34,7 @@ import { CamposPersonalizadosField } from "../misc/CamposPersonalizados";
 import { TagsListEdit } from "../contacts/TagsListEdit";
 import { probabilidadDeEtapa } from "./probabilidad";
 import { SeccionDeCotizaciones } from "../cotizaciones/SeccionDeCotizaciones";
+import { RenovacionDeLaOportunidad } from "../renovaciones/RenovacionDelContrato";
 
 export const DealShow = ({ open, id }: { open: boolean; id?: string }) => {
   const redirect = useRedirect();
@@ -177,6 +178,8 @@ const DealShowContent = () => {
               </div>
             )}
           </div>
+
+          <RenovacionDeLaOportunidad deal={record} />
 
           {!!record.contact_ids?.length && (
             <div className="m-4">

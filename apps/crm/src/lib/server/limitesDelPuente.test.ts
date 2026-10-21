@@ -91,3 +91,43 @@ describe("embudosNuevos", () => {
     expect(embudosNuevos(JSON.stringify({ config: { currency: "MXN" } }), guardado)).toEqual([]);
   });
 });
+
+describe("embudo de renovaciones del sistema", () => {
+  const guardado = {
+    dealPipelines: [{ value: "ventas" }, { value: "renovaciones" }],
+    renewals: { systemPipeline: "renovaciones" },
+  };
+
+  it("quitarlo no libera cupo: nunca se contó", () => {
+    const cuerpo = JSON.stringify({
+      config: { dealPipelines: [{ value: "ventas" }] },
+    });
+    expect(embudosQuitados(cuerpo, guardado)).toEqual([]);
+  });
+
+  it("volver a ponerlo no cuenta", () => {
+    const cuerpo = JSON.stringify({
+      config: {
+        dealPipelines: [{ value: "ventas" }, { value: "renovaciones" }],
+      },
+    });
+    const sinElEmbudo = {
+      dealPipelines: [{ value: "ventas" }],
+      renewals: { systemPipeline: "renovaciones" },
+    };
+    expect(embudosNuevos(cuerpo, sinElEmbudo)).toEqual([]);
+  });
+
+  it("el cuerpo no puede declarar «del sistema» otro embudo", () => {
+    const cuerpo = JSON.stringify({
+      config: {
+        dealPipelines: [{ value: "ventas" }, { value: "extra" }],
+        renewals: { systemPipeline: "extra" },
+      },
+    });
+    expect(embudosNuevos(cuerpo, { dealPipelines: [{ value: "ventas" }] })).toEqual([
+      "extra",
+    ]);
+  });
+});
+

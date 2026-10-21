@@ -1567,6 +1567,21 @@ export const spanishCrmMessages = {
         history: "Historial del contrato",
       },
     },
+    // Oportunidades de renovación que abre y cierra el CRM solo.
+    renewals: {
+      contract: {
+        open: "Renovación: oportunidad en «%{stage}» ·",
+        archived: "Renovación: oportunidad archivada («%{stage}») ·",
+        see_deal: "ver oportunidad",
+        opens_on: "Renovación: la oportunidad se abrirá el %{date}",
+        opens_soon: "Renovación: la oportunidad se abrirá en la próxima hora",
+      },
+      deal: {
+        of_contract: "Renovación del contrato «%{name}» · vence el %{date}",
+        see_company: "Ver empresa",
+        help: "La abrió el CRM solo. Queda ganada cuando se paga la factura del periodo o se renueva el contrato, y perdida si vence o se cancela sin renovarse.",
+      },
+    },
     email: {
       title: "Correo saliente",
       intro:
@@ -2222,6 +2237,17 @@ export const spanishCrmMessages = {
         loss_reasons: "Motivos de pérdida",
         loss_reasons_help:
           "Las opciones que se ofrecerán al perder una oportunidad. Saber por qué se pierde es lo que convierte el historial en una decisión.",
+      },
+      renewals: {
+        title: "Renovaciones",
+        help: "Antes de que se renueve un contrato, el CRM abre solo una oportunidad en el embudo «Renovaciones» con el importe del contrato y una tarea para el responsable de la cuenta. Cuando se paga la factura del periodo o el contrato se renueva, queda ganada sola; si vence o se cancela sin renovarse, queda perdida.",
+        active: "Abrir oportunidades de renovación",
+        days_yearly: "Días antes, contratos anuales",
+        days_quarterly: "Días antes, contratos trimestrales",
+        days_monthly: "Días antes, contratos mensuales",
+        include_card: "Incluir contratos que se cobran con tarjeta",
+        include_card_help:
+          "Esos contratos se renuevan solos al cobrarse; enciéndelo solo si también quieres darles seguimiento.",
       },
       notes: {
         statuses: "Estados",

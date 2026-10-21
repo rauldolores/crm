@@ -29,6 +29,11 @@ import type {
 } from "../types";
 import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
 import { AjustesDeTickets } from "./AjustesDeTickets";
+import { AjustesDeRenovaciones } from "./AjustesDeRenovaciones";
+import {
+  ajustesDeRenovaciones,
+  limpiarRenovaciones,
+} from "../renovaciones/renovaciones";
 import { limpiarSla } from "./limpiarSla";
 import { ColorInput } from "./ColorInput";
 
@@ -44,6 +49,11 @@ const SECTIONS = [
     fallback: "Companies",
   },
   { id: "deals", label: "resources.deals.name", fallback: "Deals" },
+  {
+    id: "renewals",
+    label: "crm.settings.renewals.title",
+    fallback: "Renewals",
+  },
   { id: "notes", label: "resources.notes.name", fallback: "Notes" },
   { id: "tasks", label: "resources.tasks.name", fallback: "Tasks" },
   {
@@ -209,6 +219,9 @@ const transformFormValues = (data: Record<string, any>) => {
       quoteTaxRate: data.quoteTaxRate,
       quoteTemplates: data.quoteTemplates,
       quoteIssuer: data.quoteIssuer,
+      // Oportunidades de renovación: valores limpios, y el embudo que agregó
+      // el sistema se conserva (no cuenta contra el límite del plan).
+      renewals: limpiarRenovaciones(data.renewals, data.renewals),
       currency: data.currency,
       companySectors: ensureValues(data.companySectors),
       dealCategories: ensureValues(data.dealCategories),
@@ -271,6 +284,7 @@ const SettingsForm = () => {
       quoteTaxRate: config.quoteTaxRate,
       quoteTemplates: config.quoteTemplates,
       quoteIssuer: config.quoteIssuer,
+      renewals: ajustesDeRenovaciones(config.renewals),
       currency: config.currency,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
@@ -507,6 +521,8 @@ const SettingsFormFields = () => {
           </CardContent>
         </Card>
 
+        <AjustesDeRenovaciones />
+
         <AjustesDeTickets />
 
         {/* Tasks */}
@@ -575,6 +591,7 @@ const SettingsFormFields = () => {
                   quoteTaxRate: config.quoteTaxRate,
                   quoteTemplates: config.quoteTemplates,
                   quoteIssuer: config.quoteIssuer,
+                  renewals: limpiarRenovaciones({}, config.renewals),
                 })
               }
             >

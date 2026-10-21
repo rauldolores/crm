@@ -182,6 +182,12 @@ export type Deal = {
   custom_fields?: CustomFieldValues;
   /** Etiquetas (ids de tags), como en contactos. */
   tags?: number[] | null;
+  /**
+   * Oportunidad de renovación (la abre sola la base): de qué contrato y qué
+   * fecha de renovación. Nulos en las demás.
+   */
+  contract_id?: Identifier | null;
+  renewal_for?: string | null;
 } & Pick<RaRecord, "id">;
 
 export type DealNote = {

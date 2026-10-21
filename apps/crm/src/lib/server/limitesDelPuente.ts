@@ -42,13 +42,29 @@ export const idsDe = (cuerpoDeRespuesta: string): (string | number)[] =>
     );
 
 type ConfiguracionConEmbudos = {
-  config?: { dealPipelines?: { value?: unknown }[] } | null;
+  config?: {
+    dealPipelines?: { value?: unknown }[];
+    renewals?: { systemPipeline?: unknown } | null;
+  } | null;
 };
 
 const valoresDeEmbudos = (config: ConfiguracionConEmbudos["config"]) =>
   (config?.dealPipelines ?? [])
     .map((embudo) => embudo?.value)
     .filter((valor): valor is string => typeof valor === "string" && !!valor);
+
+/**
+ * El embudo de renovaciones lo agrega la base sola
+ * (crm.asegurar_embudo_de_renovaciones) y lo anota en
+ * `config.renewals.systemPipeline`. No cuenta contra el límite del plan: ni
+ * al aparecer ni al quitarlo. Se lee de lo GUARDADO, no del cuerpo, para que
+ * una escritura no pueda declarar «del sistema» un embudo cualquiera.
+ */
+const embudoDelSistema = (configActual: unknown): string | null => {
+  const valor = (configActual as ConfiguracionConEmbudos["config"])?.renewals
+    ?.systemPipeline;
+  return typeof valor === "string" && valor ? valor : null;
+};
 
 /**
  * Embudos que la escritura añade respecto a lo guardado. Una modificación
@@ -64,7 +80,10 @@ export const embudosNuevos = (
   const existentes = new Set(
     valoresDeEmbudos(configActual as ConfiguracionConEmbudos["config"]),
   );
-  return enviados.filter((valor) => !existentes.has(valor));
+  const delSistema = embudoDelSistema(configActual);
+  return enviados.filter(
+    (valor) => !existentes.has(valor) && valor !== delSistema,
+  );
 };
 
 /**
@@ -78,9 +97,10 @@ export const embudosQuitados = (
   const enviados = embudosEnviados(cuerpo);
   if (enviados === null) return [];
   const conservados = new Set(enviados);
+  const delSistema = embudoDelSistema(configActual);
   return valoresDeEmbudos(
     configActual as ConfiguracionConEmbudos["config"],
-  ).filter((valor) => !conservados.has(valor));
+  ).filter((valor) => !conservados.has(valor) && valor !== delSistema);
 };
 
 /** Los embudos del cuerpo, o null si la escritura no toca `dealPipelines`. */

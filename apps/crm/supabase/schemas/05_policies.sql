@@ -508,3 +508,10 @@ create policy "Support time is created in the organization" on crm.soporte_tiemp
 alter table crm.soporte_bolsas enable row level security;
 create policy "Support plans are readable" on crm.soporte_bolsas
     for select to authenticated using (true);
+
+-- Oportunidades de renovación ya abiertas: solo lectura. Escribe únicamente
+-- crm.generar_oportunidades_de_renovacion() (security definer).
+alter table crm.renewal_runs enable row level security;
+create policy "renewal_runs_select_own_org" on crm.renewal_runs
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());

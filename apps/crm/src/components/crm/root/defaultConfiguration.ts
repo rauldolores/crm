@@ -79,6 +79,10 @@ export const defaultDealLossReasons = [
   { value: "timing", label: "No era el momento" },
   { value: "no-budget", label: "Sin presupuesto" },
   { value: "no-response", label: "Dejó de responder" },
+  // Los pone solos el cierre de las oportunidades de renovación
+  // (crm.generar_oportunidades_de_renovacion).
+  { value: "vencio-sin-renovar", label: "Venció sin renovar" },
+  { value: "contrato-cancelado", label: "Contrato cancelado" },
   { value: "other", label: "Otro" },
 ];
 

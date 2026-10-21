@@ -37,9 +37,11 @@ import type {
   Contract,
   ContractEvent,
   CustomerSummary,
+  Deal,
   Purchase,
   PurchaseItem,
 } from "../types";
+import { RenovacionDelContrato } from "../renovaciones/RenovacionDelContrato";
 import { EtapaDeCliente } from "./EtapaDeCliente";
 import { RiesgoDeCliente } from "./RiesgoDeCliente";
 
@@ -138,6 +140,13 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
     pagination: { page: 1, perPage: 100 },
   });
   const recurrentes = (contratos ?? []).filter(esRecurrente);
+  // Oportunidades de renovación de esta empresa (las abre la base sola), en
+  // una sola consulta; cada contrato toma las suyas.
+  const { data: renovaciones } = useGetList<Deal>("deals", {
+    filter: { company_id: empresa.id, "contract_id@not.is": null },
+    sort: { field: "renewal_for", order: "DESC" },
+    pagination: { page: 1, perPage: 100 },
+  });
   const unicos = (contratos ?? []).filter(
     (contrato) => !esRecurrente(contrato),
   );
@@ -241,7 +250,13 @@ export const PanelDeCliente = ({ empresa }: { empresa: Company }) => {
           </p>
         ) : (
           recurrentes.map((contrato) => (
-            <FilaDeContrato key={contrato.id} contrato={contrato} />
+            <FilaDeContrato
+              key={contrato.id}
+              contrato={contrato}
+              renovaciones={(renovaciones ?? []).filter(
+                (oportunidad) => oportunidad.contract_id === contrato.id,
+              )}
+            />
           ))
         )}
       </section>
@@ -339,7 +354,13 @@ const FilaDeHistorial = ({
  * Contrato de un producto de KONTROLIA (llega de KontrolIA Auth): plan,
  * extras, vigencia, precio del periodo y forma de cobro.
  */
-const FilaDeProducto = ({ contrato }: { contrato: Contract }) => {
+const FilaDeProducto = ({
+  contrato,
+  renovaciones = [],
+}: {
+  contrato: Contract;
+  renovaciones?: Deal[];
+}) => {
   const translate = useTranslate();
   const importe = useImporte();
   const activo = contrato.status === "active";
@@ -424,17 +445,38 @@ const FilaDeProducto = ({ contrato }: { contrato: Contract }) => {
           {translate("crm.customers.kontrolia.auto_contract")}
         </p>
       )}
+      {esRecurrente(contrato) && (
+        <RenovacionDelContrato
+          contrato={contrato}
+          oportunidades={renovaciones}
+        />
+      )}
       {esRecurrente(contrato) && <FacturacionDelContrato contrato={contrato} />}
     </div>
   );
 };
 
-const FilaDeContrato = ({ contrato }: { contrato: Contract }) => {
-  if (contrato.application_slug) return <FilaDeProducto contrato={contrato} />;
-  return <FilaDeContratoManual contrato={contrato} />;
+const FilaDeContrato = ({
+  contrato,
+  renovaciones,
+}: {
+  contrato: Contract;
+  renovaciones?: Deal[];
+}) => {
+  if (contrato.application_slug)
+    return <FilaDeProducto contrato={contrato} renovaciones={renovaciones} />;
+  return (
+    <FilaDeContratoManual contrato={contrato} renovaciones={renovaciones} />
+  );
 };
 
-const FilaDeContratoManual = ({ contrato }: { contrato: Contract }) => {
+const FilaDeContratoManual = ({
+  contrato,
+  renovaciones = [],
+}: {
+  contrato: Contract;
+  renovaciones?: Deal[];
+}) => {
   const translate = useTranslate();
   const importe = useImporte();
   return (
@@ -461,6 +503,12 @@ const FilaDeContratoManual = ({ contrato }: { contrato: Contract }) => {
           </Badge>
         </div>
       </div>
+      {esRecurrente(contrato) && (
+        <RenovacionDelContrato
+          contrato={contrato}
+          oportunidades={renovaciones}
+        />
+      )}
       {esRecurrente(contrato) && <FacturacionDelContrato contrato={contrato} />}
     </div>
   );
