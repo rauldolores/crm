@@ -29,6 +29,21 @@ describe("quitarCamposProtegidos", () => {
     ).toEqual({ name: "X" });
   });
 
+  it("quita el contrato y la fecha de una oportunidad de renovación", () => {
+    expect(
+      JSON.parse(
+        quitarCamposProtegidos(
+          "deals",
+          JSON.stringify({
+            name: "X",
+            contract_id: 4,
+            renewal_for: "2027-01-10",
+          }),
+        ),
+      ),
+    ).toEqual({ name: "X" });
+  });
+
   it("también en una lista", () => {
     expect(
       JSON.parse(

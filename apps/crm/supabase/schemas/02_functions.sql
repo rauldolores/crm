@@ -2270,3 +2270,450 @@ begin
   return new;
 end;
 $$;
+
+-- Oportunidades de renovación (ver la migración 20261021051708): pg_cron
+-- llama cada hora a crm.generar_oportunidades_de_renovacion().
+-- ── Oportunidades de renovación: ayudantes ─────────────────────────────────────────────────────────
+
+-- «15 dic 2026»: la fecha en el nombre de la oportunidad.
+create or replace function crm.fecha_corta_es(p_fecha date) returns text
+    language sql immutable
+    set search_path = ''
+    as $$
+  select extract(day from p_fecha)::int || ' '
+      || (array['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'])[extract(month from p_fecha)::int]
+      || ' ' || extract(year from p_fecha)::int;
+$$;
+
+-- Días de anticipación: un entero de 0 a 366 (número o texto); cualquier
+-- otra cosa vale lo de fábrica.
+create or replace function crm.dias_de_renovacion(p_valor jsonb, p_defecto integer) returns integer
+    language sql immutable
+    set search_path = ''
+    as $$
+  select case
+    when jsonb_typeof(p_valor) in ('number', 'string')
+         and (p_valor #>> '{}') ~ '^[0-9]{1,4}$'
+    then least((p_valor #>> '{}')::integer, 366)
+    else p_defecto
+  end;
+$$;
+
+-- Los ajustes de la organización con los de fábrica donde falten. Misma
+-- regla que ajustesDeRenovaciones() en src/components/crm/renovaciones/renovaciones.ts.
+create or replace function crm.ajustes_de_renovaciones(p_config jsonb) returns jsonb
+    language plpgsql immutable
+    set search_path = ''
+    as $$
+declare
+  r jsonb := p_config -> 'renewals';
+  embudo text;
+begin
+  if r is null or jsonb_typeof(r) <> 'object' then
+    r := '{}'::jsonb;
+  end if;
+  embudo := r ->> 'pipeline';
+  if embudo is null or embudo !~ '^[A-Za-z0-9_-]{1,60}$' then
+    embudo := 'renovaciones';
+  end if;
+  return jsonb_build_object(
+    'active', case when jsonb_typeof(r -> 'active') = 'boolean'
+                   then (r ->> 'active')::boolean else true end,
+    'daysBeforeYearly', crm.dias_de_renovacion(r -> 'daysBeforeYearly', 60),
+    'daysBeforeQuarterly', crm.dias_de_renovacion(r -> 'daysBeforeQuarterly', 30),
+    'daysBeforeMonthly', crm.dias_de_renovacion(r -> 'daysBeforeMonthly', 15),
+    'includeCardContracts', case when jsonb_typeof(r -> 'includeCardContracts') = 'boolean'
+                                 then (r ->> 'includeCardContracts')::boolean else false end,
+    'pipeline', embudo
+  );
+end;
+$$;
+
+-- Un embudo de la configuración por su value (null si no está).
+create or replace function crm.embudo_de_config(p_config jsonb, p_valor text) returns jsonb
+    language sql immutable
+    set search_path = ''
+    as $$
+  select e
+    from jsonb_array_elements(
+           case when jsonb_typeof(p_config -> 'dealPipelines') = 'array'
+                then p_config -> 'dealPipelines' else '[]'::jsonb end
+         ) as e
+   where e ->> 'value' = p_valor
+   limit 1;
+$$;
+
+-- El embudo de fábrica. Los value llevan prefijo para no chocar con las
+-- etapas de otros embudos (la aplicación junta las de todos por value).
+-- Si se cambia, documentarlo en modulo-de-facturacion.mdx.
+create or replace function crm.embudo_de_renovaciones_por_defecto(p_valor text) returns jsonb
+    language sql immutable
+    set search_path = ''
+    as $$
+  select jsonb_build_object(
+    'value', p_valor,
+    'label', 'Renovaciones',
+    'stages', jsonb_build_array(
+      jsonb_build_object('value', 'renovacion-por-contactar', 'label', 'Por contactar', 'probability', 60),
+      jsonb_build_object('value', 'renovacion-propuesta-enviada', 'label', 'Propuesta enviada', 'probability', 80),
+      jsonb_build_object('value', 'renovada', 'label', 'Renovada'),
+      jsonb_build_object('value', 'no-renovo', 'label', 'No renovó')
+    ),
+    'pipelineStatuses', jsonb_build_array('renovada'),
+    'lostStages', jsonb_build_array('no-renovo')
+  );
+$$;
+
+-- Deja el embudo de renovaciones (y los dos motivos de pérdida) en la
+-- configuración de la organización si faltan, y lo devuelve. No toca nada
+-- más de la configuración.
+--
+-- Si la organización nunca guardó sus embudos, la aplicación sintetiza
+-- «Ventas» con dealStages/dealPipelineStatuses (ConfigurationContext.tsx);
+-- aquí se escribe ese mismo embudo antes de agregar el de renovaciones, o el
+-- de ventas desaparecería de la pantalla.
+create or replace function crm.asegurar_embudo_de_renovaciones(p_org uuid, p_valor text) returns jsonb
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  cfg jsonb;
+  embudos jsonb;
+  embudo jsonb;
+  etapas jsonb;
+  motivos jsonb;
+  motivo jsonb;
+  cambio boolean := false;
+begin
+  insert into crm.configuration (organization_id, config)
+  values (p_org, '{}'::jsonb)
+  on conflict (organization_id) do nothing;
+
+  select c.config into cfg
+    from crm.configuration c
+   where c.organization_id = p_org
+   for update;
+  cfg := coalesce(cfg, '{}'::jsonb);
+
+  embudos := cfg -> 'dealPipelines';
+  if embudos is null or jsonb_typeof(embudos) <> 'array' or jsonb_array_length(embudos) = 0 then
+    etapas := case
+      when jsonb_typeof(cfg -> 'dealStages') = 'array' and jsonb_array_length(cfg -> 'dealStages') > 0
+      then cfg -> 'dealStages'
+      -- Las de fábrica (defaultDealStages en defaultConfiguration.ts).
+      else '[{"value":"opportunity","label":"Oportunidad","probability":20},
+             {"value":"proposal-sent","label":"Propuesta enviada","probability":40},
+             {"value":"in-negociation","label":"En negociación","probability":70},
+             {"value":"won","label":"Ganada"},
+             {"value":"lost","label":"Perdida"},
+             {"value":"delayed","label":"Aplazada","probability":10}]'::jsonb
+    end;
+    embudos := jsonb_build_array(jsonb_build_object(
+      'value', 'ventas',
+      'label', 'Ventas',
+      'stages', etapas,
+      'pipelineStatuses', case
+        when jsonb_typeof(cfg -> 'dealPipelineStatuses') = 'array' then cfg -> 'dealPipelineStatuses'
+        else '["won"]'::jsonb end,
+      'lostStages', case
+        when exists (select 1 from jsonb_array_elements(etapas) e where e ->> 'value' = 'lost')
+        then '["lost"]'::jsonb else '[]'::jsonb end
+    ));
+    cambio := true;
+  end if;
+
+  select e into embudo
+    from jsonb_array_elements(embudos) e
+   where e ->> 'value' = p_valor
+   limit 1;
+
+  if embudo is null then
+    embudo := crm.embudo_de_renovaciones_por_defecto(p_valor);
+    embudos := embudos || jsonb_build_array(embudo);
+    -- Lo agregó el sistema: el puente no lo cuenta contra el límite de
+    -- embudos del plan (ver limitesDelPuente.ts).
+    cfg := jsonb_set(
+      cfg, '{renewals}',
+      (case when jsonb_typeof(cfg -> 'renewals') = 'object' then cfg -> 'renewals' else '{}'::jsonb end)
+        || jsonb_build_object('systemPipeline', p_valor)
+    );
+    cambio := true;
+  end if;
+
+  -- Los motivos solo se agregan si la organización ya guardó los suyos: si
+  -- no, la aplicación usa los de fábrica, que ya los traen.
+  motivos := cfg -> 'dealLossReasons';
+  if jsonb_typeof(motivos) = 'array' then
+    for motivo in
+      select * from jsonb_array_elements(
+        '[{"value":"vencio-sin-renovar","label":"Venció sin renovar"},
+          {"value":"contrato-cancelado","label":"Contrato cancelado"}]'::jsonb)
+    loop
+      if not exists (
+        select 1 from jsonb_array_elements(motivos) m where m ->> 'value' = motivo ->> 'value'
+      ) then
+        motivos := motivos || jsonb_build_array(motivo);
+        cambio := true;
+      end if;
+    end loop;
+    cfg := jsonb_set(cfg, '{dealLossReasons}', motivos);
+  end if;
+
+  if cambio then
+    update crm.configuration
+       set config = jsonb_set(cfg, '{dealPipelines}', embudos)
+     where organization_id = p_org;
+  end if;
+
+  return embudo;
+end;
+$$;
+
+-- ── 4. El proceso ────────────────────────────────────────────────────────
+create or replace function crm.generar_oportunidades_de_renovacion() returns jsonb
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  org uuid;
+  cfg jsonb;
+  ajustes jsonb;
+  embudo jsonb;
+  primera text;
+  tipo_tarea text;
+  k record;
+  d record;
+  corrida bigint;
+  nueva bigint;
+  contactos bigint[];
+  responsable bigint;
+  nombre text;
+  etapa_ganada text;
+  etapa_perdida text;
+  resultado text;
+  motivo text;
+  abiertas integer := 0;
+  ganadas integer := 0;
+  perdidas integer := 0;
+  errores integer := 0;
+begin
+  -- 1. Abrir las que ya entraron en su ventana.
+  for org in
+    select distinct c.organization_id
+      from crm.contracts c
+     where c.status = 'active'
+       and c.billing_period in ('monthly', 'quarterly', 'yearly')
+       and c.renews_on >= current_date
+  loop
+    begin
+      select c.config into cfg from crm.configuration c where c.organization_id = org;
+      ajustes := crm.ajustes_de_renovaciones(cfg);
+      continue when not (ajustes ->> 'active')::boolean;
+      embudo := null;
+      primera := null;
+
+      for k in
+        select c.id, c.company_id, c.name, c.plan_name, c.amount, c.currency,
+               c.renews_on, c.billing_period, c.sales_id,
+               e.sales_id as company_sales_id
+          from crm.contracts c
+          join crm.companies e on e.id = c.company_id
+         where c.organization_id = org
+           and c.status = 'active'
+           and c.billing_period in ('monthly', 'quarterly', 'yearly')
+           and c.renews_on >= current_date
+           and current_date >= c.renews_on - (case c.billing_period
+                 when 'yearly' then (ajustes ->> 'daysBeforeYearly')::integer
+                 when 'quarterly' then (ajustes ->> 'daysBeforeQuarterly')::integer
+                 else (ajustes ->> 'daysBeforeMonthly')::integer end)
+           and ((ajustes ->> 'includeCardContracts')::boolean
+                or c.provider is distinct from 'stripe')
+           and not exists (
+             select 1 from crm.renewal_runs r
+              where r.contract_id = c.id and r.renewal_for = c.renews_on
+           )
+         order by c.renews_on, c.id
+      loop
+        -- El embudo se asegura solo cuando hay algo que abrir.
+        if embudo is null then
+          embudo := crm.asegurar_embudo_de_renovaciones(org, ajustes ->> 'pipeline');
+          primera := embudo -> 'stages' -> 0 ->> 'value';
+          select c.config into cfg from crm.configuration c where c.organization_id = org;
+          tipo_tarea := case
+            when coalesce(jsonb_typeof(cfg -> 'taskTypes'), '') <> 'array'
+              or exists (
+                select 1 from jsonb_array_elements(
+                  case when jsonb_typeof(cfg -> 'taskTypes') = 'array'
+                       then cfg -> 'taskTypes' else '[]'::jsonb end) t
+                 where t ->> 'value' = 'call')
+            then 'call' else null end;
+        end if;
+        -- Un embudo sin etapas (hecho a mano con ese value) no puede recibir
+        -- oportunidades.
+        exit when primera is null;
+
+        begin
+          corrida := null;
+          insert into crm.renewal_runs (organization_id, contract_id, renewal_for)
+          values (org, k.id, k.renews_on)
+          on conflict (contract_id, renewal_for) do nothing
+          returning id into corrida;
+          continue when corrida is null;
+
+          contactos := array(
+            select ct.id from crm.contacts ct
+             where ct.company_id = k.company_id
+               and ct.organization_id = org
+               and ct.archived_at is null
+             order by ct.last_seen desc nulls last, ct.id
+             limit 5
+          );
+          responsable := coalesce(k.company_sales_id, k.sales_id);
+          nombre := 'Renovación · ' || k.name
+            || case when k.plan_name is not null and k.plan_name <> ''
+                         and position(k.plan_name in k.name) = 0
+                    then ' · ' || k.plan_name else '' end
+            || ' · vence ' || crm.fecha_corta_es(k.renews_on);
+
+          nueva := null;
+          insert into crm.deals
+            (organization_id, name, company_id, contact_ids, stage, pipeline,
+             description, amount, expected_closing_date, sales_id,
+             contract_id, renewal_for)
+          values (
+            org, nombre, k.company_id, contactos, primera, embudo ->> 'value',
+            'Se abrió sola antes de la renovación del contrato «' || k.name || '»'
+              || case when k.amount is not null
+                      then ' (' || to_char(k.amount, 'FM999,999,999,990.00') || ' ' || coalesce(k.currency, 'MXN') || ' por periodo)'
+                      else '' end
+              || '. Se marca ganada sola cuando se paga la factura del periodo o se renueva el contrato,'
+              || ' y perdida si vence o se cancela sin renovarse.',
+            case when k.amount is not null then round(k.amount)::bigint else null end,
+            k.renews_on, responsable, k.id, k.renews_on
+          )
+          on conflict (organization_id, contract_id, renewal_for) do nothing
+          returning id into nueva;
+
+          if nueva is not null then
+            update crm.renewal_runs set deal_id = nueva where id = corrida;
+            if contactos[1] is not null then
+              insert into crm.tasks (organization_id, contact_id, text, type, due_date, sales_id)
+              values (
+                org, contactos[1],
+                'Contactar para renovar «' || k.name || '» antes del ' || crm.fecha_corta_es(k.renews_on),
+                tipo_tarea,
+                greatest(k.renews_on - 7, current_date)::timestamp with time zone,
+                responsable
+              );
+            end if;
+            abiertas := abiertas + 1;
+          end if;
+        exception when others then
+          errores := errores + 1;
+          raise warning 'Renovación del contrato %: %', k.id, sqlerrm;
+        end;
+      end loop;
+    exception when others then
+      errores := errores + 1;
+      raise warning 'Renovaciones de la organización %: %', org, sqlerrm;
+    end;
+  end loop;
+
+  -- 2. Cerrar las abiertas cuyo contrato ya se renovó o ya se perdió.
+  for d in
+    select dl.id, dl.organization_id, dl.pipeline, dl.stage, dl.renewal_for,
+           c.id as contrato, c.status, c.renews_on, c.in_grace, c.source
+      from crm.deals dl
+      join crm.contracts c on c.id = dl.contract_id
+     where dl.renewal_for is not null
+       and dl.archived_at is null
+  loop
+    begin
+      select c.config into cfg from crm.configuration c where c.organization_id = d.organization_id;
+      embudo := crm.embudo_de_config(cfg, d.pipeline);
+      -- Ya está en una etapa ganada o perdida (a mano o por una corrida
+      -- anterior): no se vuelve a tocar.
+      continue when embudo is not null
+        and (coalesce(embudo -> 'pipelineStatuses', '[]'::jsonb) ? d.stage
+             or coalesce(embudo -> 'lostStages', '[]'::jsonb) ? d.stage);
+      etapa_ganada := embudo -> 'pipelineStatuses' ->> 0;
+      etapa_perdida := embudo -> 'lostStages' ->> 0;
+
+      resultado := null;
+      motivo := null;
+      if d.renews_on > d.renewal_for
+         or exists (
+           select 1 from crm.invoices i
+            where i.contract_id = d.contrato
+              and i.period_start = d.renewal_for
+              and i.payment_status = 'paid'
+              and i.status <> 'cancelled'
+         ) then
+        resultado := 'ganada';
+      elsif d.status = 'cancelled' then
+        resultado := 'perdida';
+        motivo := 'contrato-cancelado';
+      elsif d.status = 'expired' then
+        resultado := 'perdida';
+        motivo := 'vencio-sin-renovar';
+      elsif d.status = 'active'
+            and d.renews_on = d.renewal_for
+            and current_date > d.renewal_for
+            and (case when d.source = 'kontrolia_auth' then not d.in_grace
+                      else current_date > d.renewal_for + 5 end) then
+        resultado := 'perdida';
+        motivo := 'vencio-sin-renovar';
+      end if;
+
+      continue when resultado is null;
+
+      if resultado = 'ganada' then
+        -- Sin etapa ganada en su embudo no hay a dónde moverla.
+        continue when etapa_ganada is null;
+        perform crm.move_deal(d.id, etapa_ganada, 0, null, null);
+        ganadas := ganadas + 1;
+      else
+        if etapa_perdida is not null then
+          perform crm.move_deal(d.id, etapa_perdida, 0, motivo, null);
+        else
+          -- Embudo sin etapa de pérdida: se archiva con el motivo.
+          update crm.deals
+             set loss_reason = motivo,
+                 archived_at = now(),
+                 updated_by = null,
+                 updated_at = now()
+           where id = d.id;
+        end if;
+        perdidas := perdidas + 1;
+      end if;
+    exception when others then
+      errores := errores + 1;
+      raise warning 'Cierre de la oportunidad de renovación %: %', d.id, sqlerrm;
+    end;
+  end loop;
+
+  return jsonb_build_object(
+    'abiertas', abiertas,
+    'ganadas', ganadas,
+    'perdidas', perdidas,
+    'errores', errores
+  );
+end;
+$$;
+
+-- ── 5. Permisos ──────────────────────────────────────────────────────────
+revoke all on function crm.fecha_corta_es(date) from public, anon, authenticated;
+revoke all on function crm.dias_de_renovacion(jsonb, integer) from public, anon, authenticated;
+revoke all on function crm.ajustes_de_renovaciones(jsonb) from public, anon, authenticated;
+revoke all on function crm.embudo_de_config(jsonb, text) from public, anon, authenticated;
+revoke all on function crm.embudo_de_renovaciones_por_defecto(text) from public, anon, authenticated;
+revoke all on function crm.asegurar_embudo_de_renovaciones(uuid, text) from public, anon, authenticated;
+revoke all on function crm.generar_oportunidades_de_renovacion() from public, anon, authenticated;
+
+grant execute on function crm.fecha_corta_es(date) to service_role;
+grant execute on function crm.dias_de_renovacion(jsonb, integer) to service_role;
+grant execute on function crm.ajustes_de_renovaciones(jsonb) to service_role;
+grant execute on function crm.embudo_de_config(jsonb, text) to service_role;
+grant execute on function crm.embudo_de_renovaciones_por_defecto(text) to service_role;
+grant execute on function crm.asegurar_embudo_de_renovaciones(uuid, text) to service_role;
+grant execute on function crm.generar_oportunidades_de_renovacion() to service_role;

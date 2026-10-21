@@ -9,6 +9,10 @@ export const CAMPOS_PROTEGIDOS: Record<string, string[]> = {
   // in_grace y grace_until los escribe solo la integración con KontrolIA
   // Auth: a mano dirían que alguien tiene acceso que allá no tiene.
   contracts: ["billing_enabled", "in_grace", "grace_until"],
+  // De qué contrato y qué fecha es una oportunidad de renovación: los pone
+  // solo crm.generar_oportunidades_de_renovacion. A mano romperían el cierre
+  // automático (ganada al pagarse, perdida al vencer).
+  deals: ["contract_id", "renewal_for"],
 };
 
 /**

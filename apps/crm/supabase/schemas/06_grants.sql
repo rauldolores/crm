@@ -322,3 +322,11 @@ revoke all on table crm.soporte_bolsas from anon;
 revoke all on table crm.soporte_bolsas from authenticated;
 grant select on table crm.soporte_bolsas to authenticated;
 grant select, insert, update, delete on table crm.soporte_bolsas to service_role;
+
+-- Oportunidades de renovación: la constancia es de solo lectura; las
+-- funciones solo las ejecuta service_role (pg_cron).
+revoke all on table crm.renewal_runs from anon;
+revoke all on table crm.renewal_runs from authenticated;
+grant select on table crm.renewal_runs to authenticated;
+grant select, insert, update, delete on table crm.renewal_runs to service_role;
+grant usage, select on sequence crm.renewal_runs_id_seq to service_role;

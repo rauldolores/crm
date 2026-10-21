@@ -11,6 +11,7 @@ import type {
   QuoteTemplate,
 } from "../types";
 import { defaultConfiguration } from "./defaultConfiguration";
+import type { AjustesDeRenovaciones } from "../renovaciones/renovaciones";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
 
@@ -87,6 +88,12 @@ export interface ConfigurationContextValue {
   quoteTemplates: QuoteTemplate[];
   /** Cabecera del documento: nombre comercial, RFC, dirección, logo. */
   quoteIssuer: QuoteIssuer;
+  /**
+   * Oportunidades de renovación automáticas (las abre la base cada hora).
+   * Leer siempre con ajustesDeRenovaciones(): lo guardado puede venir
+   * incompleto.
+   */
+  renewals?: Partial<AjustesDeRenovaciones>;
 }
 
 export const useConfigurationContext = () => {
