@@ -5,6 +5,7 @@ import {
 } from "@/lib/conectores/catalogo";
 
 import { getServiceClient } from "../supabase-service";
+import { ajustarModuloDeFamilia } from "./modulos";
 import { construirConector, proveedorValidoPara } from "./registro";
 import { ErrorDeConector, type Conector } from "./tipos";
 
@@ -161,6 +162,10 @@ export const conectar = async (
     .select(COLUMNAS_VISIBLES)
     .single();
   if (error) throw new Error(error.message);
+
+  // El módulo de la familia se enciende con el conector: ver modulos.ts.
+  await ajustarModuloDeFamilia(organizacionId, familia, true);
+
   return { guardado: data as ConectorGuardado, detalle: prueba.detalle };
 };
 
@@ -174,6 +179,9 @@ export const desconectar = async (
     .eq("organization_id", organizacionId)
     .eq("family", familia);
   if (error) throw new Error(error.message);
+
+  // Y se apaga al desconectarlo, para no dejar botones que no pueden cumplir.
+  await ajustarModuloDeFamilia(organizacionId, familia, false);
 };
 
 /** Deja constancia de que la última llamada falló (o de que ya funciona). */

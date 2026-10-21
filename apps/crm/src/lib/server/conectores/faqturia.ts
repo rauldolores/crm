@@ -1,5 +1,7 @@
 import {
   ErrorDeConector,
+  type CatalogoDelSat,
+  type ClaveDelSat,
   type ConectorDeFacturacion,
   type CredencialesDeConector,
   type FacturaEmitida,
@@ -161,6 +163,49 @@ export class ConectorFaqturia implements ConectorDeFacturacion {
     if (typeof error === "string") return error;
     const mensaje = (error as { message?: unknown })?.message;
     return typeof mensaje === "string" ? mensaje : porDefecto;
+  }
+
+  /** Cuántas filas se piden por búsqueda. Faqturia topa en 100. */
+  private static readonly POR_BUSQUEDA = 25;
+
+  async buscarEnCatalogoDelSat(
+    catalogo: CatalogoDelSat,
+    texto: string,
+  ): Promise<ClaveDelSat[]> {
+    const q = texto.trim();
+    const parametros = new URLSearchParams({
+      pageSize: String(ConectorFaqturia.POR_BUSQUEDA),
+    });
+    if (q) parametros.set("search", q);
+
+    const { estado, cuerpo } = await this.pedir<{
+      data?: {
+        clave?: string;
+        descripcion?: string | null;
+        nombre?: string | null;
+        simbolo?: string | null;
+      }[];
+    }>(`/catalogs/${catalogo}?${parametros.toString()}`);
+
+    if (estado >= 400) {
+      throw new ErrorDeConector(
+        this.mensajeDe(cuerpo, "Faqturia no pudo darnos el catálogo del SAT."),
+        estado === 404 ? 404 : 502,
+      );
+    }
+
+    // Las dos tablas del SAT nombran distinto la columna legible: las claves
+    // de producto traen `descripcion` y las unidades `nombre`.
+    return (cuerpo.data ?? [])
+      .filter((fila): fila is { clave: string } => Boolean(fila.clave))
+      .map((fila) => ({
+        clave: fila.clave,
+        descripcion:
+          (fila as { descripcion?: string | null }).descripcion?.trim() ||
+          (fila as { nombre?: string | null }).nombre?.trim() ||
+          "",
+        simbolo: (fila as { simbolo?: string | null }).simbolo ?? null,
+      }));
   }
 
   async probar(): Promise<ResultadoDePrueba> {

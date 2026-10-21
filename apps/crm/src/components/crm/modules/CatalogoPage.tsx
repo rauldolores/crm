@@ -66,8 +66,13 @@ export const CatalogoPage = () => {
                   </p>
                 </div>
               </div>
+              {/* Un módulo con conector no se enciende aquí: lo gobierna el
+                  conector (ver lib/server/conectores/modulos.ts). Dejarlo
+                  manual permitía encender Facturación sin proveedor, y
+                  entonces «Emitir factura» aparecía para fallar al pulsarlo. */}
               <Switch
                 checked={activo}
+                disabled={Boolean(modulo.connector)}
                 onCheckedChange={(valor) => alternar(modulo.key, valor)}
                 aria-label={translate(modulo.nameKey)}
               />

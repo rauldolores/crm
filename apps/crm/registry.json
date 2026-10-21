@@ -226,6 +226,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/conectores/SelectorDeClaveSat.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/consts.ts",
           "type": "registry:component"
         },
@@ -1626,6 +1630,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/conectores/__screenshots__/faqturia.test.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/conectores/almacen.ts",
           "type": "registry:lib"
         },
@@ -1647,6 +1655,14 @@
         },
         {
           "path": "src/lib/server/conectores/faqturia.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/modulos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/conectores/modulos.ts",
           "type": "registry:lib"
         },
         {
@@ -1907,6 +1923,10 @@
         },
         {
           "path": "src/lib/server/integraciones/movimientos.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/kontrolia-auth/__screenshots__/consumo.test.ts",
           "type": "registry:lib"
         },
         {

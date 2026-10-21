@@ -21,7 +21,13 @@ export interface CampoDeConector {
   /** Una línea debajo del campo, en el lenguaje de quien no es técnico. */
   help?: string;
   placeholder?: string;
-  type: "text" | "url" | "secret" | "select";
+  type: "text" | "url" | "secret" | "select" | "sat";
+  /**
+   * Solo con `type: "sat"`: qué catálogo del SAT se busca. Se consulta al
+   * proveedor conectado (ver /api/conectores/facturacion/catalogo), porque son
+   * decenas de miles de filas y no caben en el paquete de la aplicación.
+   */
+  satCatalog?: "productos-servicios" | "unidades";
   options?: { value: string; label: string }[];
   defaultValue?: string;
   required?: boolean;
@@ -74,12 +80,6 @@ export const METODOS_DE_PAGO = [
   { value: "PPD", label: "Pago en parcialidades o diferido (PPD)" },
 ];
 
-const UNIDADES = [
-  { value: "E48", label: "Unidad de servicio (E48)" },
-  { value: "H87", label: "Pieza (H87)" },
-  { value: "ACT", label: "Actividad (ACT)" },
-  { value: "MON", label: "Mes (MON)" },
-];
 
 export const PROVEEDORES: ProveedorDeConector[] = [
   {
@@ -167,15 +167,18 @@ export const PROVEEDORES: ProveedorDeConector[] = [
         key: "clave_prod_serv",
         label: "Clave de producto o servicio del SAT",
         placeholder: "81112100",
-        help: "La clave del catálogo del SAT que mejor describe lo que vendes (por ejemplo 81112100 para servicios de internet, 43232408 para software). Si no la sabes, tu contador la tiene.",
-        type: "text",
+        help: "Busca por lo que vendes («servicios de internet», «software») y elige de la lista: son más de 52.000 claves y no hace falta que te la sepas.",
+        type: "sat",
+        satCatalog: "productos-servicios",
+        defaultValue: "01010101",
         required: true,
       },
       {
         key: "clave_unidad",
         label: "Unidad",
-        type: "select",
-        options: UNIDADES,
+        help: "Busca la unidad en la que vendes: pieza, servicio, kilogramo, litro…",
+        type: "sat",
+        satCatalog: "unidades",
         defaultValue: "E48",
       },
     ],
