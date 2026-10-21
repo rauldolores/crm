@@ -540,6 +540,29 @@ export type TicketEvent = {
 } & Pick<RaRecord, "id">;
 
 /**
+ * Tiempo de soporte dedicado a un ticket (crm.soporte_tiempos). Solo de
+ * alta: un error se corrige con otro registro en contra (`corrige_a`).
+ */
+export type SoporteTiempo = {
+  ticket_id: Identifier;
+  company_id: Identifier;
+  contract_id?: Identifier | null;
+  /** AAAA-MM-DD, en hora de México. */
+  fecha_atencion: string;
+  atendio?: Identifier | null;
+  minutos: number;
+  consume: boolean;
+  motivo_no_consume?: string | null;
+  descripcion_cliente: string;
+  nota_interna?: string | null;
+  autorizado_por?: string | null;
+  autorizado_en?: string | null;
+  corrige_a?: Identifier | null;
+  motivo_correccion?: string | null;
+  created_at: string;
+} & Pick<RaRecord, "id">;
+
+/**
  * Afiliado: un contacto que llegó a la etapa de "afiliación completa" del
  * embudo configurado en el módulo Afiliados (crm.gestionar_modulo_afiliados).
  * `kontrolia_auth_user_id` queda nulo hasta que un administrador vincula

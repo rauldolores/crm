@@ -8,6 +8,13 @@ import {
 } from "ra-core";
 import fakeRestDataProvider from "ra-data-fakerest";
 
+import {
+  hoyEnMexico,
+  type CorreccionDeTiempo,
+  type RegistroDeTiempoEntrada,
+  type ResumenDeSoporte,
+} from "@/lib/soporteTiempos";
+
 import type {
   Company,
   Contact,
@@ -356,6 +363,59 @@ export const createDataProvider = ({
         previousData: perdedor,
       });
     },
+    // Modo demostración: sin disparadores, la empresa y quien atendió se
+    // copian aquí; la corrección solo anula (sin cifra nueva).
+    registrarTiempoSoporte: async (registro: RegistroDeTiempoEntrada) => {
+      const { data: ticket } = await baseDataProvider.getOne("tickets", {
+        id: registro.ticketId,
+      });
+      await baseDataProvider.create("soporte_tiempos", {
+        data: {
+          ticket_id: registro.ticketId,
+          company_id: ticket.company_id,
+          contract_id: ticket.contract_id ?? null,
+          fecha_atencion: registro.fechaAtencion ?? hoyEnMexico(),
+          minutos: registro.minutos,
+          consume: registro.consume ?? true,
+          motivo_no_consume:
+            registro.consume === false ? registro.motivoNoConsume : null,
+          descripcion_cliente: registro.descripcionCliente,
+          nota_interna: registro.notaInterna ?? null,
+          created_at: new Date().toISOString(),
+        },
+      });
+    },
+    corregirTiempoSoporte: async (correccion: CorreccionDeTiempo) => {
+      const { data: original } = await baseDataProvider.getOne(
+        "soporte_tiempos",
+        { id: correccion.id },
+      );
+      await baseDataProvider.create("soporte_tiempos", {
+        data: {
+          ...original,
+          id: undefined,
+          minutos: -original.minutos,
+          descripcion_cliente: "Corrección de un registro anterior",
+          corrige_a: original.id,
+          motivo_correccion: correccion.motivo,
+          created_at: new Date().toISOString(),
+        },
+      });
+    },
+    // Sin contratos con extras en la demostración: nunca hay bolsa.
+    resumenDeSoporte: async (
+      _companyId: Identifier,
+      mes?: string,
+    ): Promise<ResumenDeSoporte> => ({
+      mes: `${mes ?? hoyEnMexico().slice(0, 7)}-01`,
+      bolsas: [],
+      minutos_incluidos: 0,
+      minutos_usados: 0,
+      minutos_de_mas: 0,
+      minutos_no_consumen: 0,
+      precio_hora_de_mas_centavos: null,
+      registros: 0,
+    }),
     enviarWhatsapp: async (contactId: Identifier, mensaje: string) => {
       await baseDataProvider.create("contact_notes", {
         data: {

@@ -125,6 +125,12 @@ const SOLO_LECTURA = new Set([
   "invoices",
   "invoice_items",
   "billing_settings",
+  // Tiempos de soporte: se registran y corrigen por /api/tickets/tiempos,
+  // que pone a quien atendió. La base, además, no deja editar ni borrar.
+  "soporte_tiempos",
+  // Catálogo de bolsas de soporte: global (sin organización), lo cambia
+  // solo una migración.
+  "soporte_bolsas",
 ]);
 
 /**
@@ -158,6 +164,7 @@ const CON_DUENO = new Set([
   "tickets",
   "ticket_notes",
   "ticket_events",
+  "soporte_tiempos",
   "configuration",
   "activity_log",
   "contact_timeline",
