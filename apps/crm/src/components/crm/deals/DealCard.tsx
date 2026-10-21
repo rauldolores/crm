@@ -76,7 +76,7 @@ export const DealCardContent = ({
         >
           <CardContent className="flex flex-col gap-1.5 px-3">
             <div className="flex items-start gap-2">
-              <p className="line-clamp-2 flex-1 text-sm leading-snug font-medium">
+              <p className="line-clamp-2 min-w-0 flex-1 text-sm leading-snug font-medium">
                 {deal.name}
               </p>
               <ReferenceField

@@ -48,7 +48,7 @@ export const DealColumn = ({
   const ocultas = deals.length - tarjetas.length;
 
   return (
-    <div className="flex-1 pb-8">
+    <div className="w-72 shrink-0 pb-8">
       <div className="flex flex-col items-center gap-0.5">
         <h3 className="flex items-center gap-1.5 text-sm font-medium">
           {findDealLabel(dealStages, stage)}

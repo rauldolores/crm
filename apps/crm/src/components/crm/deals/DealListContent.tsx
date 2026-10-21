@@ -163,7 +163,12 @@ export const DealListContent = () => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-4">
+      {/* Las columnas tienen ancho fijo y el tablero se desplaza: con
+          `flex-1` cada columna se quedaba con el ancho de su contenido (un
+          elemento flex no baja de su min-content), así que una etapa con
+          nombres largos se comía la pantalla y las vacías quedaban en nada.
+          Con anchos iguales el arrastre es predecible. */}
+      <div className="flex gap-4 overflow-x-auto pb-2">
         {etapas.map((stage) => (
           <DealColumn
             stage={stage.value}
