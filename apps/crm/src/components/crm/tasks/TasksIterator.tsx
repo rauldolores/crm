@@ -17,7 +17,9 @@ export const TasksIterator = ({
   const tasks = data.filter((task) => !isDone(task) || isRecentlyDone(task));
 
   return (
-    <div className={`space-y-4 md:space-y-2 ${className || ""}`}>
+    // @container: la fila decide qué columnas caben por el ancho de la lista
+    // (ficha del contacto, panel, página de tareas), no por el de la pantalla.
+    <div className={`@container divide-y divide-border ${className || ""}`}>
       {tasks.map((task) => (
         <Task task={task} showContact={showContact} key={task.id} />
       ))}

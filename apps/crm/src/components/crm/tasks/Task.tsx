@@ -9,7 +9,7 @@ import {
 } from "ra-core";
 import { useEffect, useState } from "react";
 import { ReferenceField } from "@/components/admin/reference-field";
-import { DateField } from "@/components/admin/date-field";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -24,6 +24,8 @@ import type { Contact, Task as TData } from "../types";
 import { TaskEdit } from "./TaskEdit";
 import { TaskEditSheet } from "./TaskEditSheet";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatDueLabel, formatDueTitle } from "./taskDueLabel";
+import { isOverdue } from "./tasksPredicate";
 
 export const Task = ({
   task,
@@ -88,11 +90,17 @@ export const Task = ({
 
   const labelId = `checkbox-list-label-${task.id}`;
 
+  const typeLabel =
+    task.type && task.type !== "none"
+      ? (taskTypes.find((taskType) => taskType.value === task.type)?.label ??
+        task.type)
+      : null;
+
   return (
     <>
-      <div className="flex items-start justify-between">
+      <div className="flex items-center gap-1 py-1.5">
         <div
-          className="flex items-start gap-2 flex-1"
+          className="flex min-w-0 flex-1 items-center gap-2"
           onClick={isMobile ? handleCheck() : undefined}
         >
           <Checkbox
@@ -100,53 +108,52 @@ export const Task = ({
             checked={!!task.done_date}
             onCheckedChange={handleCheck()}
             disabled={isUpdatePending}
-            className="mt-1"
           />
-          <div className={`flex-grow ${task.done_date ? "line-through" : ""}`}>
-            <div className="text-sm">
-              {task.type && task.type !== "none" && (
-                <>
-                  <span className="font-semibold text-sm">
-                    {(() => {
-                      const matchedTaskType = taskTypes.find(
-                        (taskType) => taskType.value === task.type,
-                      );
-                      return matchedTaskType
-                        ? matchedTaskType.label
-                        : task.type;
-                    })()}
-                  </span>
-                  &nbsp;
-                </>
-              )}
-              {task.text}
-            </div>
-            <div className="text-sm text-muted-foreground">
-              {translate("resources.tasks.fields.due_short")}
-              &nbsp;
-              <DateField source="due_date" record={task} showDate showTime />
-              {showContact && (
-                <ReferenceField<TData, Contact>
-                  source="contact_id"
-                  reference="contacts"
-                  record={task}
-                  link="show"
-                  className="inline text-sm text-muted-foreground"
-                  render={({ referenceRecord }) => {
-                    if (!referenceRecord) return null;
-                    return (
-                      <>
-                        {" "}
-                        {translate("resources.tasks.regarding_contact", {
-                          name: getContactRepresentation(referenceRecord),
-                        })}
-                      </>
-                    );
-                  }}
-                />
-              )}
-            </div>
-          </div>
+          {typeLabel && (
+            <Badge
+              variant="secondary"
+              className="hidden shrink-0 font-normal @sm:inline-flex"
+            >
+              {typeLabel}
+            </Badge>
+          )}
+          {/* Una línea por tarea: el texto completo queda en el title y al
+              abrirla. En móvil no hay hover, así que se permiten dos. */}
+          <span
+            title={task.text}
+            onClick={isMobile ? undefined : handleEdit}
+            className={`min-w-0 flex-1 text-sm line-clamp-2 md:line-clamp-1 md:cursor-pointer md:hover:underline ${
+              task.done_date ? "text-muted-foreground line-through" : ""
+            }`}
+          >
+            {task.text}
+          </span>
+          {showContact && (
+            <ReferenceField<TData, Contact>
+              source="contact_id"
+              reference="contacts"
+              record={task}
+              link="show"
+              className="hidden max-w-48 shrink-0 truncate text-xs text-muted-foreground @2xl:inline"
+              render={({ referenceRecord }) =>
+                referenceRecord
+                  ? getContactRepresentation(referenceRecord)
+                  : null
+              }
+            />
+          )}
+          {task.due_date && (
+            <span
+              title={formatDueTitle(task.due_date)}
+              className={`shrink-0 text-xs tabular-nums ${
+                !task.done_date && isOverdue(task.due_date)
+                  ? "text-destructive"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {formatDueLabel(task.due_date)}
+            </span>
+          )}
         </div>
 
         <DropdownMenu>
