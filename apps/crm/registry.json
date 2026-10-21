@@ -1358,6 +1358,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tickets/RegistrarTiempoDialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/tickets/ResponderPorCorreoButton.tsx",
           "type": "registry:component"
         },
@@ -1422,6 +1426,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/tickets/TiemposDeTicket.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/tickets/index.ts",
           "type": "registry:component"
         },
@@ -1439,6 +1447,10 @@
         },
         {
           "path": "src/components/crm/tickets/useIndiceDePrioridad.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/tickets/useRefrescarTiempos.ts",
           "type": "registry:component"
         },
         {
@@ -2006,6 +2018,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/soporte/tiempos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/soporte/tiempos.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/supabase-service.ts",
           "type": "registry:lib"
         },
@@ -2031,6 +2051,14 @@
         },
         {
           "path": "src/lib/server/twilioWhatsapp.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/soporteTiempos.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/soporteTiempos.ts",
           "type": "registry:lib"
         },
         {
