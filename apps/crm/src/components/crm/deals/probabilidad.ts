@@ -80,7 +80,10 @@ const etiquetaDeMes = (fecha: Date, locale: string) => {
  * final, para que no se pierda del total.
  */
 export const pronosticoPorMes = (
-  deals: Deal[],
+  deals: Pick<
+    Deal,
+    "amount" | "stage" | "archived_at" | "expected_closing_date"
+  >[],
   embudo: Pick<DealPipeline, "stages" | "pipelineStatuses" | "lostStages">,
   opciones: { meses?: number; hoy?: Date; locale?: string; sinFecha: string },
 ): MesDelPronostico[] => {

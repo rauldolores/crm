@@ -8,7 +8,8 @@ import {
   probabilidadDeEtapa,
   pronosticoPorMes,
 } from "../deals/probabilidad";
-import type { Deal, DealPipeline } from "../types";
+import type { OportunidadDeInforme } from "../providers/commons/datosDeInformes";
+import type { DealPipeline } from "../types";
 import { Grafica, Indicador } from "./PiezasDeInforme";
 import { LOCALE } from "./RelativeDate";
 
@@ -23,7 +24,7 @@ export const Pronostico = ({
   embudo,
   moneda,
 }: {
-  oportunidades: Deal[];
+  oportunidades: OportunidadDeInforme[];
   embudo: DealPipeline;
   moneda: string;
 }) => {
