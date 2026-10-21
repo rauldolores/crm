@@ -230,3 +230,8 @@ create trigger soporte_tiempos_inmutables_trigger
 create trigger soporte_tiempos_autorizacion_trigger
     before insert on crm.soporte_tiempos
     for each row execute function crm.exigir_autorizacion_de_hora_extra();
+
+-- Horas de soporte reportadas a KontrolIA Auth (20261021140000_soporte_reporta_a_auth).
+create trigger soporte_tiempos_reportar_a_auth_trigger
+    after insert on crm.soporte_tiempos
+    for each row execute function crm.soporte_reportar_a_auth();
