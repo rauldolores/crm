@@ -343,3 +343,10 @@ revoke all on table crm.customer_risk from authenticated;
 grant select on table crm.customer_risk to authenticated;
 grant select, insert, update, delete on table crm.customer_risk to service_role;
 grant usage, select on sequence crm.customer_risk_id_seq to service_role;
+
+-- Horas de soporte reportadas a KontrolIA Auth (20261021140000_soporte_reporta_a_auth).
+revoke all on table crm.soporte_reportes_auth from anon;
+revoke all on table crm.soporte_reportes_auth from authenticated;
+grant select on table crm.soporte_reportes_auth to authenticated;
+grant select, insert on table crm.soporte_reportes_auth to service_role;
+revoke all on function crm.soporte_reportar_a_auth() from public;
