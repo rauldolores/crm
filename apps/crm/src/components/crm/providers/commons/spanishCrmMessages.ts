@@ -291,6 +291,20 @@ export const spanishCrmMessages = {
         cancel: "Cancelar",
         success: "WhatsApp enviado",
         error: "No se pudo enviar el mensaje",
+        template: "Plantilla",
+        free_text: "Mensaje libre",
+        choose_template: "Elige una plantilla",
+        preview: "Vista previa",
+        checking: "Comprobando la conversación…",
+        load_error: "No se pudieron cargar las opciones de WhatsApp",
+        window_open:
+          "Te escribió en las últimas 24 horas: puedes enviarle un mensaje libre o una plantilla.",
+        window_closed:
+          "No te ha escrito en las últimas 24 horas, así que WhatsApp solo deja iniciar la conversación con una plantilla aprobada.",
+        window_unknown:
+          "No se pudo comprobar si te escribió hace poco. Envíale una plantilla, que llega siempre.",
+        no_templates:
+          "Todavía no hay plantillas aprobadas. Créalas en Twilio (Content Template Builder) y mándalas a aprobar a WhatsApp: aparecerán aquí en cuanto Meta las apruebe.",
       },
       filters: {
         before_last_month: "Antes del mes pasado",

@@ -24,9 +24,45 @@ export function normalizarTelefono(numero: string): string {
   return limpio.startsWith("+") ? limpio : `+${limpio}`;
 }
 
-export async function enviarWhatsapp(
+/**
+ * Cabecera de autenticación de la cuenta de Twilio, la misma para la API de
+ * mensajes y para la de plantillas (Content API). `null` sin credenciales.
+ */
+export function autorizacionDeTwilio(): string | null {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  return sid && token ? `Basic ${btoa(`${sid}:${token}`)}` : null;
+}
+
+/**
+ * Texto libre o plantilla: Twilio no admite los dos a la vez. Con `ContentSid`
+ * se omite `Body`, y las variables viajan como un JSON en texto
+ * (`{"1": "Ana"}`).
+ */
+type Contenido =
+  | { Body: string }
+  | { ContentSid: string; ContentVariables: string };
+
+/** Texto libre: solo llega dentro de la ventana de 24 h (ver `whatsapp/ventana`). */
+export const enviarWhatsapp = (
   paraNumero: string,
   mensaje: string,
+): Promise<ResultadoDeEnvio> => publicarMensaje(paraNumero, { Body: mensaje });
+
+/** Plantilla aprobada: la única forma de iniciar una conversación. */
+export const enviarPlantillaWhatsapp = (
+  paraNumero: string,
+  sid: string,
+  valores: Record<string, string>,
+): Promise<ResultadoDeEnvio> =>
+  publicarMensaje(paraNumero, {
+    ContentSid: sid,
+    ContentVariables: JSON.stringify(valores),
+  });
+
+async function publicarMensaje(
+  paraNumero: string,
+  contenido: Contenido,
 ): Promise<ResultadoDeEnvio> {
   const sid = process.env.TWILIO_ACCOUNT_SID;
   const token = process.env.TWILIO_AUTH_TOKEN;
@@ -43,7 +79,7 @@ export async function enviarWhatsapp(
   const cuerpo = new URLSearchParams({
     From: `whatsapp:${normalizarTelefono(desde)}`,
     To: `whatsapp:${normalizarTelefono(paraNumero)}`,
-    Body: mensaje,
+    ...contenido,
   });
 
   const respuesta = await fetch(

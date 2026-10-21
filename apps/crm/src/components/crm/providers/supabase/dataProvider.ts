@@ -11,6 +11,10 @@ import {
 import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { avisarExcedenteDe } from "@/lib/kontrolia-auth/excedentes";
 import type {
+  ContenidoDeWhatsapp,
+  OpcionesDeWhatsapp,
+} from "@/lib/whatsapp/plantillas";
+import type {
   CorreccionDeTiempo,
   RegistroDeTiempoEntrada,
   ResumenDeSoporte,
@@ -496,10 +500,13 @@ const getDataProviderWithCustomMethods = () => {
       }
       return cuerpo as ResumenDeSoporte;
     },
-    async enviarWhatsapp(contactId: Identifier, mensaje: string) {
+    async enviarWhatsapp(
+      contactId: Identifier,
+      contenido: ContenidoDeWhatsapp,
+    ) {
       const respuesta = await llamarApiDelCrm("/api/whatsapp/enviar", {
         contactId,
-        mensaje,
+        ...contenido,
       });
       if (!respuesta.ok) {
         const cuerpo = await respuesta.json().catch(() => ({}));
@@ -507,6 +514,21 @@ const getDataProviderWithCustomMethods = () => {
           cuerpo.message || "No se pudo enviar el mensaje de WhatsApp",
         );
       }
+    },
+    /** Ventana de 24 h y plantillas aprobadas, para el diálogo de envío. */
+    async opcionesDeWhatsapp(
+      contactId: Identifier,
+    ): Promise<OpcionesDeWhatsapp> {
+      const respuesta = await llamarApiDelCrm("/api/whatsapp/opciones", {
+        contactId,
+      });
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      if (!respuesta.ok) {
+        throw new Error(
+          cuerpo.message || "No se pudieron cargar las opciones de WhatsApp",
+        );
+      }
+      return cuerpo as OpcionesDeWhatsapp;
     },
     // Los mismos datos que pide el formulario de vinqulia.com/enterprise:
     // así la solicitud entra en el CRM comercial como una oportunidad con su
