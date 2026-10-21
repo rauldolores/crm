@@ -27,6 +27,7 @@ import type {
   VentanaDeConversacion,
 } from "@/lib/whatsapp/plantillas";
 import { variablesSinRellenar } from "@/lib/whatsapp/plantillas";
+import { telefonoParaWhatsapp } from "@/lib/whatsapp/telefono";
 import type { Contact } from "../types";
 import { PlantillaDeWhatsappInputs } from "./PlantillaDeWhatsappInputs";
 
@@ -34,14 +35,15 @@ type Modo = "plantilla" | "libre";
 
 /**
  * Envía un WhatsApp real al contacto (no solo una nota informativa) y deja
- * constancia en su ficha. Solo aparece si tiene un teléfono registrado.
+ * constancia en su ficha. Solo aparece si tiene un teléfono registrado; va
+ * al marcado como móvil si lo hay (ver `telefonoParaWhatsapp`).
  */
 export const EnviarWhatsAppButton = () => {
   const record = useRecordContext<Contact>();
   const translate = useTranslate();
   const [open, setOpen] = useState(false);
 
-  if (!record?.phone_jsonb?.[0]?.number) return null;
+  if (!telefonoParaWhatsapp(record?.phone_jsonb)) return null;
 
   return (
     <>
@@ -152,7 +154,7 @@ const EnviarWhatsAppDialog = ({ onClose }: { onClose: () => void }) => {
   };
 
   if (!record) return null;
-  const telefonoDestino = record.phone_jsonb?.[0]?.number ?? "";
+  const telefono = telefonoParaWhatsapp(record.phone_jsonb);
 
   return (
     <Dialog open onOpenChange={(abierto) => !abierto && onClose()}>
@@ -163,10 +165,18 @@ const EnviarWhatsAppDialog = ({ onClose }: { onClose: () => void }) => {
           </DialogTitle>
           <DialogDescription>
             {translate("resources.contacts.send_whatsapp.to", {
-              phone: telefonoDestino,
+              phone: telefono?.numero ?? "",
             })}
           </DialogDescription>
         </DialogHeader>
+
+        {/* Va igualmente: muchos números de «Trabajo» son celulares. Pero si
+            es un fijo no le llegará, y conviene que quien envía lo sepa. */}
+        {telefono && !telefono.esMovil && (
+          <p className="text-sm text-muted-foreground">
+            {translate("resources.contacts.send_whatsapp.not_mobile")}
+          </p>
+        )}
 
         {cargando ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
