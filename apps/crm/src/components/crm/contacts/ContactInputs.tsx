@@ -106,6 +106,14 @@ const ContactPersonalInformationInputs = () => {
       name: translatePersonalInfoTypeLabel("Work", translate),
     },
     {
+      // Móvil y fijo no se distinguen por el número: desde la marcación
+      // homologada de 2019 todos son de 10 dígitos. Se marca a mano (o desde
+      // el plan de numeración del IFT), y sirve para saber a quién se le
+      // puede mandar WhatsApp.
+      id: "Mobile",
+      name: translatePersonalInfoTypeLabel("Mobile", translate),
+    },
+    {
       id: "Home",
       name: translatePersonalInfoTypeLabel("Home", translate),
     },
