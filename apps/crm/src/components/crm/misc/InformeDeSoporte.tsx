@@ -1,4 +1,4 @@
-import { useGetList, useTranslate } from "ra-core";
+import { useTranslate } from "ra-core";
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -16,36 +16,32 @@ import { metricasDeSoporte } from "./metricasDeSoporte";
  * de una pyme sobra, y así usa las prioridades y categorías que configuró
  * la organización. Solo aparece cuando hay tickets.
  */
-export const InformeDeSoporte = ({ dias }: { dias: number | null }) => {
+export const InformeDeSoporte = ({
+  dias,
+  tickets,
+  reaperturas,
+  comerciales,
+}: {
+  dias: number | null;
+  tickets: Ticket[];
+  /** Cambios de estado que salen de «cerrado». */
+  reaperturas: TicketEvent[];
+  comerciales: Sale[];
+}) => {
   const translate = useTranslate();
   const { ticketCategories } = useConfigurationContext();
-
-  const { data: tickets } = useGetList<Ticket>("tickets", {
-    pagination: { page: 1, perPage: 1000 },
-    sort: { field: "created_at", order: "DESC" },
-  });
-  // Reaperturas: cambios de estado que salen de «cerrado».
-  const { data: reaperturas } = useGetList<TicketEvent>("ticket_events", {
-    pagination: { page: 1, perPage: 1000 },
-    sort: { field: "created_at", order: "DESC" },
-    filter: { field: "status", old_value: "closed" },
-  });
-  const { data: comerciales } = useGetList<Sale>("sales", {
-    pagination: { page: 1, perPage: 200 },
-    sort: { field: "last_name", order: "ASC" },
-  });
 
   const metricas = useMemo(
     () =>
       metricasDeSoporte(
-        tickets ?? [],
-        reaperturas ?? [],
+        tickets,
+        reaperturas,
         dias ? new Date(Date.now() - dias * 24 * 60 * 60 * 1000) : null,
       ),
     [tickets, reaperturas, dias],
   );
 
-  if (!tickets?.length) return null;
+  if (!tickets.length) return null;
 
   // Los temas se ordenan de más a menos: la primera barra es la queja que más
   // repite la gente, que es lo único que alguien va a leer con prisa.
@@ -170,7 +166,7 @@ export const InformeDeSoporte = ({ dias }: { dias: number | null }) => {
           </p>
           <Grafica
             datos={[
-              ...(comerciales ?? []).map((comercial) => ({
+              ...comerciales.map((comercial) => ({
                 id: `${comercial.first_name} ${comercial.last_name}`,
                 valor:
                   metricas.abiertosPorResponsable[String(comercial.id)] ?? 0,

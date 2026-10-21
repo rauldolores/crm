@@ -37,6 +37,7 @@ import type {
 import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
 import type { ResultadoDeAsignacionDeAfiliado } from "../commons/asignarAfiliado";
+import type { DatosDeInformes } from "../commons/datosDeInformes";
 import type { DestinoDeOportunidad } from "../commons/moverOportunidad";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient, getUrlDeDatos } from "./supabase";
@@ -434,6 +435,18 @@ const getDataProviderWithCustomMethods = () => {
         throw new Error(
           cuerpo.message || "No se pudo guardar el afiliado del cliente",
         );
+      }
+      return respuesta.json();
+    },
+    async leerDatosDeInformes(): Promise<DatosDeInformes> {
+      // Todas las filas, no las primeras mil: ver /api/informes.
+      const token = await getKontroliaAccessToken();
+      const respuesta = await fetch("/api/informes", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!respuesta.ok) {
+        const cuerpo = await respuesta.json().catch(() => ({}));
+        throw new Error(cuerpo.message || "No se pudieron cargar los informes");
       }
       return respuesta.json();
     },

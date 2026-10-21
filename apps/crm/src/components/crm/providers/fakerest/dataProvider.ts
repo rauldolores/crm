@@ -3,6 +3,7 @@ import {
   type CreateParams,
   type DataProvider,
   type Identifier,
+  type RaRecord,
   type ResourceCallbacks,
   type UpdateParams,
 } from "ra-core";
@@ -25,10 +26,13 @@ import type {
   ContactNote,
   Deal,
   DealNote,
+  Quote,
   Sale,
   SalesFormData,
   SignUpData,
   Task,
+  Ticket,
+  TicketEvent,
   TicketNote,
 } from "../../types";
 import type { ConfigurationContextValue } from "../../root/ConfigurationContext";
@@ -38,6 +42,7 @@ import { getCompanyAvatar } from "../commons/getCompanyAvatar";
 import { getContactAvatar } from "../commons/getContactAvatar";
 import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
 import { asignarAfiliado } from "../commons/asignarAfiliado";
+import type { DatosDeInformes } from "../commons/datosDeInformes";
 import { mergeCompanies } from "../commons/mergeCompanies";
 import { mergeContacts } from "../commons/mergeContacts";
 import {
@@ -300,6 +305,52 @@ export const createDataProvider = ({
       reason?: string,
     ) => {
       return asignarAfiliado(companyId, affiliateId, reason, baseDataProvider);
+    },
+    // Sin servidor: FakeRest no tiene tope de filas, así que basta con pedir
+    // cada lista entera.
+    leerDatosDeInformes: async (): Promise<DatosDeInformes> => {
+      const todas = async <T extends RaRecord>(
+        recurso: string,
+        filter: Record<string, unknown> = {},
+      ) =>
+        (
+          await dataProvider.getList<T>(recurso, {
+            pagination: { page: 1, perPage: Number.MAX_SAFE_INTEGER },
+            sort: { field: "id", order: "ASC" },
+            filter,
+          })
+        ).data;
+      const [
+        oportunidades,
+        cotizaciones,
+        tickets,
+        reaperturas,
+        tareas,
+        notasDeContacto,
+        notasDeOportunidad,
+      ] = await Promise.all([
+        todas<Deal>("deals"),
+        todas<Quote>("quotes"),
+        todas<Ticket>("tickets"),
+        todas<TicketEvent>("ticket_events", {
+          field: "status",
+          old_value: "closed",
+        }),
+        todas<Task>("tasks"),
+        todas<ContactNote>("contact_notes"),
+        todas<DealNote>("deal_notes"),
+      ]);
+      return {
+        oportunidades,
+        cotizaciones,
+        tickets,
+        reaperturas,
+        tareas,
+        notas: [...notasDeContacto, ...notasDeOportunidad].map((nota) => ({
+          sales_id: nota.sales_id,
+          date: nota.date,
+        })),
+      };
     },
     moverOportunidad: async (
       deal: Deal,

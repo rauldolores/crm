@@ -1,4 +1,5 @@
-import { useGetList, useTranslate } from "ra-core";
+import { useQuery } from "@tanstack/react-query";
+import { useDataProvider, useGetList, useTranslate } from "ra-core";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -6,20 +7,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { estadoVisible } from "../cotizaciones/estado";
-import type { Deal, Quote, Sale } from "../types";
+import type { OportunidadDeInforme } from "../providers/commons/datosDeInformes";
+import type { CrmDataProvider } from "../providers/types";
+import type { Quote, Sale } from "../types";
+import { DesempenoDelEquipo } from "./DesempenoDelEquipo";
 import { InformeDeSoporte } from "./InformeDeSoporte";
+import { desempenoDelEquipo } from "./metricasDelEquipo";
 import { Grafica, Indicador } from "./PiezasDeInforme";
 import { Pronostico } from "./Pronostico";
 import { LOCALE } from "./RelativeDate";
 
 /**
- * Los tres informes con los que se decide en una pyme: dónde se atoran las
- * oportunidades, quién vende, y por qué se pierde.
+ * Los informes con los que se decide en una pyme: dónde se atoran las
+ * oportunidades, quién vende y cómo rinde cada quien, y por qué se pierde.
  *
- * Se calculan en el navegador sobre las oportunidades del periodo en vez de
- * en vistas de base de datos: para el volumen de una pyme sobra, y así los
- * informes siguen los mismos embudos y motivos que cada organización
- * configuró, sin duplicar esa lógica en SQL.
+ * Se calculan en el navegador en vez de en vistas de base de datos, para
+ * que sigan los mismos embudos y motivos que cada organización configuró
+ * sin duplicar esa lógica en SQL. Los datos llegan completos de
+ * /api/informes (leerDatosDeInformes), no solo los mil más recientes.
  */
 export const InformesPage = () => {
   const translate = useTranslate();
@@ -27,33 +32,55 @@ export const InformesPage = () => {
   const [dias, setDias] = useState<number | null>(90);
   const [embudoActivo, setEmbudoActivo] = useState(dealPipelines[0]?.value);
 
-  const { data: oportunidades, isPending } = useGetList<Deal>("deals", {
-    pagination: { page: 1, perPage: 1000 },
-    sort: { field: "created_at", order: "DESC" },
+  const dataProvider = useDataProvider<CrmDataProvider>();
+  const {
+    data: datos,
+    isPending,
+    isError,
+  } = useQuery({
+    queryKey: ["informes"],
+    queryFn: () => dataProvider.leerDatosDeInformes(),
   });
+  const oportunidades = datos?.oportunidades;
+  const cotizaciones = datos?.cotizaciones;
   const { data: comerciales } = useGetList<Sale>("sales", {
-    pagination: { page: 1, perPage: 200 },
-    sort: { field: "last_name", order: "ASC" },
-  });
-  const { data: cotizaciones } = useGetList<Quote>("quotes", {
     pagination: { page: 1, perPage: 1000 },
-    sort: { field: "created_at", order: "DESC" },
+    sort: { field: "last_name", order: "ASC" },
   });
 
   const embudo =
     dealPipelines.find((candidato) => candidato.value === embudoActivo) ??
     dealPipelines[0];
 
+  const desde = useMemo(
+    () => (dias ? new Date(Date.now() - dias * 24 * 60 * 60 * 1000) : null),
+    [dias],
+  );
+
   const delPeriodo = useMemo(() => {
-    const desde = dias
-      ? new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
-      : null;
     return (oportunidades ?? []).filter((oportunidad) => {
       if ((oportunidad.pipeline ?? "ventas") !== embudo?.value) return false;
       if (!desde) return true;
       return new Date(oportunidad.created_at) >= desde;
     });
-  }, [oportunidades, dias, embudo?.value]);
+  }, [oportunidades, desde, embudo?.value]);
+
+  const equipo = useMemo(
+    () =>
+      datos && embudo
+        ? desempenoDelEquipo({
+            comerciales: comerciales ?? [],
+            oportunidades: datos.oportunidades,
+            tareas: datos.tareas,
+            notas: datos.notas,
+            tickets: datos.tickets,
+            embudo,
+            desde,
+            sinResponsable: translate("crm.reports.team.unassigned"),
+          })
+        : [],
+    [datos, comerciales, embudo, desde, translate],
+  );
 
   const ganadas = delPeriodo.filter((oportunidad) =>
     (embudo?.pipelineStatuses ?? []).includes(oportunidad.stage),
@@ -69,9 +96,6 @@ export const InformesPage = () => {
   // propia fecha, no por la de la oportunidad: lo que se quiere saber es
   // cuánto se cotizó en estos meses.
   const cotizacionesDelPeriodo = useMemo(() => {
-    const desde = dias
-      ? new Date(Date.now() - dias * 24 * 60 * 60 * 1000)
-      : null;
     const delEmbudo = new Set(
       (oportunidades ?? [])
         .filter(
@@ -85,7 +109,7 @@ export const InformesPage = () => {
       if (!desde) return true;
       return new Date(cotizacion.created_at) >= desde;
     });
-  }, [cotizaciones, oportunidades, dias, embudo?.value]);
+  }, [cotizaciones, oportunidades, desde, embudo?.value]);
 
   const periodos = [
     { valor: 90, etiqueta: translate("crm.reports.periods.quarter") },
@@ -135,7 +159,13 @@ export const InformesPage = () => {
         )}
       </div>
 
-      {isPending ? null : (
+      {isError && (
+        <p className="text-sm text-destructive">
+          {translate("crm.reports.error_loading")}
+        </p>
+      )}
+
+      {isPending || isError ? null : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Indicador
@@ -171,7 +201,14 @@ export const InformesPage = () => {
             />
           )}
 
-          <InformeDeSoporte dias={dias} />
+          <DesempenoDelEquipo filas={equipo} moneda={currency} />
+
+          <InformeDeSoporte
+            dias={dias}
+            tickets={datos.tickets}
+            reaperturas={datos.reaperturas}
+            comerciales={comerciales ?? []}
+          />
 
           <Card>
             <CardHeader>
@@ -325,7 +362,11 @@ const ResumenDeCotizaciones = ({
  * Los motivos se listan en vez de graficarse: son pocos y lo que importa es
  * el porcentaje, que en una barra habría que ir a buscar al tooltip.
  */
-const MotivosDePerdida = ({ perdidas }: { perdidas: Deal[] }) => {
+const MotivosDePerdida = ({
+  perdidas,
+}: {
+  perdidas: OportunidadDeInforme[];
+}) => {
   const translate = useTranslate();
   const { dealLossReasons } = useConfigurationContext();
 
