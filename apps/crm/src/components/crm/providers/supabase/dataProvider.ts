@@ -642,6 +642,14 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
     },
   },
   {
+    // La lista de Clientes busca con `q`; sin esto PostgREST lo toma como una
+    // columna de la vista y responde «column customer_summary.q does not exist».
+    resource: "customer_summary",
+    beforeGetList: async (params) => {
+      return applyFullTextSearch(["name"])(params);
+    },
+  },
+  {
     resource: "contacts_summary",
     beforeGetList: async (params) => {
       return applyFullTextSearch(["first_name", "last_name"])(
