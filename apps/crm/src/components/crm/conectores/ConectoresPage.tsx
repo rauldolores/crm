@@ -34,6 +34,7 @@ import {
 import { llamarApi } from "../misc/llamarApi";
 import { RelativeDate } from "../misc/RelativeDate";
 import type { CrmDataProvider } from "../providers/types";
+import { SelectorDeClaveSat } from "./SelectorDeClaveSat";
 import {
   useConfigurationContext,
   useConfigurationUpdater,
@@ -476,7 +477,15 @@ const Campo = ({
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{campo.label}</Label>
-      {campo.type === "select" ? (
+      {campo.type === "sat" && campo.satCatalog ? (
+        <SelectorDeClaveSat
+          id={id}
+          catalogo={campo.satCatalog}
+          valor={valor}
+          onChange={onChange}
+          placeholder={campo.placeholder}
+        />
+      ) : campo.type === "select" ? (
         <Select value={valor} onValueChange={onChange}>
           <SelectTrigger id={id} className="w-full">
             <SelectValue />

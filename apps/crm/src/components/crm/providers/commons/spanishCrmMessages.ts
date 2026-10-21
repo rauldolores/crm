@@ -1582,6 +1582,14 @@ export const spanishCrmMessages = {
       test_and_save: "Probar y conectar",
       steps_title: "Cómo conseguir lo que pide %{name}",
       secret_kept: "Guardada. Escribe una nueva solo si quieres cambiarla.",
+      sat: {
+        choose: "Busca y elige una clave",
+        search_placeholder: "Escribe lo que vendes o la clave…",
+        searching: "Buscando en el catálogo del SAT…",
+        no_results: "Nada con ese texto. Prueba con otras palabras.",
+        needs_connector:
+          "Guarda primero la conexión y vuelve a entrar: el catálogo del SAT lo consultamos a tu proveedor, así que hace falta la clave de API ya guardada. Mientras tanto puedes escribir la clave a mano.",
+      },
     },
     invoices: {
       dialog_title: "Facturar %{number}",
