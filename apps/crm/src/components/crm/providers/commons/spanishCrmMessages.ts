@@ -213,6 +213,7 @@ export const spanishCrmMessages = {
         },
         personal_info_types: {
           work: "Trabajo",
+          mobile: "Móvil",
           home: "Personal",
           other: "Otro",
         },
