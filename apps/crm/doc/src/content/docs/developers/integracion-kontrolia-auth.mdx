@@ -7,11 +7,12 @@ KontrolIA Auth (el login y la facturación de AduaniaX, Faqturia, Vinqulia y Nod
 
 | En KontrolIA Auth | En Vinqulia |
 |---|---|
-| Organización | Empresa (`companies`, `source = 'kontrolia_auth'`, `external_id` = id de la organización). Etapa: *cliente* si tiene alguna suscripción viva; *perdido* si ya no le queda ninguna. Una etapa puesta a mano (p. ej. *en riesgo*) no se toca. |
+| Organización | Empresa (`companies`, `source = 'kontrolia_auth'`, `external_id` = id de la organización). Etapa: *cliente* si tiene alguna suscripción viva; *perdido* si ya no le queda ninguna. Una etapa puesta a mano (p. ej. *en riesgo*) no se toca; ver [Cliente en riesgo](#cliente-en-riesgo). |
 | Usuarios (miembros) | Contactos de esa empresa (`external_id` = id del usuario). Un usuario quitado o suspendido se **archiva**, no se borra. |
 | Suscripción de cada aplicación | Un contrato por producto (`external_id` = `<organización>:<aplicación>`): plan, extras, vigencia, precio del periodo y forma de cobro (*por contrato* o *con tarjeta*). |
 | Renovación con pago | Compra pagada ligada al contrato, con una línea «Renovación …». |
 | Historial (`subscription_events`) y renovaciones | Historial del contrato (`contract_events`), visible en la pestaña **Cliente** de la empresa. |
+| Consumo (`usage`) | Uso del mes actual y del anterior por producto y límite (`customer_usage`): cuánto usó, cuánto incluye su plan y el precio de lo de más. Ver [Uso del cliente](#uso-del-cliente). |
 
 Cada aviso trae la **foto completa** del cliente, así que un aviso repetido, perdido o fuera de orden nunca deja mal la copia: todo se reconoce por `source` + `external_id`, y una foto más vieja que la última aplicada (`snapshot.generated_at`) se ignora. Los importes llegan en centavos y se guardan en pesos.
 
@@ -24,7 +25,7 @@ Lo sincronizado **no se edita a mano**: el siguiente aviso lo sobrescribiría. L
 - `Authorization: Bearer vnq_…` — una clave de API de Vinqulia de la organización donde deben quedar los clientes (Ajustes → Claves de API). Decide **en qué organización** se guarda.
 - `X-Kontrolia-Signature: t=<unix>,v1=<hex>` — HMAC-SHA256 del cuerpo crudo con el secreto del aviso (tolerancia de 300 s). Prueba que el aviso lo mandó KontrolIA Auth.
 
-Respuestas: `200 {ok, company_id, contacts, contracts, purchases, events}` (o `{ok, ignored: true}` si la foto es más vieja que la ya aplicada); `401` firma o clave inválida; `400` cuerpo no válido; `503` si falta el secreto en el servidor; `500` si algo falló al guardar (KontrolIA Auth reintenta). Cada aviso queda anotado en `crm.integration_events` (solo `service_role`).
+Respuestas: `200 {ok, company_id, contacts, contracts, purchases, events, usage}` (o `{ok, ignored: true}` si la foto es más vieja que la ya aplicada); `401` firma o clave inválida; `400` cuerpo no válido; `503` si falta el secreto en el servidor; `500` si algo falló al guardar (KontrolIA Auth reintenta). Cada aviso queda anotado en `crm.integration_events` (solo `service_role`).
 
 ## Variable de entorno
 
@@ -44,3 +45,90 @@ KONTROLIA_AUTH_WEBHOOK_SECRET=
 4. Usa «Reenviar todo» (`organization.sync`) para la carga inicial de todos los clientes.
 
 El código: `app/api/integraciones/kontrolia-auth/route.ts` (firma, clave y bitácora), `src/lib/server/integraciones/kontroliaAuth.ts` (de la foto a filas, puro y con pruebas) y `aplicarKontroliaAuth.ts` (guarda con la clave de servicio, siempre filtrando por la organización de la clave).
+
+## Uso del cliente
+
+La foto trae, opcional, `snapshot.usage`: un renglón por producto, límite y mes (el actual y el anterior).
+
+```json
+{
+  "application_slug": "aduaniax",
+  "limit_key": "ctm_paginas",
+  "description": "Páginas escaneadas",
+  "period": "month",
+  "period_start": "2026-10-01",
+  "used": 120,
+  "included": 200,
+  "overage_price_amount": 1000,
+  "currency": "MXN"
+}
+```
+
+- Se guarda en `crm.customer_usage`, uno por organización × empresa × producto × límite × mes (`period_start`). `included: null` = sin límite. `overage_price_amount` llega en centavos y se guarda en **pesos**, como los demás importes.
+- Se conservan dos meses: el actual (el más reciente entre el mes de la foto, en hora de México, y el más nuevo que traiga `usage`) y el anterior. Lo más viejo se borra, y del mes actual se quita el límite que ya no venga (salió del plan).
+- Un renglón mal formado se descarta sin tumbar el aviso. Una foto **sin** `usage` (de antes de que KontrolIA Auth lo mandara) no toca lo guardado; `usage: []` sí quita el mes actual.
+- `customer_usage` es de solo lectura en el puente `/api/datos`: la escribe solo la integración.
+
+En la pestaña **Cliente**, la sección **Uso** enseña los usuarios activos de los últimos 30 días (contactos sincronizados no archivados con `last_seen` en la ventana, de todos los que hay), el último acceso y, por producto, «120 de 200» con una barra (o «sin límite»), lo de más en ámbar y el mes anterior en chico. Los usuarios son de la organización, no de cada producto: KontrolIA Auth no dice en qué producto entró cada quien. Cálculos en `src/components/crm/customers/usoDelCliente.ts` (con pruebas).
+
+## Cliente en riesgo
+
+Si nadie de una empresa entra en **14 días** (ajustable en Ajustes → Clientes en riesgo, `config.risk = {active, inactivityDays}`; sin nada guardado, activo y 14), la empresa pasa sola a la etapa **En riesgo** (`at-risk`) y se abre una tarea de llamada, para hoy, al responsable de la cuenta, en el contacto que entró más recientemente: «Cliente sin actividad: nadie de *Empresa* ha entrado en *N* días. Llamar para saber si necesita ayuda.». Cuando alguien vuelve a entrar, regresa a **Cliente activo**.
+
+Lo hace `crm.revisar_clientes_en_riesgo()`, que pg_cron corre a diario a las 13:30 UTC (7:30 en México). SQL puro e idempotente:
+
+- **Solo** empresas con `source = 'kontrolia_auth'`, etapa `customer` y al menos un contrato `active`. «Entrar» = el `last_seen` más reciente de sus contactos no archivados (la integración lo llena con `last_sign_in_at`); si nadie ha entrado nunca, cuenta desde el alta de la empresa.
+- Lo que marca queda en `crm.customer_risk` (una por empresa, con el último acceso de entonces y la tarea). **Solo regresa lo que marcó él**: una etapa *En riesgo* puesta a mano no la toca.
+- Si una persona mueve la empresa a otra etapa (prospecto, perdido, una propia), la marca se olvida. Si la regresa a *Cliente activo* sin que nadie haya entrado, la marca se conserva para no volver a marcarla ni abrir otra tarea hasta que alguien entre.
+- La integración no pelea con la marca: con una suscripción viva no regresa *En riesgo* a *Cliente* (eso lo hace solo la revisión cuando alguien entra); si al cliente ya no le queda ninguna suscripción viva, pasa a *Perdido* y la marca se borra.
+- Apagar la revisión deja de marcar, pero las ya marcadas siguen regresando cuando alguien entra.
+- El cambio de etapa no tiene bitácora propia: sale por el webhook `companies` como cualquier cambio de empresa.
+
+La pestaña Cliente avisa en ámbar «En riesgo: nadie ha entrado desde el *fecha*» mientras la empresa siga en esa etapa por la marca del sistema.
+
+### Prueba manual (SQL)
+
+En la consola SQL de Supabase, todo dentro de una transacción que se deshace. Cambia `123` por el id de una empresa sincronizada con contrato activo:
+
+```sql
+begin;
+
+-- 0. Una empresa candidata.
+select e.id, e.name, e.lifecycle_stage
+  from crm.companies e
+ where e.source = 'kontrolia_auth'
+   and exists (select 1 from crm.contracts c where c.company_id = e.id and c.status = 'active')
+ limit 5;
+
+-- 1. Nadie entra desde hace 20 días.
+update crm.companies set lifecycle_stage = 'customer' where id = 123;
+update crm.contacts set last_seen = now() - interval '20 days' where company_id = 123;
+select crm.revisar_clientes_en_riesgo();          -- marcadas ≥ 1
+select lifecycle_stage from crm.companies where id = 123;   -- at-risk
+select r.last_seen_at, t.text, t.type, t.due_date, t.sales_id
+  from crm.customer_risk r left join crm.tasks t on t.id = r.task_id
+ where r.company_id = 123;                        -- la marca y la tarea
+
+-- 2. Idempotente: otra corrida no marca ni abre otra tarea.
+select crm.revisar_clientes_en_riesgo();          -- marcadas 0 (para esta empresa)
+
+-- 3. Alguien vuelve a entrar.
+update crm.contacts set last_seen = now()
+ where id = (select min(id) from crm.contacts where company_id = 123 and archived_at is null);
+select crm.revisar_clientes_en_riesgo();          -- recuperadas ≥ 1
+select lifecycle_stage from crm.companies where id = 123;   -- customer
+select count(*) from crm.customer_risk where company_id = 123;  -- 0
+
+-- 4. Una etapa puesta a mano no se toca.
+update crm.companies set lifecycle_stage = 'at-risk' where id = 123;  -- sin marca
+select crm.revisar_clientes_en_riesgo();
+select lifecycle_stage from crm.companies where id = 123;   -- sigue at-risk
+
+-- 5. Los ajustes: apagada no marca; días con los de fábrica si no sirven.
+select crm.ajustes_de_riesgo('{"risk": {"active": false, "inactivityDays": "30"}}');
+select crm.ajustes_de_riesgo('{"risk": {"inactivityDays": 0}}');   -- 14
+
+rollback;
+```
+
+El código: `supabase/migrations/20261021060814_uso_y_riesgo.sql` (tablas, función y pg_cron), `etapaDelCliente()` y `usoDeLaFoto()` en `kontroliaAuth.ts`, `guardarUso()` en `aplicarKontroliaAuth.ts`, y `SeccionDeUso.tsx` / `AjustesDeRiesgo.tsx` en la interfaz.

@@ -2717,3 +2717,220 @@ grant execute on function crm.embudo_de_config(jsonb, text) to service_role;
 grant execute on function crm.embudo_de_renovaciones_por_defecto(text) to service_role;
 grant execute on function crm.asegurar_embudo_de_renovaciones(uuid, text) to service_role;
 grant execute on function crm.generar_oportunidades_de_renovacion() to service_role;
+
+-- Clientes en riesgo (ver la migración 20261021060814): pg_cron llama una
+-- vez al día (13:30 UTC) a crm.revisar_clientes_en_riesgo().
+-- ── Clientes en riesgo: ajustes ───────────────────────────────────────────────────────────
+
+-- Los ajustes de la organización con los de fábrica donde falten. Misma
+-- regla que ajustesDeRiesgo() en src/components/crm/customers/usoDelCliente.ts:
+-- días = entero de 1 a 365 (número o texto); lo demás vale 14.
+create or replace function crm.ajustes_de_riesgo(p_config jsonb) returns jsonb
+    language plpgsql immutable
+    set search_path = ''
+    as $$
+declare
+  r jsonb := p_config -> 'risk';
+  dias integer := 14;
+begin
+  if r is null or jsonb_typeof(r) <> 'object' then
+    r := '{}'::jsonb;
+  end if;
+  if jsonb_typeof(r -> 'inactivityDays') in ('number', 'string')
+     and (r ->> 'inactivityDays') ~ '^[0-9]{1,4}$' then
+    dias := (r ->> 'inactivityDays')::integer;
+    if dias < 1 then
+      dias := 14;
+    end if;
+    dias := least(dias, 365);
+  end if;
+  return jsonb_build_object(
+    'active', (case when jsonb_typeof(r -> 'active') = 'boolean'
+                    then (r ->> 'active')::boolean else true end),
+    'inactivityDays', dias
+  );
+end;
+$$;
+
+-- ── Clientes en riesgo: el proceso ────────────────────────────────────────────────────────
+create or replace function crm.revisar_clientes_en_riesgo() returns jsonb
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+declare
+  org uuid;
+  cfg jsonb;
+  ajustes jsonb;
+  dias integer;
+  tipo_tarea text;
+  k record;
+  f record;
+  marca bigint;
+  contacto bigint;
+  tarea bigint;
+  sin_entrar integer;
+  texto text;
+  marcadas integer := 0;
+  recuperadas integer := 0;
+  olvidadas integer := 0;
+  errores integer := 0;
+begin
+  -- 1. Regresar lo que marcó el sistema. Va primero y no mira si la
+  --    revisión está encendida: una organización que la apaga no debe
+  --    quedarse con clientes en riesgo para siempre.
+  for f in
+    select r.id, r.company_id, r.organization_id, e.lifecycle_stage,
+           (select max(ct.last_seen)
+              from crm.contacts ct
+             where ct.company_id = r.company_id
+               and ct.organization_id = r.organization_id
+               and ct.archived_at is null) as ultimo
+      from crm.customer_risk r
+      join crm.companies e on e.id = r.company_id
+  loop
+    begin
+      select c.config into cfg from crm.configuration c where c.organization_id = f.organization_id;
+      dias := (crm.ajustes_de_riesgo(cfg) ->> 'inactivityDays')::integer;
+
+      if f.ultimo is not null and f.ultimo >= now() - make_interval(days => dias) then
+        -- Alguien volvió a entrar. Solo se regresa la etapa si sigue en la
+        -- que puso el sistema.
+        if f.lifecycle_stage = 'at-risk' then
+          update crm.companies
+             set lifecycle_stage = 'customer'
+           where id = f.company_id
+             and lifecycle_stage = 'at-risk';
+          recuperadas := recuperadas + 1;
+        end if;
+        delete from crm.customer_risk where id = f.id;
+      elsif f.lifecycle_stage is distinct from 'at-risk'
+            and f.lifecycle_stage is distinct from 'customer' then
+        -- Una persona (o la integración, al perderse el cliente) la movió a
+        -- otra etapa: ya no es asunto del sistema.
+        delete from crm.customer_risk where id = f.id;
+        olvidadas := olvidadas + 1;
+      end if;
+      -- Sigue sin entrar (en riesgo, o regresada a mano a cliente): se
+      -- conserva la marca para no volver a marcarla ni abrir otra tarea.
+    exception when others then
+      errores := errores + 1;
+      raise warning 'Cliente en riesgo, revisión de la empresa %: %', f.company_id, sqlerrm;
+    end;
+  end loop;
+
+  -- 2. Marcar a quien lleva los días sin entrar.
+  for org in
+    select distinct e.organization_id
+      from crm.companies e
+     where e.source = 'kontrolia_auth'
+       and e.lifecycle_stage = 'customer'
+  loop
+    begin
+      select c.config into cfg from crm.configuration c where c.organization_id = org;
+      ajustes := crm.ajustes_de_riesgo(cfg);
+      continue when not (ajustes ->> 'active')::boolean;
+      dias := (ajustes ->> 'inactivityDays')::integer;
+      -- Llamada si la organización tiene ese tipo de tarea (o usa los de
+      -- fábrica); si no, sin tipo. Igual que las renovaciones.
+      tipo_tarea := (case
+        when coalesce(jsonb_typeof(cfg -> 'taskTypes'), '') <> 'array'
+          or exists (
+            select 1 from jsonb_array_elements(
+              case when jsonb_typeof(cfg -> 'taskTypes') = 'array'
+                   then cfg -> 'taskTypes' else '[]'::jsonb end) t
+             where t ->> 'value' = 'call')
+        then 'call' else null end);
+
+      for k in
+        select e.id, e.name, e.sales_id, e.created_at, a.ultimo
+          from crm.companies e
+          left join lateral (
+            select max(ct.last_seen) as ultimo
+              from crm.contacts ct
+             where ct.company_id = e.id
+               and ct.organization_id = org
+               and ct.archived_at is null
+          ) a on true
+         where e.organization_id = org
+           and e.source = 'kontrolia_auth'
+           and e.lifecycle_stage = 'customer'
+           and exists (
+             select 1 from crm.contracts c
+              where c.company_id = e.id
+                and c.organization_id = org
+                and c.status = 'active'
+           )
+           and not exists (
+             select 1 from crm.customer_risk r where r.company_id = e.id
+           )
+           and coalesce(a.ultimo, e.created_at) < now() - make_interval(days => dias)
+         order by e.id
+      loop
+        begin
+          marca := null;
+          insert into crm.customer_risk (organization_id, company_id, last_seen_at, inactivity_days)
+          values (org, k.id, k.ultimo, dias)
+          on conflict (company_id) do nothing
+          returning id into marca;
+          continue when marca is null;
+
+          update crm.companies
+             set lifecycle_stage = 'at-risk'
+           where id = k.id
+             and lifecycle_stage = 'customer';
+
+          -- Días en hora de México, como se leen las fechas en el resto del
+          -- CRM.
+          sin_entrar := (now() at time zone 'America/Mexico_City')::date
+            - (coalesce(k.ultimo, k.created_at) at time zone 'America/Mexico_City')::date;
+          texto := (case
+            when k.ultimo is null
+            then 'Cliente sin actividad: nadie de ' || k.name
+                 || ' ha entrado desde que se dio de alta, hace ' || sin_entrar || ' días.'
+            else 'Cliente sin actividad: nadie de ' || k.name
+                 || ' ha entrado en ' || sin_entrar || ' días.'
+            end) || ' Llamar para saber si necesita ayuda.';
+
+          contacto := (
+            select ct.id from crm.contacts ct
+             where ct.company_id = k.id
+               and ct.organization_id = org
+               and ct.archived_at is null
+             order by ct.last_seen desc nulls last, ct.id
+             limit 1
+          );
+          tarea := null;
+          if contacto is not null then
+            insert into crm.tasks (organization_id, contact_id, text, type, due_date, sales_id)
+            values (org, contacto, texto, tipo_tarea,
+                    current_date::timestamp with time zone, k.sales_id)
+            returning id into tarea;
+            update crm.customer_risk set task_id = tarea where id = marca;
+          end if;
+          marcadas := marcadas + 1;
+        exception when others then
+          errores := errores + 1;
+          raise warning 'Cliente en riesgo, empresa %: %', k.id, sqlerrm;
+        end;
+      end loop;
+    exception when others then
+      errores := errores + 1;
+      raise warning 'Clientes en riesgo de la organización %: %', org, sqlerrm;
+    end;
+  end loop;
+
+  return jsonb_build_object(
+    'marcadas', marcadas,
+    'recuperadas', recuperadas,
+    'olvidadas', olvidadas,
+    'errores', errores
+  );
+end;
+$$;
+
+-- ── Clientes en riesgo: permisos ──────────────────────────────────────────────────────────
+revoke all on function crm.ajustes_de_riesgo(jsonb) from public, anon, authenticated;
+revoke all on function crm.revisar_clientes_en_riesgo() from public, anon, authenticated;
+
+grant execute on function crm.ajustes_de_riesgo(jsonb) to service_role;
+grant execute on function crm.revisar_clientes_en_riesgo() to service_role;

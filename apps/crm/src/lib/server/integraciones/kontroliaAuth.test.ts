@@ -12,8 +12,11 @@ import {
   eventosDeLaFoto,
   fechaDe,
   importeDeContrato,
+  mesAnterior,
+  mesesDeUso,
   planDeLaFoto,
   unirCorreos,
+  usoDeLaFoto,
   type FotoKontroliaAuth,
   type SuscripcionKontroliaAuth,
 } from "./kontroliaAuth";
@@ -248,6 +251,21 @@ describe("etapaDelCliente", () => {
   it("nunca pisa una etapa que puso una persona", () => {
     expect(etapaDelCliente("at-risk", viva)).toBeUndefined();
     expect(etapaDelCliente("at-risk", muerta)).toBeUndefined();
+  });
+
+  it("«en riesgo» del sistema no se regresa a cliente con una suscripción viva", () => {
+    // Eso lo hace solo la revisión diaria cuando alguien vuelve a entrar.
+    expect(etapaDelCliente("at-risk", viva, true)).toBeUndefined();
+  });
+
+  it("«en riesgo» del sistema pasa a perdido si ya no le queda ninguna viva", () => {
+    expect(etapaDelCliente("at-risk", muerta, true)).toBe("churned");
+  });
+
+  it("la marca del sistema no cambia nada en otras etapas", () => {
+    expect(etapaDelCliente("customer", viva, true)).toBeUndefined();
+    expect(etapaDelCliente("churned", viva, true)).toBe("customer");
+    expect(etapaDelCliente("vip", viva, true)).toBeUndefined();
   });
 
   it("sin suscripciones y sin etapa es prospecto", () => {
@@ -537,5 +555,105 @@ describe("planDeLaFoto", () => {
     expect(plan.contactos).toEqual([]);
     expect(plan.contratos).toEqual([]);
     expect(plan.eventos).toEqual([]);
+  });
+});
+
+describe("uso", () => {
+  const conUso = (usage: unknown) =>
+    AvisoKontroliaAuth.parse({
+      snapshot: {
+        generated_at: "2026-10-20T18:00:00Z",
+        organization: { id: ORG, name: "Acme" },
+        usage,
+      },
+    }).snapshot;
+
+  const renglon = {
+    application_slug: "aduaniax",
+    limit_key: "ctm_paginas",
+    description: "Páginas escaneadas",
+    period: "month",
+    period_start: "2026-10-01",
+    used: 120,
+    included: 200,
+    overage_price_amount: 1000,
+    currency: "MXN",
+  };
+
+  it("una foto sin uso no toca lo guardado", () => {
+    const sinUso = AvisoKontroliaAuth.parse(aviso).snapshot;
+    expect(usoDeLaFoto(sinUso)).toBeNull();
+    expect(planDeLaFoto(sinUso).uso).toBeNull();
+  });
+
+  it("guarda el uso con el precio de lo de más en pesos", () => {
+    expect(usoDeLaFoto(conUso([renglon]))).toEqual([
+      {
+        application_slug: "aduaniax",
+        limit_key: "ctm_paginas",
+        description: "Páginas escaneadas",
+        period_start: "2026-10-01",
+        used: 120,
+        included: 200,
+        overage_price_amount: 10,
+        currency: "MXN",
+      },
+    ]);
+  });
+
+  it("sin límite queda included null", () => {
+    const [fila] = usoDeLaFoto(
+      conUso([{ ...renglon, included: null, overage_price_amount: null }]),
+    )!;
+    expect(fila.included).toBeNull();
+    expect(fila.overage_price_amount).toBeNull();
+  });
+
+  it("un renglón mal formado se descarta sin tumbar el aviso", () => {
+    const uso = usoDeLaFoto(
+      conUso([
+        renglon,
+        { ...renglon, limit_key: "timbres", used: "muchos" },
+        { ...renglon, limit_key: "x", period_start: "octubre" },
+        null,
+      ]),
+    )!;
+    expect(uso.map((u) => u.limit_key)).toEqual(["ctm_paginas"]);
+  });
+
+  it("un renglón repetido vale el último", () => {
+    const uso = usoDeLaFoto(conUso([renglon, { ...renglon, used: 150 }]))!;
+    expect(uso).toHaveLength(1);
+    expect(uso[0].used).toBe(150);
+  });
+
+  it("una lista vacía es «sin uso este mes», no «foto vieja»", () => {
+    expect(usoDeLaFoto(conUso([]))).toEqual([]);
+  });
+
+  it("el mes anterior cruza el año", () => {
+    expect(mesAnterior("2026-01-01")).toBe("2025-12-01");
+    expect(mesAnterior("2026-10-01")).toBe("2026-09-01");
+  });
+
+  it("conserva el mes de la foto (hora de México) y el anterior", () => {
+    expect(mesesDeUso("2026-10-20T18:00:00Z", [])).toEqual({
+      actual: "2026-10-01",
+      anterior: "2026-09-01",
+    });
+    // 1 de noviembre a las 3:00 UTC todavía es 31 de octubre en México.
+    expect(mesesDeUso("2026-11-01T03:00:00Z", [])).toEqual({
+      actual: "2026-10-01",
+      anterior: "2026-09-01",
+    });
+  });
+
+  it("si el uso trae un mes más nuevo que la foto, ese es el actual", () => {
+    expect(
+      mesesDeUso("2026-11-01T03:00:00Z", [
+        { period_start: "2026-10-01" },
+        { period_start: "2026-11-01" },
+      ]),
+    ).toEqual({ actual: "2026-11-01", anterior: "2026-10-01" });
   });
 });

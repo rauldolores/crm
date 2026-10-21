@@ -1,7 +1,10 @@
 import type { getServiceClient } from "../supabase-service";
 import {
   camposDeContacto,
+  ETAPA_EN_RIESGO,
   etapaDelCliente,
+  llaveDeUso,
+  mesesDeUso,
   ORIGEN_KONTROLIA_AUTH,
   planDeLaFoto,
   REF_KONTROLIA_AUTH,
@@ -27,6 +30,7 @@ export interface ResultadoKontroliaAuth {
   contracts: number;
   purchases: number;
   events: number;
+  usage: number;
 }
 
 const exigir = <T>(
@@ -104,6 +108,24 @@ async function buscarEmpresa(
   return porNombre?.length === 1 ? porNombre[0] : null;
 }
 
+/** Id de la marca de «en riesgo» que puso el sistema, o null. */
+async function marcaDeRiesgo(
+  db: Db,
+  org: string,
+  companyId: number,
+): Promise<number | null> {
+  const fila = exigir(
+    await db
+      .from("customer_risk")
+      .select("id")
+      .eq("organization_id", org)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    "Leer la marca de cliente en riesgo",
+  ) as { id: number } | null;
+  return fila?.id ?? null;
+}
+
 async function guardarEmpresa(
   db: Db,
   org: string,
@@ -114,9 +136,17 @@ async function guardarEmpresa(
   for (let intento = 0; intento < 2; intento++) {
     const existente = await buscarEmpresa(db, org, externa);
     if (existente) {
+      // «En riesgo» puesto por el sistema (nadie entra) no lo regresa a
+      // cliente la integración: lo hace la revisión diaria cuando alguien
+      // vuelve a entrar. Si el cliente se pierde, sí pasa a perdido.
+      const marca =
+        existente.lifecycle_stage === ETAPA_EN_RIESGO
+          ? await marcaDeRiesgo(db, org, existente.id)
+          : null;
       const etapa = etapaDelCliente(
         existente.lifecycle_stage,
         foto.subscriptions,
+        marca !== null,
       );
       exigir(
         await db
@@ -135,6 +165,18 @@ async function guardarEmpresa(
           .eq("organization_id", org),
         "Actualizar la empresa",
       );
+      // La integración la sacó de «en riesgo» (se perdió el cliente): la
+      // marca del sistema ya no aplica.
+      if (marca !== null && etapa !== undefined && etapa !== ETAPA_EN_RIESGO) {
+        exigir(
+          await db
+            .from("customer_risk")
+            .delete()
+            .eq("id", marca)
+            .eq("organization_id", org),
+          "Quitar la marca de cliente en riesgo",
+        );
+      }
       return existente.id;
     }
 
@@ -388,6 +430,84 @@ async function guardarEventos(
   return filas.length;
 }
 
+/**
+ * Uso del mes actual y del anterior (crm.customer_usage). Lo que trae la
+ * foto se guarda; del mes actual se quita lo que ya no viene (un límite que
+ * salió del plan) y lo anterior al mes pasado se borra. Sin `usage` en la
+ * foto no se toca nada.
+ */
+async function guardarUso(
+  db: Db,
+  org: string,
+  companyId: number,
+  plan: ReturnType<typeof planDeLaFoto>,
+  generadaEn: string,
+  ahora: string,
+): Promise<number> {
+  if (plan.uso === null) return 0;
+  const { actual, anterior } = mesesDeUso(generadaEn, plan.uso);
+  const vigentes = plan.uso.filter((u) => u.period_start >= anterior);
+
+  if (vigentes.length) {
+    exigir(
+      await db.from("customer_usage").upsert(
+        vigentes.map((u) => ({
+          ...u,
+          organization_id: org,
+          company_id: companyId,
+          updated_at: ahora,
+        })),
+        {
+          onConflict:
+            "organization_id,company_id,application_slug,limit_key,period_start",
+        },
+      ),
+      "Guardar el uso",
+    );
+  }
+
+  exigir(
+    await db
+      .from("customer_usage")
+      .delete()
+      .eq("organization_id", org)
+      .eq("company_id", companyId)
+      .lt("period_start", anterior),
+    "Quitar el uso de meses viejos",
+  );
+
+  const llaves = new Set(vigentes.map(llaveDeUso));
+  const delMes = (exigir(
+    await db
+      .from("customer_usage")
+      .select("id, application_slug, limit_key, period_start")
+      .eq("organization_id", org)
+      .eq("company_id", companyId)
+      .eq("period_start", actual),
+    "Leer el uso del mes",
+  ) ?? []) as {
+    id: number;
+    application_slug: string;
+    limit_key: string;
+    period_start: string;
+  }[];
+  const sobrantes = delMes
+    .filter((fila) => !llaves.has(llaveDeUso(fila)))
+    .map((fila) => fila.id);
+  if (sobrantes.length) {
+    exigir(
+      await db
+        .from("customer_usage")
+        .delete()
+        .eq("organization_id", org)
+        .eq("company_id", companyId)
+        .in("id", sobrantes),
+      "Quitar del uso lo que ya no viene",
+    );
+  }
+  return vigentes.length;
+}
+
 /** Aplica la foto completa de un cliente a la organización `org` del CRM. */
 export async function aplicarKontroliaAuth(
   db: Db,
@@ -401,12 +521,21 @@ export async function aplicarKontroliaAuth(
   const contratos = await guardarContratos(db, org, companyId, plan, ahora);
   const purchases = await guardarCompras(db, org, companyId, plan, contratos);
   const events = await guardarEventos(db, org, companyId, plan, contratos);
+  const usage = await guardarUso(
+    db,
+    org,
+    companyId,
+    plan,
+    foto.generated_at,
+    ahora,
+  );
   return {
     company_id: companyId,
     contacts,
     contracts: contratos.size,
     purchases,
     events,
+    usage,
   };
 }
 

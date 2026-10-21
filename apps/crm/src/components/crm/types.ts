@@ -147,6 +147,9 @@ export type Contact = {
   status_is_automatic?: boolean;
   /** Cuándo alguien fijó el estado a mano; manda 14 días. */
   status_set_at?: string;
+  /** De dónde vino (kontrolia_auth…) y su id allá; null = alta a mano. */
+  source?: string | null;
+  external_id?: string | null;
 } & Pick<RaRecord, "id">;
 
 export type ContactNote = {
@@ -386,6 +389,38 @@ export type ContractEvent = {
   source: string;
   external_id: string;
   created_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Consumo de un cliente de KONTROLIA en un mes, por producto y límite (lo
+ * escribe la integración con KontrolIA Auth). `included` null = sin límite;
+ * `overage_price_amount` en pesos.
+ */
+export type CustomerUsage = {
+  company_id: Identifier;
+  application_slug: string;
+  limit_key: string;
+  description?: string | null;
+  /** Primer día del mes (AAAA-MM-01). */
+  period_start: string;
+  used: number;
+  included?: number | null;
+  overage_price_amount?: number | null;
+  currency?: string | null;
+  updated_at?: string;
+} & Pick<RaRecord, "id">;
+
+/**
+ * Marca que pone crm.revisar_clientes_en_riesgo() cuando nadie de la empresa
+ * entra en N días: la empresa pasó sola a «en riesgo».
+ */
+export type CustomerRisk = {
+  company_id: Identifier;
+  /** Último acceso cuando se marcó; null = nadie había entrado nunca. */
+  last_seen_at?: string | null;
+  inactivity_days: number;
+  flagged_at: string;
+  task_id?: Identifier | null;
 } & Pick<RaRecord, "id">;
 
 export type Purchase = {

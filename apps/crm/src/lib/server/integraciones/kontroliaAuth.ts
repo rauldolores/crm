@@ -121,6 +121,24 @@ const Movimiento = z.object({
   payload: z.record(z.string(), z.unknown()).nullish(),
 });
 
+// Consumo del mes actual y del anterior por producto y límite. Se valida
+// renglón por renglón (usoDeLaFoto): uno mal formado se descarta sin tumbar
+// el aviso. Opcional: una foto de antes de que KontrolIA Auth lo mandara no
+// lo trae, y entonces el uso guardado no se toca.
+export const UsoKontroliaAuth = z.object({
+  application_slug: z.string().min(1),
+  limit_key: z.string().min(1),
+  description: texto,
+  period: texto,
+  period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  used: z.number(),
+  // null = sin límite.
+  included: numero,
+  // Centavos; null = no se cobra aparte.
+  overage_price_amount: numero,
+  currency: texto,
+});
+
 const Foto = z.object({
   generated_at: z.string(),
   organization: z.object({
@@ -134,6 +152,7 @@ const Foto = z.object({
   renewals: z.array(Renovacion).default([]),
   history: z.array(Movimiento).default([]),
   plans: z.array(PlanDeLaFoto).nullish(),
+  usage: z.array(z.unknown()).nullish(),
 });
 
 export const AvisoKontroliaAuth = z.object({
@@ -151,6 +170,7 @@ export type MiembroKontroliaAuth = z.infer<typeof Miembro>;
 export type SuscripcionKontroliaAuth = z.infer<typeof Suscripcion>;
 export type RenovacionKontroliaAuth = z.infer<typeof Renovacion>;
 export type MovimientoKontroliaAuth = z.infer<typeof Movimiento>;
+export type UsoKontroliaAuth = z.infer<typeof UsoKontroliaAuth>;
 
 // ── Utilidades ──────────────────────────────────────────────────────────
 
@@ -221,6 +241,9 @@ export function dividirNombre(
 /** Etapas que la integración puede mover sola; el resto las decide alguien. */
 const ETAPAS_AUTOMATICAS = new Set(["prospect", "customer", "churned"]);
 
+/** Etapa que pone crm.revisar_clientes_en_riesgo() a quien deja de entrar. */
+export const ETAPA_EN_RIESGO = "at-risk";
+
 /**
  * Etapa del cliente según sus suscripciones, o `undefined` si no hay que
  * tocarla.
@@ -228,21 +251,30 @@ const ETAPAS_AUTOMATICAS = new Set(["prospect", "customer", "churned"]);
  * Solo se mueve entre prospecto, cliente y perdido. Si una persona la puso
  * en otra («en riesgo», por ejemplo), se respeta: esa decisión no la sabe
  * KontrolIA Auth.
+ *
+ * `riesgoDelSistema`: la empresa está «en riesgo» porque la marcó el sistema
+ * (crm.customer_risk), no una persona. Cuenta como cliente: con una
+ * suscripción viva NO se regresa a cliente —eso lo hace solo la revisión
+ * diaria cuando alguien vuelve a entrar—, y si ya no le queda ninguna pasa a
+ * perdido.
  */
 export function etapaDelCliente(
   actual: string | null | undefined,
   suscripciones: Pick<SuscripcionKontroliaAuth, "is_live">[],
+  riesgoDelSistema = false,
 ): string | undefined {
-  const automatica = actual == null || ETAPAS_AUTOMATICAS.has(actual);
+  const efectiva =
+    actual === ETAPA_EN_RIESGO && riesgoDelSistema ? "customer" : actual;
+  const automatica = efectiva == null || ETAPAS_AUTOMATICAS.has(efectiva);
   const hayViva = suscripciones.some((s) => s.is_live);
 
   if (hayViva) {
-    return automatica && actual !== "customer" ? "customer" : undefined;
+    return automatica && efectiva !== "customer" ? "customer" : undefined;
   }
   if (suscripciones.length) {
-    return actual === "customer" ? "churned" : undefined;
+    return efectiva === "customer" ? "churned" : undefined;
   }
-  return actual == null ? "prospect" : undefined;
+  return efectiva == null ? "prospect" : undefined;
 }
 
 // ── Contactos ───────────────────────────────────────────────────────────
@@ -549,6 +581,81 @@ export function eventosDeLaFoto(foto: FotoKontroliaAuth): EventoDeseado[] {
   });
 }
 
+// ── Uso ─────────────────────────────────────────────────────────────────
+
+/** Lo que se guarda en crm.customer_usage (sin ids del CRM). */
+export interface UsoDeseado {
+  application_slug: string;
+  limit_key: string;
+  description: string | null;
+  period_start: string;
+  used: number;
+  included: number | null;
+  /** En pesos. */
+  overage_price_amount: number | null;
+  currency: string | null;
+}
+
+/** Primer día del mes (AAAA-MM-01) de una fecha AAAA-MM-DD. */
+const inicioDeMes = (dia: string) => `${dia.slice(0, 7)}-01`;
+
+/** Primer día del mes anterior a `inicio` (AAAA-MM-01). */
+export function mesAnterior(inicio: string): string {
+  const [anio, mes] = inicio.split("-").map(Number);
+  const fecha = new Date(Date.UTC(anio, mes - 2, 1));
+  return fecha.toISOString().slice(0, 10);
+}
+
+/** Producto × límite × mes: lo que hace único un renglón de uso. */
+export const llaveDeUso = (
+  u: Pick<UsoDeseado, "application_slug" | "limit_key" | "period_start">,
+) => `${u.application_slug}|${u.limit_key}|${u.period_start}`;
+
+/**
+ * El uso de la foto, listo para guardar, o `null` si la foto no lo trae (una
+ * foto de antes de que KontrolIA Auth lo mandara: el uso guardado no se
+ * toca). Los renglones mal formados se descartan; uno repetido (mismo
+ * producto, límite y mes) vale el último.
+ */
+export function usoDeLaFoto(foto: FotoKontroliaAuth): UsoDeseado[] | null {
+  if (!Array.isArray(foto.usage)) return null;
+  const porLlave = new Map<string, UsoDeseado>();
+  for (const crudo of foto.usage) {
+    const renglon = UsoKontroliaAuth.safeParse(crudo);
+    if (!renglon.success) continue;
+    const u = renglon.data;
+    const fila: UsoDeseado = {
+      application_slug: u.application_slug,
+      limit_key: u.limit_key,
+      description: u.description?.trim() || null,
+      period_start: inicioDeMes(u.period_start),
+      used: u.used,
+      included: u.included ?? null,
+      overage_price_amount: aPesos(u.overage_price_amount),
+      currency: u.currency || null,
+    };
+    porLlave.set(llaveDeUso(fila), fila);
+  }
+  return [...porLlave.values()];
+}
+
+/**
+ * Los dos meses que se conservan: el actual (el más reciente entre el mes de
+ * la foto, en hora de México, y el más nuevo que traiga el uso) y el
+ * anterior. Lo más viejo se borra.
+ */
+export function mesesDeUso(
+  generadaEn: string,
+  uso: Pick<UsoDeseado, "period_start">[],
+): { actual: string; anterior: string } {
+  const deLaFoto = inicioDeMes(fechaDe(generadaEn) ?? generadaEn.slice(0, 10));
+  const actual = uso.reduce(
+    (mayor, u) => (u.period_start > mayor ? u.period_start : mayor),
+    deLaFoto,
+  );
+  return { actual, anterior: mesAnterior(actual) };
+}
+
 // ── Plan completo ───────────────────────────────────────────────────────
 
 /** Todo lo que hay que guardar para una foto, sin ids del CRM todavía. */
@@ -559,6 +666,8 @@ export interface PlanKontroliaAuth {
   contratos: Record<string, unknown>[];
   compras: CompraDeseada[];
   eventos: EventoDeseado[];
+  /** null = la foto no trae uso: no se toca lo guardado. */
+  uso: UsoDeseado[] | null;
 }
 
 export function planDeLaFoto(foto: FotoKontroliaAuth): PlanKontroliaAuth {
@@ -572,5 +681,6 @@ export function planDeLaFoto(foto: FotoKontroliaAuth): PlanKontroliaAuth {
       .map((r) => compraDeRenovacion(r, foto.subscriptions))
       .filter((c): c is CompraDeseada => c !== null),
     eventos: eventosDeLaFoto(foto),
+    uso: usoDeLaFoto(foto),
   };
 }

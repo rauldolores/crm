@@ -12,6 +12,7 @@ import type {
 } from "../types";
 import { defaultConfiguration } from "./defaultConfiguration";
 import type { AjustesDeRenovaciones } from "../renovaciones/renovaciones";
+import type { AjustesDeRiesgo } from "../customers/usoDelCliente";
 
 export const CONFIGURATION_STORE_KEY = "app.configuration";
 
@@ -94,6 +95,11 @@ export interface ConfigurationContextValue {
    * incompleto.
    */
   renewals?: Partial<AjustesDeRenovaciones>;
+  /**
+   * Clientes en riesgo: si nadie de la empresa entra en N días (lo revisa la
+   * base cada día). Leer siempre con ajustesDeRiesgo().
+   */
+  risk?: Partial<AjustesDeRiesgo>;
 }
 
 export const useConfigurationContext = () => {

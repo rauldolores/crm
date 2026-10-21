@@ -1566,6 +1566,30 @@ export const spanishCrmMessages = {
         },
         history: "Historial del contrato",
       },
+      // Uso de los clientes de KONTROLIA y «en riesgo» puesto por el CRM.
+      usage: {
+        title: "Uso",
+        active_users:
+          "Usuarios activos (últimos %{dias} días): %{activos} de %{total}",
+        last_access: "Último acceso: %{cuando} (%{fecha})",
+        last_access_never: "Último acceso: nadie ha entrado todavía",
+        users_help:
+          "Cuenta a los usuarios de la empresa en todos sus productos de KONTROLIA.",
+        today: "hoy",
+        yesterday: "ayer",
+        days_ago: "hace %{smart_count} día |||| hace %{smart_count} días",
+        month: "Consumo de %{mes}",
+        of: "%{usado} de %{incluido}",
+        unlimited: "%{usado} · sin límite",
+        over: "%{cantidad} de más",
+        no_current: "Sin consumo este mes",
+        previous: "%{mes}: %{texto}",
+        no_usage: "Todavía no llega el consumo desde KontrolIA.",
+        at_risk_since: "En riesgo: nadie ha entrado desde el %{date}.",
+        at_risk_never: "En riesgo: nadie de la empresa ha entrado nunca.",
+        at_risk_help:
+          "Lo marcó el CRM solo y abrió una tarea para llamar. Vuelve a «Cliente activo» en cuanto alguien entre.",
+      },
     },
     // Oportunidades de renovación que abre y cierra el CRM solo.
     renewals: {
@@ -2257,6 +2281,12 @@ export const spanishCrmMessages = {
         include_card: "Incluir contratos que se cobran con tarjeta",
         include_card_help:
           "Esos contratos se renuevan solos al cobrarse; enciéndelo solo si también quieres darles seguimiento.",
+      },
+      risk: {
+        title: "Clientes en riesgo",
+        help: "Para los clientes de KONTROLIA con contrato activo: si nadie de la empresa entra en los días que pongas aquí, el CRM la pasa a «En riesgo» y abre una tarea de llamada para el responsable de la cuenta. Cuando alguien vuelve a entrar, regresa a «Cliente activo». Si alguien cambia la etapa a mano, el CRM no la toca.",
+        active: "Marcar clientes en riesgo",
+        days: "Días sin que nadie entre",
       },
       notes: {
         statuses: "Estados",
