@@ -209,6 +209,11 @@ export const SeccionDeFacturas = ({ empresa }: { empresa: Company }) => {
                       )}
                   </p>
                   <p className="text-xs text-muted-foreground">
+                    {/* Con folio, el origen ya no se ve arriba: un excedente
+                        se distingue aquí de la factura del plan. */}
+                    {factura.origin === "overage" && folioDe(factura)
+                      ? `${translate("crm.customer_billing.inbox.origin.overage")} · `
+                      : ""}
                     {periodoDe(factura)}
                     {Number(factura.paid_amount ?? 0) > 0
                       ? ` · ${translate("crm.customer_billing.company.paid")} ${importeDe(

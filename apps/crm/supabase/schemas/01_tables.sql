@@ -693,7 +693,7 @@ create table crm.invoices (
     period_end date,
     origin text not null default 'quote'
         constraint invoices_origin_check
-        check (origin in ('quote', 'contract', 'card', 'credits', 'manual')),
+        check (origin in ('quote', 'contract', 'card', 'credits', 'manual', 'overage')),
     billing_status text
         constraint invoices_billing_status_check
         check (billing_status is null or billing_status in (
@@ -733,7 +733,10 @@ create table crm.invoices (
     access_updated_at timestamp with time zone,
     access_next_attempt_at timestamp with time zone,
     -- Referencia del pago registrado a mano («Registrar pago»).
-    payment_reference text
+    payment_reference text,
+    -- Texto informativo que se imprime en el CFDI (excedente: «Usado 260,
+    -- incluido 200, cubierto con créditos 0»).
+    notes text
 );
 alter table crm.invoices
     add constraint invoices_connector_id_fkey foreign key (connector_id) references crm.connectors(id) on delete set null,
@@ -744,9 +747,13 @@ create unique index invoices_org_provider_external_uk on crm.invoices (organizat
 create index invoices_quote_id_idx on crm.invoices (quote_id);
 create index invoices_organization_id_idx on crm.invoices (organization_id, created_at);
 -- Idempotencia (índices completos, ver 20260917130000): una factura por
--- contrato, periodo y origen; una por cobro de tarjeta.
+-- contrato, periodo y origen; una por cobro de tarjeta. El excedente
+-- ('overage') queda fuera del primero: un contrato puede tener en el mismo
+-- mes uno por cada límite; su llave es source_ref (ningún ON CONFLICT usa
+-- este índice, así que puede ser parcial).
 create unique index invoices_contract_period_uk
-    on crm.invoices (organization_id, contract_id, period_start, origin);
+    on crm.invoices (organization_id, contract_id, period_start, origin)
+    where origin <> 'overage';
 create unique index invoices_origin_source_ref_uk
     on crm.invoices (organization_id, origin, source_ref);
 create index invoices_billing_status_idx on crm.invoices (organization_id, billing_status);

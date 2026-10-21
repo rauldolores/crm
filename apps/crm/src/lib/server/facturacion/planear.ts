@@ -113,7 +113,10 @@ const extraVigente = (
 };
 
 /** Precio antes de IVA: si el del contrato ya lo incluye, se le quita. */
-const sinIva = (importe: number, ajustes: AjustesDeFacturacion): number =>
+export const sinIva = (
+  importe: number,
+  ajustes: Pick<AjustesDeFacturacion, "prices_include_tax" | "tax_rate">,
+): number =>
   ajustes.prices_include_tax
     ? aCentavos(importe / (1 + ajustes.tax_rate))
     : aCentavos(importe);

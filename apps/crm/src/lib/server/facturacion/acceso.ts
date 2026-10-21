@@ -121,7 +121,11 @@ export const estadoDeAccesoAlPagar = (
   factura: FacturaParaAcceso,
   contrato: ContratoParaAcceso | null,
 ): EstadoDeAcceso | null => {
-  if (factura.origin === "card" || factura.origin === "credits") {
+  if (
+    factura.origin === "card" ||
+    factura.origin === "credits" ||
+    factura.origin === "overage"
+  ) {
     return "not_applicable";
   }
   if (factura.origin !== "contract") return null;

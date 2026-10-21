@@ -4,6 +4,11 @@ import { autenticarPuente } from "@/lib/server/autenticarPuente";
 import { registrarCobroConTarjeta } from "@/lib/server/facturacion/cobros";
 import { emitirFactura } from "@/lib/server/facturacion/emitir";
 import {
+  AvisoDeExcedente,
+  EVENTO_DE_EXCEDENTE,
+  facturaDeExcedente,
+} from "@/lib/server/facturacion/excedente";
+import {
   AvisoDeCobro,
   EVENTO_DE_COBRO,
 } from "@/lib/server/facturacion/tarjeta";
@@ -40,6 +45,11 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  * registra la factura del cobro, ya pagada, en la bandeja «Por facturar»
  * (módulo de facturación). Si puede timbrarse sola, se timbra después de
  * responder, para no pasar de los 10 s que espera KontrolIA Auth.
+ *
+ * `usage.overage` (KontrolIA Auth cerró un mes de una suscripción por
+ * transferencia y el cliente usó más de lo incluido): además de aplicar la
+ * foto, se registra la factura del excedente (PPD, aparte de la del plan) en
+ * la bandeja, con el mismo modo de revisión que las facturas de contrato.
  */
 
 export const runtime = "nodejs";
@@ -104,39 +114,84 @@ export async function POST(peticion: Request) {
 
   const db = getServiceClient();
 
+  /** Timbra después de responder: KontrolIA Auth espera solo 10 s. */
+  const timbrarDespues = (facturaId: number) => {
+    after(async () => {
+      try {
+        await emitirFactura(org, facturaId, db);
+      } catch (error) {
+        // Ya la tomó otra corrida; el proceso de cada hora la retoma si no.
+        console.error("[facturación] factura sin timbrar", facturaId, error);
+      }
+    });
+  };
+
+  const camposFaltantes = (error: { issues: { path: PropertyKey[] }[] }) =>
+    error.issues
+      .slice(0, 5)
+      .map((i) => i.path.join("."))
+      .join(", ");
+
   /**
-   * Factura del cobro con tarjeta, si el aviso es de uno. Idempotente por el
-   * id del cobro: un reintento del aviso no la duplica.
+   * La factura que trae el aviso, si es de cobro o de excedente: lo que se
+   * agrega a la respuesta y, si no se facturó por algo que una persona debe
+   * ver, la nota para la bitácora de avisos. Idempotente por el id del cobro
+   * o del cierre: un reintento del aviso no la duplica.
    */
-  const facturarCobro = async () => {
-    if (tipo !== EVENTO_DE_COBRO) return null;
-    const cobro = AvisoDeCobro.safeParse(json);
-    if (!cobro.success) {
-      throw new Error(
-        `El aviso de cobro no trae los datos esperados: ${cobro.error.issues
-          .slice(0, 5)
-          .map((i) => i.path.join("."))
-          .join(", ")}`,
-      );
+  const facturar = async (): Promise<{
+    respuesta: Record<string, unknown>;
+    nota: string | null;
+  } | null> => {
+    if (tipo === EVENTO_DE_COBRO) {
+      const cobro = AvisoDeCobro.safeParse(json);
+      if (!cobro.success) {
+        throw new Error(
+          `El aviso de cobro no trae los datos esperados: ${camposFaltantes(cobro.error)}`,
+        );
+      }
+      const resultado = await registrarCobroConTarjeta(db, org, cobro.data);
+      if (
+        resultado.registrada &&
+        resultado.factura.billing_status === "queued"
+      ) {
+        timbrarDespues(resultado.factura.id);
+      }
+      return {
+        respuesta: resultado.registrada
+          ? {
+              invoice_id: resultado.factura.id,
+              billing_status: resultado.factura.billing_status,
+            }
+          : { invoice_ignored: resultado.motivo },
+        nota: null,
+      };
     }
-    const resultado = await registrarCobroConTarjeta(db, org, cobro.data);
-    if (resultado.registrada && resultado.factura.billing_status === "queued") {
-      const facturaId = resultado.factura.id;
-      after(async () => {
-        try {
-          await emitirFactura(org, facturaId, db);
-        } catch (error) {
-          // Ya la tomó otra corrida; el proceso de cada hora la retoma si no.
-          console.error("[facturación] cobro sin timbrar", facturaId, error);
-        }
-      });
-    }
-    return resultado.registrada
-      ? {
+    if (tipo === EVENTO_DE_EXCEDENTE) {
+      const excedente = AvisoDeExcedente.safeParse(json);
+      if (!excedente.success) {
+        throw new Error(
+          `El aviso de excedente no trae los datos esperados: ${camposFaltantes(excedente.error)}`,
+        );
+      }
+      const resultado = await facturaDeExcedente(excedente.data, org, db);
+      if (!resultado.registrada) {
+        return {
+          respuesta: { invoice_ignored: resultado.motivo },
+          nota: resultado.mensaje,
+        };
+      }
+      if (resultado.factura.billing_status === "queued") {
+        timbrarDespues(resultado.factura.id);
+      }
+      return {
+        respuesta: {
           invoice_id: resultado.factura.id,
           billing_status: resultado.factura.billing_status,
-        }
-      : { invoice_ignored: resultado.motivo };
+        },
+        nota: null,
+      };
+    }
+    return null;
   };
 
   const renglon = {
@@ -153,26 +208,41 @@ export async function POST(peticion: Request) {
     // vuelve a aplicar: es idempotente.
     const ultima = await ultimaFotoAplicada(db, org, foto.organization.id);
     if (ultima && Date.parse(ultima) > Date.parse(foto.generated_at)) {
+      // La foto vieja no se aplica, pero el cobro o el excedente sí se
+      // factura.
+      const factura = await facturar();
       await registrarAviso(db, {
         ...renglon,
         status: "ok",
-        error: `Foto de ${foto.generated_at} ignorada: ya se aplicó una de ${ultima}.`,
+        error: [
+          `Foto de ${foto.generated_at} ignorada: ya se aplicó una de ${ultima}.`,
+          factura?.nota,
+        ]
+          .filter(Boolean)
+          .join(" "),
       });
-      // La foto vieja no se aplica, pero el cobro sí se factura.
-      const factura = await facturarCobro();
       return Response.json({
         ok: true,
         ignored: true,
         reason: "older_snapshot",
-        ...(factura ?? {}),
+        ...(factura?.respuesta ?? {}),
       });
     }
 
     const resultado = await aplicarKontroliaAuth(db, org, foto);
-    // Después de la foto: así el contrato del cobro ya existe.
-    const factura = await facturarCobro();
-    await registrarAviso(db, { ...renglon, status: "ok", error: null });
-    return Response.json({ ok: true, ...resultado, ...(factura ?? {}) });
+    // Después de la foto: así el contrato del cobro o del excedente ya
+    // existe.
+    const factura = await facturar();
+    await registrarAviso(db, {
+      ...renglon,
+      status: "ok",
+      error: factura?.nota ?? null,
+    });
+    return Response.json({
+      ok: true,
+      ...resultado,
+      ...(factura?.respuesta ?? {}),
+    });
   } catch (error) {
     const mensaje = error instanceof Error ? error.message : String(error);
     console.error("Aviso de KontrolIA Auth no aplicado", eventoId, mensaje);

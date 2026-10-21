@@ -277,6 +277,9 @@ export const FilaDeFactura = ({
               : ""}
             {folioDe(factura) ? ` · ${folioDe(factura)}` : ""}
           </p>
+          {factura.notes && (
+            <p className="text-xs text-muted-foreground">{factura.notes}</p>
+          )}
           {estado === "missing_data" && problemas.length > 0 && (
             <p className="text-xs text-amber-700 dark:text-amber-400">
               {translate("crm.customer_billing.inbox.missing")}{" "}
