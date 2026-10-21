@@ -63,7 +63,7 @@ export const PREGUNTAS_FRECUENTES: Pregunta[] = [
   {
     pregunta: "¿Y WhatsApp?",
     respuesta:
-      "Desde la ficha del contacto, «Enviar WhatsApp» abre el mensaje al teléfono del contacto. Es un envío manual, uno a uno.",
+      "Desde la ficha del contacto, «Enviar WhatsApp» le escribe al teléfono del contacto, uno a uno. WhatsApp tiene una regla que conviene saber: solo deja escribir libremente en las 24 horas siguientes al último mensaje que te mandó el contacto. Para escribirle primero —a un prospecto en frío, por ejemplo— hace falta una plantilla aprobada por WhatsApp; el CRM te dice en cada caso cuál de las dos puedes usar y no te deja enviar algo que no le llegaría.",
     seccion: "contactos",
   },
   {

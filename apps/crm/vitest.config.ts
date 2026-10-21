@@ -92,6 +92,7 @@ export default defineConfig({
             "src/lib/server/facturacion/**",
             // Tiempos de soporte: código del servidor, se prueba en Node.
             "src/lib/server/soporte/**",
+            "src/lib/server/whatsapp/**",
           ],
           server: {
             deps: {
@@ -125,6 +126,7 @@ export default defineConfig({
             "src/lib/server/importacion/**/*.test.ts",
             "src/lib/server/facturacion/**/*.test.ts",
             "src/lib/server/soporte/**/*.test.ts",
+            "src/lib/server/whatsapp/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },

@@ -7,6 +7,10 @@ import {
   type UpdateParams,
 } from "ra-core";
 import fakeRestDataProvider from "ra-data-fakerest";
+import type {
+  ContenidoDeWhatsapp,
+  OpcionesDeWhatsapp,
+} from "@/lib/whatsapp/plantillas";
 
 import {
   hoyEnMexico,
@@ -416,11 +420,22 @@ export const createDataProvider = ({
       precio_hora_de_mas_centavos: null,
       registros: 0,
     }),
-    enviarWhatsapp: async (contactId: Identifier, mensaje: string) => {
+    // En la demo no hay Twilio: ninguna plantilla y la ventana siempre
+    // abierta, para que se pueda probar el envío de texto libre.
+    opcionesDeWhatsapp: async (): Promise<OpcionesDeWhatsapp> => ({
+      ventana: { abierta: true, ultimoMensaje: null, comprobada: true },
+      plantillas: [],
+      errorDePlantillas: null,
+    }),
+    enviarWhatsapp: async (
+      contactId: Identifier,
+      contenido: ContenidoDeWhatsapp,
+    ) => {
+      if (!("mensaje" in contenido)) return;
       await baseDataProvider.create("contact_notes", {
         data: {
           contact_id: contactId,
-          text: mensaje,
+          text: contenido.mensaje,
           type: "whatsapp",
           date: new Date().toISOString(),
         },
