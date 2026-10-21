@@ -37,7 +37,7 @@ export const exigir = <T>(
 
 /** Las columnas de crm.invoices que usan el servidor y la bandeja. */
 export const COLUMNAS_DE_FACTURA =
-  "id, organization_id, connector_id, provider, quote_id, company_id, contract_id, external_id, uuid, serie, folio, status, total, subtotal, tax, currency, issued_at, error, origin, billing_status, payment_method, payment_form, payment_status, paid_amount, paid_at, due_on, period_start, period_end, source_ref, problems, approved_by, approved_at, discard_reason, stamp_attempts, access_status, access_renewed_until, access_error, access_attempts, access_updated_at, access_next_attempt_at, payment_reference, created_at, updated_at";
+  "id, organization_id, connector_id, provider, quote_id, company_id, contract_id, external_id, uuid, serie, folio, status, total, subtotal, tax, currency, issued_at, error, origin, billing_status, payment_method, payment_form, payment_status, paid_amount, paid_at, due_on, period_start, period_end, source_ref, problems, approved_by, approved_at, discard_reason, stamp_attempts, access_status, access_renewed_until, access_error, access_attempts, access_updated_at, access_next_attempt_at, payment_reference, notes, created_at, updated_at";
 
 export interface FacturaDeBandeja {
   id: number;
@@ -81,6 +81,7 @@ export interface FacturaDeBandeja {
   access_updated_at: string | null;
   access_next_attempt_at: string | null;
   payment_reference: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -284,10 +285,14 @@ export const guardarFacturaPlaneada = async (
     period_end: plan.period_end,
     source_ref: plan.source_ref,
     problems: problemas,
+    notes: plan.notes ?? null,
     // Un cobro con tarjeta o de créditos ya renovó el acceso en KontrolIA
-    // Auth al cobrarse: no hay nada que pedirle al pagar.
+    // Auth al cobrarse, y un excedente no lo renueva nunca: no hay nada que
+    // pedirle al pagar.
     access_status:
-      plan.origin === "card" || plan.origin === "credits"
+      plan.origin === "card" ||
+      plan.origin === "credits" ||
+      plan.origin === "overage"
         ? "not_applicable"
         : null,
   };
@@ -411,10 +416,19 @@ export const revisarDatosFaltantes = async (
   return movidas;
 };
 
-/** «Periodo: enero 2027», la nota que se imprime en la factura. */
+/**
+ * «Periodo: enero 2027», la nota que se imprime en la factura, seguida del
+ * texto propio de la factura si lo tiene (el consumo de un excedente).
+ */
 export const notaDelPeriodo = (
-  factura: Pick<FacturaDeBandeja, "period_start" | "period_end">,
-): string | undefined =>
-  factura.period_start && factura.period_end
-    ? `Periodo: ${textoDelPeriodo(factura.period_start, factura.period_end)}`
-    : undefined;
+  factura: Pick<FacturaDeBandeja, "period_start" | "period_end"> &
+    Partial<Pick<FacturaDeBandeja, "notes">>,
+): string | undefined => {
+  const partes = [
+    factura.period_start && factura.period_end
+      ? `Periodo: ${textoDelPeriodo(factura.period_start, factura.period_end)}`
+      : null,
+    factura.notes?.trim() || null,
+  ].filter(Boolean);
+  return partes.length ? partes.join(". ") : undefined;
+};

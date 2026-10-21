@@ -1786,6 +1786,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/facturacion/excedente.test.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/facturacion/excedente.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/facturacion/faqturiaEstado.test.ts",
           "type": "registry:lib"
         },

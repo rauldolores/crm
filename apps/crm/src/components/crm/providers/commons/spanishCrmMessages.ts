@@ -1770,6 +1770,7 @@ export const spanishCrmMessages = {
           contract: "Contrato",
           card: "Tarjeta",
           credits: "Créditos",
+          overage: "Excedente",
           manual: "A mano",
           quote: "Cotización",
         },

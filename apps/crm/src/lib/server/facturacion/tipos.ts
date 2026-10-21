@@ -30,7 +30,13 @@ export interface AjustesDeFacturacion {
 
 export type Periodicidad = "monthly" | "quarterly" | "yearly";
 
-export type OrigenDeFactura = "quote" | "contract" | "card" | "credits" | "manual";
+export type OrigenDeFactura =
+  | "quote"
+  | "contract"
+  | "card"
+  | "credits"
+  | "manual"
+  | "overage";
 
 export type EstadoDeBandeja =
   | "pending_review"
@@ -143,4 +149,6 @@ export interface FacturaPlaneada {
   /** Para la tarea y la nota de la factura («enero 2027»). */
   periodo_texto: string | null;
   producto: string;
+  /** Texto que se imprime en el CFDI además del periodo (excedente). */
+  notes?: string | null;
 }

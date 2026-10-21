@@ -804,7 +804,8 @@ export type InvoiceOrigin =
   | "contract"
   | "card"
   | "credits"
-  | "manual";
+  | "manual"
+  | "overage";
 
 export type InvoiceBillingStatus =
   | "pending_review"
@@ -858,6 +859,8 @@ export type Invoice = {
   discard_reason?: string | null;
   /** Referencia del pago registrado a mano. */
   payment_reference?: string | null;
+  /** Texto que se imprime en el CFDI (el consumo de un excedente). */
+  notes?: string | null;
   /** Renovar el acceso al pagar (contratos de KontrolIA Auth por transferencia). */
   access_status?: InvoiceAccessStatus | null;
   access_renewed_until?: string | null;
