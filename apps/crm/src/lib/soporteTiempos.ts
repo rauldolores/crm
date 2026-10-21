@@ -93,7 +93,7 @@ export type CorreccionDeTiempo = z.infer<typeof correccionDeTiempoSchema>;
 export interface ResumenDeSoporte {
   /** Primer día del mes (AAAA-MM-DD). */
   mes: string;
-  /** Slugs de los extras de soporte vigentes (soporte-basico…). */
+  /** Slugs de los extras de soporte vigentes (10-horas-de-soporte-basico…). */
   bolsas: string[];
   minutos_incluidos: number;
   minutos_usados: number;

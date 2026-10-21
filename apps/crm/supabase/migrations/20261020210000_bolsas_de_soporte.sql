@@ -1,7 +1,8 @@
 -- Bolsas de horas de soporte y el resumen del mes por cliente.
 --
--- KontrolIA Auth vende las bolsas como extras de cada app (soporte-basico,
--- soporte-premium) y el extra llega solo al contrato del CRM
+-- KontrolIA Auth vende las bolsas como extras de cada app
+-- (10-horas-de-soporte-basico, 15-horas-de-soporte-premium) y el extra llega
+-- solo al contrato del CRM
 -- (crm.contracts.addons). Este catálogo dice qué trae cada extra: minutos al
 -- mes y precio de la hora de más. Reglas del dueño (2026-10-20):
 --
@@ -43,8 +44,10 @@ create table if not exists crm.soporte_bolsas (
 
 insert into crm.soporte_bolsas (slug, nombre, minutos_al_mes, precio_hora_de_mas_centavos)
 values
-    ('soporte-basico', 'Soporte Básico', 600, 40000),
-    ('soporte-premium', 'Soporte Premium', 900, 40000)
+    -- El slug es el del extra en KontrolIA Auth (no se puede cambiar allá).
+    ('10-horas-de-soporte-basico', 'Soporte Básico', 600, 40000),
+    -- Todavía no existe en Auth: al crearlo, usar exactamente este slug.
+    ('15-horas-de-soporte-premium', 'Soporte Premium', 900, 40000)
 on conflict (slug) do nothing;
 
 alter table crm.soporte_bolsas enable row level security;
