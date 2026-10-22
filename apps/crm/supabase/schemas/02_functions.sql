@@ -1256,6 +1256,8 @@ declare
   ticket bigint;
   prioridad text;
   texto_a_juzgar text;
+  tiene_movil boolean;
+  etapa_destino text;
 begin
   if pg_trigger_depth() > 1 then
     return null;
@@ -1298,6 +1300,17 @@ begin
     contacto := new.contact_ids[1];
     oportunidad := new.id;
     texto_a_juzgar := concat_ws(E'\n\n', new.name, new.description);
+    -- Si el contacto de la oportunidad tiene un teléfono marcado como móvil.
+    -- Es un hecho, no un juicio: no pasa por el modelo. Sirve para separar a
+    -- quien se puede intentar por WhatsApp de quien solo tiene fijo, que debe
+    -- saltar directo al correo.
+    tiene_movil := contacto is not null and exists (
+      select 1
+        from crm.contacts c,
+             jsonb_array_elements(coalesce(c.phone_jsonb, '[]'::jsonb)) as e(v)
+       where c.id = contacto
+         and e.v ->> 'type' = 'Mobile'
+    );
   elsif tg_table_name = 'tickets' then
     contacto := new.contact_id;
     oportunidad := new.deal_id;
@@ -1323,6 +1336,13 @@ begin
       if tg_table_name = 'tickets'
          and nullif(regla.trigger_params ->> 'priority', '') is not null
          and regla.trigger_params ->> 'priority' is distinct from prioridad then
+        continue;
+      end if;
+      -- Una oportunidad puede filtrar por si su contacto tiene móvil.
+      if tg_table_name = 'deals'
+         and nullif(regla.trigger_params ->> 'contacto', '') is not null
+         and regla.trigger_params ->> 'contacto'
+             is distinct from (case when tiene_movil then 'movil' else 'sin_movil' end) then
         continue;
       end if;
 
@@ -1352,6 +1372,23 @@ begin
             update crm.deals set sales_id = responsable where id = new.id;
           end if;
         end if;
+
+      -- Mover de etapa: como assign_owner, toca la fila que disparó la regla,
+      -- por eso vive aquí y no en aplicar_accion_de_automatizacion.
+      --
+      -- El cambio NO vuelve a disparar las reglas de «cambió de etapa»: el
+      -- guardia pg_trigger_depth() de arriba corta la reentrada. Es
+      -- deliberado (evita bucles entre dos reglas que se muevan la una a la
+      -- otra), así que una regla que mueva y otra que mande correo deben ser
+      -- hermanas del mismo disparador, no encadenadas.
+      elsif regla.action_type = 'mover_etapa' then
+        etapa_destino := nullif(regla.action_params ->> 'stage', '');
+        if tg_table_name = 'deals'
+           and etapa_destino is not null
+           and etapa_destino is distinct from new.stage then
+          update crm.deals set stage = etapa_destino where id = new.id;
+        end if;
+
       else
         perform crm.aplicar_accion_de_automatizacion(
           regla, contacto, oportunidad, null, null, new.sales_id, ticket

@@ -148,14 +148,23 @@ const TarjetaDeRegla = ({
                 : "—";
             })(),
           })
-        : regla.action_params?.dueInDays == null
-          ? translate("crm.automations.then.task_named_no_due", {
-              text: regla.action_params?.text ?? regla.name,
+        : regla.action_type === "mover_etapa"
+          ? translate("crm.automations.then.move_stage_named", {
+              name:
+                dealStages.find(
+                  (etapa) => etapa.value === regla.action_params?.stage,
+                )?.label ??
+                regla.action_params?.stage ??
+                "—",
             })
-          : translate("crm.automations.then.task_named", {
-              text: regla.action_params?.text ?? regla.name,
-              days: regla.action_params.dueInDays,
-            });
+          : regla.action_params?.dueInDays == null
+            ? translate("crm.automations.then.task_named_no_due", {
+                text: regla.action_params?.text ?? regla.name,
+              })
+            : translate("crm.automations.then.task_named", {
+                text: regla.action_params?.text ?? regla.name,
+                days: regla.action_params.dueInDays,
+              });
 
   return (
     <div className="flex items-start gap-3 rounded-md border p-3">
@@ -254,7 +263,9 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
                       ? {}
                       : { dueInDays: Number(valores.dueInDays) }),
                   }
-                : { salesId: valores.salesId },
+                : valores.accion === "mover_etapa"
+                  ? { stage: valores.etapaDestino }
+                  : { salesId: valores.salesId },
           },
         },
         { returnPromise: true },
@@ -314,6 +325,10 @@ const CamposDeLaRegla = () => {
       ? [{ id: "assign_owner", name: "crm.automations.then.assign" }]
       : []),
     { id: "send_email", name: "crm.automations.then.email" },
+    // Mover de etapa solo tiene sentido sobre una oportunidad.
+    ...(cuando?.startsWith("deals:")
+      ? [{ id: "mover_etapa", name: "crm.automations.then.move_stage" }]
+      : []),
   ];
 
   return (
@@ -374,6 +389,22 @@ const CamposDeLaRegla = () => {
           validate={required()}
         />
       )}
+      {/* Opcional: acota la regla según el teléfono del contacto. Es lo que
+          permite separar «se puede intentar por WhatsApp» de «solo tiene
+          fijo, que vaya directo al correo». Vacío = la regla no mira el
+          teléfono. */}
+      {cuando?.startsWith("deals:") && (
+        <SelectInput
+          source="contacto"
+          label="crm.automations.fields.contact_phone"
+          choices={[
+            { id: "movil", name: "crm.automations.phone.mobile" },
+            { id: "sin_movil", name: "crm.automations.phone.no_mobile" },
+          ]}
+          helperText="crm.automations.fields.contact_phone_help"
+          emptyText="crm.automations.phone.any"
+        />
+      )}
       {/* La condición es opcional a propósito: una regla sin ella actúa al
           instante, y con ella espera a que la IA lea el texto (hasta un
           minuto). Quien no la necesite no debería pagar ese retraso. */}
@@ -416,6 +447,18 @@ const CamposDeLaRegla = () => {
             min={0}
           />
         </>
+      ) : accion === "mover_etapa" ? (
+        // `etapaDestino` y no `stage`: ese ya lo usa el filtro del disparador
+        // «cambió de etapa», y una regla puede llevar los dos a la vez.
+        <SelectInput
+          source="etapaDestino"
+          label="crm.automations.fields.move_to"
+          choices={dealStages}
+          optionText="label"
+          optionValue="value"
+          helperText="crm.automations.fields.move_to_help"
+          validate={required()}
+        />
       ) : accion === "send_email" ? (
         <ReferenceInput
           source="templateId"

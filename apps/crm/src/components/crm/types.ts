@@ -266,6 +266,11 @@ export type Automation = {
     hoursAfter?: number;
     /** Solo tickets creados con esta prioridad (tickets:created). */
     priority?: string;
+    /**
+     * Solo oportunidades cuyo contacto tenga (o no) un teléfono móvil.
+     * Ausente = la regla no mira el teléfono.
+     */
+    contacto?: "movil" | "sin_movil";
   };
   action_params: {
     text?: string;
@@ -275,8 +280,10 @@ export type Automation = {
     salesId?: Identifier;
     /** Plantilla que se envía, para la acción send_email. */
     templateId?: Identifier;
+    /** Etapa de destino, para la acción mover_etapa. */
+    stage?: string;
   };
-  action_type: "create_task" | "assign_owner" | "send_email";
+  action_type: "create_task" | "assign_owner" | "send_email" | "mover_etapa";
   created_at?: string;
 } & Pick<RaRecord, "id">;
 

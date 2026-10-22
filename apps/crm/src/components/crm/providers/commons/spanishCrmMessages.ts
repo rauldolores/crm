@@ -971,6 +971,12 @@ export const spanishCrmMessages = {
         name: "Nombre de la regla",
         when: "Cuando",
         stage: "Etapa",
+        contact_phone: "Teléfono del contacto",
+        contact_phone_help:
+          "Acota la regla según el teléfono del contacto. Sirve para separar a quien se puede intentar por WhatsApp de quien solo tiene fijo y debe pasar directo al correo. Déjalo en «Cualquiera» si la regla no depende del teléfono.",
+        move_to: "Mover a la etapa",
+        move_to_help:
+          "La oportunidad pasa a esa etapa. Ojo: moverla así no dispara las reglas de «una oportunidad llega a una etapa», para que dos reglas no se muevan la una a la otra sin fin. Si además quieres mandar un correo, crea otra regla con el mismo «cuando».",
         then: "Entonces",
         task_text: "Texto de la tarea",
         task_type: "Tipo de tarea",
@@ -1026,6 +1032,13 @@ export const spanishCrmMessages = {
         task_named_no_due: "Crear la tarea «%{text}», sin fecha límite",
         assign_named: "Asignar a %{name}",
         email_named: "Enviar el correo de la plantilla «%{name}»",
+        move_stage: "Mover la oportunidad de etapa",
+        move_stage_named: "Mover la oportunidad a «%{name}»",
+      },
+      phone: {
+        any: "Cualquiera",
+        mobile: "Solo si tiene móvil",
+        no_mobile: "Solo si no tiene móvil",
       },
     },
     billing: {

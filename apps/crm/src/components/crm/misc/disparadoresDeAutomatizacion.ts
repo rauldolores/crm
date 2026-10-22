@@ -88,13 +88,19 @@ export const parametrosDelDisparador = (
   if (esDisparadorPorHoras(cuando)) {
     return { hoursAfter: Number(valores.hoursAfter ?? 4) };
   }
+  // El filtro por teléfono del contacto convive con el de etapa: una regla
+  // puede ser «cuando pase a WhatsApp y el contacto tenga móvil».
+  const porTelefono =
+    cuando.startsWith("deals:") && valores.contacto
+      ? { contacto: valores.contacto }
+      : {};
   if (evento === "stage_changed" && valores.stage) {
-    return { stage: valores.stage };
+    return { stage: valores.stage, ...porTelefono };
   }
   if (cuando === "tickets:created" && valores.priority) {
     return { priority: valores.priority };
   }
-  return {};
+  return porTelefono;
 };
 
 /** La parte «cuando…» de la frase que describe una regla guardada. */
@@ -105,6 +111,18 @@ export const describirDisparador = (
 ): string => {
   const clave = `${regla.trigger_resource}:${regla.trigger_event}`;
   const params = regla.trigger_params ?? {};
+  // El filtro por teléfono se añade a la frase: sin él, dos reglas con el
+  // mismo disparador y filtros distintos se leerían exactamente igual.
+  const porTelefono =
+    params.contacto === "movil" || params.contacto === "sin_movil"
+      ? translate(
+          params.contacto === "movil"
+            ? "crm.automations.when.with_mobile"
+            : "crm.automations.when.without_mobile",
+        )
+      : "";
+  const con = (frase: string) =>
+    porTelefono ? `${frase} ${porTelefono}` : frase;
   switch (clave) {
     case "quotes:unanswered":
       return translate("crm.automations.when.quote_unanswered_named", {
@@ -115,13 +133,15 @@ export const describirDisparador = (
         days: params.daysBefore ?? 30,
       });
     case "deals:stage_changed":
-      return translate("crm.automations.when.deal_stage_named", {
-        stage: etiquetas.etapa ?? "",
-      });
+      return con(
+        translate("crm.automations.when.deal_stage_named", {
+          stage: etiquetas.etapa ?? "",
+        }),
+      );
     case "contacts:created":
       return translate("crm.automations.when.contact_created");
     case "deals:created":
-      return translate("crm.automations.when.deal_created");
+      return con(translate("crm.automations.when.deal_created"));
     case "tickets:created":
       return params.priority
         ? translate("crm.automations.when.ticket_created_named", {

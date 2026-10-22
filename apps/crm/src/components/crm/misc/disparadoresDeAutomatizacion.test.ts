@@ -137,3 +137,55 @@ describe("describirDisparador", () => {
     }
   });
 });
+
+describe("filtro por teléfono del contacto", () => {
+  test("guarda el filtro en una oportunidad creada", () => {
+    expect(
+      parametrosDelDisparador("deals:created", { contacto: "sin_movil" }),
+    ).toEqual({ contacto: "sin_movil" });
+  });
+
+  test("convive con el filtro de etapa, que es otro eje", () => {
+    expect(
+      parametrosDelDisparador("deals:stage_changed", {
+        stage: "whatsapp",
+        contacto: "movil",
+      }),
+    ).toEqual({ stage: "whatsapp", contacto: "movil" });
+  });
+
+  test("no se guarda en disparadores que no son de oportunidades", () => {
+    expect(
+      parametrosDelDisparador("tickets:created", { contacto: "movil" }),
+    ).toEqual({});
+  });
+
+  test("vacío significa que la regla no mira el teléfono", () => {
+    expect(parametrosDelDisparador("deals:created", {})).toEqual({});
+  });
+
+  test("la frase de la regla dice el filtro, para no leerse igual que otra sin él", () => {
+    const con = describirDisparador(
+      regla({
+        trigger_resource: "deals",
+        trigger_event: "created",
+        trigger_params: { contacto: "sin_movil" },
+      }),
+      translate,
+      {},
+    );
+    const sin = describirDisparador(
+      regla({
+        trigger_resource: "deals",
+        trigger_event: "created",
+        trigger_params: {},
+      }),
+      translate,
+      {},
+    );
+
+    expect(con).toContain("without_mobile");
+    expect(sin).not.toContain("without_mobile");
+    expect(con).not.toEqual(sin);
+  });
+});
