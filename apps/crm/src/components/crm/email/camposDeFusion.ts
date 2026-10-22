@@ -44,6 +44,9 @@ const CAMPOS_FIJOS: CampoDeFusion[] = [
   { clave: "empresa.sitio_web", etiqueta: "Sitio web", entidad: "empresa" },
   { clave: "empresa.telefono", etiqueta: "Teléfono", entidad: "empresa" },
   { clave: "empresa.ciudad", etiqueta: "Ciudad", entidad: "empresa" },
+  // Quien lleva la cuenta: para firmar un correo automático con el nombre de
+  // la persona que le da seguimiento, no con uno fijo en la plantilla.
+  { clave: "empresa.responsable", etiqueta: "Responsable", entidad: "empresa" },
   {
     clave: "oportunidad.nombre",
     etiqueta: "Nombre",

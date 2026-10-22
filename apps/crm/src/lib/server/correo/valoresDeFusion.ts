@@ -126,10 +126,13 @@ export async function valoresDeFusion(
   };
   volcarPersonalizados(valores, "contacto", contacto as FilaConCampos);
 
+  let responsableDeLaEmpresa: number | null = null;
+  let responsableDeLaOportunidad: number | null = null;
+
   if (contacto.company_id) {
     const { data: empresa } = await supabase
       .from("companies")
-      .select("name, website, phone_number, city, custom_fields")
+      .select("name, website, phone_number, city, sales_id, custom_fields")
       .eq("id", contacto.company_id)
       .eq("organization_id", organizacionId)
       .maybeSingle();
@@ -140,6 +143,7 @@ export async function valoresDeFusion(
       valores["empresa.telefono"] =
         (empresa.phone_number as string | null) ?? null;
       valores["empresa.ciudad"] = (empresa.city as string | null) ?? null;
+      responsableDeLaEmpresa = (empresa.sales_id as number | null) ?? null;
       volcarPersonalizados(valores, "empresa", empresa as FilaConCampos);
     }
   }
@@ -147,7 +151,7 @@ export async function valoresDeFusion(
   if (oportunidadId) {
     const { data: oportunidad } = await supabase
       .from("deals")
-      .select("name, stage, amount, custom_fields")
+      .select("name, stage, amount, sales_id, custom_fields")
       .eq("id", oportunidadId)
       .eq("organization_id", organizacionId)
       .maybeSingle();
@@ -157,7 +161,29 @@ export async function valoresDeFusion(
       valores["oportunidad.etapa"] = (oportunidad.stage as string) ?? null;
       valores["oportunidad.importe"] =
         (oportunidad.amount as number | null) ?? null;
+      responsableDeLaOportunidad =
+        (oportunidad.sales_id as number | null) ?? null;
       volcarPersonalizados(valores, "oportunidad", oportunidad as FilaConCampos);
+    }
+  }
+
+  // Siempre presente, aunque sea vacío: un token sin valor se borra, pero uno
+  // ausente llegaría tal cual («Saludos, {{empresa.responsable}}»).
+  // Firma el responsable de la empresa y, si no tiene, el de la oportunidad:
+  // las empresas importadas en bloque se quedan sin él, su oportunidad no.
+  valores["empresa.responsable"] = null;
+  const responsableId = responsableDeLaEmpresa ?? responsableDeLaOportunidad;
+  if (responsableId) {
+    const { data: responsable } = await supabase
+      .from("sales")
+      .select("first_name, last_name")
+      .eq("id", responsableId)
+      .eq("organization_id", organizacionId)
+      .maybeSingle();
+    if (responsable) {
+      valores["empresa.responsable"] =
+        `${(responsable.first_name as string | null) ?? ""} ${(responsable.last_name as string | null) ?? ""}`.trim() ||
+        null;
     }
   }
 
