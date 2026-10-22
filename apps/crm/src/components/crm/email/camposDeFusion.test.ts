@@ -21,6 +21,17 @@ describe("camposDeFusion", () => {
     expect(claves).toContain("contrato.importe");
   });
 
+  it("ofrece el responsable de la empresa para firmar correos automáticos", () => {
+    // «Saludos, {{empresa.responsable}}»: la plantilla de prospección firma
+    // con quien lleva la cuenta, no con un nombre escrito a mano.
+    const responsable = camposDeFusion({}).find(
+      (c) => c.clave === "empresa.responsable",
+    );
+
+    expect(responsable?.etiqueta).toBe("Responsable");
+    expect(responsable?.entidad).toBe("empresa");
+  });
+
   it("suma los campos personalizados con el prefijo de su entidad", () => {
     // El caso real: el enlace del diagnóstico vive en un campo personalizado
     // del contacto y hay que poder meterlo en el correo.
