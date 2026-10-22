@@ -175,6 +175,14 @@ create trigger run_automations_tickets
     after insert or update on crm.tickets
     for each row execute function crm.run_automations();
 
+-- Correo realmente enviado. Solo UPDATE: la fila de la cola nace sin enviar
+-- y lo que interesa es el momento en que sale (sent_at pasa a tener valor).
+-- Es lo que permite que una etapa se mueva COMO CONSECUENCIA del envío y no
+-- antes: si el envío falla, last_error se llena y la tarjeta no se mueve.
+create trigger run_automations_email_outbox
+    after update on crm.email_outbox
+    for each row execute function crm.run_automations();
+
 -- Módulo Afiliados: ver crm.gestionar_modulo_afiliados en 02_functions.sql.
 -- Trigger propio (no reusa run_automations) para que el módulo entero pueda
 -- apagarse por organización sin tocar el motor de automatizaciones que usan

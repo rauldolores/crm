@@ -29,6 +29,7 @@ export const disparadoresDisponibles = (
         },
       ]
     : []),
+  { id: "email_outbox:sent", name: "crm.automations.when.email_sent" },
   { id: "quotes:unanswered", name: "crm.automations.when.quote_unanswered" },
   { id: "tickets:created", name: "crm.automations.when.ticket_created" },
   { id: "tickets:unanswered", name: "crm.automations.when.ticket_unanswered" },
@@ -70,18 +71,30 @@ export const esDisparadorPorHoras = (cuando: string) =>
  * cotización sin respuesta (no son filas nuevas a las que asignar nadie).
  */
 export const admiteAsignarResponsable = (cuando: string) =>
-  !["contracts:renewal_due", "quotes:unanswered", "tickets:closed"].includes(
-    cuando,
-  );
+  ![
+    "contracts:renewal_due",
+    "quotes:unanswered",
+    "tickets:closed",
+    // Un correo enviado no es una ficha a la que asignarle un responsable.
+    "email_outbox:sent",
+  ].includes(cuando);
 
 /**
- * «Mover a otra etapa» solo desde «lleva N días en una etapa», que evalúa el
- * motor por fecha. Desde un disparador de evento (al crear o al cambiar de
- * etapa) sería actualizar la oportunidad desde su propio disparador, y dos
- * reglas que se movieran entre sí harían un bucle.
+ * «Mover a otra etapa» solo desde dos sitios:
+ *
+ * - «lleva N días en una etapa», que evalúa el motor por fecha.
+ * - «se envía un correo», donde la fila que dispara es la de la cola y no la
+ *   oportunidad. Este es además el único que permite mover SIN mentir: la
+ *   etapa cambia porque el correo salió de verdad, no porque un reloj lo
+ *   dijo. Si el envío falla, la tarjeta se queda donde está.
+ *
+ * No desde «al crear» ni «al cambiar de etapa»: ahí sería actualizar la
+ * oportunidad desde su propio disparador, y dos reglas que se movieran entre
+ * sí harían un bucle. (El motor corta la reentrada, pero la regla seguiría
+ * afirmando algo que nadie hizo.)
  */
 export const admiteMoverDeEtapa = (cuando: string) =>
-  cuando === "deals:stalled";
+  cuando === "deals:stalled" || cuando === "email_outbox:sent";
 
 /**
  * A qué etapas se puede mover desde la de origen: las demás del mismo
@@ -113,30 +126,62 @@ export const parametrosDelDisparador = (
   if (esDisparadorPorHoras(cuando)) {
     return { hoursAfter: Number(valores.hoursAfter ?? 4) };
   }
+  // El filtro por teléfono del contacto convive con los demás: una regla
+  // puede ser «cuando pase a WhatsApp y el contacto tenga móvil».
+  const porTelefono =
+    cuando.startsWith("deals:") && valores.contacto
+      ? { contacto: valores.contacto }
+      : {};
   if (cuando === "deals:stalled") {
     return {
       pipeline: valores.pipeline,
       stage: valores.stage,
       daysInStage: Number(valores.daysInStage ?? 3),
+      ...porTelefono,
     };
   }
+  if (cuando === "email_outbox:sent") {
+    // `plantillaDisparadora` y no `templateId`: ese nombre ya lo usa la
+    // plantilla de la ACCIÓN de mandar correo, y una regla podría llevar las
+    // dos (se envía la plantilla A -> manda la B).
+    return valores.plantillaDisparadora
+      ? { templateId: String(valores.plantillaDisparadora) }
+      : {};
+  }
   if (evento === "stage_changed" && valores.stage) {
-    return { stage: valores.stage };
+    return { stage: valores.stage, ...porTelefono };
   }
   if (cuando === "tickets:created" && valores.priority) {
     return { priority: valores.priority };
   }
-  return {};
+  return porTelefono;
 };
 
 /** La parte «cuando…» de la frase que describe una regla guardada. */
 export const describirDisparador = (
   regla: Automation,
   translate: ReturnType<typeof useTranslate>,
-  etiquetas: { etapa?: string; prioridad?: string; embudo?: string },
+  etiquetas: {
+    etapa?: string;
+    prioridad?: string;
+    embudo?: string;
+    plantilla?: string;
+  },
 ): string => {
   const clave = `${regla.trigger_resource}:${regla.trigger_event}`;
   const params = regla.trigger_params ?? {};
+  // El filtro por teléfono se añade a la frase: sin él, dos reglas con el
+  // mismo disparador y filtros distintos se leerían exactamente igual.
+  const porTelefono =
+    params.contacto === "movil" || params.contacto === "sin_movil"
+      ? translate(
+          params.contacto === "movil"
+            ? "crm.automations.when.with_mobile"
+            : "crm.automations.when.without_mobile",
+        )
+      : "";
+  const con = (frase: string) =>
+    porTelefono ? `${frase} ${porTelefono}` : frase;
   switch (clave) {
     case "quotes:unanswered":
       return translate("crm.automations.when.quote_unanswered_named", {
@@ -147,24 +192,34 @@ export const describirDisparador = (
         days: params.daysBefore ?? 30,
       });
     case "deals:stage_changed":
-      return translate("crm.automations.when.deal_stage_named", {
-        stage: etiquetas.etapa ?? "",
-      });
-    case "deals:stalled":
-      return translate(
-        etiquetas.embudo
-          ? "crm.automations.when.deal_stalled_named"
-          : "crm.automations.when.deal_stalled_any_pipeline",
-        {
-          days: params.daysInStage ?? 3,
+      return con(
+        translate("crm.automations.when.deal_stage_named", {
           stage: etiquetas.etapa ?? "",
-          pipeline: etiquetas.embudo ?? "",
-        },
+        }),
       );
+    case "deals:stalled":
+      return con(
+        translate(
+          etiquetas.embudo
+            ? "crm.automations.when.deal_stalled_named"
+            : "crm.automations.when.deal_stalled_any_pipeline",
+          {
+            days: params.daysInStage ?? 3,
+            stage: etiquetas.etapa ?? "",
+            pipeline: etiquetas.embudo ?? "",
+          },
+        ),
+      );
+    case "email_outbox:sent":
+      return params.templateId
+        ? translate("crm.automations.when.email_sent_named", {
+            name: etiquetas.plantilla ?? String(params.templateId),
+          })
+        : translate("crm.automations.when.email_sent");
     case "contacts:created":
       return translate("crm.automations.when.contact_created");
     case "deals:created":
-      return translate("crm.automations.when.deal_created");
+      return con(translate("crm.automations.when.deal_created"));
     case "tickets:created":
       return params.priority
         ? translate("crm.automations.when.ticket_created_named", {

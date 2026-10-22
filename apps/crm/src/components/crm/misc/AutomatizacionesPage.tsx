@@ -143,6 +143,12 @@ const TarjetaDeRegla = ({
     prioridad: ticketPriorities.find(
       (p) => p.value === regla.trigger_params?.priority,
     )?.label,
+    // La plantilla del DISPARADOR («se envía el correo X»), que no es la de
+    // la acción de mandar correo.
+    plantilla: (plantillas ?? []).find(
+      (plantilla) =>
+        String(plantilla.id) === String(regla.trigger_params?.templateId),
+    )?.name,
   });
 
   const entonces =
@@ -327,7 +333,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
 
 /** Los campos que dependen del disparador y de la acción elegidos. */
 const CamposDeLaRegla = () => {
-  const { dealStages, taskTypes, ticketPriorities, modules } =
+  const { dealStages, dealPipelines, taskTypes, ticketPriorities, modules } =
     useConfigurationContext();
   const cuando = useWatch({ name: "cuando" });
   const accion = useWatch({ name: "accion" });
@@ -415,6 +421,53 @@ const CamposDeLaRegla = () => {
         />
       )}
       {cuando === "deals:stalled" && <CamposDeEtapaEstancada />}
+      {/* Correo enviado: de qué plantilla (vacío = cualquiera) y, si la regla
+          mueve de etapa, de qué embudo son las etapas de destino. Aquí no hay
+          etapa de origen, así que el destino puede ser cualquiera del embudo
+          menos las que cuentan como ganadas. */}
+      {cuando === "email_outbox:sent" && (
+        <>
+          <ReferenceInput
+            source="plantillaDisparadora"
+            reference="email_templates"
+            filter={{ active: true }}
+          >
+            <SelectInput
+              label="crm.automations.fields.sent_template"
+              optionText="name"
+              helperText="crm.automations.fields.sent_template_help"
+              emptyText="crm.automations.fields.sent_template_any"
+            />
+          </ReferenceInput>
+          {accion === "move_stage" && (
+            <SelectInput
+              source="pipeline"
+              label="crm.automations.fields.pipeline"
+              choices={dealPipelines}
+              optionText="label"
+              optionValue="value"
+              helperText={false}
+              validate={required()}
+            />
+          )}
+        </>
+      )}
+      {/* Opcional: acota la regla según el teléfono del contacto. Es lo que
+          permite separar «se puede intentar por WhatsApp» de «solo tiene
+          fijo, que vaya directo al correo». Vacío = la regla no mira el
+          teléfono. */}
+      {cuando?.startsWith("deals:") && (
+        <SelectInput
+          source="contacto"
+          label="crm.automations.fields.contact_phone"
+          choices={[
+            { id: "movil", name: "crm.automations.phone.mobile" },
+            { id: "sin_movil", name: "crm.automations.phone.no_mobile" },
+          ]}
+          helperText="crm.automations.fields.contact_phone_help"
+          emptyText="crm.automations.phone.any"
+        />
+      )}
       {/* La condición es opcional a propósito: una regla sin ella actúa al
           instante, y con ella espera a que la IA lea el texto (hasta un
           minuto). Quien no la necesite no debería pagar ese retraso. */}

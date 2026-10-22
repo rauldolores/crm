@@ -1022,6 +1022,13 @@ export const spanishCrmMessages = {
         name: "Nombre de la regla",
         when: "Cuando",
         stage: "Etapa",
+        sent_template: "Plantilla del correo",
+        sent_template_help:
+          "La regla solo salta cuando sale el correo de esa plantilla. Déjalo vacío para que salte con cualquier correo.",
+        sent_template_any: "Cualquier plantilla",
+        contact_phone: "Teléfono del contacto",
+        contact_phone_help:
+          "Acota la regla según el teléfono del contacto. Sirve para separar a quien se puede intentar por WhatsApp de quien solo tiene fijo y debe pasar directo al correo. Déjalo en «Cualquiera» si la regla no depende del teléfono.",
         then: "Entonces",
         task_text: "Texto de la tarea",
         task_type: "Tipo de tarea",
@@ -1063,6 +1070,10 @@ export const spanishCrmMessages = {
           "Una oportunidad lleva %{days} días en «%{stage}» (%{pipeline})",
         deal_stalled_any_pipeline:
           "Una oportunidad lleva %{days} días en «%{stage}»",
+        email_sent: "Se envía un correo",
+        email_sent_named: "Se envía el correo de la plantilla «%{name}»",
+        with_mobile: "y el contacto tiene móvil",
+        without_mobile: "y el contacto no tiene móvil",
         renewal_due: "Se acerca la renovación de un contrato",
         renewal_due_named:
           "Faltan %{days} días para que se renueve un contrato",
@@ -1091,6 +1102,11 @@ export const spanishCrmMessages = {
         task_named_no_due: "Crear la tarea «%{text}», sin fecha límite",
         assign_named: "Asignar a %{name}",
         email_named: "Enviar el correo de la plantilla «%{name}»",
+      },
+      phone: {
+        any: "Cualquiera",
+        mobile: "Solo si tiene móvil",
+        no_mobile: "Solo si no tiene móvil",
       },
     },
     billing: {
