@@ -1376,12 +1376,15 @@ begin
       -- Mover de etapa: como assign_owner, toca la fila que disparó la regla,
       -- por eso vive aquí y no en aplicar_accion_de_automatizacion.
       --
+      -- Mismo nombre de acción que en el motor por fechas (deals:stalled),
+      -- que ya la tenía: es UNA acción que vale en los dos motores, no dos.
+      --
       -- El cambio NO vuelve a disparar las reglas de «cambió de etapa»: el
       -- guardia pg_trigger_depth() de arriba corta la reentrada. Es
       -- deliberado (evita bucles entre dos reglas que se muevan la una a la
       -- otra), así que una regla que mueva y otra que mande correo deben ser
       -- hermanas del mismo disparador, no encadenadas.
-      elsif regla.action_type = 'mover_etapa' then
+      elsif regla.action_type = 'move_stage' then
         etapa_destino := nullif(regla.action_params ->> 'stage', '');
         if tg_table_name = 'deals'
            and etapa_destino is not null
