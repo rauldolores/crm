@@ -1325,6 +1325,10 @@ begin
        and active
        and trigger_resource = tg_table_name
        and trigger_event = evento
+     -- Las que mueven de etapa van al final, igual que en el motor por
+     -- fechas: así una regla que manda correo sobre el mismo disparador
+     -- alcanza a actuar antes de que la tarjeta cambie de sitio.
+     order by (action_type = 'move_stage'), id
   loop
     begin
       if evento = 'stage_changed'

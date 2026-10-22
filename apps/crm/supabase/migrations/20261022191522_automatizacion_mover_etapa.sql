@@ -1,11 +1,16 @@
 -- Dos añadidos al motor de escrituras de automatizaciones:
 --
--- 1. Acción `mover_etapa`: lleva la oportunidad a otra etapa. Vive junto a
---    assign_owner porque, como ella, toca la fila que disparó la regla. El
---    cambio NO vuelve a disparar las reglas de «cambió de etapa» (lo corta el
---    guardia pg_trigger_depth), para que dos reglas no se muevan la una a la
---    otra sin fin; por eso mover y mandar correo deben ser reglas hermanas
---    del mismo disparador, no encadenadas.
+-- 1. La acción `move_stage` —la misma que el motor por fechas ya tenía para
+--    deals:stalled— ahora también funciona sobre deals:created y
+--    deals:stage_changed. Vive junto a assign_owner porque, como ella, toca
+--    la fila que disparó la regla. Las reglas que mueven se ordenan al
+--    final, para que una que mande correo sobre el mismo disparador actúe
+--    antes de que la tarjeta cambie de sitio.
+--
+--    El cambio NO vuelve a disparar las reglas de «cambió de etapa»: lo
+--    corta el guardia pg_trigger_depth, para que dos reglas no se muevan la
+--    una a la otra sin fin. Por eso mover y mandar correo deben ser reglas
+--    hermanas del mismo disparador, no encadenadas.
 --
 -- 2. Filtro `trigger_params.contacto` = movil | sin_movil: acota la regla
 --    según el teléfono del contacto de la oportunidad. Es un hecho leído del
@@ -96,6 +101,10 @@ begin
        and active
        and trigger_resource = tg_table_name
        and trigger_event = evento
+     -- Las que mueven de etapa van al final, igual que en el motor por
+     -- fechas: así una regla que manda correo sobre el mismo disparador
+     -- alcanza a actuar antes de que la tarjeta cambie de sitio.
+     order by (action_type = 'move_stage'), id
   loop
     begin
       if evento = 'stage_changed'
@@ -147,12 +156,15 @@ begin
       -- Mover de etapa: como assign_owner, toca la fila que disparó la regla,
       -- por eso vive aquí y no en aplicar_accion_de_automatizacion.
       --
+      -- Mismo nombre de acción que en el motor por fechas (deals:stalled),
+      -- que ya la tenía: es UNA acción que vale en los dos motores, no dos.
+      --
       -- El cambio NO vuelve a disparar las reglas de «cambió de etapa»: el
       -- guardia pg_trigger_depth() de arriba corta la reentrada. Es
       -- deliberado (evita bucles entre dos reglas que se muevan la una a la
       -- otra), así que una regla que mueva y otra que mande correo deben ser
       -- hermanas del mismo disparador, no encadenadas.
-      elsif regla.action_type = 'mover_etapa' then
+      elsif regla.action_type = 'move_stage' then
         etapa_destino := nullif(regla.action_params ->> 'stage', '');
         if tg_table_name = 'deals'
            and etapa_destino is not null
