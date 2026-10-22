@@ -1,15 +1,31 @@
-import { Building, Handshake, Tag, Truck, Users } from "lucide-react";
+import {
+  Building,
+  Handshake,
+  ListFilter,
+  MapPin,
+  Tag,
+  Target,
+  Truck,
+  Users,
+} from "lucide-react";
 import {
   FilterLiveForm,
   useGetIdentity,
   useGetList,
+  useListContext,
   useTranslate,
 } from "ra-core";
 import { ToggleFilterButton } from "@/components/admin/toggle-filter-button";
 import { SearchInput } from "@/components/admin/search-input";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 import { FilterCategory } from "../filters/FilterCategory";
+import {
+  FiltroDeCampoPersonalizado,
+  FiltroDeEstado,
+} from "../filters/FiltrosDeEmpresa";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
@@ -42,6 +58,27 @@ export const CompanyListFilter = () => {
       <FilterLiveForm>
         <SearchInput source="q" />
       </FilterLiveForm>
+
+      <FilterCategory
+        icon={<Target className="h-4 w-4" />}
+        label="crm.filters.company.deals"
+      >
+        <SoloConOportunidades />
+      </FilterCategory>
+
+      <FilterCategory
+        icon={<MapPin className="h-4 w-4" />}
+        label="crm.filters.company.state"
+      >
+        <FiltroDeEstado prefijo="" />
+      </FilterCategory>
+
+      <FilterCategory
+        icon={<ListFilter className="h-4 w-4" />}
+        label="crm.filters.company.custom_field"
+      >
+        <FiltroDeCampoPersonalizado prefijo="" />
+      </FilterCategory>
 
       <FilterCategory
         icon={<Building className="h-4 w-4" />}
@@ -121,6 +158,37 @@ export const CompanyListFilter = () => {
           ))}
         </FilterCategory>
       )}
+    </div>
+  );
+};
+
+/**
+ * Solo las empresas con al menos una oportunidad (`nb_deals` de la vista
+ * companies_summary), para prospectar sobre las que ya están en el embudo.
+ */
+const CLAVE_CON_OPORTUNIDADES = "nb_deals@gt";
+
+const SoloConOportunidades = () => {
+  const translate = useTranslate();
+  const { filterValues, setFilters } = useListContext();
+  const activo = filterValues?.[CLAVE_CON_OPORTUNIDADES] != null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <Switch
+        id="solo-con-oportunidades"
+        checked={activo}
+        onCheckedChange={(encendido) => {
+          const { [CLAVE_CON_OPORTUNIDADES]: _anterior, ...resto } =
+            filterValues ?? {};
+          setFilters(
+            encendido ? { ...resto, [CLAVE_CON_OPORTUNIDADES]: 0 } : resto,
+          );
+        }}
+      />
+      <Label htmlFor="solo-con-oportunidades" className="font-normal">
+        {translate("crm.filters.company.with_deals")}
+      </Label>
     </div>
   );
 };

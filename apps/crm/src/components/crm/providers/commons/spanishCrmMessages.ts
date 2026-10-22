@@ -870,6 +870,23 @@ export const spanishCrmMessages = {
       me: "Yo",
       task_count: "%{smart_count} tarea |||| %{smart_count} tareas",
     },
+    filters: {
+      company: {
+        state: "Estado",
+        all_states: "Todos los estados",
+        custom_field: "Campo personalizado",
+        any_field: "Cualquier campo",
+        any_value: "Cualquier valor",
+        contains: "Contiene…",
+        minimum: "Mínimo…",
+        yes: "Sí",
+        no: "No",
+        clear: "Quitar filtro",
+        deals: "Oportunidades",
+        with_deals: "Solo con oportunidades",
+        board_label: "Filtrar por empresa",
+      },
+    },
     reports: {
       title: "Informes",
       intro:
