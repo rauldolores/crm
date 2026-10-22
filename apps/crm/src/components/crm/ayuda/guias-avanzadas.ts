@@ -108,7 +108,7 @@ export const AVANZADO: Grupo = {
             ["Una oportunidad llega a la etapa «X»", "Lo mismo"],
             [
               "Una oportunidad lleva N días en la etapa «X» de un embudo, sin moverse",
-              "Lo mismo. Se revisa cada hora y actúa una vez por cada estancia en la etapa: si sale y vuelve, cuenta de nuevo.",
+              "Lo mismo, o mover la oportunidad a otra etapa del embudo (y entonces actúan las reglas de esa etapa). Si pones dos reglas sobre la misma etapa y días, una que envía un correo y otra que mueve, primero sale el correo. Se revisa cada hora y actúa una vez por cada estancia en la etapa: si sale y vuelve, cuenta de nuevo.",
             ],
             [
               "Faltan N días para que se renueve un contrato (módulo Clientes)",

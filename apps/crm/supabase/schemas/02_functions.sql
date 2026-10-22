@@ -1381,6 +1381,7 @@ declare
   contacto bigint;
   dias integer;
   horas integer;
+  movidas integer;
   disparadas integer := 0;
 begin
   -- Renovaciones de contratos (módulo Clientes).
@@ -1556,12 +1557,18 @@ begin
   --
   -- Una vez por estancia: due_on es el día en que entró. Si sale de la etapa
   -- y vuelve, hay estancia nueva y la regla vuelve a contar.
+  --
+  -- Las reglas que MUEVEN van al final de la pasada. Lo natural es emparejar
+  -- dos reglas sobre la misma etapa y días («3 días en WhatsApp → enviar
+  -- correo» y «… → mover a Correo»): si la de mover corriera antes, la
+  -- oportunidad ya no estaría en WhatsApp y el correo no saldría.
   for regla in
     select * from crm.automations
      where active
        and trigger_resource = 'deals'
        and trigger_event = 'stalled'
        and nullif(trigger_params ->> 'stage', '') is not null
+     order by (action_type = 'move_stage'), id
   loop
     dias := case
       when regla.trigger_params ->> 'daysInStage' ~ '^[0-9]+$'
@@ -1607,6 +1614,44 @@ begin
              set sales_id = nullif(regla.action_params ->> 'salesId', '')::bigint
            where id = oportunidad.id
              and nullif(regla.action_params ->> 'salesId', '') is not null;
+        elsif regla.action_type = 'move_stage' then
+          -- Solo a una etapa que exista en el embudo de la oportunidad: en una
+          -- que no, desaparecería del tablero. El cambio de etapa dispara
+          -- crm.run_automations, así que las reglas de la etapa nueva («al
+          -- llegar a Correo → tarea de llamar») actúan solas: la cadencia se
+          -- encadena. Si el destino no vale no se mueve nada, y el raise
+          -- deshace también la ejecución registrada: se reintenta en la
+          -- próxima pasada, por si se corrige el embudo.
+          update crm.deals d
+             set stage = regla.action_params ->> 'stage'
+           where d.id = oportunidad.id
+             and nullif(regla.action_params ->> 'stage', '') is not null
+             and d.stage is distinct from regla.action_params ->> 'stage'
+             and exists (
+               select 1
+                 from crm.configuration c
+                cross join lateral jsonb_array_elements(
+                  coalesce(
+                    (select p -> 'stages'
+                       from jsonb_array_elements(c.config -> 'dealPipelines') p
+                      where p ->> 'value' = d.pipeline
+                      limit 1),
+                    -- Configuración anterior a los embudos múltiples: un solo
+                    -- embudo, con sus etapas en dealStages.
+                    case
+                      when coalesce(jsonb_array_length(c.config -> 'dealPipelines'), 0) = 0
+                      then c.config -> 'dealStages'
+                    end,
+                    '[]'::jsonb
+                  )
+                ) etapa
+                where c.organization_id = regla.organization_id
+                  and etapa ->> 'value' = regla.action_params ->> 'stage'
+             );
+          get diagnostics movidas = row_count;
+          if movidas = 0 then
+            raise exception 'etapa de destino no válida';
+          end if;
         else
           perform crm.aplicar_accion_de_automatizacion(
             regla, oportunidad.contacto, oportunidad.id, null, null, oportunidad.sales_id

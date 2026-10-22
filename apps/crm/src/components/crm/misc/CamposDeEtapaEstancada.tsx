@@ -1,11 +1,12 @@
 import { required } from "ra-core";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { NumberInput } from "@/components/admin/number-input";
 import { SelectInput } from "@/components/admin/select-input";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { etapasDeDestino } from "./disparadoresDeAutomatizacion";
 
 /**
  * Los campos de «una oportunidad lleva N días en una etapa»: embudo, etapa
@@ -65,5 +66,46 @@ export const CamposDeEtapaEstancada = () => {
         validate={required()}
       />
     </>
+  );
+};
+
+/**
+ * A qué etapa mover la oportunidad estancada: del mismo embudo que la regla,
+ * sin la de origen ni las ganadas (ver `etapasDeDestino`). Si cambia el
+ * embudo o la etapa de origen, un destino que ya no vale se vacía.
+ */
+export const CampoDeEtapaDestino = () => {
+  const { dealPipelines } = useConfigurationContext();
+  const { getValues, setValue } = useFormContext();
+  const embudoElegido = useWatch({ name: "pipeline" });
+  const etapaDeOrigen = useWatch({ name: "stage" });
+
+  const destinos = useMemo(
+    () =>
+      etapasDeDestino(
+        dealPipelines.find((candidato) => candidato.value === embudoElegido),
+        etapaDeOrigen,
+      ),
+    [dealPipelines, embudoElegido, etapaDeOrigen],
+  );
+
+  useEffect(() => {
+    const destino = getValues("targetStage");
+    if (destino && !destinos.some((etapa) => etapa.value === destino)) {
+      setValue("targetStage", undefined);
+    }
+  }, [destinos, getValues, setValue]);
+
+  return (
+    <SelectInput
+      source="targetStage"
+      label="crm.automations.fields.target_stage"
+      helperText="crm.automations.fields.target_stage_help"
+      choices={destinos}
+      optionText="label"
+      optionValue="value"
+      disabled={destinos.length === 0}
+      validate={required()}
+    />
   );
 };
