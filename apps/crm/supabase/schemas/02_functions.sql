@@ -1256,6 +1256,13 @@ declare
   ticket bigint;
   prioridad text;
   texto_a_juzgar text;
+  tiene_movil boolean;
+  etapa_destino text;
+  -- Responsable de la fila que disparó la regla. En variable y no leyendo
+  -- new.sales_id donde haga falta: la cola de correo NO tiene esa columna, y
+  -- plpgsql solo falla al evaluarla, así que el error aparecería tarde y lo
+  -- escondería el `exception when others` de abajo.
+  sales_de_la_fila bigint;
 begin
   if pg_trigger_depth() > 1 then
     return null;
@@ -1269,7 +1276,17 @@ begin
   -- Cada tabla lee sus propios campos en su rama: plpgsql resuelve todas
   -- las referencias a new.* de una expresión aunque el «and» no llegue a
   -- ellas, y new.stage no existe en un ticket.
-  if tg_op = 'INSERT' then
+  --
+  -- El correo va primero porque su evento es un UPDATE, no un alta: la fila
+  -- de la cola nace sin enviar y lo que interesa es el momento en que sale
+  -- de verdad.
+  if tg_table_name = 'email_outbox' then
+    if new.sent_at is not null and old.sent_at is null then
+      evento := 'sent';
+    else
+      return null;
+    end if;
+  elsif tg_op = 'INSERT' then
     evento := 'created';
   elsif tg_table_name = 'deals' then
     if new.stage is distinct from old.stage then
@@ -1289,6 +1306,7 @@ begin
 
   if tg_table_name = 'contacts' then
     contacto := new.id;
+    sales_de_la_fila := new.sales_id;
     -- Un contacto recién creado no tiene texto que juzgar: su nota llega
     -- después, en otra transacción. Por eso la interfaz no ofrece condición
     -- para este disparador, y aquí queda null.
@@ -1297,13 +1315,37 @@ begin
     etapa := new.stage;
     contacto := new.contact_ids[1];
     oportunidad := new.id;
+    sales_de_la_fila := new.sales_id;
     texto_a_juzgar := concat_ws(E'\n\n', new.name, new.description);
+    -- Si el contacto de la oportunidad tiene un teléfono marcado como móvil.
+    -- Es un hecho, no un juicio: no pasa por el modelo. Sirve para separar a
+    -- quien se puede intentar por WhatsApp de quien solo tiene fijo, que debe
+    -- saltar directo al correo.
+    tiene_movil := contacto is not null and exists (
+      select 1
+        from crm.contacts c,
+             jsonb_array_elements(coalesce(c.phone_jsonb, '[]'::jsonb)) as e(v)
+       where c.id = contacto
+         and e.v ->> 'type' = 'Mobile'
+    );
   elsif tg_table_name = 'tickets' then
     contacto := new.contact_id;
     oportunidad := new.deal_id;
     ticket := new.id;
     prioridad := new.priority;
+    sales_de_la_fila := new.sales_id;
     texto_a_juzgar := concat_ws(E'\n\n', new.subject, new.description);
+  elsif tg_table_name = 'email_outbox' then
+    -- El correo ya salió: la fila dice a quién y por qué oportunidad. No hay
+    -- texto que juzgar (el cuerpo lo pone la plantilla, no una persona), así
+    -- que estas reglas no admiten condición.
+    contacto := new.contact_id;
+    oportunidad := new.deal_id;
+    -- La cola no tiene responsable: lo pone el comercial del contacto, que es
+    -- quien aparecera en la tarea o en el correo que encadene esta regla.
+    select c.sales_id into sales_de_la_fila
+      from crm.contacts c where c.id = new.contact_id;
+    texto_a_juzgar := null;
   end if;
 
   for regla in
@@ -1312,6 +1354,10 @@ begin
        and active
        and trigger_resource = tg_table_name
        and trigger_event = evento
+     -- Las que mueven de etapa van al final, igual que en el motor por
+     -- fechas: así una regla que manda correo sobre el mismo disparador
+     -- alcanza a actuar antes de que la tarjeta cambie de sitio.
+     order by (action_type = 'move_stage'), id
   loop
     begin
       if evento = 'stage_changed'
@@ -1325,6 +1371,21 @@ begin
          and regla.trigger_params ->> 'priority' is distinct from prioridad then
         continue;
       end if;
+      -- Una oportunidad puede filtrar por si su contacto tiene móvil.
+      if tg_table_name = 'deals'
+         and nullif(regla.trigger_params ->> 'contacto', '') is not null
+         and regla.trigger_params ->> 'contacto'
+             is distinct from (case when tiene_movil then 'movil' else 'sin_movil' end) then
+        continue;
+      end if;
+      -- Un correo enviado puede acotarse a una plantilla: «cuando salga el
+      -- primer contacto», no «cuando salga cualquier correo».
+      if tg_table_name = 'email_outbox'
+         and nullif(regla.trigger_params ->> 'templateId', '') is not null
+         and regla.trigger_params ->> 'templateId'
+             is distinct from new.template_id::text then
+        continue;
+      end if;
 
       -- Con condición no se actúa aquí: se encola para que la aplicación le
       -- pregunte al modelo. Sin texto que juzgar la regla no se cumple nunca,
@@ -1336,7 +1397,7 @@ begin
              sales_id, texto)
           values
             (org, regla.id, contacto, oportunidad, ticket,
-             new.sales_id, texto_a_juzgar);
+             sales_de_la_fila, texto_a_juzgar);
         end if;
         continue;
       end if;
@@ -1352,9 +1413,35 @@ begin
             update crm.deals set sales_id = responsable where id = new.id;
           end if;
         end if;
+
+      -- Mover de etapa: como assign_owner, toca la fila que disparó la regla,
+      -- por eso vive aquí y no en aplicar_accion_de_automatizacion.
+      --
+      -- Mismo nombre de acción que en el motor por fechas (deals:stalled),
+      -- que ya la tenía: es UNA acción que vale en los dos motores, no dos.
+      --
+      -- El cambio NO vuelve a disparar las reglas de «cambió de etapa»: el
+      -- guardia pg_trigger_depth() de arriba corta la reentrada. Es
+      -- deliberado (evita bucles entre dos reglas que se muevan la una a la
+      -- otra), así que una regla que mueva y otra que mande correo deben ser
+      -- hermanas del mismo disparador, no encadenadas.
+      elsif regla.action_type = 'move_stage' then
+        etapa_destino := nullif(regla.action_params ->> 'stage', '');
+        -- Sobre `oportunidad` y no sobre new.id: con el disparador de correo
+        -- enviado, la fila que dispara es la de la cola y la oportunidad que
+        -- hay que mover es la suya. Para una oportunidad las dos coinciden.
+        -- El `is distinct from` va en el where para no escribir un cambio que
+        -- no cambia nada (y no ensuciar el historial con un evento vacío).
+        if etapa_destino is not null and oportunidad is not null then
+          update crm.deals
+             set stage = etapa_destino
+           where id = oportunidad
+             and stage is distinct from etapa_destino;
+        end if;
+
       else
         perform crm.aplicar_accion_de_automatizacion(
-          regla, contacto, oportunidad, null, null, new.sales_id, ticket
+          regla, contacto, oportunidad, null, null, sales_de_la_fila, ticket
         );
       end if;
 

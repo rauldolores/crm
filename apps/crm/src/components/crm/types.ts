@@ -245,7 +245,13 @@ export type Automation = {
    * disparador encola y la aplicación drena. Ver `admiteCondicion`.
    */
   condition_text?: string | null;
-  trigger_resource: "contacts" | "deals" | "contracts" | "quotes" | "tickets";
+  trigger_resource:
+    | "contacts"
+    | "deals"
+    | "contracts"
+    | "quotes"
+    | "tickets"
+    | "email_outbox";
   /**
    * renewal_due (contratos), unanswered (cotizaciones), los de tickets por
    * horas (unanswered, unassigned, overdue) y stalled (oportunidades que
@@ -259,7 +265,8 @@ export type Automation = {
     | "unanswered"
     | "unassigned"
     | "overdue"
-    | "closed";
+    | "closed"
+    | "sent";
   trigger_params: {
     stage?: string;
     /**
@@ -275,6 +282,16 @@ export type Automation = {
     hoursAfter?: number;
     /** Solo tickets creados con esta prioridad (tickets:created). */
     priority?: string;
+    /**
+     * Solo oportunidades cuyo contacto tenga (o no) un teléfono móvil.
+     * Ausente = la regla no mira el teléfono.
+     */
+    contacto?: "movil" | "sin_movil";
+    /**
+     * Solo cuando salga el correo de esta plantilla (email_outbox:sent).
+     * Ausente = cualquier correo.
+     */
+    templateId?: Identifier;
   };
   action_params: {
     text?: string;

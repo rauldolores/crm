@@ -254,3 +254,129 @@ describe("etapasDeDestino", () => {
     expect(etapasDeDestino(undefined, "whatsapp")).toEqual([]);
   });
 });
+
+describe("filtro por teléfono del contacto", () => {
+  test("guarda el filtro en una oportunidad creada", () => {
+    expect(
+      parametrosDelDisparador("deals:created", { contacto: "sin_movil" }),
+    ).toEqual({ contacto: "sin_movil" });
+  });
+
+  test("convive con el filtro de etapa, que es otro eje", () => {
+    expect(
+      parametrosDelDisparador("deals:stage_changed", {
+        stage: "whatsapp",
+        contacto: "movil",
+      }),
+    ).toEqual({ stage: "whatsapp", contacto: "movil" });
+  });
+
+  test("convive con los días de una oportunidad estancada", () => {
+    expect(
+      parametrosDelDisparador("deals:stalled", {
+        pipeline: "prospeccion-fria",
+        stage: "whatsapp",
+        daysInStage: 3,
+        contacto: "movil",
+      }),
+    ).toEqual({
+      pipeline: "prospeccion-fria",
+      stage: "whatsapp",
+      daysInStage: 3,
+      contacto: "movil",
+    });
+  });
+
+  test("no se guarda en disparadores que no son de oportunidades", () => {
+    expect(
+      parametrosDelDisparador("tickets:created", { contacto: "movil" }),
+    ).toEqual({});
+  });
+
+  test("vacío significa que la regla no mira el teléfono", () => {
+    expect(parametrosDelDisparador("deals:created", {})).toEqual({});
+  });
+
+  test("la frase de la regla dice el filtro, para no leerse igual que otra sin él", () => {
+    const con = describirDisparador(
+      regla({
+        trigger_resource: "deals",
+        trigger_event: "created",
+        trigger_params: { contacto: "sin_movil" },
+      }),
+      translate,
+      {},
+    );
+    const sin = describirDisparador(
+      regla({
+        trigger_resource: "deals",
+        trigger_event: "created",
+        trigger_params: {},
+      }),
+      translate,
+      {},
+    );
+
+    expect(con).toContain("without_mobile");
+    expect(sin).not.toContain("without_mobile");
+    expect(con).not.toEqual(sin);
+  });
+});
+
+describe("disparador de correo enviado", () => {
+  test("mover de etapa se ofrece aquí, porque la fila que dispara no es la oportunidad", () => {
+    expect(admiteMoverDeEtapa("email_outbox:sent")).toBe(true);
+    expect(admiteMoverDeEtapa("deals:stalled")).toBe(true);
+    // No desde el propio evento de la oportunidad: movería sin que nadie
+    // hubiera hecho la acción que la etapa afirma.
+    expect(admiteMoverDeEtapa("deals:created")).toBe(false);
+    expect(admiteMoverDeEtapa("deals:stage_changed")).toBe(false);
+  });
+
+  test("no ofrece asignar responsable: un correo no es una ficha", () => {
+    expect(admiteAsignarResponsable("email_outbox:sent")).toBe(false);
+  });
+
+  test("no admite condición: el cuerpo lo pone la plantilla, no una persona", () => {
+    expect(admiteCondicion("email_outbox:sent")).toBe(false);
+  });
+
+  test("guarda la plantilla del disparador, con su propio nombre de campo", () => {
+    expect(
+      parametrosDelDisparador("email_outbox:sent", {
+        plantillaDisparadora: 6,
+        // El de la acción de mandar correo, que NO debe acabar en el filtro.
+        templateId: 99,
+      }),
+    ).toEqual({ templateId: "6" });
+  });
+
+  test("sin plantilla elegida, la regla salta con cualquier correo", () => {
+    expect(parametrosDelDisparador("email_outbox:sent", {})).toEqual({});
+  });
+
+  test("la frase nombra la plantilla cuando la regla la acota", () => {
+    const acotada = describirDisparador(
+      regla({
+        trigger_resource: "email_outbox",
+        trigger_event: "sent",
+        trigger_params: { templateId: 6 },
+      }),
+      translate,
+      { plantilla: "Primer contacto" },
+    );
+    const cualquiera = describirDisparador(
+      regla({
+        trigger_resource: "email_outbox",
+        trigger_event: "sent",
+        trigger_params: {},
+      }),
+      translate,
+      {},
+    );
+
+    expect(acotada).toContain("Primer contacto");
+    expect(cualquiera).toContain("email_sent");
+    expect(cualquiera).not.toContain("Primer contacto");
+  });
+});
