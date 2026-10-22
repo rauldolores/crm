@@ -328,6 +328,39 @@ export const spanishCrmMessages = {
     },
     deals: {
       name: "Oportunidad |||| Oportunidades",
+      bulk: {
+        action: "Mandar correo en lote",
+        title: "Mandar un correo a toda una etapa",
+        intro:
+          "Encola el correo de una plantilla para cada oportunidad de la etapa que elijas. No se manda de golpe: salen 25 por minuto, y cada tarjeta pasa a la etapa de Correo cuando el suyo sale de verdad. Puedes cerrar esta ventana sin cancelar nada.",
+        stage: "Etapa",
+        stage_pick: "Elige la etapa",
+        template: "Plantilla",
+        template_pick: "Elige la plantilla",
+        affects:
+          "Afecta a 1 oportunidad |||| Afecta a %{smart_count} oportunidades",
+        cancel: "Cancelar",
+        send: "Encolar",
+        sending: "Encolando…",
+        close: "Cerrar",
+        queued:
+          "Se encoló 1 correo de %{total} |||| Se encolaron %{smart_count} correos de %{total}",
+        skipped: "Se quedaron fuera:",
+        reason: {
+          "sin-contacto":
+            "1 sin contacto ligado |||| %{smart_count} sin contacto ligado",
+          "sin-correo":
+            "1 cuyo contacto no tiene correo |||| %{smart_count} cuyo contacto no tiene correo",
+          "ya-encolado":
+            "1 que ya tenía este correo |||| %{smart_count} que ya tenían este correo",
+        },
+        progress: "Enviados %{sent} de %{total}",
+        failed:
+          "1 falló tras agotar los reintentos |||| %{smart_count} fallaron tras agotar los reintentos",
+        finished: "Terminado.",
+        keeps_going:
+          "Sigue enviándose en segundo plano. Puedes cerrar esta ventana.",
+      },
       fields: {
         name: "Nombre",
         description: "Descripción",

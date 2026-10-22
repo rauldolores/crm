@@ -127,6 +127,7 @@ export default defineConfig({
             "src/lib/server/facturacion/**/*.test.ts",
             "src/lib/server/soporte/**/*.test.ts",
             "src/lib/server/whatsapp/**/*.test.ts",
+            "src/lib/server/accionesMasivas/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },
