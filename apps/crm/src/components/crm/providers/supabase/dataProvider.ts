@@ -38,6 +38,10 @@ import { ATTACHMENTS_BUCKET } from "../commons/attachments";
 import { aplicarFiltroDeArchivados } from "../commons/filtroDeArchivados";
 import type { ResultadoDeAsignacionDeAfiliado } from "../commons/asignarAfiliado";
 import type { DatosDeInformes } from "../commons/datosDeInformes";
+import {
+  conEmpresaEmbebida,
+  sinEmpresaEmbebida,
+} from "../../filters/consultaDeEmpresa";
 import type { DestinoDeOportunidad } from "../commons/moverOportunidad";
 import { getIsInitialized } from "./authProvider";
 import { getSupabaseClient, getUrlDeDatos } from "./supabase";
@@ -695,8 +699,14 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
   {
     resource: "deals",
     beforeGetList: async (params) => {
-      return applyFullTextSearch(["name", "category", "description"])(params);
+      return conEmpresaEmbebida(
+        applyFullTextSearch(["name", "category", "description"])(params),
+      );
     },
+    afterGetList: async (resultado) => ({
+      ...resultado,
+      data: resultado.data.map(sinEmpresaEmbebida),
+    }),
   },
   {
     // El buscador de la línea de tiempo del contacto: título (tareas,

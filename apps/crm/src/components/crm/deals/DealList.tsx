@@ -18,6 +18,12 @@ import { SelectInput } from "@/components/admin/select-input";
 
 import { Button } from "@/components/ui/button";
 
+import {
+  FiltroDeCampoPersonalizado,
+  FiltroDeEstado,
+} from "../filters/FiltrosDeEmpresa";
+import { PREFIJO_EMBEBIDO } from "../filters/consultaDeEmpresa";
+
 import { exportadorDeOportunidades } from "../misc/exportadores";
 import { LOCALE } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -155,6 +161,7 @@ const DealLayout = () => {
     return (
       <div className="w-full">
         <SelectorDeEmbudo />
+        <FiltrosDeLaEmpresa />
         <DealEmpty>
           <DealShow open={!!matchShow} id={matchShow?.params.id} />
           <DealArchivedList />
@@ -165,6 +172,7 @@ const DealLayout = () => {
   return (
     <div className="w-full">
       <SelectorDeEmbudo />
+      <FiltrosDeLaEmpresa />
       {total != null && total > data.length && (
         <p
           role="status"
@@ -181,6 +189,24 @@ const DealLayout = () => {
       <DealCreate open={!!matchCreate} />
       <DealEdit open={!!matchEdit && !matchCreate} id={matchEdit?.params.id} />
       <DealShow open={!!matchShow} id={matchShow?.params.id} />
+    </div>
+  );
+};
+
+/**
+ * Estado y campo personalizado de la empresa de cada oportunidad. Van a la
+ * vista, sobre el tablero, y no en el botón de filtros: son los que más se
+ * usan para repartir la prospección por región o por programa.
+ */
+const FiltrosDeLaEmpresa = () => {
+  const translate = useTranslate();
+  return (
+    <div className="mb-4 flex flex-wrap items-start gap-2">
+      <span className="py-2 text-sm text-muted-foreground">
+        {translate("crm.filters.company.board_label")}
+      </span>
+      <FiltroDeEstado prefijo={PREFIJO_EMBEBIDO} className="w-48" />
+      <FiltroDeCampoPersonalizado prefijo={PREFIJO_EMBEBIDO} className="w-64" />
     </div>
   );
 };
