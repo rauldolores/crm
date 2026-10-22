@@ -182,7 +182,8 @@ with resumen as (
         left join crm.tasks t on co.id = t.contact_id
         left join crm.companies c on co.company_id = c.id
         left join crm.contact_notes cn on co.id = cn.contact_id
-        left join crm.deals d on co.id = any(d.contact_ids) and d.archived_at is null
+        -- @> y no «= any»: solo así puede usar el índice GIN de contact_ids.
+        left join crm.deals d on d.contact_ids @> array[co.id] and d.archived_at is null
         left join crm.tickets tk on co.id = tk.contact_id
     group by co.id, c.name
 )
