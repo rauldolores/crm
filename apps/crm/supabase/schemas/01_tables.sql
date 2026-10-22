@@ -1316,6 +1316,9 @@ create index contact_notes_contact_id_idx on crm.contact_notes using btree (cont
 create index contacts_company_id_idx on crm.contacts using btree (company_id);
 create index deal_notes_deal_id_idx on crm.deal_notes using btree (deal_id);
 create index deals_company_id_idx on crm.deals using btree (company_id);
+-- Para «oportunidades de este contacto» (contact_ids @> array[id]). Sin él,
+-- contacts_summary compara cada contacto con cada oportunidad.
+create index deals_contact_ids_idx on crm.deals using gin (contact_ids);
 -- Una oportunidad de renovación por contrato y fecha. Completo, no parcial:
 -- los nulos (oportunidades normales) no chocan y PostgREST puede usarlo en
 -- ON CONFLICT (ver 20260917130000).
