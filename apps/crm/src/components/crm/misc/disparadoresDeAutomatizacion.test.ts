@@ -4,8 +4,10 @@ import type { Automation } from "../types";
 import {
   admiteAsignarResponsable,
   admiteCondicion,
+  admiteMoverDeEtapa,
   describirDisparador,
   disparadoresDisponibles,
+  etapasDeDestino,
   parametrosDelDisparador,
 } from "./disparadoresDeAutomatizacion";
 
@@ -203,5 +205,52 @@ describe("describirDisparador", () => {
     ]) {
       expect(admiteCondicion(cuando)).toBe(false);
     }
+  });
+});
+
+describe("admiteMoverDeEtapa", () => {
+  test("solo desde «lleva N días en una etapa», que no corre dentro de un disparador", () => {
+    expect(admiteMoverDeEtapa("deals:stalled")).toBe(true);
+    // Mover desde un disparador de evento sería actualizar la oportunidad
+    // desde su propio disparador: dos reglas cruzadas harían un bucle.
+    expect(admiteMoverDeEtapa("deals:stage_changed")).toBe(false);
+    expect(admiteMoverDeEtapa("deals:created")).toBe(false);
+    expect(admiteMoverDeEtapa("tickets:created")).toBe(false);
+  });
+});
+
+describe("etapasDeDestino", () => {
+  const prospeccion = {
+    stages: [
+      { value: "opportunity", label: "Por contactar" },
+      { value: "whatsapp", label: "WhatsApp" },
+      { value: "correo", label: "Correo" },
+      { value: "lost", label: "Descartado" },
+    ],
+    pipelineStatuses: [],
+  };
+
+  test("ofrece las demás etapas del embudo, sin la de origen", () => {
+    expect(
+      etapasDeDestino(prospeccion, "whatsapp").map((etapa) => etapa.value),
+    ).toEqual(["opportunity", "correo", "lost"]);
+  });
+
+  test("no ofrece las etapas ganadas: dar una venta por ganada no es cosa de un reloj", () => {
+    const ventas = {
+      stages: [
+        { value: "opportunity", label: "Oportunidad" },
+        { value: "won", label: "Ganada" },
+        { value: "lost", label: "Perdida" },
+      ],
+      pipelineStatuses: ["won"],
+    };
+    expect(
+      etapasDeDestino(ventas, "opportunity").map((etapa) => etapa.value),
+    ).toEqual(["lost"]);
+  });
+
+  test("sin embudo elegido no hay destinos", () => {
+    expect(etapasDeDestino(undefined, "whatsapp")).toEqual([]);
   });
 });

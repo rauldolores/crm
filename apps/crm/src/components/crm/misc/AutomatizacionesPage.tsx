@@ -9,8 +9,8 @@ import {
   useTranslate,
   useUpdate,
 } from "ra-core";
-import { useState } from "react";
-import { useWatch, type FieldValues } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useFormContext, useWatch, type FieldValues } from "react-hook-form";
 
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { NumberInput } from "@/components/admin/number-input";
@@ -23,9 +23,13 @@ import { Switch } from "@/components/ui/switch";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Automation, EmailTemplate, Sale } from "../types";
-import { CamposDeEtapaEstancada } from "./CamposDeEtapaEstancada";
+import {
+  CampoDeEtapaDestino,
+  CamposDeEtapaEstancada,
+} from "./CamposDeEtapaEstancada";
 import {
   admiteAsignarResponsable,
+  admiteMoverDeEtapa,
   admiteCondicion,
   describirDisparador,
   disparadoresDisponibles,
@@ -146,26 +150,35 @@ const TarjetaDeRegla = ({
       ? translate("crm.automations.then.email_named", {
           name: nombreDePlantilla ?? "—",
         })
-      : regla.action_type === "assign_owner"
-        ? translate("crm.automations.then.assign_named", {
-            name: (() => {
-              const comercial = (comerciales ?? []).find(
-                (candidato) =>
-                  String(candidato.id) === String(regla.action_params?.salesId),
-              );
-              return comercial
-                ? `${comercial.first_name} ${comercial.last_name}`
-                : "—";
-            })(),
+      : regla.action_type === "move_stage"
+        ? translate("crm.automations.then.move_named", {
+            stage:
+              etapas.find((etapa) => etapa.value === regla.action_params?.stage)
+                ?.label ??
+              regla.action_params?.stage ??
+              "—",
           })
-        : regla.action_params?.dueInDays == null
-          ? translate("crm.automations.then.task_named_no_due", {
-              text: regla.action_params?.text ?? regla.name,
+        : regla.action_type === "assign_owner"
+          ? translate("crm.automations.then.assign_named", {
+              name: (() => {
+                const comercial = (comerciales ?? []).find(
+                  (candidato) =>
+                    String(candidato.id) ===
+                    String(regla.action_params?.salesId),
+                );
+                return comercial
+                  ? `${comercial.first_name} ${comercial.last_name}`
+                  : "—";
+              })(),
             })
-          : translate("crm.automations.then.task_named", {
-              text: regla.action_params?.text ?? regla.name,
-              days: regla.action_params.dueInDays,
-            });
+          : regla.action_params?.dueInDays == null
+            ? translate("crm.automations.then.task_named_no_due", {
+                text: regla.action_params?.text ?? regla.name,
+              })
+            : translate("crm.automations.then.task_named", {
+                text: regla.action_params?.text ?? regla.name,
+                days: regla.action_params.dueInDays,
+              });
 
   return (
     <div className="flex items-start gap-3 rounded-md border p-3">
@@ -233,6 +246,7 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
     const [trigger_resource, trigger_event] = cuando.split(":");
     const esTarea = valores.accion === "create_task";
     const esCorreo = valores.accion === "send_email";
+    const esMover = valores.accion === "move_stage";
 
     try {
       await create(
@@ -252,19 +266,21 @@ const FormularioDeRegla = ({ alCrear }: { alCrear: () => void }) => {
             action_type: valores.accion,
             action_params: esCorreo
               ? { templateId: valores.templateId }
-              : esTarea
-                ? {
-                    text: valores.text,
-                    taskType: valores.taskType,
-                    // Vacio = tarea sin fecha limite. Se omite la clave en vez
-                    // de mandar null para que el disparador la vea ausente.
-                    ...(valores.dueInDays === "" ||
-                    valores.dueInDays === null ||
-                    valores.dueInDays === undefined
-                      ? {}
-                      : { dueInDays: Number(valores.dueInDays) }),
-                  }
-                : { salesId: valores.salesId },
+              : esMover
+                ? { stage: valores.targetStage }
+                : esTarea
+                  ? {
+                      text: valores.text,
+                      taskType: valores.taskType,
+                      // Vacio = tarea sin fecha limite. Se omite la clave en vez
+                      // de mandar null para que el disparador la vea ausente.
+                      ...(valores.dueInDays === "" ||
+                      valores.dueInDays === null ||
+                      valores.dueInDays === undefined
+                        ? {}
+                        : { dueInDays: Number(valores.dueInDays) }),
+                    }
+                  : { salesId: valores.salesId },
           },
         },
         { returnPromise: true },
@@ -325,7 +341,20 @@ const CamposDeLaRegla = () => {
       ? [{ id: "assign_owner", name: "crm.automations.then.assign" }]
       : []),
     { id: "send_email", name: "crm.automations.then.email" },
+    ...(admiteMoverDeEtapa(cuando)
+      ? [{ id: "move_stage", name: "crm.automations.then.move" }]
+      : []),
   ];
+
+  // Si se cambia a un disparador que no admite mover, la acción elegida deja
+  // de existir en la lista: se vuelve a la de por defecto en vez de guardar
+  // una regla que el motor ignoraría.
+  const { setValue } = useFormContext();
+  useEffect(() => {
+    if (accion === "move_stage" && !admiteMoverDeEtapa(cuando)) {
+      setValue("accion", "create_task");
+    }
+  }, [accion, cuando, setValue]);
 
   return (
     <>
@@ -428,6 +457,8 @@ const CamposDeLaRegla = () => {
             min={0}
           />
         </>
+      ) : accion === "move_stage" ? (
+        <CampoDeEtapaDestino />
       ) : accion === "send_email" ? (
         <ReferenceInput
           source="templateId"

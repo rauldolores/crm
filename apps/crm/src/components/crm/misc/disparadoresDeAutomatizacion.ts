@@ -2,7 +2,7 @@ import type { useTranslate } from "ra-core";
 import type { FieldValues } from "react-hook-form";
 
 import type { ConfigurationContextValue } from "../root/ConfigurationContext";
-import type { Automation } from "../types";
+import type { Automation, DealPipeline } from "../types";
 
 /** Un disparador tal como se elige en el formulario: `recurso:evento`. */
 export interface Disparador {
@@ -72,6 +72,30 @@ export const esDisparadorPorHoras = (cuando: string) =>
 export const admiteAsignarResponsable = (cuando: string) =>
   !["contracts:renewal_due", "quotes:unanswered", "tickets:closed"].includes(
     cuando,
+  );
+
+/**
+ * «Mover a otra etapa» solo desde «lleva N días en una etapa», que evalúa el
+ * motor por fecha. Desde un disparador de evento (al crear o al cambiar de
+ * etapa) sería actualizar la oportunidad desde su propio disparador, y dos
+ * reglas que se movieran entre sí harían un bucle.
+ */
+export const admiteMoverDeEtapa = (cuando: string) =>
+  cuando === "deals:stalled";
+
+/**
+ * A qué etapas se puede mover desde la de origen: las demás del mismo
+ * embudo, menos las que cuentan como ganadas — dar una venta por ganada es
+ * una decisión de una persona (y puede exigir importe), no de un reloj.
+ */
+export const etapasDeDestino = (
+  embudo: Pick<DealPipeline, "stages" | "pipelineStatuses"> | undefined,
+  etapaDeOrigen: string | undefined,
+): DealPipeline["stages"] =>
+  (embudo?.stages ?? []).filter(
+    (etapa) =>
+      etapa.value !== etapaDeOrigen &&
+      !(embudo?.pipelineStatuses ?? []).includes(etapa.value),
   );
 
 /** Los parámetros del disparador a partir de los valores del formulario. */

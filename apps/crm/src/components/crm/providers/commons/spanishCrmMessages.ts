@@ -1027,6 +1027,9 @@ export const spanishCrmMessages = {
         days_in_stage: "Tras cuántos días en la etapa",
         days_in_stage_help:
           "Se revisa cada hora. Cuenta desde que la oportunidad entró en la etapa; las archivadas no cuentan. Actúa una vez por cada estancia: si sale de la etapa y vuelve, empieza a contar de nuevo.",
+        target_stage: "Mover a la etapa",
+        target_stage_help:
+          "Solo etapas de este embudo, sin las que cuentan como ganadas. Al llegar se aplican las reglas de esa etapa: si tienes «al llegar a Correo → tarea de llamar», salta sola.",
         priority: "Solo con prioridad",
         any_priority: "Cualquier prioridad",
         condition: "Solo si… (opcional)",
@@ -1065,6 +1068,8 @@ export const spanishCrmMessages = {
         task: "Crear una tarea",
         assign: "Asignar responsable",
         email: "Enviar un correo",
+        move: "Mover a otra etapa",
+        move_named: "Mover a «%{stage}»",
         task_named: "Crear la tarea «%{text}» para dentro de %{days} días",
         task_named_no_due: "Crear la tarea «%{text}», sin fecha límite",
         assign_named: "Asignar a %{name}",

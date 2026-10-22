@@ -284,8 +284,13 @@ export type Automation = {
     salesId?: Identifier;
     /** Plantilla que se envía, para la acción send_email. */
     templateId?: Identifier;
+    /**
+     * Etapa de destino, para la acción move_stage: siempre del mismo embudo
+     * que la de la regla (deals:stalled, el único disparador que la admite).
+     */
+    stage?: string;
   };
-  action_type: "create_task" | "assign_owner" | "send_email";
+  action_type: "create_task" | "assign_owner" | "send_email" | "move_stage";
   created_at?: string;
 } & Pick<RaRecord, "id">;
 
