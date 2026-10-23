@@ -98,7 +98,19 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/affiliates/AfiliadosEnProceso.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/embudoDeAfiliados.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/affiliates/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/affiliates/useAfiliadosEnProceso.ts",
           "type": "registry:component"
         },
         {
@@ -843,6 +855,10 @@
         },
         {
           "path": "src/components/crm/misc/MobileBackButton.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/misc/PasosDeAlta.tsx",
           "type": "registry:component"
         },
         {
