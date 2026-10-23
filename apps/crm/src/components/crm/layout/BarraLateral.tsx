@@ -15,6 +15,7 @@ import {
   Ticket,
   Users,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -44,6 +45,8 @@ interface Seccion {
   Icono: typeof LayoutDashboard;
   /** Recurso a comprobar antes de mostrarla, si aplica. */
   recurso?: string;
+  /** Lo pendiente de la sección (la bandeja), a la derecha del nombre. */
+  Contador?: ComponentType;
 }
 
 const EnlaceDeSeccion = ({
@@ -70,6 +73,7 @@ const EnlaceDeSeccion = ({
       ].join(" ")}
     />
     <span className="truncate">{seccion.etiqueta}</span>
+    {seccion.Contador && <seccion.Contador />}
   </Link>
 );
 
@@ -144,6 +148,7 @@ export const BarraLateral = () => {
       ruta: modulo.path,
       Icono: modulo.icon,
       recurso: modulo.key,
+      Contador: modulo.Contador,
     },
     ...(modulo.extraLinks ?? []).map((enlace) => ({
       etiqueta: translate(enlace.nameKey),

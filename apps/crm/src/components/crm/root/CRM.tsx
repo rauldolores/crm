@@ -32,6 +32,8 @@ import { ListaDeProductos } from "../productos/ListaDeProductos";
 import { ListaDeFacturas } from "../facturas/ListaDeFacturas";
 import { PorFacturarPage } from "../facturas/PorFacturarPage";
 import { CobranzaPage } from "../facturas/CobranzaPage";
+import { BandejaPage } from "../bandeja/BandejaPage";
+import { ConfigurarBandejaPage } from "../bandeja/ConfigurarBandejaPage";
 import { AjustesDeFacturacionPage } from "../facturas/AjustesDeFacturacionPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
@@ -333,6 +335,11 @@ const DesktopAdmin = (
         <Route path={ConectoresPage.path} element={<ConectoresPage />} />
         <Route path={PorFacturarPage.path} element={<PorFacturarPage />} />
         <Route path={CobranzaPage.path} element={<CobranzaPage />} />
+        <Route path={BandejaPage.path} element={<BandejaPage />} />
+        <Route
+          path={ConfigurarBandejaPage.path}
+          element={<ConfigurarBandejaPage />}
+        />
         <Route
           path={AjustesDeFacturacionPage.path}
           element={<AjustesDeFacturacionPage />}
@@ -350,6 +357,8 @@ const DesktopAdmin = (
       <Resource name="email_templates" {...emailTemplates} />
       <Resource name="customer_summary" {...customers} />
       <Resource name="contracts" />
+      <Resource name="conversations" />
+      <Resource name="conversation_messages" />
       <Resource name="contract_events" />
       <Resource name="customer_usage" />
       <Resource name="customer_risk" />

@@ -108,6 +108,9 @@ const RECURSOS_PROHIBIDOS = new Set([
   // equivaldría a hacer que el CRM ejecute la acción de una regla sobre la
   // fila que uno elija: el despachador aplica lo que encuentre en la cola.
   "automation_pending",
+  // Bandeja de correo: guarda el secreto del aviso de Resend y quizá una
+  // clave. Solo por /api/bandeja/configuracion, que exige administrador.
+  "inbox_settings",
 ]);
 
 /**
@@ -139,6 +142,10 @@ const SOLO_LECTURA = new Set([
   // sistema regresara (o dejara de regresar) etapas que no puso él.
   "customer_usage",
   "customer_risk",
+  // Bandeja compartida: la escriben el aviso de Resend y /api/bandeja/*,
+  // que comprueban que el contacto y el responsable sean de la organización.
+  "conversations",
+  "conversation_messages",
 ]);
 
 /**
@@ -149,6 +156,9 @@ const SOLO_LECTURA = new Set([
 const AJENOS_AL_AFILIADO = new Set([
   "affiliate_rates",
   "affiliate_attributions",
+  // La bandeja es del equipo: un afiliado solo ve lo que gestiona.
+  "conversations",
+  "conversation_messages",
 ]);
 
 /** Tablas y vistas que pertenecen a una organización. */
@@ -195,6 +205,8 @@ const CON_DUENO = new Set([
   "invoices",
   "invoice_items",
   "billing_settings",
+  "conversations",
+  "conversation_messages",
 ]);
 
 /**

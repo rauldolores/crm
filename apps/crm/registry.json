@@ -142,6 +142,34 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/bandeja/BandejaPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/bandeja/ConfigurarBandejaPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/bandeja/ContadorDeBandeja.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/bandeja/Conversacion.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/bandeja/EnlazarContacto.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/bandeja/cita.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/bandeja/vistas.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/companies/AutocompleteCompanyInput.tsx",
           "type": "registry:component"
         },
@@ -1639,6 +1667,22 @@
         },
         {
           "path": "src/lib/server/automatizaciones/condicion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/bandeja/configuracion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/bandeja/correoRecibido.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/bandeja/firma.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/bandeja/responder.ts",
           "type": "registry:lib"
         },
         {

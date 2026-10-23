@@ -540,3 +540,18 @@ create policy "customer_risk_select_own_org" on crm.customer_risk
 alter table crm.soporte_reportes_auth enable row level security;
 create policy "Support usage reports are scoped to the organization" on crm.soporte_reportes_auth
     for select to authenticated using (organization_id = crm.current_organization_id());
+
+-- Lectura para la organización; nadie escribe por PostgREST. Todo cambio
+-- pasa por /api/bandeja, que comprueba que el contacto y el responsable
+-- sean de la misma organización.
+alter table crm.inbox_settings enable row level security;
+alter table crm.conversations enable row level security;
+alter table crm.conversation_messages enable row level security;
+
+create policy "Conversations are scoped to the organization" on crm.conversations
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+create policy "Conversation messages are scoped to the organization" on crm.conversation_messages
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+

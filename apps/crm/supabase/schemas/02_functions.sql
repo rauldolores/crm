@@ -577,6 +577,7 @@ BEGIN
   UPDATE tickets SET contact_id = winner_id WHERE contact_id = loser_id;
   UPDATE quotes SET contact_id = winner_id WHERE contact_id = loser_id;
   UPDATE email_outbox SET contact_id = winner_id WHERE contact_id = loser_id;
+  UPDATE conversations SET contact_id = winner_id WHERE contact_id = loser_id;
   IF NOT EXISTS (SELECT 1 FROM affiliates WHERE contact_id = winner_id) THEN
     UPDATE affiliates SET contact_id = winner_id WHERE contact_id = loser_id;
   END IF;
@@ -3254,3 +3255,170 @@ begin
   return null;
 end;
 $$;
+
+-- «RE: RV: Fwd: Hola» y «hola» son el mismo hilo.
+create or replace function crm.asunto_de_hilo(asunto text)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select btrim(regexp_replace(
+    lower(coalesce(asunto, '')),
+    '^(\s*(re|rv|fw|fwd|res|enc)\s*(\[\d+\])?\s*:\s*)+',
+    ''
+  ));
+$$;
+
+-- Guarda un correo recibido en la bandeja: encuentra (o abre) su
+-- conversación, lo enlaza al contacto si su dirección es de uno solo, y deja
+-- constancia en la ficha. Idempotente por el id del proveedor y el
+-- Message-ID: Resend reintenta los avisos.
+--
+-- Solo la llama el servidor (service_role), después de verificar la firma
+-- del aviso: confía en la organización que recibe.
+create or replace function crm.registrar_correo_entrante(
+    organizacion uuid,
+    correo jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  proveedor_id text := nullif(correo ->> 'provider_id', '');
+  mensaje_id text := nullif(correo ->> 'message_id', '');
+  remitente text := lower(btrim(correo ->> 'from_email'));
+  automatico boolean := coalesce((correo ->> 'automatic')::boolean, false);
+  referencias text[] := coalesce(
+    array(select jsonb_array_elements_text(coalesce(correo -> 'references', '[]'::jsonb))),
+    '{}'
+  );
+  respuesta_a text := nullif(correo ->> 'in_reply_to', '');
+  enviado timestamp with time zone :=
+    coalesce((correo ->> 'sent_at')::timestamp with time zone, now());
+  texto text := left(coalesce(correo ->> 'text', ''), 65536);
+  conversacion crm.conversations%rowtype;
+  existente bigint;
+  contacto_id bigint;
+  responsable bigint;
+  nuevo_mensaje bigint;
+  es_nueva boolean := false;
+begin
+  if remitente is null or remitente = '' then
+    raise exception 'registrar_correo_entrante: falta el remitente';
+  end if;
+
+  -- Un aviso repetido llega a la vez que el original: que espere.
+  perform pg_advisory_xact_lock(
+    hashtext(organizacion::text || coalesce(proveedor_id, mensaje_id, remitente))
+  );
+
+  select m.conversation_id into existente
+  from crm.conversation_messages m
+  where m.organization_id = organizacion
+    and (m.provider_id = proveedor_id or m.message_id = mensaje_id)
+  limit 1;
+  if existente is not null then
+    return jsonb_build_object('conversation_id', existente, 'duplicate', true);
+  end if;
+
+  -- 1. Por las cabeceras de hilo: la respuesta cita un mensaje que ya está.
+  if respuesta_a is not null or cardinality(referencias) > 0 then
+    select c.* into conversacion
+    from crm.conversation_messages m
+    join crm.conversations c on c.id = m.conversation_id
+    where m.organization_id = organizacion
+      and m.message_id = any(referencias || respuesta_a)
+    order by m.sent_at desc
+    limit 1;
+  end if;
+
+  -- 2. Mismo remitente y mismo asunto en los últimos 60 días: muchos
+  --    clientes contestan sin cabeceras (o reenvían desde otro programa).
+  if conversacion.id is null then
+    select c.* into conversacion
+    from crm.conversations c
+    where c.organization_id = organizacion
+      and c.channel = 'email'
+      and c.counterpart = remitente
+      and crm.asunto_de_hilo(c.subject) = crm.asunto_de_hilo(correo ->> 'subject')
+      and c.last_message_at > now() - interval '60 days'
+    order by c.last_message_at desc
+    limit 1;
+  end if;
+
+  if conversacion.id is null then
+    -- Solo si la dirección es de un único contacto: con dos, decide una
+    -- persona desde la bandeja.
+    select min(ct.id), min(ct.sales_id)
+    into contacto_id, responsable
+    from crm.contacts ct
+    where ct.organization_id = organizacion
+      and exists (
+        select 1 from jsonb_array_elements(coalesce(ct.email_jsonb, '[]'::jsonb)) e
+        where lower(btrim(e ->> 'email')) = remitente
+      )
+    having count(*) = 1;
+
+    insert into crm.conversations (
+      organization_id, channel, contact_id, counterpart, counterpart_name,
+      subject, status, unread, sales_id, automatic, last_message_at
+    )
+    values (
+      organizacion, 'email', contacto_id, remitente,
+      nullif(correo ->> 'from_name', ''), nullif(correo ->> 'subject', ''),
+      case when automatico then 'closed' else 'pending' end,
+      not automatico, responsable, automatico, enviado
+    )
+    returning * into conversacion;
+    es_nueva := true;
+  end if;
+
+  insert into crm.conversation_messages (
+    organization_id, conversation_id, direction, from_email, from_name,
+    to_emails, cc_emails, subject, body_text, message_id, in_reply_to,
+    reference_ids, provider_id, automatic, attachments, sent_at
+  )
+  values (
+    organizacion, conversacion.id, 'in', remitente,
+    nullif(correo ->> 'from_name', ''),
+    coalesce(array(select jsonb_array_elements_text(coalesce(correo -> 'to', '[]'::jsonb))), '{}'),
+    coalesce(array(select jsonb_array_elements_text(coalesce(correo -> 'cc', '[]'::jsonb))), '{}'),
+    nullif(correo ->> 'subject', ''), texto, mensaje_id, respuesta_a,
+    referencias, proveedor_id, automatico,
+    coalesce(correo -> 'attachments', '[]'::jsonb), enviado
+  )
+  returning id into nuevo_mensaje;
+
+  -- Una respuesta automática se guarda en el hilo, pero no lo reabre.
+  update crm.conversations c
+  set last_message_at = greatest(c.last_message_at, enviado),
+      last_message_preview = left(regexp_replace(texto, '\s+', ' ', 'g'), 200),
+      status = case when automatico then c.status else 'pending' end,
+      unread = c.unread or not automatico,
+      automatic = c.automatic and automatico
+  where c.id = conversacion.id;
+
+  -- Constancia en la ficha: cuenta como actividad del contacto.
+  if conversacion.contact_id is not null and not automatico then
+    insert into crm.contact_notes (
+      organization_id, contact_id, text, type, sales_id, date
+    )
+    values (
+      organizacion, conversacion.contact_id,
+      left(coalesce(nullif(correo ->> 'subject', '') || E'\n\n', '') || texto, 20000),
+      'email', conversacion.sales_id, enviado
+    );
+  end if;
+
+  return jsonb_build_object(
+    'conversation_id', conversacion.id,
+    'message_id', nuevo_mensaje,
+    'new_conversation', es_nueva,
+    'duplicate', false
+  );
+end;
+$$;
+
