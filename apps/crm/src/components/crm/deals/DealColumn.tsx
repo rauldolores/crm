@@ -21,11 +21,15 @@ export const TARJETAS_POR_TRAMO = 30;
 
 export const DealColumn = ({
   stage,
-  deals,
+  // Con valor por defecto aunque el tipo diga que siempre llega: el tablero
+  // lo saca de un objeto indexado por etapa, y una firma de índice miente
+  // —TypeScript da por hecho que hay valor para cualquier clave—, así que un
+  // undefined no lo detecta el typecheck y aquí reventaba el reduce.
+  deals = [],
   embudo,
 }: {
   stage: string;
-  deals: Deal[];
+  deals?: Deal[];
   embudo: DealPipeline;
 }) => {
   const translate = useTranslate();

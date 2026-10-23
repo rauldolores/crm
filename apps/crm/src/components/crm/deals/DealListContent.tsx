@@ -172,7 +172,13 @@ export const DealListContent = () => {
         {etapas.map((stage) => (
           <DealColumn
             stage={stage.value}
-            deals={dealsByStage[stage.value]}
+            // `?? []` porque al cambiar de embudo este render ya pinta las
+            // etapas del nuevo mientras `dealsByStage` —que es estado— sigue
+            // agrupado por las del anterior hasta que corre el efecto. Para
+            // una etapa que solo existe en el nuevo embudo (de Ventas a
+            // Prospección fría: whatsapp, correo, llamada…) aquí llegaba
+            // undefined y la columna reventaba al sumar los importes.
+            deals={dealsByStage[stage.value] ?? []}
             embudo={embudoActivo}
             key={stage.value}
           />
