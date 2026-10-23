@@ -2133,8 +2133,6 @@ export const spanishCrmMessages = {
           title: "Tu dirección de correo",
           help: "En Resend, entra a «Receiving» (o «Inboxes») y crea la dirección donde quieres recibir. Escríbela aquí igual que allá.",
           label: "Dirección de la bandeja",
-          reply_to:
-            "Desde que la guardes, todo lo que Vinqulia envíe llevará esta dirección como «responder a»: así las respuestas llegan aquí y no al buzón de cada persona.",
         },
         step2: {
           title: "Avisa a Vinqulia cuando llegue un correo",

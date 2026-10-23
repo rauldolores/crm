@@ -119,7 +119,6 @@ export const ConfigurarBandejaPage = () => {
           value={direccion}
           onChange={(evento) => setDireccion(evento.target.value)}
         />
-        <p className="text-xs text-muted-foreground">{t("step1.reply_to")}</p>
       </Paso>
 
       <Paso numero={2} titulo={t("step2.title")}>
