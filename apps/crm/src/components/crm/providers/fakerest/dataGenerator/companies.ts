@@ -59,6 +59,8 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       referred_by_affiliate_id: null,
       tags: [],
       lifecycle_stage: null,
+      is_client: true,
+      is_affiliate: false,
     };
   });
 };

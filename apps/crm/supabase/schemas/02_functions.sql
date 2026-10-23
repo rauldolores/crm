@@ -1820,15 +1820,88 @@ $$;
 
 grant all on function crm.generar_codigo_referido_disponible(uuid, bigint) to service_role;
 
--- Módulo Afiliados: cuando una oportunidad cambia de etapa y esa etapa es una
--- de las configuradas como "afiliación completa" para el embudo configurado,
--- da de alta (o refresca) al contacto principal del deal como afiliado.
+-- Módulo Afiliados: ¿esta etapa de este embudo es de "afiliación completa"
+-- para la organización? Falso si el módulo está apagado o sin configurar.
+create or replace function crm.es_etapa_de_afiliacion(org uuid, embudo text, etapa text) returns boolean
+    language sql stable security definer
+    set search_path = ''
+    as $$
+  select coalesce((
+    select coalesce((c.config -> 'modules' -> 'affiliates' ->> 'active')::boolean, false)
+       and c.config -> 'modules' -> 'affiliates' ->> 'pipelineId' = embudo
+       and coalesce(c.config -> 'modules' -> 'affiliates' -> 'completionStages', '[]'::jsonb) ? etapa
+      from crm.configuration c
+     where c.organization_id = org
+  ), false)
+$$;
+
+revoke all on function crm.es_etapa_de_afiliacion(uuid, text, text) from public, anon, authenticated;
+grant all on function crm.es_etapa_de_afiliacion(uuid, text, text) to service_role;
+
+-- Módulo Afiliados: quién se convierte en afiliado al completar una
+-- oportunidad. El primer contacto de la oportunidad; si no tiene, el contacto
+-- más reciente de su empresa (lo normal es dar de alta la empresa y su
+-- contacto y luego la oportunidad, sin acordarse de vincularlo).
+create or replace function crm.contacto_para_afiliar(oportunidad crm.deals) returns bigint
+    language sql stable security definer
+    set search_path = ''
+    as $$
+  select coalesce(
+    oportunidad.contact_ids[1],
+    (select co.id
+       from crm.contacts co
+      where co.company_id = oportunidad.company_id
+        and co.organization_id = oportunidad.organization_id
+      order by co.last_seen desc nulls last, co.id desc
+      limit 1)
+  )
+$$;
+
+revoke all on function crm.contacto_para_afiliar(crm.deals) from public, anon, authenticated;
+grant all on function crm.contacto_para_afiliar(crm.deals) to service_role;
+
+-- Módulo Afiliados: no deja llevar una oportunidad a la etapa de "afiliación
+-- completa" si no hay a quién hacer afiliado (ni contacto en la oportunidad
+-- ni en su empresa). Antes la etapa cambiaba y el afiliado simplemente no se
+-- creaba, sin aviso. El mensaje llega tal cual a la pantalla.
+create or replace function crm.exigir_contacto_para_afiliar() returns trigger
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+begin
+  -- Los embudos comparten los valores de etapa: pasar de embudo con la
+  -- misma etapa también cuenta como llegar a ella.
+  if tg_op = 'UPDATE'
+     and old.stage is not distinct from new.stage
+     and old.pipeline is not distinct from new.pipeline then
+    return new;
+  end if;
+
+  if crm.es_etapa_de_afiliacion(new.organization_id, new.pipeline, new.stage)
+     and crm.contacto_para_afiliar(new) is null then
+    raise exception 'Para activar al afiliado, la oportunidad necesita un contacto: vincula uno o dalo de alta en su empresa.'
+      using errcode = 'check_violation';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function crm.exigir_contacto_para_afiliar() from public, anon, authenticated;
+grant all on function crm.exigir_contacto_para_afiliar() to service_role;
+
+-- Módulo Afiliados: cuando una oportunidad llega (al crearse o al cambiar de
+-- etapa) a una de las etapas de "afiliación completa" del embudo configurado,
+-- da de alta (o refresca) como afiliado al contacto de crm.contacto_para_afiliar
+-- y marca su empresa como afiliado (sin quitarle lo de cliente: puede ser las
+-- dos cosas).
 --
 -- Todo el cuerpo va protegido con manejo de excepciones: si el módulo está
 -- apagado para la organización, si falta configurarlo, o si algo falla, esta
 -- función no debe impedir jamás que se guarde el cambio de etapa del deal.
 -- Así "cada módulo es independiente, se activa o desactiva sin afectar el
--- sistema" es literal, no solo una intención.
+-- sistema" es literal, no solo una intención. (Lo único que sí bloquea es
+-- crm.exigir_contacto_para_afiliar, a propósito y antes de guardar.)
 create or replace function crm.gestionar_modulo_afiliados() returns trigger
     language plpgsql security definer
     set search_path = ''
@@ -1836,14 +1909,16 @@ create or replace function crm.gestionar_modulo_afiliados() returns trigger
 declare
   org uuid;
   cfg jsonb;
-  pipeline_id text;
-  etapas_completas jsonb;
   contacto bigint;
   empresa bigint;
   codigo text;
   comision numeric;
 begin
-  if old.stage is not distinct from new.stage then
+  -- Los embudos comparten los valores de etapa: pasar de embudo con la
+  -- misma etapa también cuenta como llegar a ella.
+  if tg_op = 'UPDATE'
+     and old.stage is not distinct from new.stage
+     and old.pipeline is not distinct from new.pipeline then
     return null;
   end if;
 
@@ -1853,38 +1928,28 @@ begin
   end if;
 
   begin
-    select config -> 'modules' -> 'affiliates' into cfg
-      from crm.configuration
-     where organization_id = org;
-
-    if cfg is null or coalesce((cfg ->> 'active')::boolean, false) is not true then
+    if not crm.es_etapa_de_afiliacion(org, new.pipeline, new.stage) then
       return null;
     end if;
 
-    pipeline_id := cfg ->> 'pipelineId';
-    etapas_completas := cfg -> 'completionStages';
-
-    if pipeline_id is null or etapas_completas is null then
-      return null;
-    end if;
-
-    if new.pipeline is distinct from pipeline_id then
-      return null;
-    end if;
-
-    if not (etapas_completas ? new.stage) then
-      return null;
-    end if;
-
-    contacto := new.contact_ids[1];
+    contacto := crm.contacto_para_afiliar(new);
     if contacto is null then
       return null;
     end if;
 
-    select company_id into empresa from crm.contacts where id = contacto;
+    -- La empresa de la oportunidad; la del contacto solo si la oportunidad
+    -- no tuviera (deals.company_id es obligatorio en el formulario).
+    empresa := coalesce(
+      new.company_id,
+      (select company_id from crm.contacts where id = contacto)
+    );
     if empresa is null then
       return null;
     end if;
+
+    select config -> 'modules' -> 'affiliates' into cfg
+      from crm.configuration
+     where organization_id = org;
 
     codigo := crm.generar_codigo_referido_disponible(org, contacto);
     -- Tasa del programa: la configurada en el módulo, o 15%.
@@ -1899,6 +1964,12 @@ begin
       -- Ni referral_code ni commission_percentage se tocan en el conflicto:
       -- si el contacto ya era afiliado conserva su código y la tasa que se
       -- le haya negociado.
+
+    update crm.companies
+       set is_affiliate = true
+     where id = empresa
+       and organization_id = org
+       and not is_affiliate;
   exception when others then
     null;
   end;

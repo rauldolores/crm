@@ -111,7 +111,10 @@ select
     -- cliente deja cambiar la etapa ahí mismo; sin esta columna el cambio se
     -- guardaba en crm.companies pero al refrescar volvía vacío, porque el
     -- registro recargado ya no traía el campo.
-    c.lifecycle_stage
+    c.lifecycle_stage,
+    -- Al final por la misma razón que lifecycle_stage.
+    c.is_client,
+    c.is_affiliate
 from crm.companies c
     left join crm.deals d on c.id = d.company_id
     left join crm.contacts co on c.id = co.company_id
@@ -325,7 +328,11 @@ select
     coalesce(g.won_amount, 0) as won_amount,
     -- De dónde viene la empresa (kontrolia_auth = se sincroniza sola).
     c.source,
-    c.external_id
+    c.external_id,
+    -- La lista de Clientes muestra solo empresas cliente: un afiliado que no
+    -- compra nada no es un cliente. Va como columna (y no como `where`)
+    -- porque la ficha de la empresa también lee de esta vista.
+    c.is_client
 from crm.companies c
 left join lateral (
     select count(*) as nb_purchases,

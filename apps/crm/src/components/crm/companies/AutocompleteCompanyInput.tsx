@@ -8,7 +8,15 @@ export const AutocompleteCompanyInput = ({
   validate,
   label,
   modal,
-}: Pick<InputProps, "validate" | "label"> & Pick<PopoverProps, "modal">) => {
+  datosDeAlta,
+}: Pick<InputProps, "validate" | "label"> &
+  Pick<PopoverProps, "modal"> & {
+    /**
+     * Campos con los que nace una empresa creada desde aquí, p. ej. el tipo
+     * (cliente o afiliado) que pide el embudo de la oportunidad.
+     */
+    datosDeAlta?: Record<string, unknown>;
+  }) => {
   const [create] = useCreate();
   const { identity } = useGetIdentity();
   const notify = useNotify();
@@ -19,6 +27,7 @@ export const AutocompleteCompanyInput = ({
         "companies",
         {
           data: {
+            ...datosDeAlta,
             name,
             sales_id: identity?.id,
             created_at: new Date().toISOString(),

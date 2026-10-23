@@ -51,11 +51,23 @@ create table crm.companies (
     tags bigint[],
     -- De dónde vino (kontrolia_auth…) y su id allá; null = alta a mano.
     source text,
-    external_id text
+    external_id text,
+    -- Qué es la empresa para nosotros: cliente, afiliado o las dos cosas (un
+    -- despacho que usa el producto y además lo revende). La lista de empresas
+    -- muestra por defecto los clientes, y una oportunidad del embudo de
+    -- afiliados solo ofrece afiliados. Al menos una de las dos.
+    is_client boolean not null default true,
+    is_affiliate boolean not null default false,
+    constraint companies_client_or_affiliate check (is_client or is_affiliate)
 );
 
 create index if not exists companies_referred_by_affiliate_id_idx
     on crm.companies (referred_by_affiliate_id);
+
+-- Los afiliados son pocos: el selector de empresas del embudo de afiliados
+-- los busca sin recorrer todos los clientes.
+create index if not exists companies_is_affiliate_idx
+    on crm.companies (organization_id) where is_affiliate;
 
 create table crm.contacts (
     organization_id uuid not null default (auth.jwt() ->> 'organization_id')::uuid,

@@ -100,6 +100,16 @@ export const spanishCrmMessages = {
         fifty_to_two_hundred_forty_nine_employees: "50-249 empleados",
         two_hundred_fifty_or_more_employees: "250 empleados o más",
       },
+      type: {
+        title: "Tipo",
+        client: "Cliente",
+        affiliate: "Afiliado",
+        help: "Puede ser las dos cosas: un despacho que usa tu producto y además lo revende.",
+        at_least_one: "Marca al menos una: cliente o afiliado.",
+        clients: "Clientes",
+        affiliates: "Afiliados",
+        all: "Todas",
+      },
       autocomplete: {
         create_error: "Se produjo un error al crear la empresa",
         create_item: "Crear %{item}",
@@ -365,6 +375,7 @@ export const spanishCrmMessages = {
         name: "Nombre",
         description: "Descripción",
         company_id: "Empresa",
+        affiliate_company_id: "Empresa afiliada",
         contact_ids: "Contactos",
         category: "Categoría",
         amount: "Importe",
@@ -761,7 +772,7 @@ export const spanishCrmMessages = {
       empty: {
         title: "No hay afiliados",
         description:
-          "Un contacto se vuelve afiliado solo cuando gana una oportunidad en el embudo configurado en Módulos > Afiliados.",
+          "Todavía no hay afiliados. Se crean solos cuando la oportunidad de una empresa afiliada llega a la etapa de afiliación completa del embudo de afiliados; los que van en camino están en la pestaña «En proceso».",
       },
     },
     sales: {
@@ -1602,6 +1613,19 @@ export const spanishCrmMessages = {
     },
     customers: {
       tab: "Cliente",
+      how_to: {
+        title: "¿Cómo agrego un cliente?",
+        company: "Da de alta la empresa y su contacto en Empresas.",
+        company_typed:
+          "Da de alta la empresa (con el tipo «Cliente» marcado) y su contacto en Empresas.",
+        company_link: "Nueva empresa",
+        deal: "Crea una oportunidad para esa empresa.",
+        deal_not_affiliates:
+          "Crea una oportunidad para esa empresa en tu embudo de ventas (no en el de afiliados).",
+        deal_link: "Nueva oportunidad",
+        becomes_customer:
+          "La empresa ya aparece aquí. Su etapa pasa a «Cliente» sola al registrar una compra o un contrato, o cuando acepta una cotización.",
+      },
       stage_none: "Sin etapa",
       risk: {
         filter: "En riesgo",
@@ -2047,6 +2071,30 @@ export const spanishCrmMessages = {
       },
     },
     affiliates: {
+      how_to: {
+        title: "¿Cómo agrego un afiliado?",
+        company:
+          "Da de alta la empresa (con el tipo «Afiliado» marcado) y su contacto en Empresas.",
+        company_link: "Nueva empresa",
+        deal: "Crea una oportunidad para esa empresa en el embudo «%{embudo}»: desde ese momento aparece en la pestaña «En proceso».",
+        deal_link: "Nueva oportunidad",
+        becomes_affiliate:
+          "Cuando la oportunidad llega a «%{etapas}», se convierte en afiliado con su código de referido y su comisión, y pasa a la pestaña «Afiliados».",
+      },
+      tabs: {
+        affiliates: "Afiliados",
+        in_progress: "En proceso",
+      },
+      in_progress: {
+        deal: "Oportunidad",
+        stage: "Etapa",
+        updated: "Último cambio",
+        no_contact: "Sin contacto vinculado",
+        empty:
+          "No hay candidatos en proceso. Aparecen aquí en cuanto creas su oportunidad en el embudo de afiliados; los rechazados no se muestran.",
+        not_configured:
+          "Configura el embudo de afiliación en «Configurar módulo» para ver aquí a los candidatos.",
+      },
       config: {
         title: "Configuración de Afiliados",
         intro:
