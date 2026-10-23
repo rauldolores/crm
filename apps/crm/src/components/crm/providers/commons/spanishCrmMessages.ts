@@ -2472,8 +2472,10 @@ export const spanishCrmMessages = {
         client_id: "Cuando el asistente pida el Client ID de OAuth, usa este:",
         how_to:
           "En Claude: Ajustes → Conectores → Agregar conector personalizado. Pega la dirección de arriba y, en Configuración avanzada, este Client ID. El Client Secret se deja vacío.",
+        claude_code:
+          "En Claude Code, agrégalo con este comando y luego ejecuta /mcp para iniciar sesión. El puerto 8765 es el que está autorizado: no lo cambies.",
         redirect_uris:
-          "Claude.ai y ChatGPT ya están autorizados. Si tu asistente usa otra dirección de retorno (por ejemplo, Claude Code en tu computadora), pide al administrador que la agregue a este cliente en KontrolIA Auth.",
+          "Claude.ai, ChatGPT, Claude Code y Nodia Agents ya están autorizados. Si tu asistente usa otra dirección de retorno, pide al administrador que la agregue a este cliente en KontrolIA Auth.",
         no_client_id:
           "Esta instalación no tiene configurado el Client ID de OAuth (NEXT_PUBLIC_KONTROLIA_OAUTH_CLIENT_ID).",
         tools: "El servidor expone estas herramientas:",
