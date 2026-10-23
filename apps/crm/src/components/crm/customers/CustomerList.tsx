@@ -6,7 +6,11 @@ import { SearchInput } from "@/components/admin/search-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { ToggleFilterButton } from "@/components/admin/toggle-filter-button";
 
+import { Link } from "react-router";
+
 import { TopToolbar } from "../layout/TopToolbar";
+import { useEmbudoDeAfiliados } from "../affiliates/embudoDeAfiliados";
+import { PasosDeAlta } from "../misc/PasosDeAlta";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { CustomerSummary } from "../types";
 import { EtapaDeCliente } from "./EtapaDeCliente";
@@ -102,11 +106,48 @@ const CustomerListActions = () => (
   </TopToolbar>
 );
 
+/** Un cliente nace de una empresa y una oportunidad: no se crea aquí. */
+const ComoAgregarUnCliente = () => {
+  const translate = useTranslate();
+  const { activo } = useEmbudoDeAfiliados();
+  return (
+    <PasosDeAlta
+      id="clientes"
+      titulo={translate("crm.customers.how_to.title")}
+      pasos={[
+        <>
+          {translate(
+            activo
+              ? "crm.customers.how_to.company_typed"
+              : "crm.customers.how_to.company",
+          )}{" "}
+          <Link className="text-primary underline" to="/companies/create">
+            {translate("crm.customers.how_to.company_link")}
+          </Link>
+        </>,
+        <>
+          {translate(
+            activo
+              ? "crm.customers.how_to.deal_not_affiliates"
+              : "crm.customers.how_to.deal",
+          )}{" "}
+          <Link className="text-primary underline" to="/deals/create">
+            {translate("crm.customers.how_to.deal_link")}
+          </Link>
+        </>,
+        translate("crm.customers.how_to.becomes_customer"),
+      ]}
+    />
+  );
+};
+
 export const CustomerList = () => {
   const { customerStages } = useConfigurationContext();
   return (
     <List
       actions={<CustomerListActions />}
+      // Solo empresas cliente: un afiliado que no compra no es cliente.
+      filter={{ is_client: true }}
       filters={[
         <SearchInput source="q" alwaysOn key="q" />,
         <SelectInput
@@ -122,6 +163,9 @@ export const CustomerList = () => {
       sort={{ field: "total_spent", order: "DESC" }}
       perPage={25}
     >
+      <div className="mb-3 flex flex-col">
+        <ComoAgregarUnCliente />
+      </div>
       <div className="mb-2 flex flex-wrap gap-1">
         <ToggleFilterButton
           className="w-auto"

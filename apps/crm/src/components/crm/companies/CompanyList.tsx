@@ -12,15 +12,19 @@ import { VistasGuardadas } from "../misc/VistasGuardadas";
 import { CompanyEmpty } from "./CompanyEmpty";
 import { CompanyListFilter } from "./CompanyListFilter";
 import { ImageList } from "./GridList";
+import { useEmbudoDeAfiliados } from "../affiliates/embudoDeAfiliados";
 
 export const CompanyList = () => {
   const { identity } = useGetIdentity();
   const { companyCustomFields } = useConfigurationContext();
+  const { activo: conAfiliados } = useEmbudoDeAfiliados();
   if (!identity) return null;
   return (
     <List
       perPage={25}
       sort={{ field: "name", order: "ASC" }}
+      // Es un CRM: por defecto, los clientes. Los afiliados, con el filtro.
+      filterDefaultValues={conAfiliados ? { is_client: true } : undefined}
       exporter={exportadorDeEmpresas(companyCustomFields)}
       actions={<CompanyListActions />}
       pagination={<ListPagination rowsPerPageOptions={[10, 25, 50, 100]} />}

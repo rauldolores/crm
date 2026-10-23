@@ -2,6 +2,7 @@ import { required, useRecordContext, useTranslate } from "ra-core";
 import { AutocompleteInput } from "@/components/admin/autocomplete-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
+import { BooleanInput } from "@/components/admin/boolean-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { ArrayInput } from "@/components/admin/array-input";
 import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
@@ -13,6 +14,7 @@ import ImageEditorField from "../misc/ImageEditorField";
 import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { isLinkedinUrl } from "../misc/isLinkedInUrl";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { useEmbudoDeAfiliados } from "../affiliates/embudoDeAfiliados";
 import type { Company, Sale } from "../types";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
 import { sizes } from "./sizes";
@@ -39,6 +41,7 @@ export const CompanyInputs = () => {
       <CompanyDisplayInputs />
       <div className={`flex gap-6 ${isMobile ? "flex-col" : "flex-row"}`}>
         <div className="flex flex-col gap-10 flex-1">
+          <CompanyTypeInputs />
           <CompanyContactInputs />
           <CompanyContextInputs />
         </div>
@@ -73,6 +76,42 @@ const CompanyDisplayInputs = () => {
         placeholder={translate("resources.companies.fields.name", {
           _: "Company name",
         })}
+      />
+    </div>
+  );
+};
+
+/** Una empresa es cliente, afiliado o las dos cosas, nunca ninguna. */
+const alMenosUnTipo = (_valor: unknown, valores: Partial<Company>) =>
+  valores.is_client || valores.is_affiliate
+    ? undefined
+    : "resources.companies.type.at_least_one";
+
+/**
+ * Cliente, afiliado o las dos cosas. Solo tiene sentido con el módulo
+ * Afiliados encendido: sin él, toda empresa es cliente.
+ */
+const CompanyTypeInputs = () => {
+  const translate = useTranslate();
+  const { activo } = useEmbudoDeAfiliados();
+  if (!activo) return null;
+  return (
+    <div className="flex flex-col gap-4">
+      <h6 className="border-b pb-2 font-display text-base font-semibold tracking-tight">
+        {translate("resources.companies.type.title")}
+      </h6>
+      <BooleanInput
+        source="is_client"
+        label="resources.companies.type.client"
+        defaultValue={true}
+        validate={alMenosUnTipo}
+        helperText={false}
+      />
+      <BooleanInput
+        source="is_affiliate"
+        label="resources.companies.type.affiliate"
+        defaultValue={false}
+        helperText="resources.companies.type.help"
       />
     </div>
   );

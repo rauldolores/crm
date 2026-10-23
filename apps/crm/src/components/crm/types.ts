@@ -102,6 +102,9 @@ export type Company = {
   tags?: number[] | null;
   /** Módulo Clientes: prospecto, cliente activo, en riesgo, perdido. */
   lifecycle_stage?: string | null;
+  /** Qué es para nosotros: cliente, afiliado o las dos cosas (al menos una). */
+  is_client?: boolean;
+  is_affiliate?: boolean;
 } & Pick<RaRecord, "id">;
 
 export type EmailAndType = {

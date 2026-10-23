@@ -187,9 +187,17 @@ create trigger run_automations_email_outbox
 -- Trigger propio (no reusa run_automations) para que el módulo entero pueda
 -- apagarse por organización sin tocar el motor de automatizaciones que usan
 -- todas las demás.
+-- También al crear: una oportunidad dada de alta directamente en la etapa de
+-- afiliación completa también hace afiliado.
 create trigger gestionar_modulo_afiliados_deals
-    after update on crm.deals
+    after insert or update on crm.deals
     for each row execute function crm.gestionar_modulo_afiliados();
+
+-- Antes de guardar, para poder rechazar la etapa: ver
+-- crm.exigir_contacto_para_afiliar.
+create trigger exigir_contacto_para_afiliar_deals
+    before insert or update of stage, pipeline on crm.deals
+    for each row execute function crm.exigir_contacto_para_afiliar();
 
 -- La atribución a un afiliado sólo cambia por crm.asignar_afiliado: ver
 -- crm.conservar_afiliado_de_referencia en 02_functions.sql.

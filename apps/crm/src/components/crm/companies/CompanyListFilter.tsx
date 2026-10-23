@@ -3,6 +3,7 @@ import {
   Handshake,
   ListFilter,
   MapPin,
+  Shapes,
   Tag,
   Target,
   Truck,
@@ -18,6 +19,7 @@ import {
 import { ToggleFilterButton } from "@/components/admin/toggle-filter-button";
 import { SearchInput } from "@/components/admin/search-input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
@@ -58,6 +60,15 @@ export const CompanyListFilter = () => {
       <FilterLiveForm>
         <SearchInput source="q" />
       </FilterLiveForm>
+
+      {conAfiliados && (
+        <FilterCategory
+          icon={<Shapes className="h-4 w-4" />}
+          label="resources.companies.type.title"
+        >
+          <FiltroDeTipo />
+        </FilterCategory>
+      )}
 
       <FilterCategory
         icon={<Target className="h-4 w-4" />}
@@ -158,6 +169,50 @@ export const CompanyListFilter = () => {
           ))}
         </FilterCategory>
       )}
+    </div>
+  );
+};
+
+/**
+ * Clientes, afiliados o todas. Excluyentes entre sí: elegir una quita la
+ * otra, porque con las dos claves a la vez solo saldrían las empresas que
+ * son ambas cosas.
+ */
+const TIPOS = [
+  { clave: "is_client", etiqueta: "resources.companies.type.clients" },
+  { clave: "is_affiliate", etiqueta: "resources.companies.type.affiliates" },
+  { clave: null, etiqueta: "resources.companies.type.all" },
+] as const;
+
+const FiltroDeTipo = () => {
+  const translate = useTranslate();
+  const { filterValues, setFilters } = useListContext();
+  const {
+    is_client: _cliente,
+    is_affiliate: _afiliado,
+    ...resto
+  } = filterValues ?? {};
+  const actual = filterValues?.is_client
+    ? "is_client"
+    : filterValues?.is_affiliate
+      ? "is_affiliate"
+      : null;
+
+  return (
+    <div className="flex flex-col">
+      {TIPOS.map(({ clave, etiqueta }) => (
+        <Button
+          key={etiqueta}
+          variant={actual === clave ? "secondary" : "ghost"}
+          size="sm"
+          className="w-full justify-start"
+          onClick={() =>
+            setFilters(clave ? { ...resto, [clave]: true } : resto)
+          }
+        >
+          {translate(etiqueta)}
+        </Button>
+      ))}
     </div>
   );
 };

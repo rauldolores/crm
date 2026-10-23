@@ -15,6 +15,10 @@ import { contactOptionText } from "../misc/ContactOption";
 import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { AutocompleteCompanyInput } from "../companies/AutocompleteCompanyInput.tsx";
+import {
+  filtroDeEmpresasParaEmbudo,
+  useEmbudoDeAfiliados,
+} from "../affiliates/embudoDeAfiliados";
 
 export const DealInputs = () => {
   const isMobile = useIsMobile();
@@ -42,15 +46,31 @@ const DealInfoInputs = () => {
 
 const DealLinkedToInputs = () => {
   const translate = useTranslate();
+  const { dealPipelines } = useConfigurationContext();
+  const afiliados = useEmbudoDeAfiliados();
+  // Sin selector de embudo (hay uno solo), la oportunidad va al primero.
+  const embudoElegido =
+    useWatch({ name: "pipeline" }) ?? dealPipelines[0]?.value;
+  // En el embudo de afiliados solo se ofrecen afiliados; en los demás, solo
+  // clientes. Una empresa creada aquí nace con ese mismo tipo.
+  const filtro = filtroDeEmpresasParaEmbudo(afiliados, embudoElegido);
+  const datosDeAlta = filtro.is_affiliate
+    ? { is_affiliate: true, is_client: false }
+    : undefined;
   return (
     <div className="flex flex-col gap-4 flex-1">
       <h3 className="text-base font-medium">
         {translate("resources.deals.inputs.linked_to")}
       </h3>
-      <ReferenceInput source="company_id" reference="companies">
+      <ReferenceInput source="company_id" reference="companies" filter={filtro}>
         <AutocompleteCompanyInput
-          label="resources.deals.fields.company_id"
+          label={
+            filtro.is_affiliate
+              ? "resources.deals.fields.affiliate_company_id"
+              : "resources.deals.fields.company_id"
+          }
           validate={required()}
+          datosDeAlta={datosDeAlta}
           modal
         />
       </ReferenceInput>
