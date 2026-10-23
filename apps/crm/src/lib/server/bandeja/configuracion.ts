@@ -74,17 +74,6 @@ export async function ajustesVisibles(
 }
 
 /**
- * Dirección a la que deben llegar las respuestas: la de la bandeja, si está
- * activa. Va como Reply-To en todo lo que sale del CRM.
- */
-export async function direccionDeRespuesta(
-  organizacionId: string,
-): Promise<string | null> {
-  const ajustes = await ajustesDeBandeja(organizacionId);
-  return ajustes?.active ? ajustes.inboxEmail : null;
-}
-
-/**
  * Clave con la que se lee el correo recibido en Resend: la propia de la
  * bandeja o, si no hay, la del correo saliente cuando también es de Resend.
  */

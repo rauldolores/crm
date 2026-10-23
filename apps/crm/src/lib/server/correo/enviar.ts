@@ -1,4 +1,3 @@
-import { direccionDeRespuesta } from "../bandeja/configuracion";
 import { cuentaDeEnvioDeOrganizacion } from "./configuracion";
 import type { MensajeDeCorreo, ResultadoDeEnvio } from "./proveedores";
 import { enviarConProveedor } from "./proveedores";
@@ -9,9 +8,10 @@ import { enviarConProveedor } from "./proveedores";
  * por aquí, y por tanto por el proveedor que haya configurado esa
  * organización. Ver `cuentaDeEnvioDeOrganizacion`.
  *
- * Si la organización tiene bandeja de correo, todo sale con su dirección
- * como Reply-To: la respuesta del cliente llega a la bandeja del equipo y no
- * al buzón de quien sea el remitente.
+ * Sin Reply-To impuesto: la respuesta vuelve a la dirección que envió. Hubo
+ * uno global (la dirección de la bandeja) y se quitó porque, con varios
+ * proyectos en una organización, una cotización de un proyecto pedía que le
+ * contestaran a otro.
  */
 
 export async function enviarCorreoDeOrganizacion(
@@ -26,12 +26,7 @@ export async function enviarCorreoDeOrganizacion(
         "No hay un servidor de correo configurado. Configúralo en Ajustes → Correo saliente.",
     };
   }
-  const responderA =
-    mensaje.responderA ?? (await direccionDeRespuesta(organizacionId));
-  return enviarConProveedor(cuenta, {
-    ...mensaje,
-    responderA: responderA ?? undefined,
-  });
+  return enviarConProveedor(cuenta, mensaje);
 }
 
 /** ¿Puede esta organización enviar correo ahora mismo? */
