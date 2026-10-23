@@ -36,6 +36,20 @@ const excludedLibFiles = [
 const testFilePattern = "**/*.{test,spec}.*";
 const storyFilePattern = "**/*.stories.*";
 
+// Lo mismo para las cuatro rutas. Antes solo los componentes ignoraban las
+// pruebas, así que el registry publicaba los .test.ts de src/lib y src/hooks.
+//
+// `__screenshots__` es donde vitest guarda la captura de una prueba fallida,
+// en una carpeta con nombre de archivo (`__screenshots__/x.test.ts/…png`).
+// Está en .gitignore, pero el glob no lo lee: sin excluirla, el registry se
+// llenaba de esas carpetas cada vez que alguien tenía una prueba roja, y el
+// archivo quedaba modificado sin que nadie lo hubiera tocado.
+const ignorados = [testFilePattern, storyFilePattern, "**/__screenshots__/**"];
+
+// `nodir`: el patrón **/*.ts* también encaja con una CARPETA llamada
+// `x.test.ts` (justo las de las capturas). Solo interesan archivos.
+const soloArchivos = { ignore: ignorados, nodir: true };
+
 // glob devuelve los resultados con el separador nativo, asi que en Windows
 // llegan con backslashes. El registry se publica y se versiona, por lo que sus
 // rutas deben ser identicas en cualquier plataforma: siempre con barras.
@@ -46,22 +60,24 @@ const globPosix = (pattern, options) =>
 
 const crmComponents = globPosix(
   path.posix.join(crmComponentsPath, "**", "*.ts*"),
-  { ignore: [testFilePattern, storyFilePattern] },
+  soloArchivos,
 );
 const supabaseComponents = globPosix(
   path.posix.join(supabaseComponentsPath, "**", "*.ts*"),
-  { ignore: [testFilePattern, storyFilePattern] },
+  soloArchivos,
 );
-const hooks = globPosix(path.posix.join(hooksPath, "**", "*.ts*")).filter(
-  (hook) => {
-    return !excludedHooks.includes(path.basename(hook));
-  },
-);
-const libFiles = globPosix(path.posix.join(libPath, "**", "*.ts*")).filter(
-  (file) => {
-    return !excludedLibFiles.includes(path.basename(file));
-  },
-);
+const hooks = globPosix(
+  path.posix.join(hooksPath, "**", "*.ts*"),
+  soloArchivos,
+).filter((hook) => {
+  return !excludedHooks.includes(path.basename(hook));
+});
+const libFiles = globPosix(
+  path.posix.join(libPath, "**", "*.ts*"),
+  soloArchivos,
+).filter((file) => {
+  return !excludedLibFiles.includes(path.basename(file));
+});
 const changelogPath = "CHANGELOG.md";
 
 const registryContent = JSON.parse(fs.readFileSync(registryPath, "utf-8"));

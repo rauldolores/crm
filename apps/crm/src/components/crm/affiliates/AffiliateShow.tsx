@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { Identifier } from "ra-core";
 import {
+  CanAccess,
   ShowBase,
   useGetOne,
   useNotify,
@@ -68,7 +69,12 @@ const AffiliateShowContent = () => {
                 </Badge>
                 <h5 className="text-xl">{record.referral_code}</h5>
               </div>
-              <EditButton />
+              {/* Editar decide la comisión, así que solo un administrador.
+                  El candado de verdad está en el puente /api/datos; esto
+                  solo evita enseñar un botón que iba a dar 403. */}
+              <CanAccess resource="configuration" action="edit">
+                <EditButton />
+              </CanAccess>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">

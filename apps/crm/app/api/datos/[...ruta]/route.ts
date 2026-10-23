@@ -1,4 +1,6 @@
 import { afiliadoDeLaSesion } from "@/lib/server/afiliadoDeLaSesion";
+import { exigeAdministrador } from "@/lib/server/afiliados/soloAdministrador";
+import { esAdministradorDeOrganizacion } from "@/lib/server/apiKeys";
 import { borraAlUsuarioDeLaSesion } from "@/lib/server/borradoDeUsuarios";
 import { autenticarPuente } from "@/lib/server/autenticarPuente";
 import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
@@ -288,6 +290,18 @@ async function reenviar(peticion: Request, ruta: string[]) {
     peticion.method !== "HEAD"
   ) {
     return esError(405, "Este recurso es de solo lectura.");
+  }
+
+  // Lo que decide cuánto se le paga a un afiliado solo lo escribe un
+  // administrador. La regla vive en soloAdministrador.ts, con sus pruebas.
+  if (
+    exigeAdministrador(recurso, peticion.method, viaClaveDeApi) &&
+    !(await esAdministradorDeOrganizacion(organizacionId, usuarioId))
+  ) {
+    return esError(
+      403,
+      "Solo un administrador puede modificar el programa de afiliados.",
+    );
   }
 
   // PostgREST permite incrustar relaciones (?select=*,sales(*)); una clave

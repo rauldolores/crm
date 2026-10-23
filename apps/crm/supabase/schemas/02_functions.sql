@@ -1776,7 +1776,18 @@ declare
   candidato text;
   intento int := 0;
 begin
-  select regexp_replace(lower(coalesce(first_name, '') || '-' || coalesce(last_name, '')), '[^a-z0-9]+', '-', 'g')
+  -- Los acentos se quitan ANTES de convertir a guiones: sin el translate, la
+  -- expresión [^a-z0-9] trataba cada letra acentuada como separador y «José
+  -- Núñez» salía «jos-n-ez». En un producto en español eso tocaba a casi
+  -- cualquier nombre, y el código va en el enlace que el afiliado reparte.
+  -- Las dos listas deben medir lo mismo, o translate borra letras sin avisar.
+  select regexp_replace(
+           lower(translate(
+             coalesce(first_name, '') || '-' || coalesce(last_name, ''),
+             'ÁÀÄÂÃÉÈËÊÍÌÏÎÓÒÖÔÕÚÙÜÛÑÇáàäâãéèëêíìïîóòöôõúùüûñç',
+             'AAAAAEEEEIIIIOOOOOUUUUNCaaaaaeeeeiiiiooooouuuunc'
+           )),
+           '[^a-z0-9]+', '-', 'g')
     into base
     from crm.contacts
    where id = contacto;
