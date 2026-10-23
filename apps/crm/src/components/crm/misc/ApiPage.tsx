@@ -231,6 +231,11 @@ curl "${origen}/api/datos/rest/v1/quote_items?quote_id=eq.12&order=position"   -
               <p>{translate("crm.api.mcp.client_id")}</p>
               <Bloque>{env.kontroliaOAuthClientId}</Bloque>
               <p>{translate("crm.api.mcp.how_to")}</p>
+              <p>{translate("crm.api.mcp.claude_code")}</p>
+              <Bloque>{`claude mcp add --transport http \\
+  --client-id ${env.kontroliaOAuthClientId} \\
+  --callback-port 8765 \\
+  vinqulia ${urlMcp}`}</Bloque>
               <p className="text-muted-foreground">
                 {translate("crm.api.mcp.redirect_uris")}
               </p>
