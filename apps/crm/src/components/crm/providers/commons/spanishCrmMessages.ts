@@ -2436,7 +2436,15 @@ export const spanishCrmMessages = {
         title: "MCP (para asistentes de IA)",
         intro:
           "Vinqulia expone un servidor MCP para que un asistente de IA (como Claude) consulte y modifique tus datos por instrucciones en lenguaje natural. Conéctalo con esta dirección:",
-        auth: "La autenticación usa el mismo token de sesión de KontrolIA Auth. El servidor expone estas herramientas:",
+        auth: "El asistente inicia sesión con tu cuenta de KontrolIA Auth (OAuth) y trabaja con tus mismos permisos.",
+        client_id: "Cuando el asistente pida el Client ID de OAuth, usa este:",
+        how_to:
+          "En Claude: Ajustes → Conectores → Agregar conector personalizado. Pega la dirección de arriba y, en Configuración avanzada, este Client ID. El Client Secret se deja vacío.",
+        redirect_uris:
+          "Claude.ai y ChatGPT ya están autorizados. Si tu asistente usa otra dirección de retorno (por ejemplo, Claude Code en tu computadora), pide al administrador que la agregue a este cliente en KontrolIA Auth.",
+        no_client_id:
+          "Esta instalación no tiene configurado el Client ID de OAuth (NEXT_PUBLIC_KONTROLIA_OAUTH_CLIENT_ID).",
+        tools: "El servidor expone estas herramientas:",
         tool_get_schema:
           "obtiene las tablas, columnas y relaciones disponibles (siempre se llama primero).",
         tool_query: "ejecuta una consulta SELECT de solo lectura.",

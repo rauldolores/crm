@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { env } from "@/lib/env";
 
 import type { ApiKey, Webhook } from "../types";
 import { llamarApi } from "./llamarApi";
@@ -225,6 +226,21 @@ curl "${origen}/api/datos/rest/v1/quote_items?quote_id=eq.12&order=position"   -
           <p>{translate("crm.api.mcp.intro")}</p>
           <Bloque>{urlMcp}</Bloque>
           <p>{translate("crm.api.mcp.auth")}</p>
+          {env.kontroliaOAuthClientId ? (
+            <>
+              <p>{translate("crm.api.mcp.client_id")}</p>
+              <Bloque>{env.kontroliaOAuthClientId}</Bloque>
+              <p>{translate("crm.api.mcp.how_to")}</p>
+              <p className="text-muted-foreground">
+                {translate("crm.api.mcp.redirect_uris")}
+              </p>
+            </>
+          ) : (
+            <p className="text-muted-foreground">
+              {translate("crm.api.mcp.no_client_id")}
+            </p>
+          )}
+          <p>{translate("crm.api.mcp.tools")}</p>
           <ul className="list-disc pl-5 space-y-1.5">
             <li>
               <span className="font-mono text-xs">get_schema</span> —{" "}
