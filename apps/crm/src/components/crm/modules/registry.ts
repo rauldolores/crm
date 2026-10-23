@@ -1,4 +1,11 @@
-import { Handshake, Inbox, Package, ReceiptText, Users } from "lucide-react";
+import {
+  HandCoins,
+  Handshake,
+  Inbox,
+  Package,
+  ReceiptText,
+  Users,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -61,6 +68,12 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
         nameKey: "crm.customer_billing.inbox.title",
         path: "/por-facturar",
         icon: Inbox,
+      },
+      // Lo que ya se facturó y falta cobrar.
+      {
+        nameKey: "crm.customer_billing.collections.title",
+        path: "/cobranza",
+        icon: HandCoins,
       },
     ],
   },
