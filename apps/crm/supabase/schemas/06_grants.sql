@@ -367,3 +367,7 @@ grant all on table crm.conversation_messages to service_role;
 revoke all on function crm.registrar_correo_entrante(uuid, jsonb) from public, anon, authenticated;
 grant execute on function crm.registrar_correo_entrante(uuid, jsonb) to service_role;
 revoke all on function crm.asunto_de_hilo(text) from anon;
+
+-- Proyectos: funciones de disparador, nadie las llama directo.
+revoke all on function crm.proyecto_del_embudo() from public, anon, authenticated;
+revoke all on function crm.empresa_en_proyecto_de_oportunidad() from public, anon, authenticated;

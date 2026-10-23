@@ -3,7 +3,7 @@ import { Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import type { RaRecord } from "ra-core";
 import { EditBase, Form, useGetList, useNotify, useTranslate } from "ra-core";
 import { useCallback, useMemo } from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -26,9 +26,12 @@ import type {
   CustomFieldDefinition,
   CustomFieldType,
   DealPipeline,
+  Project,
 } from "../types";
 import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
 import { AjustesDeTickets } from "./AjustesDeTickets";
+import { AjustesDeProyectos } from "./AjustesDeProyectos";
+import { limpiarProyectos } from "../proyectos/proyectos";
 import { AjustesDeRenovaciones } from "./AjustesDeRenovaciones";
 import { AjustesDeRiesgo } from "./AjustesDeRiesgo";
 import { ajustesDeRiesgo } from "../customers/usoDelCliente";
@@ -44,6 +47,11 @@ const SECTIONS = [
     id: "tools",
     label: "crm.settings.sections.tools",
     fallback: "Tools",
+  },
+  {
+    id: "projects",
+    label: "crm.projects.title",
+    fallback: "Projects",
   },
   {
     id: "companies",
@@ -209,6 +217,8 @@ const aEmbudosGuardables = (embudos: DealPipeline[] | undefined) =>
         lostStages: (embudo.lostStages ?? []).filter((valor) =>
           valores.has(valor),
         ),
+        // Sus oportunidades heredan este proyecto (lo aplica la base).
+        project: embudo.project || null,
       };
     });
 
@@ -232,6 +242,7 @@ const transformFormValues = (data: Record<string, any>) => {
       // Clientes en riesgo: valores limpios (los de fábrica donde falten).
       risk: ajustesDeRiesgo(data.risk),
       currency: data.currency,
+      ...limpiarProyectos(data.projects, data.defaultProject),
       companySectors: ensureValues(data.companySectors),
       dealCategories: ensureValues(data.dealCategories),
       taskTypes: ensureValues(data.taskTypes),
@@ -296,6 +307,8 @@ const SettingsForm = () => {
       renewals: ajustesDeRenovaciones(config.renewals),
       risk: ajustesDeRiesgo(config.risk),
       currency: config.currency,
+      projects: config.projects,
+      defaultProject: config.defaultProject,
       companySectors: config.companySectors,
       dealCategories: config.dealCategories,
       taskTypes: config.taskTypes,
@@ -394,6 +407,8 @@ const SettingsFormFields = () => {
             <HerramientasDeAdministracion />
           </CardContent>
         </Card>
+
+        <AjustesDeProyectos />
 
         {/* Companies */}
         <Card id="companies">
@@ -761,6 +776,7 @@ const EditorDeEmbudos = ({ deals }: { deals?: RaRecord[] }) => {
               placeholder={translate("crm.settings.deals.pipeline_name")}
               className="flex-1"
             />
+            <SelectorDeProyectoDelEmbudo indice={indice} />
             <Button
               type="button"
               variant="ghost"
@@ -876,5 +892,24 @@ const SelectorDeEtapas = ({
         );
       })}
     </div>
+  );
+};
+
+/** El proyecto que vende un embudo, elegido entre los del formulario. */
+const SelectorDeProyectoDelEmbudo = ({ indice }: { indice: number }) => {
+  const proyectos: Partial<Project>[] = useWatch({ name: "projects" }) ?? [];
+  const opciones = proyectos
+    .filter((p) => p?.label?.trim())
+    .map((p) => ({ id: p.value || toSlug(p.label!), name: p.label! }));
+  if (!opciones.length) return null;
+  return (
+    <SelectInput
+      source={`dealPipelines.${indice}.project`}
+      label={false}
+      helperText={false}
+      choices={opciones}
+      emptyText="crm.projects.no_project"
+      className="w-48"
+    />
   );
 };

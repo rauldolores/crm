@@ -14,6 +14,7 @@ const Cuerpo = z.object({
   para: z.string().email().optional(),
   templateId: z.number().int().positive().optional().nullable(),
   mensaje: z.string().max(2000).optional(),
+  proyecto: z.string().max(100).optional().nullable(),
 });
 
 type Contexto = { params: Promise<{ id: string }> };
@@ -38,10 +39,11 @@ export async function POST(peticion: Request, { params }: Contexto) {
     para: cuerpo.data.para,
     templateId: cuerpo.data.templateId ?? null,
     mensaje: cuerpo.data.mensaje,
+    proyecto: cuerpo.data.proyecto ?? null,
   });
   if (!resultado.ok) {
     return Response.json(
-      { message: resultado.mensaje },
+      { message: resultado.mensaje, proyectos: resultado.proyectos },
       { status: resultado.status },
     );
   }

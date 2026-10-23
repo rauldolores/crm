@@ -6,16 +6,23 @@ import {
 import { comercialDeLaSesion } from "@/lib/server/comercialDeLaSesion";
 import { cuentaDeEnvioDeOrganizacion } from "@/lib/server/correo/configuracion";
 import { enviarCorreoDeOrganizacion } from "@/lib/server/correo/enviar";
+import {
+  elegirProyecto,
+  proyectosDeLaEmpresaDelContacto,
+  proyectosDeOrganizacion,
+} from "@/lib/server/correo/proyectos";
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 import { getServiceClient } from "@/lib/server/supabase-service";
 
 /**
  * Contestar una conversación de la bandeja desde el CRM.
  *
- * Sale por el correo saliente de la organización, como respuesta en el
- * mismo hilo del cliente (In-Reply-To / References) y con la dirección de
- * la bandeja como Reply-To: el cliente escribió ahí, y ahí debe volver su
- * respuesta. Queda como mensaje de la conversación y,
+ * Sale desde la dirección del proyecto al que el cliente escribió (la de
+ * la conversación), como respuesta en el mismo hilo (In-Reply-To /
+ * References): así su siguiente correo vuelve a la misma dirección y a la
+ * misma conversación. Si el proyecto no tiene dirección propia, sale por el
+ * correo general con la de la bandeja como Reply-To. Queda como mensaje de
+ * la conversación y,
  * si hay contacto, como nota de correo en su ficha. Quien contesta una
  * conversación de la pila compartida se queda con ella.
  */
@@ -49,7 +56,7 @@ export async function POST(peticion: Request, { params }: Contexto) {
   const db = getServiceClient();
   const { data: conversacion } = await db
     .from("conversations")
-    .select("id, contact_id, counterpart, subject, sales_id")
+    .select("id, contact_id, counterpart, subject, sales_id, project")
     .eq("id", conversacionId)
     .eq("organization_id", organizacionId)
     .maybeSingle();
@@ -74,14 +81,33 @@ export async function POST(peticion: Request, { params }: Contexto) {
 
   const asunto = asuntoDeRespuesta(conversacion.subject as string | null);
   const cabeceras = cabecerasDeHilo(ultimo);
-  const bandeja = await ajustesDeBandeja(organizacionId);
-  const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
-    para: conversacion.counterpart as string,
-    asunto,
-    textoPlano: texto,
-    cabeceras,
-    responderA: bandeja?.inboxEmail,
-  });
+  const eleccion = elegirProyecto(
+    await proyectosDeOrganizacion(organizacionId),
+    {
+      fijo: [conversacion.project as string | null],
+      deLaEmpresa: conversacion.contact_id
+        ? await proyectosDeLaEmpresaDelContacto(
+            organizacionId,
+            Number(conversacion.contact_id),
+          )
+        : [],
+    },
+  );
+  const proyecto = eleccion.tipo === "proyecto" ? eleccion.proyecto : null;
+  const bandeja = proyecto?.email
+    ? null
+    : await ajustesDeBandeja(organizacionId);
+  const resultado = await enviarCorreoDeOrganizacion(
+    organizacionId,
+    {
+      para: conversacion.counterpart as string,
+      asunto,
+      textoPlano: texto,
+      cabeceras,
+      responderA: bandeja?.inboxEmail ?? undefined,
+    },
+    proyecto,
+  );
   if (!resultado.ok) {
     return esError(502, resultado.mensaje || "No se pudo enviar el correo.");
   }
@@ -93,8 +119,10 @@ export async function POST(peticion: Request, { params }: Contexto) {
     organization_id: organizacionId,
     conversation_id: conversacionId,
     direction: "out",
-    from_email: cuenta.fromEmail,
-    from_name: cuenta.fromName ?? null,
+    from_email: proyecto?.email ?? cuenta.fromEmail,
+    from_name: proyecto?.email
+      ? (proyecto.fromName ?? proyecto.label)
+      : (cuenta.fromName ?? null),
     to_emails: [conversacion.counterpart],
     subject: asunto,
     body_text: texto,

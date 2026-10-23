@@ -47,7 +47,7 @@ export const OPORTUNIDADES_EN_EL_TABLERO = 1000;
 
 const DealList = () => {
   const { identity } = useGetIdentity();
-  const { dealCategories, dealPipelines, dealCustomFields } =
+  const { dealCategories, dealPipelines, dealCustomFields, projects } =
     useConfigurationContext();
   const translate = useTranslate();
   // Filtro por etiqueta: `tags@cs` espera `{id}` (contención en el arreglo),
@@ -67,6 +67,20 @@ const DealList = () => {
         placeholder={translate("resources.deals.fields.company_id")}
       />
     </ReferenceInput>,
+    ...(projects.length
+      ? [
+          <WrapperField source="project" label="crm.projects.field_one">
+            <SelectInput
+              source="project"
+              label={false}
+              emptyText="crm.projects.field_one"
+              choices={projects}
+              optionText="label"
+              optionValue="value"
+            />
+          </WrapperField>,
+        ]
+      : []),
     <WrapperField source="category" label="resources.deals.fields.category">
       <SelectInput
         source="category"

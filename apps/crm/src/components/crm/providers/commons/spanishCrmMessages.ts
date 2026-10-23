@@ -2069,6 +2069,32 @@ export const spanishCrmMessages = {
         go_inbox: "Ver en Por facturar",
       },
     },
+    projects: {
+      title: "Proyectos",
+      help: "Los productos o servicios que vendes, cada uno con su propia dirección de correo. A cada cliente se le escribe desde la dirección del proyecto que le interesa, y lo que conteste llega a la bandeja marcado con ese proyecto.",
+      name: "Nombre",
+      email: "Dirección de correo",
+      email_help:
+        "Envía y recibe. Tiene que estar verificada en tu cuenta de Resend. Vacía: usa el correo saliente general.",
+      from_name: "Nombre del remitente",
+      default: "Proyecto predeterminado",
+      default_help:
+        "El de las empresas sin proyecto y el de los envíos automáticos cuando no se sabe cuál.",
+      default_required: "Elige el proyecto predeterminado.",
+      invalid_email: "Una de las direcciones no es válida.",
+      repeated_email: "Dos proyectos no pueden tener la misma dirección.",
+      field_one: "Proyecto",
+      field_many: "Proyectos",
+      no_project: "Sin proyecto",
+      all: "Todos los proyectos",
+      company_help:
+        "Se agregan solos cuando la empresa tiene oportunidades de un proyecto o le escribe a su dirección.",
+      deal_help: "Vacío: el del embudo.",
+      template_help:
+        "Las automatizaciones y los envíos masivos con esta plantilla salen desde la dirección de este proyecto.",
+      send_from: "Enviar desde",
+      send_from_pick: "Elige el proyecto",
+    },
     inbox: {
       title: "Bandeja",
       intro:
@@ -2127,12 +2153,18 @@ export const spanishCrmMessages = {
         save: "Guardar",
         saved: "Bandeja configurada",
         working: "Funcionando. Último correo recibido",
+        any_address: "cualquiera de tus direcciones",
         waiting:
           "Todavía no llega ningún correo. Cuando termines, mándate uno de prueba a %{email} desde tu correo personal: en un minuto debe aparecer en la bandeja.",
         step1: {
-          title: "Tu dirección de correo",
-          help: "En Resend, entra a «Receiving» (o «Inboxes») y crea la dirección donde quieres recibir. Escríbela aquí igual que allá.",
-          label: "Dirección de la bandeja",
+          title: "Las direcciones que recibe",
+          help: "La bandeja recibe en la dirección de cada uno de tus proyectos. Cada una tiene que estar dada de alta en Resend («Receiving» o «Inboxes»), todas en la misma cuenta.",
+          no_projects:
+            "Todavía no tienes proyectos con dirección. Si vendes un solo producto, escribe abajo tu dirección; si vendes varios, dalos de alta en Ajustes → Proyectos.",
+          edit_projects: "Editar proyectos y sus direcciones",
+          label: "Otra dirección (opcional)",
+          extra_help:
+            "Solo si quieres recibir en una dirección que no es de ningún proyecto.",
         },
         step2: {
           title: "Avisa a Vinqulia cuando llegue un correo",

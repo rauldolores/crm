@@ -394,12 +394,15 @@ const getDataProviderWithCustomMethods = () => {
       asunto: string,
       texto: string,
       ticketId?: Identifier,
+      // Desde qué proyecto, si la empresa tiene varios (ver ElegirProyectoDeEnvio).
+      proyecto?: string,
     ) {
       const respuesta = await llamarApiDelCrm("/api/correos/enviar", {
         contactId,
         asunto,
         texto,
         ticketId,
+        proyecto,
       });
       if (!respuesta.ok) {
         const cuerpo = await respuesta.json().catch(() => ({}));

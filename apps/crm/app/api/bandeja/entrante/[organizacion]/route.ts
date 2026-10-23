@@ -1,7 +1,7 @@
 import {
   aCorreoEntrante,
   CorreoDeResend,
-  vaALaBandeja,
+  direccionDeLaBandeja,
 } from "@/lib/server/bandeja/correoRecibido";
 import {
   ajustesDeBandeja,
@@ -9,11 +9,17 @@ import {
   claveParaLeer,
 } from "@/lib/server/bandeja/configuracion";
 import { firmaDeResendValida } from "@/lib/server/bandeja/firma";
+import {
+  proyectoPorDireccion,
+  proyectosDeOrganizacion,
+} from "@/lib/server/correo/proyectos";
 import { getServiceClient } from "@/lib/server/supabase-service";
 
 /**
  * Receptor del aviso `email.received` de Resend: cada correo que llega a la
- * dirección de la bandeja entra como mensaje de una conversación.
+ * dirección de un proyecto (o a la de la bandeja) entra como mensaje de una
+ * conversación de ese proyecto. Todas las direcciones viven en la misma
+ * cuenta de Resend: un solo webhook, y aquí se reparte por destinatario.
  *
  * El aviso solo trae metadatos (remitente, destinatarios, asunto); el cuerpo
  * y las cabeceras de hilo se piden después a la API de Resend con la clave
@@ -85,14 +91,18 @@ export async function POST(peticion: Request, { params }: Contexto) {
   if (aviso.type !== "email.received" || !datos?.email_id) {
     return Response.json({ ok: true, ignored: "evento" });
   }
-  if (
-    !vaALaBandeja(
-      { to: datos.to ?? [], cc: datos.cc, received_for: datos.received_for },
-      ajustes.inboxEmail,
-    )
-  ) {
+  const { proyectos } = await proyectosDeOrganizacion(organizacion);
+  const direccion = direccionDeLaBandeja(
+    { to: datos.to ?? [], cc: datos.cc, received_for: datos.received_for },
+    [
+      ...proyectos.flatMap((p) => (p.email ? [p.email] : [])),
+      ...(ajustes.inboxEmail ? [ajustes.inboxEmail] : []),
+    ],
+  );
+  if (!direccion) {
     return Response.json({ ok: true, ignored: "otra-direccion" });
   }
+  const proyecto = proyectoPorDireccion(proyectos, [direccion]);
 
   const clave = await claveParaLeer(organizacion, ajustes);
   if (!clave) {
@@ -130,7 +140,13 @@ export async function POST(peticion: Request, { params }: Contexto) {
 
   const { data, error } = await getServiceClient().rpc(
     "registrar_correo_entrante",
-    { organizacion, correo: aCorreoEntrante(leido.data) },
+    {
+      organizacion,
+      correo: {
+        ...aCorreoEntrante(leido.data),
+        project: proyecto?.value ?? null,
+      },
+    },
   );
   if (error) {
     console.error("bandeja: no se pudo guardar el correo", {

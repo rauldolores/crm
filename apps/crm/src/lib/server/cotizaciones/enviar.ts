@@ -1,6 +1,10 @@
 import { rellenarCampos } from "@/components/crm/email/camposDeFusion";
 import { envolverEnPlantilla } from "@/components/crm/email/plantillaBase";
 import { enviarCorreoDeOrganizacion } from "../correo/enviar";
+import {
+  elegirProyecto,
+  proyectosDeOrganizacion,
+} from "../correo/proyectos";
 import { valoresDeFusion } from "../correo/valoresDeFusion";
 import { getServiceClient } from "../supabase-service";
 import {
@@ -21,7 +25,13 @@ import {
 
 export type ResultadoDeEnvio =
   | { ok: true; enlace: string; para: string }
-  | { ok: false; status: number; mensaje: string };
+  | {
+      ok: false;
+      status: number;
+      mensaje: string;
+      /** Con 409 por proyecto: entre cuáles elegir. */
+      proyectos?: { value: string; label: string }[];
+    };
 
 const escapar = (texto: string): string =>
   texto
@@ -86,6 +96,8 @@ export async function enviarCotizacion(
     para?: string;
     templateId?: number | null;
     mensaje?: string;
+    /** Desde qué proyecto, si la empresa tiene varios (ver correo/proyectos). */
+    proyecto?: string | null;
   },
 ): Promise<ResultadoDeEnvio> {
   const { cotizacion, contacto } = completa;
@@ -113,16 +125,18 @@ export async function enviarCotizacion(
   let asunto: string;
   let html: string;
   let textoPlano: string;
+  let proyectoDePlantilla: string | null = null;
 
   if (opciones.templateId) {
     const { data: plantilla } = await supabase
       .from("email_templates")
       .select(
-        "subject, body_html, logo_url, accent_color, cta_text, cta_url, footer_text, active",
+        "subject, body_html, logo_url, accent_color, cta_text, cta_url, footer_text, active, project",
       )
       .eq("id", opciones.templateId)
       .eq("organization_id", organizacionId)
       .maybeSingle();
+    proyectoDePlantilla = (plantilla?.project as string | null) ?? null;
     if (!plantilla || !plantilla.active) {
       return {
         ok: false,
@@ -167,12 +181,49 @@ export async function enviarCotizacion(
     ));
   }
 
-  const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
-    para,
-    asunto,
-    textoPlano,
-    html,
-  });
+  // Desde qué proyecto: el elegido, el de la plantilla, el de la
+  // oportunidad o el de la empresa; con varios, se pregunta.
+  const [{ data: oportunidad }, { data: empresa }] = await Promise.all([
+    cotizacion.deal_id
+      ? supabase
+          .from("deals")
+          .select("project")
+          .eq("id", cotizacion.deal_id)
+          .eq("organization_id", organizacionId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    cotizacion.company_id
+      ? supabase
+          .from("companies")
+          .select("projects")
+          .eq("id", cotizacion.company_id)
+          .eq("organization_id", organizacionId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const eleccion = elegirProyecto(
+    await proyectosDeOrganizacion(organizacionId),
+    {
+      elegido: opciones.proyecto,
+      fijo: [proyectoDePlantilla, oportunidad?.project as string | null],
+      deLaEmpresa: (empresa?.projects as string[] | null) ?? [],
+      puedePreguntar: true,
+    },
+  );
+  if (eleccion.tipo === "preguntar") {
+    return {
+      ok: false,
+      status: 409,
+      mensaje: "Su empresa tiene varios proyectos: elige desde cuál enviarla.",
+      proyectos: eleccion.opciones.map(({ value, label }) => ({ value, label })),
+    };
+  }
+
+  const resultado = await enviarCorreoDeOrganizacion(
+    organizacionId,
+    { para, asunto, textoPlano, html },
+    eleccion.proyecto,
+  );
   if (!resultado.ok) {
     return {
       ok: false,

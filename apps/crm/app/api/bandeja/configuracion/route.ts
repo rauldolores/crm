@@ -61,10 +61,12 @@ export async function PUT(peticion: Request) {
     typeof cuerpo.inboxEmail === "string"
       ? cuerpo.inboxEmail.trim().toLowerCase().slice(0, 200)
       : "";
-  if (!esCorreoValido(inboxEmail)) {
+  // Opcional: la bandeja recibe en las direcciones de los proyectos
+  // (Ajustes → Proyectos); esta es solo para organizaciones sin proyectos.
+  if (inboxEmail && !esCorreoValido(inboxEmail)) {
     return esError(
       400,
-      "Escribe la dirección de tu bandeja, como hola@tuempresa.com.",
+      "Escribe una dirección válida, como hola@tuempresa.com, o déjala vacía.",
     );
   }
 
@@ -85,7 +87,7 @@ export async function PUT(peticion: Request) {
   // los recibe, así que un guardado sin tocarlos no debe borrarlos.
   const fila: Record<string, unknown> = {
     organization_id: organizacionId,
-    inbox_email: inboxEmail,
+    inbox_email: inboxEmail || null,
     active: typeof cuerpo.active === "boolean" ? cuerpo.active : true,
     updated_at: new Date().toISOString(),
     ...(secreto ? { webhook_secret: secreto } : {}),

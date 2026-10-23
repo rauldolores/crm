@@ -3370,6 +3370,8 @@ declare
   enviado timestamp with time zone :=
     coalesce((correo ->> 'sent_at')::timestamp with time zone, now());
   texto text := left(coalesce(correo ->> 'text', ''), 65536);
+  -- El proyecto cuya dirección recibió el correo (lo decide el servidor).
+  proyecto text := nullif(correo ->> 'project', '');
   conversacion crm.conversations%rowtype;
   existente bigint;
   contacto_id bigint;
@@ -3408,12 +3410,14 @@ begin
 
   -- 2. Mismo remitente y mismo asunto en los últimos 60 días: muchos
   --    clientes contestan sin cabeceras (o reenvían desde otro programa).
+  --    Y al mismo proyecto: escribirle a otro es otra conversación.
   if conversacion.id is null then
     select c.* into conversacion
     from crm.conversations c
     where c.organization_id = organizacion
       and c.channel = 'email'
       and c.counterpart = remitente
+      and c.project is not distinct from proyecto
       and crm.asunto_de_hilo(c.subject) = crm.asunto_de_hilo(correo ->> 'subject')
       and c.last_message_at > now() - interval '60 days'
     order by c.last_message_at desc
@@ -3435,13 +3439,13 @@ begin
 
     insert into crm.conversations (
       organization_id, channel, contact_id, counterpart, counterpart_name,
-      subject, status, unread, sales_id, automatic, last_message_at
+      subject, status, unread, sales_id, automatic, last_message_at, project
     )
     values (
       organizacion, 'email', contacto_id, remitente,
       nullif(correo ->> 'from_name', ''), nullif(correo ->> 'subject', ''),
       case when automatico then 'closed' else 'pending' end,
-      not automatico, responsable, automatico, enviado
+      not automatico, responsable, automatico, enviado, proyecto
     )
     returning * into conversacion;
     es_nueva := true;
@@ -3469,8 +3473,19 @@ begin
       last_message_preview = left(regexp_replace(texto, '\s+', ' ', 'g'), 200),
       status = case when automatico then c.status else 'pending' end,
       unread = c.unread or not automatico,
-      automatic = c.automatic and automatico
+      automatic = c.automatic and automatico,
+      project = coalesce(c.project, proyecto)
   where c.id = conversacion.id;
+
+  -- Quien le escribe a un proyecto queda en él: su empresa lo gana.
+  if proyecto is not null and conversacion.contact_id is not null and not automatico then
+    update crm.companies co
+    set projects = array_append(co.projects, proyecto)
+    from crm.contacts ct
+    where ct.id = conversacion.contact_id
+      and co.id = ct.company_id
+      and not (proyecto = any(co.projects));
+  end if;
 
   -- Constancia en la ficha: cuenta como actividad del contacto.
   if conversacion.contact_id is not null and not automatico then
@@ -3493,3 +3508,59 @@ begin
 end;
 $$;
 
+
+-- El proyecto de una oportunidad sale de su embudo (config.dealPipelines[].
+-- project) si nadie lo eligió, también al cambiarla de embudo. En la base y
+-- no en el formulario: las abren también la API, las importaciones y las
+-- renovaciones automáticas.
+create or replace function crm.proyecto_del_embudo()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  del_embudo text;
+begin
+  if tg_op = 'UPDATE'
+     and (new.pipeline is not distinct from old.pipeline
+          or new.project is distinct from old.project) then
+    return new;
+  end if;
+  if tg_op = 'INSERT' and new.project is not null then
+    return new;
+  end if;
+
+  select nullif(p ->> 'project', '') into del_embudo
+  from crm.configuration c,
+       jsonb_array_elements(coalesce(c.config -> 'dealPipelines', '[]'::jsonb)) p
+  where c.organization_id = new.organization_id
+    and p ->> 'value' = new.pipeline
+  limit 1;
+
+  if del_embudo is not null then
+    new.project := del_embudo;
+  end if;
+  return new;
+end;
+$$;
+
+-- La empresa queda en el proyecto de sus oportunidades: si le vendemos
+-- AduaniaX, es de AduaniaX.
+create or replace function crm.empresa_en_proyecto_de_oportunidad()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.project is not null and new.company_id is not null then
+    update crm.companies
+    set projects = array_append(projects, new.project)
+    where id = new.company_id
+      and organization_id = new.organization_id
+      and not (new.project = any(projects));
+  end if;
+  return null;
+end;
+$$;

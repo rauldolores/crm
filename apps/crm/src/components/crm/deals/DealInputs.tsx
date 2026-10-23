@@ -14,6 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { contactOptionText } from "../misc/ContactOption";
 import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { ProyectoInput } from "../proyectos/CamposDeProyecto";
 import { AutocompleteCompanyInput } from "../companies/AutocompleteCompanyInput.tsx";
 import {
   filtroDeEmpresasParaEmbudo,
@@ -127,6 +128,7 @@ const DealMiscInputs = () => {
           validate={required()}
         />
       )}
+      <ProyectoInput helperText="crm.projects.deal_help" />
       <SelectInput
         source="category"
         choices={dealCategories}

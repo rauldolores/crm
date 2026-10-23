@@ -114,7 +114,9 @@ select
     c.lifecycle_stage,
     -- Al final por la misma razón que lifecycle_stage.
     c.is_client,
-    c.is_affiliate
+    c.is_affiliate,
+    -- Proyectos de la empresa (20261023215915_proyectos), al final por lo mismo.
+    c.projects
 from crm.companies c
     left join crm.deals d on c.id = d.company_id
     left join crm.contacts co on c.id = co.company_id

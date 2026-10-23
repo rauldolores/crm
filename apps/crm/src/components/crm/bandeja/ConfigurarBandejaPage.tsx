@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { llamarApi } from "../misc/llamarApi";
 import { RelativeDate } from "../misc/RelativeDate";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 
 /**
  * Bandeja → Configurar: conectar la dirección de la organización para que
@@ -45,11 +46,13 @@ export const ConfigurarBandejaPage = () => {
   const [secreto, setSecreto] = useState("");
   const [clave, setClave] = useState("");
   const [activa, setActiva] = useState(true);
+  const { projects } = useConfigurationContext();
+  const direccionesDeProyectos = projects.filter((p) => p.email);
 
   const aplicar = useCallback((datos: Ajustes) => {
     setAjustes(datos);
     setDireccion(datos.inboxEmail ?? "");
-    setActiva(datos.inboxEmail ? datos.active : true);
+    setActiva(datos.inboxEmail || datos.tieneSecreto ? datos.active : true);
     setSecreto("");
     setClave("");
   }, []);
@@ -111,7 +114,25 @@ export const ConfigurarBandejaPage = () => {
 
       <Paso numero={1} titulo={t("step1.title")}>
         <p>{t("step1.help")}</p>
-        <Label htmlFor="direccion-de-bandeja">{t("step1.label")}</Label>
+        {direccionesDeProyectos.length > 0 ? (
+          <ul className="space-y-0.5">
+            {direccionesDeProyectos.map((p) => (
+              <li key={p.value}>
+                <span className="font-medium">{p.label}</span>
+                {" · "}
+                <span className="font-mono text-xs">{p.email}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground">{t("step1.no_projects")}</p>
+        )}
+        <Link to="/settings" className="text-xs">
+          {t("step1.edit_projects")}
+        </Link>
+        <Label htmlFor="direccion-de-bandeja" className="pt-2">
+          {t("step1.label")}
+        </Label>
         <Input
           id="direccion-de-bandeja"
           type="email"
@@ -119,6 +140,7 @@ export const ConfigurarBandejaPage = () => {
           value={direccion}
           onChange={(evento) => setDireccion(evento.target.value)}
         />
+        <p className="text-xs text-muted-foreground">{t("step1.extra_help")}</p>
       </Paso>
 
       <Paso numero={2} titulo={t("step2.title")}>
@@ -178,7 +200,13 @@ export const ConfigurarBandejaPage = () => {
           />
           <Label htmlFor="bandeja-activa">{t("active")}</Label>
         </div>
-        <Button onClick={guardar} disabled={guardando || !direccion.trim()}>
+        <Button
+          onClick={guardar}
+          disabled={
+            guardando ||
+            (!direccion.trim() && direccionesDeProyectos.length === 0)
+          }
+        >
           {guardando && <Loader2 className="h-4 w-4 animate-spin" />}
           {t("save")}
         </Button>
@@ -214,7 +242,8 @@ const Paso = ({
 /** Lo último que pasó: el mejor diagnóstico para alguien no técnico. */
 const Estado = ({ ajustes }: { ajustes: Ajustes }) => {
   const translate = useTranslate();
-  if (!ajustes.inboxEmail) return null;
+  // Sin nada guardado todavía no hay estado que contar.
+  if (!ajustes.inboxEmail && !ajustes.tieneSecreto) return null;
 
   const errorReciente =
     ajustes.lastError &&
@@ -242,7 +271,9 @@ const Estado = ({ ajustes }: { ajustes: Ajustes }) => {
   }
   return (
     <div className="rounded-md border p-3 text-sm text-muted-foreground">
-      {translate("crm.inbox.setup.waiting", { email: ajustes.inboxEmail })}
+      {translate("crm.inbox.setup.waiting", {
+        email: ajustes.inboxEmail ?? translate("crm.inbox.setup.any_address"),
+      })}
     </div>
   );
 };

@@ -212,6 +212,8 @@ export const CRM = ({
         quoteTaxRate: defaultQuoteTaxRate,
         quoteTemplates: [],
         quoteIssuer: { name: "" },
+        projects: [],
+        defaultProject: "",
       } satisfies ConfigurationContextValue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

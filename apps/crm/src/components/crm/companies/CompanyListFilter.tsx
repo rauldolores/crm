@@ -1,5 +1,6 @@
 import {
   Building,
+  FolderKanban,
   Handshake,
   ListFilter,
   MapPin,
@@ -35,7 +36,7 @@ import type { Affiliate } from "../types";
 
 export const CompanyListFilter = () => {
   const { identity } = useGetIdentity();
-  const { companySectors, modules } = useConfigurationContext();
+  const { companySectors, modules, projects } = useConfigurationContext();
   const conAfiliados = !!modules.affiliates?.active;
   const { data: afiliados } = useGetList<Affiliate>(
     "affiliates",
@@ -104,6 +105,22 @@ export const CompanyListFilter = () => {
           />
         ))}
       </FilterCategory>
+
+      {projects.length > 0 && (
+        <FilterCategory
+          icon={<FolderKanban className="h-4 w-4" />}
+          label="crm.projects.title"
+        >
+          {projects.map((proyecto) => (
+            <ToggleFilterButton
+              className="w-full justify-between"
+              label={proyecto.label}
+              key={proyecto.value}
+              value={{ "projects@cs": `{${proyecto.value}}` }}
+            />
+          ))}
+        </FilterCategory>
+      )}
 
       <FilterCategory
         icon={<Truck className="h-4 w-4" />}

@@ -11,7 +11,8 @@ import { getServiceClient } from "@/lib/server/supabase-service";
  *
  * Al enlazar un contacto, su dirección se agrega a la ficha si no la tenía
  * y las demás conversaciones «Sin contacto» de esa dirección se enlazan
- * también: el siguiente correo ya llegará con nombre.
+ * también: el siguiente correo ya llegará con nombre. Y su empresa gana los
+ * proyectos a los que esa persona escribió.
  */
 
 type Contexto = { params: Promise<{ id: string }> };
@@ -83,6 +84,7 @@ export async function PATCH(peticion: Request, { params }: Contexto) {
     id: number;
     email_jsonb: unknown;
     sales_id: number | null;
+    company_id: number | null;
   } | null = null;
   if ("contactId" in cuerpo) {
     if (!esIdONulo(cuerpo.contactId))
@@ -90,7 +92,7 @@ export async function PATCH(peticion: Request, { params }: Contexto) {
     if (cuerpo.contactId !== null) {
       const { data: contacto } = await db
         .from("contacts")
-        .select("id, email_jsonb, sales_id")
+        .select("id, email_jsonb, sales_id, company_id")
         .eq("id", cuerpo.contactId)
         .eq("organization_id", organizacionId)
         .maybeSingle();
@@ -138,6 +140,35 @@ export async function PATCH(peticion: Request, { params }: Contexto) {
       .eq("organization_id", organizacionId)
       .eq("counterpart", direccion)
       .is("contact_id", null);
+
+    if (contactoEnlazado.company_id != null) {
+      const [{ data: escritas }, { data: empresa }] = await Promise.all([
+        db
+          .from("conversations")
+          .select("project")
+          .eq("organization_id", organizacionId)
+          .eq("contact_id", contactoEnlazado.id)
+          .eq("automatic", false)
+          .not("project", "is", null),
+        db
+          .from("companies")
+          .select("projects")
+          .eq("id", contactoEnlazado.company_id)
+          .eq("organization_id", organizacionId)
+          .maybeSingle(),
+      ]);
+      const actuales = (empresa?.projects as string[] | null) ?? [];
+      const nuevos = [
+        ...new Set((escritas ?? []).map((c) => c.project as string)),
+      ].filter((proyecto) => !actuales.includes(proyecto));
+      if (empresa && nuevos.length) {
+        await db
+          .from("companies")
+          .update({ projects: [...actuales, ...nuevos] })
+          .eq("id", contactoEnlazado.company_id)
+          .eq("organization_id", organizacionId);
+      }
+    }
   }
 
   return Response.json(actualizada);

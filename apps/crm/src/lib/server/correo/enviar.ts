@@ -1,4 +1,5 @@
 import { cuentaDeEnvioDeOrganizacion } from "./configuracion";
+import type { Proyecto } from "./proyectos";
 import type { MensajeDeCorreo, ResultadoDeEnvio } from "./proveedores";
 import { enviarConProveedor } from "./proveedores";
 
@@ -7,6 +8,10 @@ import { enviarConProveedor } from "./proveedores";
  * (el envío manual desde una ficha, y lo que venga de automatizaciones) pasa
  * por aquí, y por tanto por el proveedor que haya configurado esa
  * organización. Ver `cuentaDeEnvioDeOrganizacion`.
+ *
+ * Con `proyecto`, sale desde la dirección de ese proyecto (misma cuenta del
+ * proveedor; el dominio tiene que estar verificado allí). Cuál proyecto toca
+ * lo decide quien llama, con elegirProyecto() (correo/proyectos.ts).
  *
  * Sin Reply-To impuesto: la respuesta vuelve a la dirección que envió. Hubo
  * uno global (la dirección de la bandeja) y se quitó porque, con varios
@@ -17,6 +22,7 @@ import { enviarConProveedor } from "./proveedores";
 export async function enviarCorreoDeOrganizacion(
   organizacionId: string,
   mensaje: MensajeDeCorreo,
+  proyecto?: Proyecto | null,
 ): Promise<ResultadoDeEnvio> {
   const cuenta = await cuentaDeEnvioDeOrganizacion(organizacionId);
   if (!cuenta) {
@@ -26,7 +32,16 @@ export async function enviarCorreoDeOrganizacion(
         "No hay un servidor de correo configurado. Configúralo en Ajustes → Correo saliente.",
     };
   }
-  return enviarConProveedor(cuenta, mensaje);
+  return enviarConProveedor(
+    proyecto?.email
+      ? {
+          ...cuenta,
+          fromEmail: proyecto.email,
+          fromName: proyecto.fromName ?? proyecto.label,
+        }
+      : cuenta,
+    mensaje,
+  );
 }
 
 /** ¿Puede esta organización enviar correo ahora mismo? */
