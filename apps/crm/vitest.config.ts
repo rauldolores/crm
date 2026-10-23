@@ -98,6 +98,7 @@ export default defineConfig({
             // ellas en el navegador.
             "src/lib/server/accionesMasivas/**",
             "src/lib/server/afiliados/**",
+            "src/lib/server/bandeja/**",
           ],
           server: {
             deps: {
@@ -134,6 +135,7 @@ export default defineConfig({
             "src/lib/server/whatsapp/**/*.test.ts",
             "src/lib/server/accionesMasivas/**/*.test.ts",
             "src/lib/server/afiliados/**/*.test.ts",
+            "src/lib/server/bandeja/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },

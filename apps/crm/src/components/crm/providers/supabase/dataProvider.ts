@@ -734,6 +734,17 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
       return applyFullTextSearch(["folio", "uuid"])(params);
     },
   },
+  {
+    // El buscador de la bandeja: quién escribió y de qué.
+    resource: "conversations",
+    beforeGetList: async (params) => {
+      return applyFullTextSearch([
+        "counterpart",
+        "counterpart_name",
+        "subject",
+      ])(params);
+    },
+  },
 ];
 
 export const getDataProvider = () => {

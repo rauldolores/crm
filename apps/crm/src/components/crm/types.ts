@@ -1021,3 +1021,40 @@ export interface QuoteTemplate {
   valid_days?: number;
   items: QuoteTemplateItem[];
 }
+
+/** Una conversación de la bandeja compartida (por ahora, solo correo). */
+export type Conversation = {
+  channel: "email";
+  contact_id: Identifier | null;
+  /** La dirección del otro lado. */
+  counterpart: string;
+  counterpart_name: string | null;
+  subject: string | null;
+  status: "pending" | "answered" | "closed";
+  unread: boolean;
+  /** Quién la atiende; nulo = pila compartida. */
+  sales_id: Identifier | null;
+  /** Solo trajo respuestas automáticas (fuera de oficina, rebotes). */
+  automatic: boolean;
+  last_message_at: string;
+  last_message_preview: string | null;
+  created_at: string;
+} & Pick<RaRecord, "id">;
+
+export type ConversationMessage = {
+  conversation_id: Identifier;
+  direction: "in" | "out";
+  from_email: string;
+  from_name: string | null;
+  to_emails: string[];
+  subject: string | null;
+  body_text: string | null;
+  sales_id: Identifier | null;
+  automatic: boolean;
+  attachments: {
+    filename: string;
+    content_type: string | null;
+    size: number | null;
+  }[];
+  sent_at: string;
+} & Pick<RaRecord, "id">;

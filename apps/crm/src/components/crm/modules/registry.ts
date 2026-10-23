@@ -3,10 +3,14 @@ import {
   Handshake,
   Inbox,
   Package,
+  Mail,
   ReceiptText,
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
+
+import { ContadorDeBandeja } from "../bandeja/ContadorDeBandeja";
 
 /**
  * Catálogo de módulos activables por organización. Agregar un módulo nuevo
@@ -28,11 +32,21 @@ export interface ModuleDefinition {
    * Conectores). Se activa solo al conectarlo y se apaga al desconectarlo.
    */
   connector?: "products" | "invoicing";
+  /** Número junto al nombre en el menú (lo pendiente), si el módulo tiene. */
+  Contador?: ComponentType;
   /** Más entradas del menú lateral que aparecen con el módulo activo. */
   extraLinks?: { nameKey: string; path: string; icon: LucideIcon }[];
 }
 
 export const MODULE_REGISTRY: ModuleDefinition[] = [
+  {
+    key: "inbox",
+    nameKey: "crm.modules.inbox.name",
+    descriptionKey: "crm.modules.inbox.description",
+    icon: Mail,
+    path: "/bandeja",
+    Contador: ContadorDeBandeja,
+  },
   {
     key: "customers",
     nameKey: "crm.modules.customers.name",

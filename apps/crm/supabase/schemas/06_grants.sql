@@ -353,3 +353,17 @@ revoke all on table crm.soporte_reportes_auth from authenticated;
 grant select on table crm.soporte_reportes_auth to authenticated;
 grant select, insert on table crm.soporte_reportes_auth to service_role;
 revoke all on function crm.soporte_reportar_a_auth() from public;
+
+-- Bandeja compartida: la configuración solo para service_role; conversaciones
+-- y mensajes de solo lectura (se escriben por /api/bandeja).
+revoke all on table crm.inbox_settings from anon, authenticated;
+grant select, insert, update, delete on table crm.inbox_settings to service_role;
+revoke all on table crm.conversations from anon, authenticated;
+revoke all on table crm.conversation_messages from anon, authenticated;
+grant select on table crm.conversations to authenticated, service_role;
+grant select on table crm.conversation_messages to authenticated, service_role;
+grant all on table crm.conversations to service_role;
+grant all on table crm.conversation_messages to service_role;
+revoke all on function crm.registrar_correo_entrante(uuid, jsonb) from public, anon, authenticated;
+grant execute on function crm.registrar_correo_entrante(uuid, jsonb) to service_role;
+revoke all on function crm.asunto_de_hilo(text) from anon;

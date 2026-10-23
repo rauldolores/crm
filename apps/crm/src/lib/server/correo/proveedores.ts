@@ -38,8 +38,10 @@ export interface MensajeDeCorreo {
   textoPlano: string;
   /** Versión HTML, cuando el mensaje viene de una plantilla. */
   html?: string;
-  /** Reply-To con hash de hilo, para que una respuesta se archive sola. */
+  /** Reply-To: la dirección de la bandeja, para que la respuesta llegue ahí. */
   responderA?: string;
+  /** Cabeceras extra; las de hilo (In-Reply-To, References) al contestar. */
+  cabeceras?: Record<string, string>;
 }
 
 export interface ResultadoDeEnvio {
@@ -71,6 +73,7 @@ const peticionPorProveedor: Record<
       text: mensaje.textoPlano,
       html: mensaje.html,
       reply_to: mensaje.responderA,
+      headers: mensaje.cabeceras,
     },
   }),
 
@@ -84,6 +87,10 @@ const peticionPorProveedor: Record<
       Subject: mensaje.asunto,
       TextBody: mensaje.textoPlano,
       HtmlBody: mensaje.html,
+      Headers: Object.entries(mensaje.cabeceras ?? {}).map(([Name, Value]) => ({
+        Name,
+        Value,
+      })),
       MessageStream: "outbound",
     },
   }),
@@ -92,7 +99,9 @@ const peticionPorProveedor: Record<
     url: "https://api.sendgrid.com/v3/mail/send",
     headers: { Authorization: `Bearer ${cuenta.apiKey}` },
     body: {
-      personalizations: [{ to: [{ email: mensaje.para }] }],
+      personalizations: [
+        { to: [{ email: mensaje.para }], headers: mensaje.cabeceras },
+      ],
       from: { email: cuenta.fromEmail, name: cuenta.fromName ?? undefined },
       reply_to: mensaje.responderA ? { email: mensaje.responderA } : undefined,
       subject: mensaje.asunto,

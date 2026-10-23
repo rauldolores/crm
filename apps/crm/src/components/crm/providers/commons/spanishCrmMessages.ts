@@ -2069,6 +2069,95 @@ export const spanishCrmMessages = {
         go_inbox: "Ver en Por facturar",
       },
     },
+    inbox: {
+      title: "Bandeja",
+      intro:
+        "Lo que tus clientes contestan a la dirección de tu empresa, a la vista de todo el equipo.",
+      configure: "Configurar",
+      search: "Buscar por nombre, correo o asunto",
+      pick_one: "Elige una conversación para leerla y contestarla.",
+      back: "Volver",
+      no_subject: "(sin asunto)",
+      no_contact: "Sin contacto",
+      open_contact: "Ver contacto",
+      automatic: "Automática",
+      assignee: "Responsable",
+      shared_pile: "Pila compartida",
+      close: "Cerrar",
+      reopen: "Reabrir",
+      show_quote: "Ver mensaje citado",
+      hide_quote: "Ocultar mensaje citado",
+      reply_placeholder: "Escribe tu respuesta a %{name}…",
+      reply_takes_it: "Al contestar, la conversación queda a tu cargo.",
+      send: "Enviar",
+      sent: "Respuesta enviada",
+      views: {
+        pending: "Pendientes",
+        mine: "Mías",
+        unassigned: "Sin asignar",
+        no_contact: "Sin contacto",
+        answered: "Respondidas",
+        closed: "Cerradas",
+      },
+      empty: {
+        pending: "No hay nada pendiente. ¡Todo contestado!",
+        mine: "No tienes conversaciones pendientes.",
+        unassigned: "Ninguna conversación espera que alguien la tome.",
+        no_contact: "Todos los correos son de contactos que ya tienes.",
+        answered: "Todavía no hay conversaciones respondidas.",
+        closed: "No hay conversaciones cerradas.",
+      },
+      link: {
+        button: "Enlazar contacto",
+        title: "¿De quién es este correo?",
+        help: "Elige el contacto al que pertenece %{email}, o créalo. Su dirección se guardará en la ficha para reconocer los próximos correos.",
+        search: "Buscar contacto",
+        none: "Ningún contacto coincide.",
+        new_name: "O crea uno nuevo con este nombre",
+        create: "Crear y enlazar",
+      },
+      setup: {
+        title: "Configurar la bandeja",
+        intro:
+          "Conecta la dirección de tu empresa (por ejemplo hola@tuempresa.com) para que lo que contestan tus clientes llegue aquí. Son cuatro pasos y solo se hacen una vez.",
+        copy: "Copiar",
+        copied: "Dirección copiada",
+        kept: "Ya hay uno guardado — escribe otro solo para cambiarlo",
+        active: "Recibir correos en la bandeja",
+        save: "Guardar",
+        saved: "Bandeja configurada",
+        working: "Funcionando. Último correo recibido",
+        waiting:
+          "Todavía no llega ningún correo. Cuando termines, mándate uno de prueba a %{email} desde tu correo personal: en un minuto debe aparecer en la bandeja.",
+        step1: {
+          title: "Tu dirección de correo",
+          help: "En Resend, entra a «Receiving» (o «Inboxes») y crea la dirección donde quieres recibir. Escríbela aquí igual que allá.",
+          label: "Dirección de la bandeja",
+          reply_to:
+            "Desde que la guardes, todo lo que Vinqulia envíe llevará esta dirección como «responder a»: así las respuestas llegan aquí y no al buzón de cada persona.",
+        },
+        step2: {
+          title: "Avisa a Vinqulia cuando llegue un correo",
+          help: "Copia esta dirección. Es a donde Resend avisará cada vez que te escriban.",
+          a: "En Resend, ve a «Webhooks» y pulsa «Add webhook».",
+          b: "Pega la dirección que copiaste.",
+          c: "En los eventos marca solo «email.received» y guarda.",
+        },
+        step3: {
+          title: "Pega el secreto del aviso",
+          help: "Al guardar el webhook, Resend muestra un «Signing secret» que empieza con «whsec_». Cópialo y pégalo aquí: así Vinqulia sabe que el aviso viene de verdad de Resend.",
+          label: "Secreto del webhook",
+        },
+        step4: {
+          title: "Una clave para leer los correos",
+          optional:
+            "Tu correo saliente ya es de Resend, así que normalmente no hace falta. Solo si tu clave es de «Sending access», crea en Resend → «API Keys» una con «Full access» y pégala aquí.",
+          required:
+            "Tu correo saliente no es de Resend, así que Vinqulia necesita una clave de Resend para leer lo que llega. Créala en Resend → «API Keys» con «Full access» y pégala aquí.",
+          label: "Clave de Resend",
+        },
+      },
+    },
     modules: {
       title: "Módulos",
       catalog: {
@@ -2095,6 +2184,11 @@ export const spanishCrmMessages = {
         name: "Facturas",
         description:
           "Las facturas que tu proveedor de facturación (Faqturia…) timbra desde una cotización aceptada, con su PDF y XML.",
+      },
+      inbox: {
+        name: "Bandeja",
+        description:
+          "Una bandeja de correo compartida: lo que tus clientes contestan a la dirección de tu empresa llega aquí, el equipo lo ve y lo contesta sin salir del CRM.",
       },
       affiliates: {
         name: "Afiliados",
