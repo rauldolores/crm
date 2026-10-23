@@ -7,6 +7,7 @@ import type {
   DealStage,
   LabeledValue,
   NoteStatus,
+  Project,
   QuoteIssuer,
   QuoteTemplate,
 } from "../types";
@@ -75,6 +76,13 @@ export interface ConfigurationContextValue {
   contactCustomFields: CustomFieldDefinition[];
   companyCustomFields: CustomFieldDefinition[];
   dealCustomFields: CustomFieldDefinition[];
+  /**
+   * Proyectos (o clasificaciones): los productos de la organización, cada
+   * uno con su dirección de correo. Ver correo/proyectos.ts en el servidor.
+   */
+  projects: Project[];
+  /** El value del proyecto predeterminado. */
+  defaultProject: string;
   /** Módulos activables por organización, indexados por clave (ver modules/registry.ts). */
   modules: Record<string, ModuleConfig>;
   /**

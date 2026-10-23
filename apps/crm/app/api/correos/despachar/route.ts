@@ -1,5 +1,11 @@
 import { getServiceClient } from "@/lib/server/supabase-service";
 import { enviarCorreoDeOrganizacion } from "@/lib/server/correo/enviar";
+import {
+  elegirProyecto,
+  proyectosDeLaEmpresaDelContacto,
+  proyectosDeOrganizacion,
+  type ProyectosDeOrganizacion,
+} from "@/lib/server/correo/proyectos";
 import { valoresDeFusion } from "@/lib/server/correo/valoresDeFusion";
 import {
   cotizacionPorId,
@@ -46,6 +52,8 @@ interface Plantilla {
   cta_url: string | null;
   footer_text: string | null;
   active: boolean;
+  /** De qué proyecto es: desde su dirección sale el correo. */
+  project: string | null;
 }
 
 export async function POST(peticion: Request) {
@@ -75,6 +83,8 @@ export async function POST(peticion: Request) {
 
   let enviados = 0;
   let fallidos = 0;
+  // Una lectura de la configuración por organización y tanda.
+  const proyectosPorOrganizacion = new Map<string, ProyectosDeOrganizacion>();
 
   for (const fila of (pendientes ?? []) as FilaDeCola[]) {
     // Se marca el intento ANTES de enviar: si el proceso muere a mitad, el
@@ -101,7 +111,7 @@ export async function POST(peticion: Request) {
     const { data: plantilla } = await supabase
       .from("email_templates")
       .select(
-        "subject, body_html, logo_url, accent_color, cta_text, cta_url, footer_text, active",
+        "subject, body_html, logo_url, accent_color, cta_text, cta_url, footer_text, active, project",
       )
       .eq("id", fila.template_id)
       .eq("organization_id", fila.organization_id)
@@ -173,12 +183,39 @@ export async function POST(peticion: Request) {
       valores,
     );
 
-    const resultado = await enviarCorreoDeOrganizacion(fila.organization_id, {
-      para: correoDelContacto,
-      asunto,
-      textoPlano,
-      html,
-    });
+    // Desde qué proyecto: el de la plantilla, el de la oportunidad o el de
+    // la empresa. Aquí no hay a quién preguntar: con varios, el
+    // predeterminado.
+    if (!proyectosPorOrganizacion.has(fila.organization_id)) {
+      proyectosPorOrganizacion.set(
+        fila.organization_id,
+        await proyectosDeOrganizacion(fila.organization_id),
+      );
+    }
+    const { data: oportunidad } = fila.deal_id
+      ? await supabase
+          .from("deals")
+          .select("project")
+          .eq("id", fila.deal_id)
+          .eq("organization_id", fila.organization_id)
+          .maybeSingle()
+      : { data: null };
+    const eleccion = elegirProyecto(
+      proyectosPorOrganizacion.get(fila.organization_id)!,
+      {
+        fijo: [p.project, oportunidad?.project as string | null],
+        deLaEmpresa: await proyectosDeLaEmpresaDelContacto(
+          fila.organization_id,
+          fila.contact_id,
+        ),
+      },
+    );
+
+    const resultado = await enviarCorreoDeOrganizacion(
+      fila.organization_id,
+      { para: correoDelContacto, asunto, textoPlano, html },
+      eleccion.tipo === "proyecto" ? eleccion.proyecto : null,
+    );
 
     if (!resultado.ok) {
       await fallo(resultado.mensaje ?? "No se pudo enviar el correo.");

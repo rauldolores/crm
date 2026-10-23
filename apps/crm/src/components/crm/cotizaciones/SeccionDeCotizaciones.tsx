@@ -52,6 +52,8 @@ import { getKontroliaAccessToken } from "@/lib/kontrolia-auth/client";
 import { BotonesDeDescarga } from "../facturas/ListaDeFacturas";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal, EmailTemplate, Invoice, Quote, QuoteItem } from "../types";
+import { ElegirProyectoDeEnvio } from "../proyectos/ElegirProyectoDeEnvio";
+import { useProyectosParaElegir } from "../proyectos/useProyectosParaElegir";
 import { DialogoDeFactura } from "./DialogoDeFactura";
 import { EditorDeCotizacion } from "./EditorDeCotizacion";
 
@@ -410,6 +412,11 @@ const DialogoDeEnvio = ({
   const [plantilla, setPlantilla] = useState<string>("");
   const [mensaje, setMensaje] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [proyecto, setProyecto] = useState("");
+  const proyectos = useProyectosParaElegir({
+    companyId: cotizacion.company_id,
+    dealId: cotizacion.deal_id,
+  });
 
   const { data: plantillas } = useGetList<EmailTemplate>("email_templates", {
     filter: { active: true },
@@ -427,6 +434,7 @@ const DialogoDeEnvio = ({
           ...(para.trim() ? { para: para.trim() } : {}),
           ...(plantilla ? { templateId: Number(plantilla) } : {}),
           ...(mensaje.trim() ? { mensaje: mensaje.trim() } : {}),
+          ...(proyecto ? { proyecto } : {}),
         },
       );
       const cuerpo = (await respuesta.json().catch(() => ({}))) as {
@@ -462,6 +470,11 @@ const DialogoDeEnvio = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
+          <ElegirProyectoDeEnvio
+            opciones={proyectos}
+            valor={proyecto}
+            alCambiar={setProyecto}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="cot-para">{translate("crm.quotes.send_to")}</Label>
             <Input
@@ -511,7 +524,10 @@ const DialogoDeEnvio = ({
           <Button variant="ghost" onClick={onClose} disabled={enviando}>
             {translate("ra.action.cancel")}
           </Button>
-          <Button onClick={enviar} disabled={enviando}>
+          <Button
+            onClick={enviar}
+            disabled={enviando || (proyectos.length > 1 && !proyecto)}
+          >
             {enviando ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (

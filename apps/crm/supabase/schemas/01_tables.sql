@@ -1686,3 +1686,24 @@ create unique index conversation_messages_provider_id_uk
 create index conversation_messages_conversation_id_idx
     on crm.conversation_messages (conversation_id, sent_at);
 
+
+-- Proyectos (20261023215915_proyectos): ver la migración para el porqué.
+-- Los `value` de config.projects a los que pertenece la empresa. Vacío = el
+-- proyecto predeterminado.
+alter table crm.companies add column if not exists projects text[] not null default '{}';
+create index if not exists companies_projects_idx on crm.companies using gin (projects);
+
+-- Una oportunidad vende un solo producto: un solo proyecto.
+alter table crm.deals add column if not exists project text;
+create index if not exists deals_project_idx on crm.deals (organization_id, project);
+
+-- Para los envíos que nadie elige a mano (automatizaciones, envíos
+-- masivos): la plantilla dice de qué proyecto es.
+alter table crm.email_templates add column if not exists project text;
+
+-- A qué dirección de proyecto llegó la conversación: se contesta desde ella.
+alter table crm.conversations add column if not exists project text;
+
+-- La bandeja recibe en las direcciones de los proyectos; la suya propia ya
+-- no es obligatoria.
+alter table crm.inbox_settings alter column inbox_email drop not null;

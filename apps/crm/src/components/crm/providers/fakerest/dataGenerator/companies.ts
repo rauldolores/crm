@@ -61,6 +61,7 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       lifecycle_stage: null,
       is_client: true,
       is_affiliate: false,
+      projects: [],
     };
   });
 };

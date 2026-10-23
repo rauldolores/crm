@@ -163,15 +163,18 @@ export const aCorreoEntrante = (correo: CorreoDeResend): CorreoEntrante => {
 };
 
 /**
- * ¿Va este correo a la bandeja de la organización? Una cuenta de Resend
- * avisa de TODO lo que recibe, también de otras direcciones suyas.
+ * A cuál de las direcciones de la bandeja (las de los proyectos) va este
+ * correo, o nulo si a ninguna: una cuenta de Resend avisa de TODO lo que
+ * recibe, también de direcciones que no son de la bandeja.
  */
-export const vaALaBandeja = (
+export const direccionDeLaBandeja = (
   correo: Pick<CorreoDeResend, "to" | "cc" | "received_for">,
-  bandeja: string,
-): boolean => {
-  const buscada = bandeja.trim().toLowerCase();
-  return [...correo.to, ...(correo.cc ?? []), ...(correo.received_for ?? [])]
-    .map((d) => separarDireccion(d).correo)
-    .includes(buscada);
+  bandeja: string[],
+): string | null => {
+  const buscadas = bandeja.map((d) => d.trim().toLowerCase());
+  return (
+    [...correo.to, ...(correo.cc ?? []), ...(correo.received_for ?? [])]
+      .map((d) => separarDireccion(d).correo)
+      .find((d) => buscadas.includes(d)) ?? null
+  );
 };

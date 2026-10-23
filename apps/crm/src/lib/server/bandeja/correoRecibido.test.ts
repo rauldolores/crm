@@ -6,7 +6,7 @@ import {
   esAutomatico,
   htmlATexto,
   separarDireccion,
-  vaALaBandeja,
+  direccionDeLaBandeja,
 } from "./correoRecibido";
 
 const recibido = (extra: Record<string, unknown> = {}) =>
@@ -96,20 +96,25 @@ describe("separarDireccion", () => {
   });
 });
 
-describe("vaALaBandeja", () => {
-  test("solo los correos dirigidos a la dirección de la bandeja", () => {
-    expect(vaALaBandeja({ to: ["Hola@AduaniaX.com"] }, "hola@aduaniax.com")).toBe(
-      true,
+describe("direccionDeLaBandeja", () => {
+  const BANDEJA = ["hola@aduaniax.com", "hola@faqturia.com"];
+
+  test("dice a qué dirección de proyecto escribieron", () => {
+    expect(direccionDeLaBandeja({ to: ["Hola@AduaniaX.com"] }, BANDEJA)).toBe(
+      "hola@aduaniax.com",
     );
     expect(
-      vaALaBandeja(
-        { to: ["otra@x.com"], cc: ["AduaniaX <hola@aduaniax.com>"] },
-        "hola@aduaniax.com",
+      direccionDeLaBandeja(
+        { to: ["otra@x.com"], cc: ["Faqturia <hola@faqturia.com>"] },
+        BANDEJA,
       ),
-    ).toBe(true);
+    ).toBe("hola@faqturia.com");
+  });
+
+  test("ignora lo que llega a direcciones que no son de la bandeja", () => {
     expect(
-      vaALaBandeja({ to: ["hola@chuujorai.resend.app"] }, "hola@aduaniax.com"),
-    ).toBe(false);
+      direccionDeLaBandeja({ to: ["hola@chuujorai.resend.app"] }, BANDEJA),
+    ).toBeNull();
   });
 });
 

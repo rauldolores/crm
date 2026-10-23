@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { ProyectoInput } from "../proyectos/CamposDeProyecto";
 import { llamarApi } from "../misc/llamarApi";
 import { camposDeFusion, tokenDeCampo } from "./camposDeFusion";
 import {
@@ -349,6 +350,8 @@ export const PlantillaInputs = () => {
           dangerouslySetInnerHTML={{ __html: vistaPrevia }}
         />
       </div>
+
+      <ProyectoInput helperText="crm.projects.template_help" />
 
       <BooleanInput
         source="active"

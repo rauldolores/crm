@@ -7,7 +7,8 @@ import { getServiceClient } from "../supabase-service";
  */
 
 export interface AjustesDeBandeja {
-  inboxEmail: string;
+  /** Dirección propia de la bandeja; nula si solo recibe en las de proyectos. */
+  inboxEmail: string | null;
   webhookSecret: string | null;
   apiKey: string | null;
   active: boolean;
@@ -36,7 +37,7 @@ export async function ajustesDeBandeja(
     .maybeSingle();
   if (!data) return null;
   return {
-    inboxEmail: data.inbox_email as string,
+    inboxEmail: (data.inbox_email as string | null) ?? null,
     webhookSecret: (data.webhook_secret as string | null) ?? null,
     apiKey: (data.api_key as string | null) ?? null,
     active: Boolean(data.active),

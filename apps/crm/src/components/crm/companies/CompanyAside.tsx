@@ -12,6 +12,7 @@ import { AsideSection } from "../misc/AsideSection";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company } from "../types";
 import { TagsListEdit } from "../contacts/TagsListEdit";
+import { ProyectosField } from "../proyectos/CamposDeProyecto";
 import { CompanyAffiliate } from "./CompanyAffiliate";
 import { CompanyMergeButton } from "./CompanyMergeButton";
 import { getTranslatedCompanySizeLabel } from "./getTranslatedCompanySizeLabel";
@@ -134,6 +135,7 @@ export const ContextInfo = ({ record }: { record: Company }) => {
     <AsideSection
       title={translate("resources.companies.field_categories.context")}
     >
+      <ProyectosField />
       {sectorLabel && (
         <span>
           {translate("resources.companies.fields.sector")}: {sectorLabel}

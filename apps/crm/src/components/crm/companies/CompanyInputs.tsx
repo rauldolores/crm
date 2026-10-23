@@ -12,6 +12,7 @@ import { REGIMENES_FISCALES, USOS_DE_CFDI } from "@/lib/conectores/sat";
 
 import ImageEditorField from "../misc/ImageEditorField";
 import { CamposPersonalizadosInput } from "../misc/CamposPersonalizados";
+import { ProyectosInput } from "../proyectos/CamposDeProyecto";
 import { isLinkedinUrl } from "../misc/isLinkedInUrl";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { useEmbudoDeAfiliados } from "../affiliates/embudoDeAfiliados";
@@ -42,6 +43,7 @@ export const CompanyInputs = () => {
       <div className={`flex gap-6 ${isMobile ? "flex-col" : "flex-row"}`}>
         <div className="flex flex-col gap-10 flex-1">
           <CompanyTypeInputs />
+          <ProyectosInput />
           <CompanyContactInputs />
           <CompanyContextInputs />
         </div>

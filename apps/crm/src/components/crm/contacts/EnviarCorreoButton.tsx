@@ -21,6 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import type { Contact } from "../types";
+import { ElegirProyectoDeEnvio } from "../proyectos/ElegirProyectoDeEnvio";
+import { useProyectosParaElegir } from "../proyectos/useProyectosParaElegir";
 
 /**
  * Envía un correo real al contacto (no solo una nota informativa) y deja
@@ -63,16 +65,27 @@ const EnviarCorreoDialog = ({
   const dataProvider = useDataProvider();
   const [asunto, setAsunto] = useState("");
   const [texto, setTexto] = useState("");
+  const [proyecto, setProyecto] = useState("");
+  const proyectos = useProyectosParaElegir({
+    companyId: record?.company_id,
+  });
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async () => {
-      await dataProvider.enviarCorreo(record!.id, asunto, texto);
+      await dataProvider.enviarCorreo(
+        record!.id,
+        asunto,
+        texto,
+        undefined,
+        proyecto || undefined,
+      );
     },
   });
 
   const handleClose = () => {
     setAsunto("");
     setTexto("");
+    setProyecto("");
     onClose();
   };
 
@@ -110,6 +123,11 @@ const EnviarCorreoDialog = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          <ElegirProyectoDeEnvio
+            opciones={proyectos}
+            valor={proyecto}
+            alCambiar={setProyecto}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="asunto-correo">
               {translate("resources.contacts.send_email.subject")}
@@ -142,7 +160,12 @@ const EnviarCorreoDialog = ({
           </Button>
           <Button
             onClick={handleEnviar}
-            disabled={!asunto || !texto || isPending}
+            disabled={
+              !asunto ||
+              !texto ||
+              isPending ||
+              (proyectos.length > 1 && !proyecto)
+            }
           >
             <Send />
             {isPending

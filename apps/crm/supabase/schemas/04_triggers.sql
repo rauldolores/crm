@@ -251,3 +251,14 @@ create trigger soporte_tiempos_autorizacion_trigger
 create trigger soporte_tiempos_reportar_a_auth_trigger
     after insert on crm.soporte_tiempos
     for each row execute function crm.soporte_reportar_a_auth();
+
+-- Proyectos (20261023215915_proyectos).
+drop trigger if exists deals_proyecto_del_embudo on crm.deals;
+create trigger deals_proyecto_del_embudo
+    before insert or update of pipeline on crm.deals
+    for each row execute function crm.proyecto_del_embudo();
+
+drop trigger if exists deals_empresa_en_proyecto on crm.deals;
+create trigger deals_empresa_en_proyecto
+    after insert or update of project, company_id on crm.deals
+    for each row execute function crm.empresa_en_proyecto_de_oportunidad();

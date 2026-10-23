@@ -14,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { RelativeDate } from "../misc/RelativeDate";
+import { etiquetaDeProyecto } from "../proyectos/proyectos";
+import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Conversation } from "../types";
 import { ConfigurarBandejaPage } from "./ConfigurarBandejaPage";
 import { Conversacion } from "./Conversacion";
@@ -32,6 +34,8 @@ export const BandejaPage = () => {
   const { identity } = useGetIdentity();
   const [parametros, setParametros] = useSearchParams();
   const [busqueda, setBusqueda] = useState("");
+  const { projects } = useConfigurationContext();
+  const proyecto = parametros.get("proyecto");
 
   const vistaPedida = parametros.get("vista");
   const vista: Vista = esVista(vistaPedida) ? vistaPedida : "pending";
@@ -78,6 +82,26 @@ export const BandejaPage = () => {
             {translate(`crm.inbox.views.${clave}`)}
           </Button>
         ))}
+        {projects.length > 1 && (
+          <select
+            aria-label={translate("crm.projects.title")}
+            className="ml-auto h-8 rounded-md border bg-background px-2 text-sm"
+            value={proyecto ?? ""}
+            onChange={(evento) =>
+              cambiarParametros({
+                proyecto: evento.target.value || null,
+                id: null,
+              })
+            }
+          >
+            <option value="">{translate("crm.projects.all")}</option>
+            {projects.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="flex h-[calc(100dvh-14rem)] min-h-[28rem] overflow-hidden rounded-lg border">
@@ -100,6 +124,7 @@ export const BandejaPage = () => {
             filtro={{
               ...filtroDeVista(vista, identity?.id),
               ...(busqueda.trim() ? { q: busqueda.trim() } : {}),
+              ...(proyecto ? { project: proyecto } : {}),
             }}
             vista={vista}
             abierta={abierta}
@@ -144,6 +169,7 @@ const ListaDeConversaciones = ({
   alAbrir: (id: Identifier) => void;
 }) => {
   const translate = useTranslate();
+  const { projects } = useConfigurationContext();
   const { data, isPending } = useGetList<Conversation>("conversations", {
     filter: filtro,
     sort: { field: "last_message_at", order: "DESC" },
@@ -202,6 +228,11 @@ const ListaDeConversaciones = ({
               </span>
             )}
             <div className="flex flex-wrap gap-1">
+              {conversacion.project && projects.length > 1 && (
+                <Badge variant="secondary" className="text-[10px]">
+                  {etiquetaDeProyecto(projects, conversacion.project)}
+                </Badge>
+              )}
               {conversacion.contact_id == null && (
                 <Badge variant="outline" className="text-[10px]">
                   {translate("crm.inbox.no_contact")}

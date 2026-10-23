@@ -22,6 +22,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import type { Contact, Ticket } from "../types";
+import { ElegirProyectoDeEnvio } from "../proyectos/ElegirProyectoDeEnvio";
+import { useProyectosParaElegir } from "../proyectos/useProyectosParaElegir";
 import { parseTicketSubject } from "./parseTicketSubject";
 
 /**
@@ -86,10 +88,18 @@ const ResponderDialog = ({
   const { title } = parseTicketSubject(ticket.subject);
   const [asunto, setAsunto] = useState(`[#${ticket.id}] ${title}`);
   const [texto, setTexto] = useState("");
+  const [proyecto, setProyecto] = useState("");
+  const proyectos = useProyectosParaElegir({ contactId: ticket.contact_id });
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: () =>
-      dataProvider.enviarCorreo(ticket.contact_id, asunto, texto, ticket.id),
+      dataProvider.enviarCorreo(
+        ticket.contact_id,
+        asunto,
+        texto,
+        ticket.id,
+        proyecto || undefined,
+      ),
   });
 
   const enviar = async () => {
@@ -122,6 +132,11 @@ const ResponderDialog = ({
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
+          <ElegirProyectoDeEnvio
+            opciones={proyectos}
+            valor={proyecto}
+            alCambiar={setProyecto}
+          />
           <div className="space-y-1.5">
             <Label htmlFor="respuesta-asunto">
               {translate("resources.contacts.send_email.subject")}
@@ -152,7 +167,15 @@ const ResponderDialog = ({
             <CircleX />
             {translate("resources.contacts.send_email.cancel")}
           </Button>
-          <Button onClick={enviar} disabled={!asunto || !texto || isPending}>
+          <Button
+            onClick={enviar}
+            disabled={
+              !asunto ||
+              !texto ||
+              isPending ||
+              (proyectos.length > 1 && !proyecto)
+            }
+          >
             <Send />
             {isPending
               ? translate("resources.contacts.send_email.sending")

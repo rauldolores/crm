@@ -198,6 +198,10 @@ export const defaultConfiguration: ConfigurationContextValue = {
   dealStages: defaultDealStages,
   dealPipelines: defaultDealPipelines,
   dealLossReasons: defaultDealLossReasons,
+  // Sin proyectos hasta que la organización los defina: todo sale por el
+  // correo saliente general.
+  projects: [],
+  defaultProject: "",
   noteStatuses: defaultNoteStatuses,
   noteTypes: defaultNoteTypes,
   taskTypes: defaultTaskTypes,

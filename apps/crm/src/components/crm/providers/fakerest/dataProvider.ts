@@ -373,6 +373,7 @@ export const createDataProvider = ({
       asunto: string,
       texto: string,
       ticketId?: Identifier,
+      _proyecto?: string,
     ) => {
       const fecha = new Date().toISOString();
       await baseDataProvider.create("contact_notes", {

@@ -26,6 +26,7 @@ import { NoteCreate } from "../notes/NoteCreate";
 import { NotesIterator } from "../notes/NotesIterator";
 import { HistorialDeOportunidad } from "./HistorialDeOportunidad";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { etiquetaDeProyecto } from "../proyectos/proyectos";
 import type { Deal } from "../types";
 import { DatosDeContacto } from "./DatosDeContacto";
 import { findDealLabel, formatISODateString } from "./dealUtils";
@@ -59,6 +60,7 @@ const DealShowContent = () => {
   const {
     dealStages,
     dealCategories,
+    projects,
     dealLossReasons,
     dealPipelines,
     currency,
@@ -137,6 +139,17 @@ const DealShowContent = () => {
                 })}
               </span>
             </div>
+
+            {record.project && (
+              <div className="flex flex-col mr-10">
+                <span className="text-xs text-muted-foreground tracking-wide">
+                  {translate("crm.projects.field_one")}
+                </span>
+                <span className="text-sm">
+                  {etiquetaDeProyecto(projects, record.project)}
+                </span>
+              </div>
+            )}
 
             {record.category && (
               <div className="flex flex-col mr-10">

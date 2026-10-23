@@ -9,6 +9,7 @@ import { CompanyAvatar } from "../companies/CompanyAvatar";
 import { TagsList } from "../contacts/TagsList";
 import { LOCALE } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { etiquetaDeProyecto } from "../proyectos/proyectos";
 import type { Deal } from "../types";
 
 export const DealCard = ({ deal, index }: { deal: Deal; index: number }) => {
@@ -39,7 +40,7 @@ export const DealCardContent = ({
   snapshot?: any;
   deal: Deal;
 }) => {
-  const { dealCategories, currency } = useConfigurationContext();
+  const { dealCategories, currency, projects } = useConfigurationContext();
   const translate = useTranslate();
   const redirect = useRedirect();
   const handleClick = () => {
@@ -48,7 +49,10 @@ export const DealCardContent = ({
     });
   };
 
-  const categoria = dealCategories.find((c) => c.value === deal.category);
+  // El proyecto, si la organización los usa; si no, la categoría.
+  const etiqueta =
+    etiquetaDeProyecto(projects, deal.project) ??
+    dealCategories.find((c) => c.value === deal.category)?.label;
   const importe = deal.amount
     ? deal.amount.toLocaleString(LOCALE, {
         style: "currency",
@@ -114,9 +118,9 @@ export const DealCardContent = ({
               >
                 {importe ?? translate("resources.deals.no_amount")}
               </span>
-              {categoria && (
+              {etiqueta && (
                 <Badge variant="secondary" className="rounded-full font-normal">
-                  {categoria.label}
+                  {etiqueta}
                 </Badge>
               )}
             </div>

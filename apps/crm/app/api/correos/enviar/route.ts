@@ -4,15 +4,22 @@ import {
   enviarCorreoDeOrganizacion,
   puedeEnviarCorreo,
 } from "@/lib/server/correo/enviar";
+import {
+  elegirProyecto,
+  proyectosDeLaEmpresaDelContacto,
+  proyectosDeOrganizacion,
+} from "@/lib/server/correo/proyectos";
 
 /**
  * Envía un correo real a un contacto desde el CRM y deja constancia como una
  * nota tipo "email" en su ficha.
  *
- * Solo saliente: la respuesta del cliente llega al buzón de quien envió. Hubo
- * un intento de archivarla sola en la ficha (un Reply-To con hash de hilo
- * contra una función de correo entrante), retirado porque nunca hubo webhook
- * al otro lado y las respuestas se perdían.
+ * La respuesta del cliente vuelve a la dirección que envió; si esa dirección
+ * es de un proyecto con bandeja, llega a la bandeja (ver /api/bandeja).
+ *
+ * Sale desde la dirección del proyecto de la empresa del contacto. Si la
+ * empresa tiene varios y no se dijo cuál (`proyecto`), responde 409 con las
+ * opciones para que la pantalla pregunte. Ver correo/proyectos.ts.
  *
  * Con `ticketId` es una respuesta al cliente desde un ticket: el asunto lleva
  * «[#id]» para que las respuestas se reconozcan, y el correo queda también
@@ -43,6 +50,7 @@ export async function POST(peticion: Request) {
     asunto?: string;
     texto?: string;
     ticketId?: number;
+    proyecto?: string;
   } | null;
 
   const contactId = cuerpo?.contactId;
@@ -115,12 +123,38 @@ export async function POST(peticion: Request) {
     .eq("organization_id", organizacionId)
     .maybeSingle();
 
-  // Sin Reply-To: la respuesta va al buzón de quien envió (ver arriba).
-  const resultado = await enviarCorreoDeOrganizacion(organizacionId, {
-    para: correoDestino,
-    asunto,
-    textoPlano: texto,
-  });
+  const eleccion = elegirProyecto(
+    await proyectosDeOrganizacion(organizacionId),
+    {
+      elegido: typeof cuerpo?.proyecto === "string" ? cuerpo.proyecto : null,
+      deLaEmpresa: await proyectosDeLaEmpresaDelContacto(
+        organizacionId,
+        contacto.id,
+      ),
+      puedePreguntar: true,
+    },
+  );
+  if (eleccion.tipo === "preguntar") {
+    return Response.json(
+      {
+        message:
+          "Su empresa tiene varios proyectos: elige desde cuál escribir.",
+        proyectos: eleccion.opciones.map(({ value, label, email }) => ({
+          value,
+          label,
+          email,
+        })),
+      },
+      { status: 409 },
+    );
+  }
+
+  // Sin Reply-To: la respuesta vuelve a la dirección del proyecto.
+  const resultado = await enviarCorreoDeOrganizacion(
+    organizacionId,
+    { para: correoDestino, asunto, textoPlano: texto },
+    eleccion.proyecto,
+  );
 
   if (!resultado.ok) {
     return Response.json(

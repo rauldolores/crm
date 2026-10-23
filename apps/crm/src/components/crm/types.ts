@@ -105,6 +105,8 @@ export type Company = {
   /** Qué es para nosotros: cliente, afiliado o las dos cosas (al menos una). */
   is_client?: boolean;
   is_affiliate?: boolean;
+  /** Proyectos de la organización a los que pertenece (values de config.projects). */
+  projects?: string[];
 } & Pick<RaRecord, "id">;
 
 export type EmailAndType = {
@@ -194,6 +196,8 @@ export type Deal = {
    */
   contract_id?: Identifier | null;
   renewal_for?: string | null;
+  /** El proyecto que vende (value de config.projects); lo hereda de su embudo. */
+  project?: string | null;
 } & Pick<RaRecord, "id">;
 
 export type DealNote = {
@@ -353,6 +357,8 @@ export type EmailTemplate = {
   cta_url?: string | null;
   footer_text?: string | null;
   active: boolean;
+  /** De qué proyecto es: los envíos automáticos salen de su dirección. */
+  project?: string | null;
   sales_id?: Identifier | null;
   created_at?: string;
   updated_at?: string;
@@ -799,6 +805,19 @@ export interface DealPipeline extends LabeledValue {
   pipelineStatuses: string[];
   /** Etapas que significan «perdida»: al llegar a una se pide el motivo. */
   lostStages: string[];
+  /** Proyecto que vende este embudo: sus oportunidades lo heredan. */
+  project?: string | null;
+}
+
+/**
+ * Un proyecto (o clasificación) de la organización: un producto o servicio
+ * con su propia dirección de correo, que envía y recibe.
+ */
+export interface Project extends LabeledValue {
+  /** Su dirección (hola@…). Vacía = el correo saliente general. */
+  email?: string | null;
+  /** Nombre del remitente; si falta, el del proyecto. */
+  fromName?: string | null;
 }
 
 export interface NoteStatus extends LabeledValue {
@@ -1039,6 +1058,8 @@ export type Conversation = {
   last_message_at: string;
   last_message_preview: string | null;
   created_at: string;
+  /** El proyecto cuya dirección recibió el correo; se contesta desde ella. */
+  project: string | null;
 } & Pick<RaRecord, "id">;
 
 export type ConversationMessage = {

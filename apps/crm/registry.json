@@ -1242,6 +1242,22 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/proyectos/CamposDeProyecto.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/proyectos/ElegirProyectoDeEnvio.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/proyectos/proyectos.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/proyectos/useProyectosParaElegir.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/public/AccionesDeCotizacion.tsx",
           "type": "registry:component"
         },
@@ -1295,6 +1311,10 @@
         },
         {
           "path": "src/components/crm/sales/useGetSalesName.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/settings/AjustesDeProyectos.tsx",
           "type": "registry:component"
         },
         {
@@ -1771,6 +1791,10 @@
         },
         {
           "path": "src/lib/server/correo/proveedores.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/correo/proyectos.ts",
           "type": "registry:lib"
         },
         {
