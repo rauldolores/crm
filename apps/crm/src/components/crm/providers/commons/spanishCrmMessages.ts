@@ -1949,6 +1949,38 @@ export const spanishCrmMessages = {
         subtotal: "Subtotal",
         tax: "IVA",
       },
+      collections: {
+        title: "Cobranza",
+        intro:
+          "Cuánto has facturado, cuánto te deben y quién ya se atrasó. Cuando un cliente te pague por transferencia, regístralo en su factura: si es de un contrato de KontrolIA, su acceso se renueva en el mismo paso.",
+        cards: {
+          issued: "Facturas emitidas",
+          receivable: "Por cobrar",
+          overdue: "Vencidas",
+          access_failed: "Pagadas sin renovar acceso",
+        },
+        tabs: {
+          por_cobrar: "Por cobrar",
+          vencidas: "Vencidas",
+          acceso: "Acceso sin renovar",
+          contratos: "Clientes por transferencia",
+        },
+        empty: {
+          por_cobrar: "Nadie te debe nada. Todas las facturas están pagadas.",
+          vencidas: "Ninguna factura está vencida.",
+          acceso:
+            "Todos los pagos registrados renovaron el acceso de su cliente.",
+          contratos: "No tienes clientes que paguen por transferencia.",
+        },
+        truncated:
+          "Se muestran las primeras %{shown} de %{total} facturas por cobrar; el resumen solo cuenta esas.",
+        overdue_days:
+          "Vencida hace %{smart_count} día |||| Vencida hace %{smart_count} días",
+        renews_on: "Renueva el %{date}",
+        in_grace: "Venció sin pago: en días de gracia hasta el %{date}",
+        auto_billing_on: "Se factura solo",
+        auto_billing_off: "Sin factura automática",
+      },
       problems: {
         customer: "la empresa del cliente",
         name: "la razón social",

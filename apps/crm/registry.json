@@ -638,6 +638,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/facturas/CobranzaPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/facturas/ListaDeFacturas.tsx",
           "type": "registry:component"
         },
@@ -647,6 +651,10 @@
         },
         {
           "path": "src/components/crm/facturas/SeccionDeFacturas.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/facturas/cobranza.ts",
           "type": "registry:component"
         },
         {

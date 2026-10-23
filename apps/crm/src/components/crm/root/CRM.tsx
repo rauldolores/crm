@@ -31,6 +31,7 @@ import { ConectoresPage } from "../conectores/ConectoresPage";
 import { ListaDeProductos } from "../productos/ListaDeProductos";
 import { ListaDeFacturas } from "../facturas/ListaDeFacturas";
 import { PorFacturarPage } from "../facturas/PorFacturarPage";
+import { CobranzaPage } from "../facturas/CobranzaPage";
 import { AjustesDeFacturacionPage } from "../facturas/AjustesDeFacturacionPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { SinAccesoPage } from "../autorizacion/SinAccesoPage";
@@ -331,6 +332,7 @@ const DesktopAdmin = (
         <Route path={CotizacionesPage.path} element={<CotizacionesPage />} />
         <Route path={ConectoresPage.path} element={<ConectoresPage />} />
         <Route path={PorFacturarPage.path} element={<PorFacturarPage />} />
+        <Route path={CobranzaPage.path} element={<CobranzaPage />} />
         <Route
           path={AjustesDeFacturacionPage.path}
           element={<AjustesDeFacturacionPage />}
