@@ -93,6 +93,11 @@ export default defineConfig({
             // Tiempos de soporte: código del servidor, se prueba en Node.
             "src/lib/server/soporte/**",
             "src/lib/server/whatsapp/**",
+            // Cada carpeta del proyecto "server" tiene que estar aquí también:
+            // si solo se incluye allá, sus pruebas corren dos veces, una de
+            // ellas en el navegador.
+            "src/lib/server/accionesMasivas/**",
+            "src/lib/server/afiliados/**",
           ],
           server: {
             deps: {
@@ -128,6 +133,7 @@ export default defineConfig({
             "src/lib/server/soporte/**/*.test.ts",
             "src/lib/server/whatsapp/**/*.test.ts",
             "src/lib/server/accionesMasivas/**/*.test.ts",
+            "src/lib/server/afiliados/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },
