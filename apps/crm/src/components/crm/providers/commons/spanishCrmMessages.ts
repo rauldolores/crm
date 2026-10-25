@@ -371,6 +371,26 @@ export const spanishCrmMessages = {
         keeps_going:
           "Sigue enviándose en segundo plano. Puedes cerrar esta ventana.",
       },
+      reparto: {
+        action: "Repartir",
+        title: "Repartir una etapa entre el equipo",
+        intro:
+          "Reparte por turnos las oportunidades de la etapa entre las personas que marques, para que cada una tenga la misma cantidad. Con cada oportunidad pasan su contacto, su empresa y sus tareas abiertas.",
+        stage: "Etapa",
+        stage_pick: "Elige la etapa",
+        from: "Solo las que hoy son de",
+        from_anyone: "Cualquiera",
+        to: "Repartir entre",
+        affects:
+          "Afecta a 1 oportunidad. |||| Afecta a %{smart_count} oportunidades.",
+        each: "Unas %{smart_count} por persona.",
+        cancel: "Cancelar",
+        send: "Repartir",
+        sending: "Repartiendo…",
+        close: "Cerrar",
+        done: "Se repartió 1 oportunidad: |||| Se repartieron %{smart_count} oportunidades:",
+        per_person: "%{name}: 1 |||| %{name}: %{smart_count}",
+      },
       fields: {
         name: "Nombre",
         description: "Descripción",

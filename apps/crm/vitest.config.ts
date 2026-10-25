@@ -136,6 +136,7 @@ export default defineConfig({
             "src/lib/server/accionesMasivas/**/*.test.ts",
             "src/lib/server/afiliados/**/*.test.ts",
             "src/lib/server/bandeja/**/*.test.ts",
+            "src/lib/server/reparto/**/*.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },
