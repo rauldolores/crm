@@ -570,6 +570,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/deals/RepartirButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/deals/dealUtils.ts",
           "type": "registry:component"
         },
@@ -2035,6 +2039,10 @@
         },
         {
           "path": "src/lib/server/organizaciones/crearOrganizacion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/reparto/repartir.ts",
           "type": "registry:lib"
         },
         {

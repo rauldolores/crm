@@ -33,6 +33,7 @@ import { DealCreate } from "./DealCreate";
 import { DealEdit } from "./DealEdit";
 import { DealEmpty } from "./DealEmpty";
 import { AccionMasivaButton } from "./AccionMasivaButton";
+import { RepartirButton } from "./RepartirButton";
 import { DealListContent } from "./DealListContent";
 import { DealShow } from "./DealShow";
 import { OnlyMineInput } from "./OnlyMineInput";
@@ -229,6 +230,7 @@ const FiltrosDeLaEmpresa = () => {
 const DealActions = () => (
   <TopToolbar>
     <VistasGuardadas resource="deals" />
+    <RepartirButton />
     <AccionMasivaButton />
     <FilterButton />
     <ExportButton />
