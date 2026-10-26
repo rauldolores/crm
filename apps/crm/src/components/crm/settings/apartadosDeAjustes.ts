@@ -1,3 +1,30 @@
+import {
+  Blocks,
+  CreditCard,
+  FileCheck2,
+  FileText,
+  FolderKanban,
+  Funnel,
+  Globe,
+  Handshake,
+  Import,
+  Inbox,
+  ListChecks,
+  Plug,
+  ReceiptText,
+  RefreshCw,
+  Scale,
+  Send,
+  Sparkles,
+  TextCursorInput,
+  Ticket,
+  TriangleAlert,
+  Users,
+  Webhook,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+
 /**
  * El menú de Ajustes: todo lo que administra la organización, agrupado por
  * tarea y no por tabla.
@@ -17,6 +44,7 @@ export interface EntradaDeAjustes {
   /** Clave de traducción del nombre. */
   etiqueta: string;
   ruta: string;
+  Icono: LucideIcon;
   /** Módulo que tiene que estar activo para que la entrada aparezca. */
   modulo?: string;
 }
@@ -49,30 +77,41 @@ export const GRUPOS_DE_AJUSTES: GrupoDeAjustes[] = [
   {
     titulo: n("organization"),
     entradas: [
-      { etiqueta: n("projects"), ruta: rutaDeApartado("proyectos") },
-      { etiqueta: n("users"), ruta: "/sales" },
-      { etiqueta: n("modules"), ruta: "/modulos/catalogo" },
-      { etiqueta: n("plan"), ruta: "/facturacion" },
+      {
+        etiqueta: n("projects"),
+        Icono: FolderKanban,
+        ruta: rutaDeApartado("proyectos"),
+      },
+      { etiqueta: n("users"), Icono: Users, ruta: "/sales" },
+      { etiqueta: n("modules"), Icono: Blocks, ruta: "/modulos/catalogo" },
+      { etiqueta: n("plan"), Icono: CreditCard, ruta: "/facturacion" },
     ],
   },
   {
     titulo: n("sales"),
     entradas: [
-      { etiqueta: n("pipelines"), ruta: rutaDeApartado("embudos") },
-      { etiqueta: n("rules"), ruta: rutaDeApartado("reglas") },
-      { etiqueta: n("quotes"), ruta: "/cotizaciones" },
+      {
+        etiqueta: n("pipelines"),
+        Icono: Funnel,
+        ruta: rutaDeApartado("embudos"),
+      },
+      { etiqueta: n("rules"), Icono: Scale, ruta: rutaDeApartado("reglas") },
+      { etiqueta: n("quotes"), Icono: ReceiptText, ruta: "/cotizaciones" },
       {
         etiqueta: n("renewals"),
+        Icono: RefreshCw,
         ruta: rutaDeApartado("renovaciones"),
         modulo: "customers",
       },
       {
         etiqueta: n("risk"),
+        Icono: TriangleAlert,
         ruta: rutaDeApartado("riesgo"),
         modulo: "customers",
       },
       {
         etiqueta: n("affiliates"),
+        Icono: Handshake,
         ruta: "/affiliates/configuracion",
         modulo: "affiliates",
       },
@@ -81,38 +120,62 @@ export const GRUPOS_DE_AJUSTES: GrupoDeAjustes[] = [
   {
     titulo: n("data"),
     entradas: [
-      { etiqueta: n("custom_fields"), ruta: rutaDeApartado("campos") },
-      { etiqueta: n("lists"), ruta: rutaDeApartado("listas") },
-      { etiqueta: n("import"), ruta: "/import" },
+      {
+        etiqueta: n("custom_fields"),
+        Icono: TextCursorInput,
+        ruta: rutaDeApartado("campos"),
+      },
+      {
+        etiqueta: n("lists"),
+        Icono: ListChecks,
+        ruta: rutaDeApartado("listas"),
+      },
+      { etiqueta: n("import"), Icono: Import, ruta: "/import" },
     ],
   },
   {
     titulo: n("support"),
-    entradas: [{ etiqueta: n("tickets"), ruta: rutaDeApartado("tickets") }],
+    entradas: [
+      {
+        etiqueta: n("tickets"),
+        Icono: Ticket,
+        ruta: rutaDeApartado("tickets"),
+      },
+    ],
   },
   {
     titulo: n("communication"),
     entradas: [
-      { etiqueta: n("email"), ruta: "/correo" },
-      { etiqueta: n("email_templates"), ruta: "/email_templates" },
-      { etiqueta: n("inbox"), ruta: "/bandeja/configurar", modulo: "inbox" },
-      { etiqueta: n("forms"), ruta: "/formularios" },
+      { etiqueta: n("email"), Icono: Send, ruta: "/correo" },
+      {
+        etiqueta: n("email_templates"),
+        Icono: FileText,
+        ruta: "/email_templates",
+      },
+      {
+        etiqueta: n("inbox"),
+        Icono: Inbox,
+        ruta: "/bandeja/configurar",
+        modulo: "inbox",
+      },
+      { etiqueta: n("forms"), Icono: Globe, ruta: "/formularios" },
     ],
   },
   {
     titulo: n("automation"),
     entradas: [
-      { etiqueta: n("automations"), ruta: "/automatizaciones" },
-      { etiqueta: n("ai"), ruta: "/inteligencia-artificial" },
+      { etiqueta: n("automations"), Icono: Zap, ruta: "/automatizaciones" },
+      { etiqueta: n("ai"), Icono: Sparkles, ruta: "/inteligencia-artificial" },
     ],
   },
   {
     titulo: n("integrations"),
     entradas: [
-      { etiqueta: n("api"), ruta: "/integraciones" },
-      { etiqueta: n("connectors"), ruta: "/modulos/conectores" },
+      { etiqueta: n("api"), Icono: Webhook, ruta: "/integraciones" },
+      { etiqueta: n("connectors"), Icono: Plug, ruta: "/modulos/conectores" },
       {
         etiqueta: n("invoicing"),
+        Icono: FileCheck2,
         ruta: "/modulos/facturacion",
         modulo: "invoicing",
       },

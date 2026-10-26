@@ -1,5 +1,5 @@
 import { useCanAccess, useTranslate } from "ra-core";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -35,41 +35,69 @@ export const MarcoDeAjustes = ({ children }: { children: ReactNode }) => {
   );
 };
 
+/**
+ * El menú va en una tarjeta, como el contenido, para que no flote sobre el
+ * fondo. Las cabeceras de grupo son rótulos en versalitas (como los de la
+ * barra lateral) y las opciones llevan icono: así no se confunden unas con
+ * otras. La opción activa se tiñe del color de marca.
+ */
 const MenuDeAjustes = ({ pathname }: { pathname: string }) => {
   const translate = useTranslate();
   const { modules } = useConfigurationContext();
+  const activaRef = useRef<HTMLAnchorElement>(null);
+
+  // Con la ventana baja el menú se desplaza; la opción activa, a la vista.
+  useEffect(() => {
+    activaRef.current?.scrollIntoView({ block: "nearest" });
+  }, [pathname]);
 
   return (
-    <nav className="hidden w-52 shrink-0 md:block">
-      <div className="sticky top-[calc(4rem_+_var(--kontrolia-band-height,0px))] space-y-4">
-        <h1 className="px-3 text-2xl font-semibold">
+    <nav className="hidden w-60 shrink-0 md:block">
+      <div className="sticky top-[calc(4rem_+_var(--kontrolia-band-height,0px))] flex max-h-[calc(100dvh_-_5rem_-_var(--kontrolia-band-height,0px))] flex-col">
+        <h1 className="px-1 pb-3 text-2xl font-black tracking-tight">
           {translate("crm.settings.title")}
         </h1>
-        {gruposVisibles(modules).map((grupo) => (
-          <div key={grupo.titulo}>
-            <p className="px-3 pb-1 text-xs font-medium text-muted-foreground">
-              {translate(grupo.titulo)}
-            </p>
-            {grupo.entradas.map((entrada) => {
-              const activa = rutaPerteneceA(pathname, entrada.ruta);
-              return (
-                <Link
-                  key={entrada.ruta}
-                  to={entrada.ruta}
-                  aria-current={activa ? "page" : undefined}
-                  className={[
-                    "block rounded-md px-3 py-1 text-sm no-underline transition-colors",
-                    activa
-                      ? "bg-muted font-medium text-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  ].join(" ")}
-                >
-                  {translate(entrada.etiqueta)}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+        <div className="min-h-0 overflow-y-auto rounded-2xl bg-card p-2 shadow-tarjeta [scrollbar-width:thin] dark:border dark:border-border">
+          {gruposVisibles(modules).map((grupo, posicion) => (
+            <div key={grupo.titulo}>
+              <p
+                className={[
+                  "px-3 pb-1.5 text-[10px] font-black tracking-[0.18em] text-muted-foreground/70 uppercase",
+                  posicion === 0 ? "pt-2" : "pt-5",
+                ].join(" ")}
+              >
+                {translate(grupo.titulo)}
+              </p>
+              {grupo.entradas.map((entrada) => {
+                const activa = rutaPerteneceA(pathname, entrada.ruta);
+                return (
+                  <Link
+                    key={entrada.ruta}
+                    to={entrada.ruta}
+                    ref={activa ? activaRef : undefined}
+                    aria-current={activa ? "page" : undefined}
+                    className={[
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] no-underline transition-colors",
+                      activa
+                        ? "bg-accent font-semibold text-primary"
+                        : "font-medium text-foreground/75 hover:bg-muted hover:text-foreground",
+                    ].join(" ")}
+                  >
+                    <entrada.Icono
+                      className={[
+                        "size-4 shrink-0",
+                        activa ? "text-primary" : "text-muted-foreground",
+                      ].join(" ")}
+                    />
+                    <span className="truncate">
+                      {translate(entrada.etiqueta)}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </nav>
   );
