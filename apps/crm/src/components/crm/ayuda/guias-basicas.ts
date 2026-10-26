@@ -149,12 +149,12 @@ export const PRIMEROS_PASOS: Grupo = {
         {
           tipo: "lista",
           items: [
-            "Barra lateral, bloque «Principal»: las pantallas de trabajo diario (Panel, Contactos, Empresas, Oportunidades, Tareas, Tickets, Usuarios, Informes).",
+            "Barra lateral, bloque «Principal»: las pantallas de trabajo diario (Panel, Mi día, Contactos, Empresas, Oportunidades, Tareas, Tickets, Usuarios, Informes).",
             "Bloque «Módulos»: las funciones que has activado en el catálogo (Clientes, Afiliados). Si no las ves, están apagadas.",
             "Bloque «Herramientas»: Plantillas de correo e Importar datos.",
             "Pie de la barra: Ayuda, Ajustes (solo administradores) y tu plan con el consumo actual.",
             "Cabecera: el selector de organización (si perteneces a varias), el tema claro/oscuro, el botón de refrescar y tu perfil. El símbolo «?» te trae aquí, a la sección de la pantalla en la que estés.",
-            "En el móvil la navegación va abajo: Panel, Contactos, el botón «+» para crear, Tareas y Ajustes.",
+            "En el móvil la navegación va abajo: Panel, Contactos, el botón «+» para crear, Mi día y Ajustes.",
           ],
         },
         {
@@ -194,6 +194,44 @@ export const PANTALLAS: Grupo = {
           titulo: "Ejemplo: lunes por la mañana",
           texto:
             "Ana, del taller Ruiz Hermanos, abre el panel: 47 oportunidades abiertas que suman 184.300 €, tres tareas para hoy (una vencida desde el viernes), y ve que su compañero dejó el sábado una nota sobre Clínica Sanz. Con eso ya sabe por dónde empezar.",
+        },
+      ],
+    },
+    {
+      id: "mi-dia",
+      titulo: "Mi día",
+      resumen:
+        "Tu cola de trabajo: lo que toca hoy, cómo contactar a cada quien y qué pasó, con un clic.",
+      ruta: "/mi-dia",
+      bloques: [
+        {
+          tipo: "parrafo",
+          texto:
+            "Arriba están tus tareas vencidas y las de hoy. Abajo, prospectos nuevos de la primera etapa del embudo que elijas, tantos como tu cuota de «Nuevos por día». Solo salen los tuyos: si no tienes, pide que te repartan desde el tablero de oportunidades.",
+        },
+        {
+          tipo: "pasos",
+          titulo: "Trabajar un prospecto",
+          pasos: [
+            "Contáctalo desde la misma fila: Enviar WhatsApp, Enviar correo o Llamar.",
+            "Si quieres, escribe en una línea qué pasó.",
+            "Pulsa el botón rojo. Si el embudo tiene una etapa que se llama como el canal que usaste («Llamada» después de llamar), lo lleva ahí; si no, a la siguiente etapa. La oportunidad se mueve, queda una nota con lo que pasó, la tarea se marca hecha y las automatizaciones del embudo crean el siguiente paso.",
+          ],
+        },
+        {
+          tipo: "lista",
+          items: [
+            "«Mover a…» lleva a cualquier otra etapa, o deja la oportunidad donde está y solo registra el seguimiento.",
+            "«Posponer» lo saca de hoy y te lo devuelve el siguiente día hábil, en 3 días hábiles o en una semana.",
+            "«Descartar» lo pasa a la etapa de pérdida del embudo con el motivo que elijas.",
+            "«Repartir vencidas» reparte tus tareas atrasadas en los próximos días hábiles, tantas por día como tu cuota, empezando por las más antiguas.",
+            "«Trabajados hoy» cuenta las notas que dejaste hoy en oportunidades: una por prospecto resuelto.",
+          ],
+        },
+        {
+          tipo: "consejo",
+          texto:
+            "El embudo y la cuota se recuerdan en tu navegador. Empieza con una cuota que de verdad termines: veinte prospectos trabajados valen más que cien abiertos.",
         },
       ],
     },

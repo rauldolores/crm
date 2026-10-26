@@ -117,7 +117,7 @@ export const PREGUNTAS_FRECUENTES: Pregunta[] = [
   {
     pregunta: "¿Funciona en el móvil?",
     respuesta:
-      "Sí, con una navegación pensada para pantalla pequeña: Panel, Contactos, crear, Tareas y Ajustes abajo. Las fichas se organizan en pestañas (notas, tareas, detalles).",
+      "Sí, con una navegación pensada para pantalla pequeña: Panel, Contactos, crear, Mi día y Ajustes abajo. «Mi día» trae tus tareas de hoy y enlaza a todas las demás. Las fichas se organizan en pestañas (notas, tareas, detalles).",
     seccion: "navegacion",
   },
   {

@@ -101,6 +101,7 @@ export default defineConfig({
             "src/lib/server/bandeja/**",
             "src/lib/server/reparto/**",
             "src/lib/server/correo/comercial.test.ts",
+            "src/lib/miDia/**",
           ],
           server: {
             deps: {
@@ -124,6 +125,7 @@ export default defineConfig({
           globals: true,
           environment: "node",
           include: [
+            "src/lib/miDia/**/*.test.ts",
             "src/lib/server/ia/**/*.test.ts",
             "src/lib/server/tickets/**/*.test.ts",
             "src/lib/server/duplicados/**/*.test.ts",
