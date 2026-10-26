@@ -2002,6 +2002,7 @@ export const spanishCrmMessages = {
           receivable: "Por cobrar",
           overdue: "Vencidas",
           access_failed: "Pagadas sin renovar acceso",
+          count: "%{smart_count} factura |||| %{smart_count} facturas",
         },
         tabs: {
           por_cobrar: "Por cobrar",
@@ -2548,6 +2549,7 @@ export const spanishCrmMessages = {
       load_more: "Cargar más actividad",
     },
     dashboard: {
+      hero_intro: "Lo más importante de tu operación comercial, de un vistazo.",
       deals_chart: "Ingresos previstos por oportunidades",
       deals_chart_empty:
         "Aún no hay importes en las oportunidades. Pon un importe a una oportunidad y aquí verás la previsión por mes.",

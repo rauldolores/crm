@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 
 import { llamarApi } from "./llamarApi";
 import { MODELOS_POR_PROVEEDOR } from "./modelosDeIa";
+import { PageHero } from "./Patrones";
 
 /**
  * Ajustes → Inteligencia artificial.
@@ -138,12 +139,11 @@ export const IaPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{translate("crm.ai.title")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.ai.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.ai.title")}
+        description={translate("crm.ai.intro")}
+      />
 
       {sinIaEnNingunSitio && (
         <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">

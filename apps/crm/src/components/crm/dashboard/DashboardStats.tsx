@@ -2,9 +2,9 @@ import { Building2, Contact, Handshake } from "lucide-react";
 import { useGetList, useTranslate } from "ra-core";
 import { Link } from "react-router";
 
-import { Card } from "@/components/ui/card";
+import { StatCard, StatGrid, type TonoDeCifra } from "../misc/Patrones";
 
-const formatter = new Intl.NumberFormat("es-ES");
+const formatter = new Intl.NumberFormat("es-MX");
 
 /**
  * Resumen ejecutivo del tablero: tres cifras clave que enlazan con sus
@@ -34,6 +34,7 @@ export const DashboardStats = () => {
       total: totalContacts,
       pendiente: pendingContacts,
       ruta: "/contacts",
+      tono: "total" as TonoDeCifra,
     },
     {
       icono: <Building2 className="size-5" />,
@@ -41,6 +42,7 @@ export const DashboardStats = () => {
       total: totalCompanies,
       pendiente: pendingCompanies,
       ruta: "/companies",
+      tono: "info" as TonoDeCifra,
     },
     {
       icono: <Handshake className="size-5" />,
@@ -48,30 +50,26 @@ export const DashboardStats = () => {
       total: totalDeals,
       pendiente: pendingDeals,
       ruta: "/deals",
+      tono: "neutro" as TonoDeCifra,
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <StatGrid className="lg:grid-cols-3">
       {stats.map((s) => (
-        <Link key={s.ruta} to={s.ruta} className="group no-underline">
-          <Card className="h-full gap-0 overflow-hidden py-0 transition-colors group-hover:border-primary/40">
-            <div className="flex items-center gap-3 p-4">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                {s.icono}
-              </span>
-              <div className="min-w-0">
-                <p className="font-display text-2xl font-semibold leading-none tracking-tight tabular-nums">
-                  {s.pendiente ? "—" : formatter.format(s.total ?? 0)}
-                </p>
-                <p className="mt-1.5 truncate text-sm text-muted-foreground">
-                  {s.etiqueta}
-                </p>
-              </div>
-            </div>
-          </Card>
+        <Link
+          key={s.ruta}
+          to={s.ruta}
+          className="rounded-2xl no-underline transition-transform duration-300 hover:scale-[1.01]"
+        >
+          <StatCard
+            tono={s.tono}
+            icon={s.icono}
+            title={s.etiqueta}
+            value={s.pendiente ? "—" : formatter.format(s.total ?? 0)}
+          />
         </Link>
       ))}
-    </div>
+    </StatGrid>
   );
 };

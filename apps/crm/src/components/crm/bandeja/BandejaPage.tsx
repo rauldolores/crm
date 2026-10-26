@@ -20,6 +20,7 @@ import type { Conversation } from "../types";
 import { ConfigurarBandejaPage } from "./ConfigurarBandejaPage";
 import { Conversacion } from "./Conversacion";
 import { esVista, filtroDeVista, VISTAS, type Vista } from "./vistas";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Bandeja compartida: lo que los clientes contestan a la dirección de la
@@ -52,24 +53,21 @@ export const BandejaPage = () => {
 
   return (
     <div className="mx-auto mt-6 mb-8 flex max-w-7xl flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            {translate("crm.inbox.title")}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {translate("crm.inbox.intro")}
-          </p>
-        </div>
-        <CanAccess resource="configuration" action="edit">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={ConfigurarBandejaPage.path}>
-              <Settings className="h-4 w-4" />
-              {translate("crm.inbox.configure")}
-            </Link>
-          </Button>
-        </CanAccess>
-      </div>
+      <PageHero
+        compacto
+        title={translate("crm.inbox.title")}
+        description={translate("crm.inbox.intro")}
+        action={
+          <CanAccess resource="configuration" action="edit">
+            <Button variant="outline" size="sm" asChild>
+              <Link to={ConfigurarBandejaPage.path}>
+                <Settings className="h-4 w-4" />
+                {translate("crm.inbox.configure")}
+              </Link>
+            </Button>
+          </CanAccess>
+        }
+      />
 
       <div className="flex flex-wrap gap-1">
         {VISTAS.map((clave) => (

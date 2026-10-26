@@ -39,6 +39,7 @@ import {
   useConfigurationContext,
   useConfigurationUpdater,
 } from "../root/ConfigurationContext";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Ajustes → Conectores: de dónde salen los productos y quién factura. Una
@@ -83,14 +84,11 @@ export const ConectoresPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.connectors.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.connectors.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.connectors.title")}
+        description={translate("crm.connectors.intro")}
+      />
 
       {conectores === null ? (
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

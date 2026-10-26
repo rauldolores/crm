@@ -30,6 +30,7 @@ import {
   type ConfigurationContextValue,
 } from "../root/ConfigurationContext";
 import type { QuoteIssuer, QuoteTemplate } from "../types";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Ajustes de cotizaciones: quién emite, el IVA por defecto y las plantillas.
@@ -116,14 +117,11 @@ export const CotizacionesPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.quotes.settings.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.quotes.settings.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.quotes.settings.title")}
+        description={translate("crm.quotes.settings.intro")}
+      />
 
       <Card>
         <CardHeader>

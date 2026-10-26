@@ -26,6 +26,7 @@ import { env } from "@/lib/env";
 import type { ApiKey, Webhook } from "../types";
 import { llamarApi } from "./llamarApi";
 import { RECURSOS_NOTIFICABLES, eventosDeRecurso } from "./webhookEvents";
+import { PageHero } from "./Patrones";
 
 /** Recursos expuestos por la API REST, con un ejemplo real de cada uno. */
 const RECURSOS_DE_EJEMPLO: { recurso: string; ejemplo: string }[] = [
@@ -84,12 +85,11 @@ export const ApiPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{translate("crm.api.title")}</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.api.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.api.title")}
+        description={translate("crm.api.intro")}
+      />
 
       <Card>
         <CardHeader>

@@ -40,6 +40,7 @@ import {
   periodoDe,
   VARIANTE_DE_BANDEJA,
 } from "./formatoDeFacturas";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Bandeja «Por facturar»: las facturas que arma el CRM (contratos por
@@ -73,14 +74,11 @@ export const PorFacturarPage = () => {
 
   return (
     <div className="mx-auto mt-8 mb-16 flex max-w-6xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.customer_billing.inbox.title")}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {translate("crm.customer_billing.inbox.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.modules.invoicing.name")}
+        title={translate("crm.customer_billing.inbox.title")}
+        description={translate("crm.customer_billing.inbox.intro")}
+      />
       <Tabs value={pestana} onValueChange={(v) => setPestana(v as Pestana)}>
         <TabsList>
           {PESTANAS.map((clave) => (

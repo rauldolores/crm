@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { llamarApi } from "../misc/llamarApi";
 import { RelativeDate } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Bandeja → Configurar: conectar la dirección de la organización para que
@@ -106,9 +107,12 @@ export const ConfigurarBandejaPage = () => {
         <Link to="/bandeja" className="text-sm">
           ← {translate("crm.inbox.title")}
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("intro")}</p>
       </div>
+      <PageHero
+        badge={translate("crm.inbox.title")}
+        title={t("title")}
+        description={t("intro")}
+      />
 
       <Estado ajustes={ajustes} />
 

@@ -7,7 +7,10 @@ function Card({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6",
+        // Sistema común Kontrolia: sin borde visible, sombra amplia y suave.
+        // El borde transparente queda para quien lo colorea (border-destructive…)
+        // y reaparece en tema oscuro, donde la sombra no se ve.
+        "bg-card text-card-foreground flex flex-col gap-6 rounded-2xl border border-transparent py-6 shadow-tarjeta dark:border-border",
         className
       )}
       {...props}
@@ -32,7 +35,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-title"
-      className={cn("leading-none font-semibold", className)}
+      className={cn("leading-none font-extrabold tracking-tight", className)}
       {...props}
     />
   )

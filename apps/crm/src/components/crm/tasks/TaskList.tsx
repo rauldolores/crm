@@ -1,4 +1,4 @@
-import { CalendarDays, CheckSquare, List } from "lucide-react";
+import { CalendarDays, List } from "lucide-react";
 import { useTranslate } from "ra-core";
 import { useSearchParams } from "react-router";
 
@@ -11,6 +11,7 @@ import { AddTask } from "./AddTask";
 import { TasksCalendar } from "./TasksCalendar";
 import { TasksListByDueDate } from "./TasksListByDueDate";
 import { useVisibleTasks } from "./useVisibleTasks";
+import { PageHero } from "../misc/Patrones";
 
 type Vista = "lista" | "calendario";
 
@@ -40,60 +41,59 @@ export const TaskList = () => {
 
   return (
     <div className="flex flex-col gap-4 pb-8">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <CheckSquare className="size-5" />
-        </div>
-        <h1 className="flex-1 text-2xl font-semibold tracking-tight">
-          {translate("resources.tasks.name", { smart_count: 2 })}
-        </h1>
+      <PageHero
+        compacto
+        title={translate("resources.tasks.name", { smart_count: 2 })}
+        action={
+          <>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="mostrar-completadas"
+                checked={mostrarCompletadas}
+                onCheckedChange={(activo) =>
+                  actualizarParametro("completadas", activo ? "1" : null)
+                }
+              />
+              <Label
+                htmlFor="mostrar-completadas"
+                className="cursor-pointer text-sm font-normal text-hero-muted"
+              >
+                {translate("resources.tasks.show_done")}
+              </Label>
+            </div>
 
-        <div className="flex items-center gap-2">
-          <Switch
-            id="mostrar-completadas"
-            checked={mostrarCompletadas}
-            onCheckedChange={(activo) =>
-              actualizarParametro("completadas", activo ? "1" : null)
-            }
-          />
-          <Label
-            htmlFor="mostrar-completadas"
-            className="cursor-pointer text-sm font-normal text-muted-foreground"
-          >
-            {translate("resources.tasks.show_done")}
-          </Label>
-        </div>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={vista}
+              onValueChange={(valor) =>
+                valor && actualizarParametro("vista", valor)
+              }
+            >
+              <ToggleGroupItem
+                value="lista"
+                aria-label={translate("resources.tasks.views.list")}
+              >
+                <List className="size-4" />
+                <span className="ml-1 hidden sm:inline">
+                  {translate("resources.tasks.views.list")}
+                </span>
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="calendario"
+                aria-label={translate("resources.tasks.views.calendar")}
+              >
+                <CalendarDays className="size-4" />
+                <span className="ml-1 hidden sm:inline">
+                  {translate("resources.tasks.views.calendar")}
+                </span>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          value={vista}
-          onValueChange={(valor) =>
-            valor && actualizarParametro("vista", valor)
-          }
-        >
-          <ToggleGroupItem
-            value="lista"
-            aria-label={translate("resources.tasks.views.list")}
-          >
-            <List className="size-4" />
-            <span className="ml-1 hidden sm:inline">
-              {translate("resources.tasks.views.list")}
-            </span>
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="calendario"
-            aria-label={translate("resources.tasks.views.calendar")}
-          >
-            <CalendarDays className="size-4" />
-            <span className="ml-1 hidden sm:inline">
-              {translate("resources.tasks.views.calendar")}
-            </span>
-          </ToggleGroupItem>
-        </ToggleGroup>
-
-        <AddTask display="icon" selectContact />
-      </div>
+            <AddTask display="icon" selectContact />
+          </>
+        }
+      />
 
       {vista === "calendario" ? (
         <TasksCalendar tasks={tasks} />

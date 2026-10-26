@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
 import { llamarApi } from "./llamarApi";
+import { PageHero } from "./Patrones";
 
 /**
  * Ajustes → Correo saliente: por qué servidor salen los correos de esta
@@ -122,14 +123,11 @@ export const CorreoPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.email.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.email.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.email.title")}
+        description={translate("crm.email.intro")}
+      />
 
       {config?.heredadaDelEntorno && (
         <p className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
