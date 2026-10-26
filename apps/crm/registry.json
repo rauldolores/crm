@@ -906,6 +906,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/Patrones.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/PiezasDeInforme.tsx",
           "type": "registry:component"
         },
