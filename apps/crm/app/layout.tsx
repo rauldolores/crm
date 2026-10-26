@@ -1,5 +1,14 @@
 import type { Metadata, Viewport } from "next";
+import { Manrope } from "next/font/google";
 import "../src/index.css";
+
+// Solo para el wordmark (layout/MarcaVinqulia.tsx), como en AduaniaX: la
+// familia de marca del ecosistema Kontrolia.
+const marca = Manrope({
+  subsets: ["latin"],
+  weight: ["800"],
+  variable: "--font-marca",
+});
 
 export const metadata: Metadata = {
   title: "Vinqulia",
@@ -28,7 +37,7 @@ export default function RootLayout({
   // interfaz: la aplicación ya está en español y su traducción automática
   // rompe los textos con variables.
   return (
-    <html lang="es" translate="no" className="notranslate">
+    <html lang="es" translate="no" className={`notranslate ${marca.variable}`}>
       <body>{children}</body>
     </html>
   );
