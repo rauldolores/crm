@@ -6,21 +6,18 @@ import {
   CircleHelp,
   Contact,
   CreditCard,
-  FileText,
   Handshake,
-  Import,
   LayoutDashboard,
   ReceiptText,
   Settings,
   Ticket,
-  Users,
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
-import { ImportPage } from "../misc/ImportPage";
+import { esPantallaDeAjustes } from "../settings/apartadosDeAjustes";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { URL_AVISO_DE_PRIVACIDAD, URL_TERMINOS } from "../legal/enlaces";
 import { MODULE_REGISTRY } from "../modules/registry";
@@ -204,33 +201,9 @@ export const BarraLateral = () => {
       recurso: "tickets",
     },
     {
-      etiqueta: translate("resources.sales.name", { smart_count: 2 }),
-      ruta: "/sales",
-      Icono: Users,
-      recurso: "sales",
-    },
-    {
       etiqueta: translate("crm.reports.title", { _: "Informes" }),
       ruta: InformesPage.path,
       Icono: ChartColumn,
-    },
-  ];
-
-  // Herramientas de uso ocasional, no de trabajo diario: plantillas y
-  // carga masiva. Ninguna exige permiso de "configuration" —quien puede ver
-  // plantillas o importar datos hoy sigue pudiendo verlo, solo que ya no
-  // mezclado con lo personal dentro del menú del avatar.
-  const seccionesDeHerramientas: Seccion[] = [
-    {
-      etiqueta: translate("crm.email_templates.title"),
-      ruta: "/email_templates",
-      Icono: FileText,
-      recurso: "email_templates",
-    },
-    {
-      etiqueta: translate("crm.header.import_data"),
-      ruta: ImportPage.path,
-      Icono: Import,
     },
   ];
 
@@ -274,11 +247,6 @@ export const BarraLateral = () => {
             secciones={seccionesDeModulos}
             estaActiva={estaActiva}
           />
-          <GrupoDeSecciones
-            titulo={translate("crm.settings.sections.tools")}
-            secciones={seccionesDeHerramientas}
-            estaActiva={estaActiva}
-          />
         </div>
 
         {/* Fijo al fondo: Ayuda, Ajustes y el consumo del plan siempre a la
@@ -300,14 +268,19 @@ export const BarraLateral = () => {
           </Link>
 
           {/* Ajustes: la única puerta a la administración de la
-              organización (automatizaciones, formularios, API, módulos,
-              correo, IA viven todas ahí dentro). Antes se repartían sueltas
-              en el menú del avatar, junto a lo personal; aquí quedan
-              agrupadas y solo las ve quien puede editar la configuración. */}
+              organización. Usuarios, plantillas, importar, automatizaciones,
+              correo, IA, API… viven todos ahí dentro, con su propio menú
+              (ver settings/apartadosDeAjustes). Solo lo ve quien puede
+              editar la configuración. */}
           <CanAccess resource="configuration" action="edit">
             <Link
               to="/settings"
-              className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground/70 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className={[
+                "mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold no-underline transition-colors",
+                esPantallaDeAjustes(pathname)
+                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              ].join(" ")}
             >
               <Settings className="size-4 shrink-0 text-sidebar-icon" />
               {translate("crm.settings.title")}

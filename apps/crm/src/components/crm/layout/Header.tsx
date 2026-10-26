@@ -23,11 +23,11 @@ import { BotonDeAyuda } from "../ayuda/BotonDeAyuda";
  * lista plana de 11 destinos casi todos sobre LA ORGANIZACIÓN, no sobre la
  * persona, mezclados con lo personal y sin ningún orden. Usuarios y
  * Plantillas ya estaban duplicados con la barra lateral. Ahora cada uno vive
- * donde corresponde: Usuarios, Plantillas e Importar en la barra lateral
- * junto a los demás recursos; Automatizaciones, Formularios, API, Módulos,
- * Correo e IA dentro de Ajustes (un solo destino de la barra lateral); Plan y
- * facturación en el pie de la barra lateral, junto al consumo del plan. Ver
- * BarraLateral.tsx y HerramientasDeAdministracion.tsx.
+ * donde corresponde: todo lo que administra la organización (Usuarios,
+ * Plantillas, Importar, Automatizaciones, Formularios, API, Módulos, Correo,
+ * IA, Plan y facturación) dentro de Ajustes, con su propio menú; el consumo
+ * del plan, en el pie de la barra lateral. Ver BarraLateral.tsx y
+ * settings/apartadosDeAjustes.ts.
  */
 const Header = () => {
   return (

@@ -320,6 +320,10 @@ const DesktopAdmin = (
       <CustomRoutes>
         <Route path={ProfilePage.path} element={<ProfilePage />} />
         <Route path={SettingsPage.path} element={<SettingsPage />} />
+        <Route
+          path={`${SettingsPage.path}/:seccion`}
+          element={<SettingsPage />}
+        />
         <Route path={ImportPage.path} element={<ImportPage />} />
         <Route path={ApiPage.path} element={<ApiPage />} />
         <Route
@@ -452,6 +456,12 @@ const MobileAdmin = (
         <CustomRoutes>
           <Route
             path={SettingsPageMobile.path}
+            element={<SettingsPageMobile />}
+          />
+          {/* Los apartados de Ajustes son de escritorio: en el móvil, un enlace
+              a uno de ellos (desde la ayuda, por ejemplo) abre el menú. */}
+          <Route
+            path={`${SettingsPageMobile.path}/:seccion`}
             element={<SettingsPageMobile />}
           />
           {/* Las mismas páginas que en escritorio: son responsivas y el móvil
