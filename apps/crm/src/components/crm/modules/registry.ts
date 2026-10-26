@@ -36,11 +36,19 @@ export interface ModuleDefinition {
   Contador?: ComponentType;
   /** Más entradas del menú lateral que aparecen con el módulo activo. */
   extraLinks?: { nameKey: string; path: string; icon: LucideIcon }[];
+  /**
+   * Dónde va en el menú lateral: suelto bajo Inicio, o dentro de un grupo
+   * desplegable (ver BarraLateral.tsx). Sin grupo, va suelto en «Comercial».
+   */
+  grupo?: GrupoDelMenu;
 }
+
+export type GrupoDelMenu = "inicio" | "directorio" | "ventas" | "facturacion";
 
 export const MODULE_REGISTRY: ModuleDefinition[] = [
   {
     key: "inbox",
+    grupo: "inicio",
     nameKey: "crm.modules.inbox.name",
     descriptionKey: "crm.modules.inbox.description",
     icon: Mail,
@@ -49,6 +57,7 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
   },
   {
     key: "customers",
+    grupo: "directorio",
     nameKey: "crm.modules.customers.name",
     descriptionKey: "crm.modules.customers.description",
     icon: Users,
@@ -56,6 +65,7 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
   },
   {
     key: "affiliates",
+    grupo: "directorio",
     nameKey: "crm.modules.affiliates.name",
     descriptionKey: "crm.modules.affiliates.description",
     icon: Handshake,
@@ -63,6 +73,7 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
   },
   {
     key: "products",
+    grupo: "ventas",
     nameKey: "crm.modules.products.name",
     descriptionKey: "crm.modules.products.description",
     icon: Package,
@@ -71,6 +82,7 @@ export const MODULE_REGISTRY: ModuleDefinition[] = [
   },
   {
     key: "invoicing",
+    grupo: "facturacion",
     nameKey: "crm.modules.invoicing.name",
     descriptionKey: "crm.modules.invoicing.description",
     icon: ReceiptText,
