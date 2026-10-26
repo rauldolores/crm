@@ -734,6 +734,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/layout/ElementosDelMenu.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/layout/FormToolbar.tsx",
           "type": "registry:component"
         },
