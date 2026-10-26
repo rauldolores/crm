@@ -22,6 +22,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 import type { PublicForm } from "../types";
+import { PageHero } from "./Patrones";
 
 /**
  * Alta y administración de formularios públicos de captación: un enlace o un
@@ -55,14 +56,11 @@ export const FormulariosPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.public_forms.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.public_forms.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.public_forms.title")}
+        description={translate("crm.public_forms.intro")}
+      />
 
       <div className="flex gap-2">
         <Input

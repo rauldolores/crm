@@ -36,6 +36,7 @@ import {
   esDisparadorPorHoras,
   parametrosDelDisparador,
 } from "./disparadoresDeAutomatizacion";
+import { PageHero } from "./Patrones";
 
 /**
  * Automatizaciones: reglas «cuando pase X, haz Y», en lenguaje llano.
@@ -56,14 +57,11 @@ export const AutomatizacionesPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.automations.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.automations.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.automations.title")}
+        description={translate("crm.automations.intro")}
+      />
 
       <Card>
         <CardHeader>

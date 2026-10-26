@@ -60,16 +60,16 @@ const EnlaceDeSeccion = ({
     to={seccion.ruta}
     aria-current={activa ? "page" : undefined}
     className={[
-      "relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline transition-all",
+      "relative flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold no-underline transition-all duration-200",
       activa
-        ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground"
-        : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
     ].join(" ")}
   >
     <seccion.Icono
       className={[
-        "size-4 shrink-0 transition-transform",
-        activa ? "scale-105" : "",
+        "size-4 shrink-0",
+        activa ? "text-sidebar-primary-foreground" : "text-sidebar-icon",
       ].join(" ")}
     />
     <span className="truncate">{seccion.etiqueta}</span>
@@ -99,13 +99,13 @@ const GrupoDeSecciones = ({
     <>
       <p
         className={[
-          "px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground",
+          "px-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-sidebar-label",
           esPrimero ? "" : "mt-4",
         ].join(" ")}
       >
         {titulo}
       </p>
-      <nav className="flex flex-col gap-1">
+      <nav className="flex flex-col gap-0.5">
         {secciones.map((seccion) =>
           seccion.recurso ? (
             <CanAccess
@@ -254,7 +254,7 @@ export const BarraLateral = () => {
             alt={title}
             className="size-9 rounded-lg transition-opacity group-hover:opacity-90"
           />
-          <span className="font-display text-base font-semibold tracking-tight text-foreground">
+          <span className="font-display text-base font-black tracking-tight text-sidebar-strong">
             {title}
           </span>
         </Link>
@@ -291,13 +291,13 @@ export const BarraLateral = () => {
           <Link
             to={AyudaPage.path}
             className={[
-              "mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm no-underline transition-colors",
+              "mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold no-underline transition-colors",
               estaActiva(AyudaPage.path)
-                ? "bg-sidebar-primary font-medium text-sidebar-primary-foreground"
-                : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             ].join(" ")}
           >
-            <CircleHelp className="size-4 shrink-0" />
+            <CircleHelp className="size-4 shrink-0 text-sidebar-icon" />
             Ayuda
           </Link>
 
@@ -309,9 +309,9 @@ export const BarraLateral = () => {
           <CanAccess resource="configuration" action="edit">
             <Link
               to="/settings"
-              className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
-              <Settings className="size-4 shrink-0" />
+              <Settings className="size-4 shrink-0 text-sidebar-icon" />
               {translate("crm.settings.title")}
             </Link>
           </CanAccess>
@@ -321,13 +321,12 @@ export const BarraLateral = () => {
               todavía (nada que consumir) queda un enlace de texto plano, para
               que "Plan y facturación" nunca se quede sin una entrada. */}
           {derechos?.subscription ? (
-            // Oscuro a propósito, en los dos temas: es el único bloque de la
-            // barra que no es navegación, y con el mismo fondo que los menús
-            // se leía como un ítem más. Las barras de consumo se tiñen solas
-            // (bg-current/10), así que no hay que tocarlas.
+            // Tarjeta translúcida sobre la barra oscura: es el único bloque
+            // que no es navegación, así no se lee como un ítem más. Las
+            // barras de consumo se tiñen solas (bg-current/10).
             <Link
               to={FacturacionPage.path}
-              className="mb-4 flex flex-col gap-2 rounded-lg bg-neutral-900 px-3 py-2.5 text-neutral-100 no-underline ring-1 ring-black/5 transition-colors hover:bg-neutral-800 dark:bg-neutral-800 dark:ring-white/10 dark:hover:bg-neutral-700"
+              className="mb-4 flex flex-col gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-sidebar-strong no-underline transition-colors hover:bg-white/10"
             >
               {/* Vino fijo en ambos temas: la tarjeta es oscura en los dos,
                   así que el título no depende del tema. Es el tono más
@@ -349,23 +348,23 @@ export const BarraLateral = () => {
             facturacionDisponible() && (
               <Link
                 to={FacturacionPage.path}
-                className="mb-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/75 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
-                <CreditCard className="size-4 shrink-0" />
+                <CreditCard className="size-4 shrink-0 text-sidebar-icon" />
                 {translate("crm.billing.title")}
               </Link>
             )
           )}
-          <div className="flex items-center gap-2 px-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 px-2 text-xs text-sidebar-foreground/70">
             <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />
             <span className="truncate">{title} · CRM</span>
           </div>
-          <div className="mt-1 flex flex-wrap gap-x-2 px-2 text-[11px] text-muted-foreground/80">
+          <div className="mt-1 flex flex-wrap gap-x-2 px-2 text-[11px] text-sidebar-foreground/70">
             <a
               href={URL_AVISO_DE_PRIVACIDAD}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-foreground"
+              className="hover:text-sidebar-strong"
             >
               Privacidad
             </a>
@@ -374,7 +373,7 @@ export const BarraLateral = () => {
               href={URL_TERMINOS}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-foreground"
+              className="hover:text-sidebar-strong"
             >
               Términos
             </a>

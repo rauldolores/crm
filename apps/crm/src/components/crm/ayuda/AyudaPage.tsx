@@ -18,6 +18,7 @@ import {
 } from "./contenido";
 import { SolicitarFuncionalidad } from "./SolicitarFuncionalidad";
 import type { Bloque, Seccion } from "./tipos";
+import { PageHero } from "../misc/Patrones";
 
 const ID_FAQ = "preguntas-frecuentes";
 const ID_A_MEDIDA = "funcionalidades-a-medida";
@@ -73,15 +74,10 @@ export const AyudaPage = () => {
   return (
     <div className="mx-auto mt-6 mb-24 flex max-w-6xl flex-col gap-8">
       <header className="flex flex-col gap-4">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Ayuda y documentación
-          </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Qué es cada pantalla y para qué sirve, con ejemplos; todo lo que el
-            sistema sabe hacer, y cómo pedir lo que aún no hace.
-          </p>
-        </div>
+        <PageHero
+          title="Ayuda y documentación"
+          description="Qué es cada pantalla y para qué sirve, con ejemplos; todo lo que el sistema sabe hacer, y cómo pedir lo que aún no hace."
+        />
         <div className="relative max-w-md">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input

@@ -1,5 +1,7 @@
 import { env } from "@/lib/env";
-import { useGetList } from "ra-core";
+import { useGetList, useTranslate } from "ra-core";
+
+import { PageHero } from "../misc/Patrones";
 
 import type { Contact, ContactNote } from "../types";
 import { DashboardActivityLog } from "./DashboardActivityLog";
@@ -12,6 +14,7 @@ import { TicketsAbiertos } from "./TicketsAbiertos";
 import { Welcome } from "./Welcome";
 
 export const Dashboard = () => {
+  const translate = useTranslate();
   const {
     data: dataContact,
     total: totalContact,
@@ -49,6 +52,11 @@ export const Dashboard = () => {
   return (
     <div className="mt-1 flex flex-col gap-6">
       {env.isDemo ? <Welcome /> : null}
+      <PageHero
+        compacto
+        title={translate("ra.page.dashboard")}
+        description={translate("crm.dashboard.hero_intro")}
+      />
       <DashboardStats />
       <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
         <div className="md:col-span-3">

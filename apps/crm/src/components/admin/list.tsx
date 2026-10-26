@@ -21,6 +21,7 @@ import { CreateButton } from "@/components/admin/create-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { ListPagination } from "@/components/admin/list-pagination";
 import { FilterButton, FilterForm } from "@/components/admin/filter-form";
+import { PageHero } from "@/components/crm/misc/Patrones";
 
 /**
  * A complete list page with breadcrumb, title, filters, and pagination.
@@ -143,18 +144,22 @@ export const ListView = <RecordType extends RaRecord = RaRecord>(
       )}
 
       <FilterContext.Provider value={filters}>
-        <div className="flex justify-between items-start flex-wrap gap-2 my-2">
-          <h2 className="font-display text-2xl font-bold tracking-tight mb-2">
-            {finalTitle}
-          </h2>
-          {actions ?? (
-            <div className="flex items-center gap-2">
-              {filters && filters.length > 0 ? <FilterButton /> : null}
-              {hasCreate ? <CreateButton /> : null}
-              {<ExportButton />}
-            </div>
-          )}
-        </div>
+        {/* Encabezado en bloque, el mismo de todas las páginas (Patrones.tsx);
+            las acciones van dentro, sobre el vino. */}
+        <PageHero
+          compacto
+          className="my-2"
+          title={finalTitle}
+          action={
+            actions ?? (
+              <>
+                {filters && filters.length > 0 ? <FilterButton /> : null}
+                {hasCreate ? <CreateButton /> : null}
+                {<ExportButton />}
+              </>
+            )
+          }
+        />
         <FilterForm />
 
         <div className={cn("my-2", props.className)}>{children}</div>

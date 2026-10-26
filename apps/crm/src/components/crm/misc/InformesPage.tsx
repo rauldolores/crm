@@ -16,6 +16,7 @@ import { desempenoDelEquipo } from "./metricasDelEquipo";
 import { Grafica, Indicador } from "./PiezasDeInforme";
 import { Pronostico } from "./Pronostico";
 import { LOCALE } from "./RelativeDate";
+import { PageHero } from "./Patrones";
 
 /**
  * Los informes con los que se decide en una pyme: dónde se atoran las
@@ -119,14 +120,10 @@ export const InformesPage = () => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.reports.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.reports.intro")}
-        </p>
-      </div>
+      <PageHero
+        title={translate("crm.reports.title")}
+        description={translate("crm.reports.intro")}
+      />
 
       <div className="flex flex-wrap gap-2">
         {periodos.map((periodo) => (

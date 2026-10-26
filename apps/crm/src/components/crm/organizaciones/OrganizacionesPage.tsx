@@ -42,6 +42,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import { MiembrosDeLaOrganizacion } from "./MiembrosDeLaOrganizacion";
 import { recargarEnLaRaiz } from "./navegacion";
 import { RUTA_ORGANIZACIONES } from "./rutas";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Gestión de organizaciones: las de quien tiene la sesión (cambiar,
@@ -137,12 +138,10 @@ export const OrganizacionesPage = () => {
             <ArrowLeft className="size-4" />
             {translate("crm.organizations.back")}
           </Link>
-          <h1 className="text-2xl font-semibold">
-            {translate("crm.organizations.title")}
-          </h1>
-          <p className="max-w-2xl text-muted-foreground">
-            {translate("crm.organizations.intro")}
-          </p>
+          <PageHero
+            title={translate("crm.organizations.title")}
+            description={translate("crm.organizations.intro")}
+          />
         </div>
 
         <section className="flex flex-col gap-3">

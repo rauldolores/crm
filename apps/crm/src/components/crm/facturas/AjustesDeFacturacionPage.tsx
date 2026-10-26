@@ -21,6 +21,7 @@ import { FORMAS_DE_PAGO } from "@/lib/conectores/catalogo";
 import { ConectoresPage } from "../conectores/ConectoresPage";
 import { llamarApi } from "../misc/llamarApi";
 import type { BillingSettings } from "../types";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Ajustes → Facturación: cómo se facturan solos los contratos y los cobros
@@ -90,14 +91,11 @@ export const AjustesDeFacturacionPage = () => {
 
   return (
     <div className="mx-auto mt-8 mb-16 flex max-w-4xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.customer_billing.settings.title")}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {translate("crm.customer_billing.settings.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.customer_billing.settings.title")}
+        description={translate("crm.customer_billing.settings.intro")}
+      />
 
       <div className="flex items-start gap-2 rounded-lg border p-4 text-sm">
         {datos.conector ? (

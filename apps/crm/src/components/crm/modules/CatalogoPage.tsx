@@ -10,6 +10,7 @@ import {
 import { ConectoresPage } from "../conectores/ConectoresPage";
 import type { CrmDataProvider } from "../providers/types";
 import { MODULE_REGISTRY } from "./registry";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Módulos > Catálogo: activa o desactiva módulos por organización. El
@@ -42,14 +43,11 @@ export const CatalogoPage = () => {
 
   return (
     <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.modules.catalog.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.modules.catalog.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.modules.catalog.title")}
+        description={translate("crm.modules.catalog.intro")}
+      />
 
       {MODULE_REGISTRY.map((modulo) => {
         const activo = config.modules[modulo.key]?.active ?? false;

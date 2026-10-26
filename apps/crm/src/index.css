@@ -1,17 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/inter";
-@import "@fontsource-variable/plus-jakarta-sans";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
-  /* Fuente de display: solo títulos de página y cifras grandes. Da voz propia
-     a la app sin tocar la lectura del cuerpo, que sigue en Inter. */
-  --font-display:
-    "Plus Jakarta Sans Variable", "Inter Variable", ui-sans-serif, system-ui,
-    sans-serif;
+  /* Display = Inter, como en AduaniaX: la voz de los títulos sale del peso
+     (black/extrabold), no de otra familia. Así los productos de Kontrolia se
+     leen de la misma familia. */
+  --font-display: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -47,6 +45,17 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  /* Barra oscura: rótulos de grupo, iconos y el texto fuerte (marca, nombre). */
+  --color-sidebar-label: var(--sidebar-label);
+  --color-sidebar-icon: var(--sidebar-icon);
+  --color-sidebar-strong: var(--sidebar-strong);
+  /* Encabezado de página en bloque (PageHero), vino oscuro en los dos temas. */
+  --color-hero: var(--hero);
+  --color-hero-glow: var(--hero-glow);
+  --color-hero-muted: var(--hero-muted);
+  /* Tarjetas sin borde: la separación la da una sombra amplia y suave. */
+  --shadow-tarjeta: 0 12px 32px -12px oklch(0.2 0.02 30 / 0.16);
+  --shadow-hero: 0 18px 40px -18px oklch(0.22 0.06 15 / 0.55);
 }
 
 /*
@@ -58,16 +67,18 @@
  * avisos comparten la misma voz. Los neutros dejan de ser grises puros para no
  * pelear con el carmesí.
  *
- * Dirección "Papel": superficies planas separadas solo por bordes (sin sombras
- * ni halos) y barra lateral clara, sobre el mismo papel que el contenido. Así
- * el carmesí significa una sola cosa en pantalla: acción o selección.
+ * Lenguaje común del ecosistema Kontrolia (el de AduaniaX, en carmesí):
+ * barra lateral oscura, encabezado de página en bloque vino, tarjetas blancas
+ * sin borde con sombra suave sobre un fondo gris cálido, cifras en tarjetas de
+ * color sólido y rótulos diminutos en mayúsculas. Las piezas están en
+ * components/crm/misc/Patrones.tsx; ver también components/ui/card.tsx.
  */
 :root {
   --radius: 0.75rem;
   /* Altura de fila de las tablas. "Cómoda" por defecto; una lista puede pasar
      a "compacta" con la clase .densidad-compacta en un contenedor. */
   --row-h: 2.875rem;
-  --background: oklch(0.985 0.004 24);
+  --background: oklch(0.96 0.005 40);
   --foreground: oklch(0.19 0.014 25);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.19 0.014 25);
@@ -93,18 +104,23 @@
   --chart-3: oklch(0.7 0.13 70);
   --chart-4: oklch(0.55 0.16 260);
   --chart-5: oklch(0.66 0.17 330);
-  /* Barra lateral clara: el mismo papel que el fondo, separada por un borde.
-     La sección activa se marca con el carmesí suave de --accent (fondo) y el
-     carmesí profundo (texto), no con un bloque rojo pleno: la barra está
-     siempre en pantalla y el rojo a ese tamaño cansa la vista. */
-  --sidebar: oklch(0.985 0.004 24);
-  --sidebar-foreground: oklch(0.32 0.02 24);
-  --sidebar-primary: oklch(0.945 0.018 24);
-  --sidebar-primary-foreground: oklch(0.44 0.16 24);
-  --sidebar-accent: oklch(0.955 0.008 24);
-  --sidebar-accent-foreground: oklch(0.19 0.014 25);
-  --sidebar-border: oklch(0.915 0.006 24);
-  --sidebar-ring: oklch(0.58 0.19 24);
+  /* Barra lateral oscura (casi negra, con un punto cálido para no pelear con
+     el carmesí). La sección activa: carmesí translúcido de fondo y rosa claro
+     de texto; un bloque rojo pleno a ese tamaño cansa la vista. */
+  --sidebar: oklch(0.18 0.008 40);
+  --sidebar-foreground: oklch(0.82 0.013 40);
+  --sidebar-primary: oklch(0.55 0.2 20 / 0.2);
+  --sidebar-primary-foreground: oklch(0.86 0.08 15);
+  --sidebar-accent: oklch(1 0 0 / 6%);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 7%);
+  --sidebar-ring: oklch(0.7 0.15 20);
+  --sidebar-label: oklch(0.72 0.11 15 / 0.8);
+  --sidebar-icon: oklch(0.72 0.11 15);
+  --sidebar-strong: oklch(0.99 0 0);
+  --hero: oklch(0.22 0.06 15);
+  --hero-glow: oklch(0.58 0.2 20 / 0.32);
+  --hero-muted: oklch(0.87 0.05 15);
   --avatar-0: oklch(0.85 0.08 240);
   --avatar-1: oklch(0.88 0.1 340);
   --avatar-2: oklch(0.85 0.07 180);
@@ -142,14 +158,20 @@
   --chart-3: oklch(0.74 0.12 70);
   --chart-4: oklch(0.6 0.15 260);
   --chart-5: oklch(0.7 0.16 330);
-  --sidebar: oklch(0.15 0.006 24);
-  --sidebar-foreground: oklch(0.78 0.01 24);
-  --sidebar-primary: oklch(0.27 0.03 24);
-  --sidebar-primary-foreground: oklch(0.86 0.09 24);
-  --sidebar-accent: oklch(0.21 0.01 24);
-  --sidebar-accent-foreground: oklch(0.955 0.005 24);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.62 0.17 24);
+  --sidebar: oklch(0.12 0.006 40);
+  --sidebar-foreground: oklch(0.8 0.012 40);
+  --sidebar-primary: oklch(0.55 0.2 20 / 0.22);
+  --sidebar-primary-foreground: oklch(0.86 0.08 15);
+  --sidebar-accent: oklch(1 0 0 / 6%);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.7 0.15 20);
+  --sidebar-label: oklch(0.72 0.11 15 / 0.8);
+  --sidebar-icon: oklch(0.72 0.11 15);
+  --sidebar-strong: oklch(0.99 0 0);
+  --hero: oklch(0.25 0.07 15);
+  --hero-glow: oklch(0.6 0.2 20 / 0.3);
+  --hero-muted: oklch(0.87 0.05 15);
   --avatar-0: oklch(0.35 0.12 240);
   --avatar-1: oklch(0.38 0.14 340);
   --avatar-2: oklch(0.35 0.11 180);

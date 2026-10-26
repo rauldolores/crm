@@ -1,10 +1,9 @@
-import { Loader2 } from "lucide-react";
+import { Clock, FileText, HandCoins, Loader2, ShieldAlert } from "lucide-react";
 import { useGetList, useGetMany, useTranslate, type Identifier } from "ra-core";
 import { useState } from "react";
 import { Link } from "react-router";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import type { Company, Contract, Invoice } from "../types";
@@ -16,6 +15,7 @@ import {
   type Monto,
 } from "./cobranza";
 import { fechaCorta, fechaDeVigencia, importeDe } from "./formatoDeFacturas";
+import { PageHero, StatCard, StatGrid } from "../misc/Patrones";
 
 /**
  * Cobranza: cuántas facturas se han emitido, cuánto falta por cobrar y qué
@@ -72,41 +72,46 @@ export const CobranzaPage = () => {
 
   return (
     <div className="mx-auto mt-8 mb-16 flex max-w-6xl flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.customer_billing.collections.title")}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {translate("crm.customer_billing.collections.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.modules.invoicing.name")}
+        title={translate("crm.customer_billing.collections.title")}
+        description={translate("crm.customer_billing.collections.intro")}
+      />
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Cifra
-          etiqueta={translate("crm.customer_billing.collections.cards.issued")}
-          valor={emitidas}
+      <StatGrid>
+        <StatCard
+          tono="total"
+          icon={<FileText />}
+          title={translate("crm.customer_billing.collections.cards.issued")}
+          value={emitidas ?? "—"}
         />
-        <Cifra
-          etiqueta={translate(
-            "crm.customer_billing.collections.cards.receivable",
-          )}
-          valor={resumen.porCobrar.cantidad}
-          monto={resumen.porCobrar}
+        <StatCard
+          tono="info"
+          icon={<HandCoins />}
+          title={translate("crm.customer_billing.collections.cards.receivable")}
+          value={textoDeMonto(resumen.porCobrar)}
+          trend={translate("crm.customer_billing.collections.cards.count", {
+            smart_count: resumen.porCobrar.cantidad,
+          })}
         />
-        <Cifra
-          etiqueta={translate("crm.customer_billing.collections.cards.overdue")}
-          valor={resumen.vencidas.cantidad}
-          monto={resumen.vencidas}
-          alerta={resumen.vencidas.cantidad > 0}
+        <StatCard
+          tono="error"
+          icon={<Clock />}
+          title={translate("crm.customer_billing.collections.cards.overdue")}
+          value={textoDeMonto(resumen.vencidas)}
+          trend={translate("crm.customer_billing.collections.cards.count", {
+            smart_count: resumen.vencidas.cantidad,
+          })}
         />
-        <Cifra
-          etiqueta={translate(
+        <StatCard
+          tono="fecha"
+          icon={<ShieldAlert />}
+          title={translate(
             "crm.customer_billing.collections.cards.access_failed",
           )}
-          valor={sinRenovar}
-          alerta={!!sinRenovar}
+          value={sinRenovar ?? "—"}
         />
-      </div>
+      </StatGrid>
       {(totalPorCobrar ?? 0) > LIMITE && (
         <p className="text-xs text-muted-foreground">
           {translate("crm.customer_billing.collections.truncated", {
@@ -152,37 +157,13 @@ export const CobranzaPage = () => {
 
 CobranzaPage.path = "/cobranza";
 
-const Cifra = ({
-  etiqueta,
-  valor,
-  monto,
-  alerta = false,
-}: {
-  etiqueta: string;
-  valor?: number;
-  monto?: Monto;
-  alerta?: boolean;
-}) => (
-  <Card className="py-3">
-    <CardContent className="px-4">
-      <p className="text-xs text-muted-foreground">{etiqueta}</p>
-      <p
-        className={`text-2xl font-semibold tabular-nums ${alerta ? "text-destructive" : ""}`}
-      >
-        {valor ?? "—"}
-      </p>
-      {monto && (
-        <p className="text-sm tabular-nums text-muted-foreground">
-          {Object.keys(monto.importes).length
-            ? Object.entries(monto.importes)
-                .map(([moneda, importe]) => importeDe(importe, moneda))
-                .join(" · ")
-            : importeDe(0)}
-        </p>
-      )}
-    </CardContent>
-  </Card>
-);
+/** El saldo por moneda; no se suman pesos con dólares. */
+const textoDeMonto = (monto: Monto): string =>
+  Object.keys(monto.importes).length
+    ? Object.entries(monto.importes)
+        .map(([moneda, importe]) => importeDe(importe, moneda))
+        .join(" · ")
+    : importeDe(0);
 
 const idsDe = (valores: (Identifier | null | undefined)[]): Identifier[] => [
   ...new Set(valores.filter((id): id is Identifier => id != null)),

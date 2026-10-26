@@ -15,6 +15,7 @@ import {
   useEsAdministrador,
 } from "./PlanesDisponibles";
 import { useDerechos } from "./useDerechos";
+import { PageHero } from "../misc/Patrones";
 
 const ESTADOS: Record<string, string> = {
   trialing: "crm.billing.status.trialing",
@@ -55,26 +56,20 @@ export const FacturacionPage = () => {
   if (!facturacionDisponible()) {
     return (
       <div className="max-w-5xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.billing.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {translate("crm.billing.self_hosted")}
-        </p>
+        <PageHero
+          title={translate("crm.billing.title")}
+          description={translate("crm.billing.self_hosted")}
+        />
       </div>
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.billing.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.billing.intro")}
-        </p>
-      </div>
+      <PageHero
+        title={translate("crm.billing.title")}
+        description={translate("crm.billing.intro")}
+      />
 
       <Card>
         <CardHeader>

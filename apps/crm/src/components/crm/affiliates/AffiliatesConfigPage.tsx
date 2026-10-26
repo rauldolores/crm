@@ -14,6 +14,7 @@ import {
 } from "../root/ConfigurationContext";
 import type { CrmDataProvider } from "../providers/types";
 import type { DealPipeline } from "../types";
+import { PageHero } from "../misc/Patrones";
 
 /**
  * Configuración del módulo Afiliados: qué embudo y qué etapas cuentan como
@@ -60,14 +61,11 @@ export const AffiliatesConfigPage = () => {
 
   return (
     <div className="max-w-2xl mx-auto mt-8 mb-16 flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">
-          {translate("crm.affiliates.config.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {translate("crm.affiliates.config.intro")}
-        </p>
-      </div>
+      <PageHero
+        badge={translate("crm.settings.title")}
+        title={translate("crm.affiliates.config.title")}
+        description={translate("crm.affiliates.config.intro")}
+      />
 
       <Form defaultValues={defaultValues} onSubmit={guardar}>
         <Card>
