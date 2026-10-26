@@ -53,6 +53,7 @@ import { AutomatizacionesPage } from "../misc/AutomatizacionesPage";
 import { CorreoPage } from "../misc/CorreoPage";
 import { IaPage } from "../misc/IaPage";
 import { InformesPage } from "../misc/InformesPage";
+import { MiDiaPage } from "../mi-dia/MiDiaPage";
 import { FormulariosPage } from "../misc/FormulariosPage";
 import {
   getAuthProvider as defaultAuthProviderBuilder,
@@ -331,6 +332,7 @@ const DesktopAdmin = (
           element={<AutomatizacionesPage />}
         />
         <Route path={InformesPage.path} element={<InformesPage />} />
+        <Route path={MiDiaPage.path} element={<MiDiaPage />} />
         <Route path={FormulariosPage.path} element={<FormulariosPage />} />
         <Route path={AyudaPage.path} element={<AyudaPage />} />
         <Route path={CatalogoPage.path} element={<CatalogoPage />} />
@@ -473,6 +475,7 @@ const MobileAdmin = (
             element={<AutomatizacionesPage />}
           />
           <Route path={InformesPage.path} element={<InformesPage />} />
+          <Route path={MiDiaPage.path} element={<MiDiaPage />} />
           <Route path={FormulariosPage.path} element={<FormulariosPage />} />
           <Route path={AyudaPage.path} element={<AyudaPage />} />
           <Route path={FacturacionPage.path} element={<FacturacionPage />} />

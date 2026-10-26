@@ -1,6 +1,7 @@
 import { useCanAccess, useCanAccessResources, useTranslate } from "ra-core";
 import {
   Building2,
+  CalendarCheck,
   ChartColumn,
   CheckSquare,
   CircleHelp,
@@ -16,6 +17,7 @@ import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
+import { MiDiaPage } from "../mi-dia/MiDiaPage";
 import { esPantallaDeAjustes } from "../settings/apartadosDeAjustes";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { MODULE_REGISTRY, type GrupoDelMenu } from "../modules/registry";
@@ -92,6 +94,11 @@ export const BarraLateral = () => {
           etiqueta: translate("ra.page.dashboard"),
           ruta: "/",
           Icono: LayoutDashboard,
+        },
+        {
+          etiqueta: translate("crm.my_day.title"),
+          ruta: MiDiaPage.path,
+          Icono: CalendarCheck,
         },
         ...deModulos("inicio"),
       ],
