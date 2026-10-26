@@ -478,38 +478,45 @@ export const PANTALLAS: Grupo = {
       id: "ajustes",
       titulo: "Ajustes",
       resumen:
-        "Adapta el CRM a tu negocio: las listas, la moneda, los campos propios y las herramientas de administración.",
+        "Adapta el CRM a tu negocio: embudos, listas, campos propios, usuarios, correo, automatizaciones e integraciones, todo en un mismo sitio.",
       ruta: "/settings",
       bloques: [
         {
           tipo: "parrafo",
           texto:
-            "Solo lo ve quien administra la organización. Está dividido en bloques:",
+            "Solo lo ve quien administra la organización. A la izquierda tiene su propio menú, agrupado por tarea; cada apartado se guarda por separado con el botón de abajo, y «Restablecer» solo toca el apartado que estás viendo.",
         },
         {
           tipo: "tabla",
-          cabeceras: ["Bloque", "Qué configuras"],
+          cabeceras: ["Grupo", "Qué configuras"],
           filas: [
             [
-              "Empresas",
-              "Los sectores que se ofrecen al crear una empresa (hostelería, salud, construcción…).",
+              "Organización",
+              "Los proyectos (cada producto con su dirección de correo), los usuarios, el catálogo de módulos y el plan.",
             ],
             [
-              "Oportunidades",
-              "Los embudos y sus etapas, cuáles cuentan como ganadas y cuáles como perdidas, los motivos de pérdida, las categorías y la moneda.",
+              "Ventas",
+              "Los embudos y sus etapas (cuáles cuentan como ganadas o perdidas y su probabilidad); la moneda, las categorías, la regla para ganar y los motivos de pérdida; las cotizaciones; y, con sus módulos activos, renovaciones, clientes en riesgo y afiliados.",
             ],
             [
-              "Notas",
-              "Los estados de contacto (frío, templado, caliente, con contrato, con su color) y los tipos de actividad (llamada, reunión, WhatsApp…).",
-            ],
-            ["Tareas", "Los tipos de tarea."],
-            [
-              "Campos personalizados",
-              "Datos propios de tu negocio en contactos, empresas y oportunidades: texto, número, fecha, lista de opciones o casilla. Una inmobiliaria añade «Superficie»; una escuela, «Grado».",
+              "Datos",
+              "Los campos personalizados de contactos, empresas y oportunidades; las listas (sectores, estados y tipos de nota, tipos de tarea); y la importación de datos.",
             ],
             [
-              "Herramientas",
-              "Automatizaciones, Formularios web, API y webhooks, Catálogo de módulos, Correo saliente e Inteligencia artificial. Cada una tiene su sección en esta ayuda.",
+              "Soporte",
+              "Las prioridades, categorías y plazos (SLA) de los tickets.",
+            ],
+            [
+              "Comunicación",
+              "El correo saliente, las plantillas de correo, la bandeja (si está activa) y los formularios web.",
+            ],
+            [
+              "Automatización",
+              "Las automatizaciones y la inteligencia artificial.",
+            ],
+            [
+              "Integraciones",
+              "La API y el servidor MCP, los conectores y, si está activa, la facturación electrónica.",
             ],
           ],
         },

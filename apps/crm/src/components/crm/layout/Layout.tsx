@@ -11,6 +11,7 @@ import Header from "./Header";
 import { AvisoDeExcedente } from "../facturacion/AvisoDeExcedente";
 import { BarraLateral } from "./BarraLateral";
 import { BandaDelEcosistema } from "./BandaDelEcosistema";
+import { MarcoDeAjustes } from "../settings/MarcoDeAjustes";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
   useConfigurationLoader();
@@ -36,7 +37,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
             <Suspense
               fallback={<Skeleton className="h-12 w-12 rounded-full" />}
             >
-              {children}
+              <MarcoDeAjustes>{children}</MarcoDeAjustes>
             </Suspense>
           </ErrorBoundary>
         </main>

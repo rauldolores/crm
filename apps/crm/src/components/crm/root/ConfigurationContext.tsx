@@ -88,7 +88,7 @@ export interface ConfigurationContextValue {
   /**
    * Para pasar una oportunidad a una etapa ganada hace falta algo que
    * represente el ingreso: una cotización aceptada, o un contrato o una
-   * compra de esa empresa. Se apaga desde Ajustes → Oportunidades.
+   * compra de esa empresa. Se apaga desde Ajustes → Motivos y reglas.
    */
   requireIncomeToWin: boolean;
   /** IVA por defecto de las líneas de cotización, en porcentaje. */

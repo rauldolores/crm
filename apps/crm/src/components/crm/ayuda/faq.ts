@@ -45,13 +45,13 @@ export const PREGUNTAS_FRECUENTES: Pregunta[] = [
   {
     pregunta: "¿Cómo cambio las etapas del embudo o la moneda?",
     respuesta:
-      "En Ajustes → Oportunidades (solo administradores). Puedes tener varios embudos, cada uno con sus etapas, y marcar cuáles significan ganada o perdida.",
+      "En Ajustes → Embudos y etapas (solo administradores). Puedes tener varios embudos, cada uno con sus etapas, y marcar cuáles significan ganada o perdida.",
     seccion: "ajustes",
   },
   {
     pregunta: "¿Por qué los importes salen en dólares si vendo en euros?",
     respuesta:
-      "La moneda se elige en Ajustes → Oportunidades → Moneda. Cámbiala a EUR y todos los importes se muestran con €.",
+      "La moneda se elige en Ajustes → Motivos y reglas → Moneda. Cámbiala a EUR y todos los importes se muestran con €.",
     seccion: "ajustes",
   },
   {
