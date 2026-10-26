@@ -742,6 +742,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/layout/MarcaVinqulia.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/layout/MobileContent.tsx",
           "type": "registry:component"
         },
