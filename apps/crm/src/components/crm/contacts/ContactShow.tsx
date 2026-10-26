@@ -21,6 +21,7 @@ import { Link } from "react-router";
 import MobileHeader from "../layout/MobileHeader";
 import { MobileContent } from "../layout/MobileContent";
 import { CompanyAvatar } from "../companies/CompanyAvatar";
+import { FichaHero } from "../misc/Patrones";
 import { LineaDeTiempo } from "../linea-de-tiempo/LineaDeTiempo";
 import { NotesIteratorMobile } from "../notes";
 import { NoteCreateSheet } from "../notes/NoteCreateSheet";
@@ -250,51 +251,60 @@ const ContactShowContent = () => {
           trunca con `white-space: nowrap`, así que un evento de texto largo
           estiraba la columna —y con ella la página entera— en vez de
           recortarse. */}
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <FichaHero
+          avatar={<Avatar />}
+          badge={translate("resources.contacts.forcedCaseName")}
+          title={
+            <>
+              <RecordRepresentation />
+              {record.archived_at && (
+                <Badge variant="secondary" className="font-normal">
+                  {translate("resources.contacts.archive.badge", {
+                    date: formatLocalizedDate(record.archived_at),
+                  })}
+                </Badge>
+              )}
+            </>
+          }
+          subtitle={
+            (record.title || record.company_id != null) && (
+              <span className="inline-flex flex-wrap">
+                {record.title && record.company_id != null
+                  ? `${translate("resources.contacts.position_at", {
+                      title: record.title,
+                    })} `
+                  : record.title}
+                {record.company_id != null && (
+                  <ReferenceField
+                    source="company_id"
+                    reference="companies"
+                    link="show"
+                  >
+                    &nbsp;
+                    <TextField source="name" />
+                  </ReferenceField>
+                )}
+              </span>
+            )
+          }
+          action={
+            record.company_id != null && (
+              <ReferenceField
+                source="company_id"
+                reference="companies"
+                link="show"
+                className="no-underline"
+              >
+                <span className="block rounded-2xl bg-white p-1">
+                  <CompanyAvatar />
+                </span>
+              </ReferenceField>
+            )
+          }
+        />
         <Card>
           <CardContent>
-            <div className="flex">
-              <Avatar />
-              <div className="ml-3 flex-1">
-                <h5 className="font-display flex flex-wrap items-center gap-2 text-2xl font-semibold tracking-tight">
-                  <RecordRepresentation />
-                  {record.archived_at && (
-                    <Badge variant="secondary" className="font-normal">
-                      {translate("resources.contacts.archive.badge", {
-                        date: formatLocalizedDate(record.archived_at),
-                      })}
-                    </Badge>
-                  )}
-                </h5>
-                <div className="inline-flex text-sm text-muted-foreground">
-                  {record.title && record.company_id != null
-                    ? `${translate("resources.contacts.position_at", {
-                        title: record.title,
-                      })} `
-                    : record.title}
-                  {record.company_id != null && (
-                    <ReferenceField
-                      source="company_id"
-                      reference="companies"
-                      link="show"
-                    >
-                      &nbsp;
-                      <TextField source="name" />
-                    </ReferenceField>
-                  )}
-                </div>
-              </div>
-              <div>
-                <ReferenceField
-                  source="company_id"
-                  reference="companies"
-                  link="show"
-                  className="no-underline"
-                >
-                  <CompanyAvatar />
-                </ReferenceField>
-              </div>
-            </div>
             {/* Toda la historia del contacto en una cronología —notas,
                 llamadas, WhatsApp, correos, tareas, oportunidades, tickets,
                 cotizaciones— con resumen por evento y el detalle a un clic.

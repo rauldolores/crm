@@ -103,6 +103,76 @@ export const PageHero = ({
   </section>
 );
 
+interface FichaHeroProps {
+  /** Avatar o logo; va sobre un cuadro blanco para que se lea en el vino. */
+  avatar?: ReactNode;
+  /** Qué es («Contacto», «Empresa», «Oportunidad»). */
+  badge?: string;
+  title: ReactNode;
+  /** Cargo, empresa, sector… Sus enlaces se pintan en blanco. */
+  subtitle?: ReactNode;
+  /** Distintivos y etiquetas bajo el título. */
+  tags?: ReactNode;
+  action?: ReactNode;
+  className?: string;
+}
+
+/**
+ * Encabezado de una ficha (contacto, empresa, oportunidad): el mismo bloque
+ * vino que PageHero, con el avatar a la izquierda.
+ */
+export const FichaHero = ({
+  avatar,
+  badge,
+  title,
+  subtitle,
+  tags,
+  action,
+  className,
+}: FichaHeroProps) => (
+  <section
+    className={cn(
+      "relative overflow-hidden rounded-2xl bg-hero px-6 py-5 text-white shadow-hero",
+      className,
+    )}
+  >
+    <div
+      aria-hidden
+      className="pointer-events-none absolute top-0 right-0 h-full w-1/2 bg-linear-to-l from-hero-glow to-transparent"
+    />
+    <div className="relative z-10 flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+      <div className="flex min-w-[14rem] flex-1 items-center gap-4">
+        {avatar && (
+          <div className="shrink-0 rounded-2xl bg-white p-1 shadow-sm">
+            {avatar}
+          </div>
+        )}
+        <div className="min-w-0 space-y-1.5">
+          {badge && (
+            <span className="inline-block rounded-full bg-primary px-3 py-0.5 text-[10px] font-black tracking-[0.2em] text-primary-foreground uppercase">
+              {badge}
+            </span>
+          )}
+          <h1 className="flex flex-wrap items-center gap-2 text-2xl leading-tight font-black tracking-tighter">
+            {title}
+          </h1>
+          {subtitle && (
+            <div className="text-sm font-medium text-hero-muted [&_a]:text-white [&_a]:underline [&_a]:decoration-white/40 [&_a:hover]:decoration-white">
+              {subtitle}
+            </div>
+          )}
+          {tags && <div className="flex flex-wrap gap-1.5">{tags}</div>}
+        </div>
+      </div>
+      {action && (
+        <div className="dark flex max-w-full flex-wrap items-center gap-2">
+          {action}
+        </div>
+      )}
+    </div>
+  </section>
+);
+
 /** Distintivo de estado dentro del encabezado. */
 export const HeroTag = ({
   children,
@@ -151,6 +221,8 @@ interface StatCardProps {
   tono?: TonoDeCifra;
   /** Píldora arriba a la derecha («+14 este mes»). */
   trend?: ReactNode;
+  /** Sin icono y más bajo: para tres cifras en una fila de móvil. */
+  compacto?: boolean;
   className?: string;
 }
 
@@ -161,16 +233,18 @@ export const StatCard = ({
   description,
   tono = "total",
   trend,
+  compacto = false,
   className,
 }: StatCardProps) => (
   <div
     className={cn(
-      "relative overflow-hidden rounded-2xl p-5 text-white shadow-tarjeta",
+      "relative overflow-hidden rounded-2xl text-white shadow-tarjeta",
+      compacto ? "p-3" : "p-5",
       TONOS[tono],
       className,
     )}
   >
-    {(icon || trend) && (
+    {!compacto && (icon || trend) && (
       <div className="mb-4 flex items-start justify-between">
         {icon && (
           <div className="rounded-lg border border-white/15 bg-white/10 p-2.5 [&_svg]:size-5">
@@ -184,10 +258,20 @@ export const StatCard = ({
         )}
       </div>
     )}
-    <p className="text-[10px] font-extrabold tracking-widest text-white/80 uppercase">
+    <p
+      className={cn(
+        "truncate font-extrabold text-white/80 uppercase",
+        compacto ? "text-[9px] tracking-wider" : "text-[10px] tracking-widest",
+      )}
+    >
       {title}
     </p>
-    <p className="mt-1 text-2xl font-black tracking-tight tabular-nums">
+    <p
+      className={cn(
+        "mt-1 font-black tracking-tight tabular-nums",
+        compacto ? "text-xl" : "text-2xl",
+      )}
+    >
       {value}
     </p>
     {description && (

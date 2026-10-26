@@ -44,6 +44,8 @@ import {
   ContextInfo,
 } from "./CompanyAside";
 import { CompanyAvatar } from "./CompanyAvatar";
+import { FichaHero } from "../misc/Patrones";
+import { etiquetaDeProyecto } from "../proyectos/proyectos";
 
 export const CompanyShow = () => {
   const isMobile = useIsMobile();
@@ -127,15 +129,16 @@ const CompanyShowContent = () => {
 
   return (
     <div className="mt-2 flex pb-2 gap-8">
-      <div className="flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <FichaHero
+          avatar={<CompanyAvatar />}
+          badge={translate("resources.companies.forcedCaseName")}
+          title={record.name}
+          subtitle={[record.city, record.country].filter(Boolean).join(", ")}
+          tags={<ProyectosEnFicha />}
+        />
         <Card>
           <CardContent>
-            <div className="flex mb-3">
-              <CompanyAvatar />
-              <h5 className="ml-3 flex-1 font-display text-2xl font-semibold tracking-tight">
-                {record.name}
-              </h5>
-            </div>
             <Tabs defaultValue={currentTab} onValueChange={handleTabChange}>
               <TabsList
                 className={cn(
@@ -357,5 +360,24 @@ const DealsIterator = () => {
         ))}
       </div>
     </div>
+  );
+};
+
+/** Los proyectos de la empresa, como píldoras sobre el vino. */
+const ProyectosEnFicha = () => {
+  const { record } = useShowContext<Company>();
+  const { projects } = useConfigurationContext();
+  if (!projects.length || !record?.projects?.length) return null;
+  return (
+    <>
+      {record.projects.map((valor) => (
+        <span
+          key={valor}
+          className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[11px] font-bold"
+        >
+          {etiquetaDeProyecto(projects, valor)}
+        </span>
+      ))}
+    </>
   );
 };

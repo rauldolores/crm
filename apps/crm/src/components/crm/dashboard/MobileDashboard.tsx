@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import type { Contact, ContactNote } from "../types";
 import { DashboardActivityLog } from "./DashboardActivityLog";
+import { DashboardStats } from "./DashboardStats";
 import { TicketsAbiertos } from "./TicketsAbiertos";
 import { DashboardStepper } from "./DashboardStepper";
 import { Welcome } from "./Welcome";
@@ -12,22 +13,14 @@ import { MobileContent } from "../layout/MobileContent";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
-  const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
+  const { darkModeLogo, title } = useConfigurationContext();
   return (
     <>
       <MobileHeader>
-        <div className="flex items-center gap-2 text-secondary-foreground no-underline py-3">
-          <img
-            className="[.light_&]:hidden h-6"
-            src={darkModeLogo}
-            alt={title}
-          />
-          <img
-            className="[.dark_&]:hidden h-6"
-            src={lightModeLogo}
-            alt={title}
-          />
-          <h1 className="text-xl font-semibold">{title}</h1>
+        {/* La barra es vino en los dos temas: siempre el logo para fondo oscuro. */}
+        <div className="flex items-center gap-2 no-underline py-3">
+          <img className="h-6" src={darkModeLogo} alt={title} />
+          <h1 className="text-xl font-black tracking-tight">{title}</h1>
         </div>
       </MobileHeader>
       <MobileContent>{children}</MobileContent>
@@ -85,6 +78,7 @@ export const MobileDashboard = () => {
     <Wrapper>
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-1">
         {env.isDemo ? <Welcome /> : null}
+        <DashboardStats compacto />
         <TicketsAbiertos />
         <DashboardActivityLog />
       </div>
