@@ -31,7 +31,7 @@ import { BotonDeAyuda } from "../ayuda/BotonDeAyuda";
  */
 const Header = () => {
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
+    <header className="sticky top-[var(--kontrolia-band-height,0px)] z-40 border-b bg-background/80 backdrop-blur-md">
       <div className="flex h-12 items-center justify-between gap-4 px-4">
         <div
           id="breadcrumb"

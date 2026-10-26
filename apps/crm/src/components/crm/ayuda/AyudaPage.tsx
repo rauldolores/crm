@@ -109,7 +109,7 @@ export const AyudaPage = () => {
               <div key={grupo.id} className="flex flex-col gap-10">
                 <h2
                   id={grupo.id}
-                  className="scroll-mt-20 border-b pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                  className="scroll-mt-[calc(5rem_+_var(--kontrolia-band-height,0px))] border-b pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                 >
                   {grupo.titulo}
                 </h2>
@@ -123,7 +123,7 @@ export const AyudaPage = () => {
               <div className="flex flex-col gap-6">
                 <h2
                   id={ID_FAQ}
-                  className="scroll-mt-20 border-b pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                  className="scroll-mt-[calc(5rem_+_var(--kontrolia-band-height,0px))] border-b pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                 >
                   Preguntas frecuentes
                 </h2>
@@ -156,7 +156,7 @@ export const AyudaPage = () => {
             {!buscando && (
               <section
                 id={ID_A_MEDIDA}
-                className="scroll-mt-20 flex flex-col gap-6"
+                className="scroll-mt-[calc(5rem_+_var(--kontrolia-band-height,0px))] flex flex-col gap-6"
               >
                 <div>
                   <h2 className="border-b pb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -187,7 +187,7 @@ const Indice = ({
 }) => (
   <nav
     aria-label="Índice de la ayuda"
-    className="hidden lg:block sticky top-16 self-start max-h-[calc(100vh-5rem)] overflow-y-auto pr-2 text-sm"
+    className="hidden lg:block sticky top-[calc(4rem_+_var(--kontrolia-band-height,0px))] self-start max-h-[calc(100vh_-_5rem_-_var(--kontrolia-band-height,0px))] overflow-y-auto pr-2 text-sm"
   >
     {grupos.map((grupo) => (
       <div key={grupo.id} className="mb-5">
@@ -238,7 +238,10 @@ const Indice = ({
 );
 
 const SeccionDeAyuda = ({ seccion }: { seccion: Seccion }) => (
-  <section id={seccion.id} className="scroll-mt-20 flex flex-col gap-4">
+  <section
+    id={seccion.id}
+    className="scroll-mt-[calc(5rem_+_var(--kontrolia-band-height,0px))] flex flex-col gap-4"
+  >
     <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
       <div className="min-w-0">
         <h3 className="font-display text-xl font-semibold tracking-tight">

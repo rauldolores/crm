@@ -722,6 +722,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/layout/BandaDelEcosistema.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/layout/BarraLateral.tsx",
           "type": "registry:component"
         },

@@ -40,7 +40,9 @@ export const DashboardStepper = ({
       <div
         className="flex justify-center items-center"
         style={{
-          height: isMobile ? undefined : `calc(100dvh - ${appbarHeight}px)`,
+          height: isMobile
+            ? undefined
+            : `calc(100dvh - ${appbarHeight}px - var(--kontrolia-band-height, 0px))`,
         }}
       >
         <Card className="w-full max-w-[600px]">

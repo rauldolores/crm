@@ -23,7 +23,11 @@ import {
 
 const reportUsageMock = vi.mocked(reportUsage);
 
-/** Un reporte de KontrolIA Auth ≥ 2.5, con los campos de excedente. */
+/**
+ * Un reporte de KontrolIA Auth ≥ 2.5, con los campos de excedente. Desde el
+ * SDK 2.6 el tipo exige también la modalidad de cobro y el saldo prepagado;
+ * el CRM no los lee, así que van en pospago (el excedente se factura).
+ */
 const reporte = (overrides: Partial<UsageReport> = {}): UsageReport => ({
   key: "contactos.registrados",
   used: 150,
@@ -37,6 +41,9 @@ const reporte = (overrides: Partial<UsageReport> = {}): UsageReport => ({
   overageUnits: 0,
   overageAmount: 0,
   currency: "MXN",
+  billingMode: "postpaid",
+  creditBalance: null,
+  creditUnitsUsed: 0,
   ...overrides,
 });
 

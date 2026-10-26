@@ -8,11 +8,13 @@ import { GuardiaDeAplicacion } from "../autorizacion/GuardiaDeAplicacion";
 import { GuardiaDePlan } from "../facturacion/GuardiaDePlan";
 import { useConfigurationLoader } from "../root/useConfigurationLoader";
 import { MobileNavigation } from "./MobileNavigation";
+import { BandaDelEcosistema } from "./BandaDelEcosistema";
 
 export const MobileLayout = ({ children }: { children: ReactNode }) => {
   useConfigurationLoader();
   return (
     <>
+      <BandaDelEcosistema />
       <GuardiaDeAplicacion />
       <GuardiaDePlan />
       <ErrorBoundary FallbackComponent={Error}>
