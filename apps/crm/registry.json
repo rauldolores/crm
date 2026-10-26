@@ -1362,7 +1362,7 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/crm/settings/HerramientasDeAdministracion.tsx",
+          "path": "src/components/crm/settings/MarcoDeAjustes.tsx",
           "type": "registry:component"
         },
         {
@@ -1375,6 +1375,10 @@
         },
         {
           "path": "src/components/crm/settings/SettingsPageMobile.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/settings/apartadosDeAjustes.ts",
           "type": "registry:component"
         },
         {

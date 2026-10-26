@@ -23,7 +23,7 @@ export const MODULOS: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "En Ajustes → Herramientas → Catálogo de módulos hay un interruptor por módulo. Al activarlo aparece en la barra lateral, bajo «Módulos», y en las fichas relacionadas. Hoy hay dos: Clientes y Afiliados. Iremos añadiendo más; si tu sector necesita uno propio, mira la sección «Funcionalidades a tu medida».",
+            "En Ajustes → Catálogo de módulos hay un interruptor por módulo. Al activarlo aparece en la barra lateral, bajo «Módulos», y en las fichas relacionadas. Hoy hay dos: Clientes y Afiliados. Iremos añadiendo más; si tu sector necesita uno propio, mira la sección «Funcionalidades a tu medida».",
         },
       ],
     },
@@ -66,7 +66,7 @@ export const MODULOS: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "Se configura en Ajustes → Módulos → Afiliados: eliges qué embudo es el de afiliación y qué etapas cuentan como «afiliación completa». Cuando una oportunidad de ese embudo se gana, el contacto se convierte en afiliado con un código de referido y una comisión por defecto (ajustable por afiliado). Si le das una URL plantilla (https://tudominio.com?ref={id}), cada afiliado ve su enlace listo en su ficha.",
+            "Se configura en Ajustes → Afiliados: eliges qué embudo es el de afiliación y qué etapas cuentan como «afiliación completa». Cuando una oportunidad de ese embudo se gana, el contacto se convierte en afiliado con un código de referido y una comisión por defecto (ajustable por afiliado). Si le das una URL plantilla (https://tudominio.com?ref={id}), cada afiliado ve su enlace listo en su ficha.",
         },
         {
           tipo: "lista",
@@ -94,7 +94,7 @@ export const AVANZADO: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "Una regla tiene un «cuando» y un «entonces». Se aplica tanto si el cambio lo haces tú en la aplicación como si entra por una importación, un formulario web o desde otro sistema por la API. Todas se ven y se activan o pausan desde Ajustes → Herramientas → Automatizaciones.",
+            "Una regla tiene un «cuando» y un «entonces». Se aplica tanto si el cambio lo haces tú en la aplicación como si entra por una importación, un formulario web o desde otro sistema por la API. Todas se ven y se activan o pausan desde Ajustes → Automatizaciones.",
         },
         {
           tipo: "tabla",
@@ -155,7 +155,7 @@ export const AVANZADO: Grupo = {
         {
           tipo: "pasos",
           pasos: [
-            "En Ajustes → Herramientas → Formularios web, pulsa «Agregar», ponle nombre y elige el tipo: «Captación de contactos» (crea un contacto) o «Ticket de soporte» (abre un ticket).",
+            "En Ajustes → Formularios web, pulsa «Agregar», ponle nombre y elige el tipo: «Captación de contactos» (crea un contacto) o «Ticket de soporte» (abre un ticket).",
             "Copia el enlace (para compartirlo o enlazarlo desde un botón) o el iframe (para incrustarlo dentro de una página tuya).",
             "Pégalo en tu web. Cada envío entra en el CRM al instante, y si tienes una automatización «se crea un contacto → …», se dispara.",
           ],
@@ -181,7 +181,7 @@ export const AVANZADO: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "Cada organización envía desde su propio dominio. En Ajustes → Herramientas → Correo saliente eliges el proveedor (Resend, Postmark o SendGrid), pegas la clave de API que te da ese proveedor y pones el remitente (nombre y una dirección de un dominio verificado allí). La clave se guarda cifrada y no vuelve a mostrarse. Hay un botón para enviarte una prueba antes de usarlo de verdad.",
+            "Cada organización envía desde su propio dominio. En Ajustes → Correo saliente eliges el proveedor (Resend, Postmark o SendGrid), pegas la clave de API que te da ese proveedor y pones el remitente (nombre y una dirección de un dominio verificado allí). La clave se guarda cifrada y no vuelve a mostrarse. Hay un botón para enviarte una prueba antes de usarlo de verdad.",
         },
         {
           tipo: "consejo",
@@ -205,7 +205,7 @@ export const AVANZADO: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "Si prefieres otro proveedor (Claude, OpenAI o DeepSeek) o un modelo más capaz, elige «Mi propia cuenta» en Ajustes → Herramientas → Inteligencia artificial, pega tu clave y selecciona el modelo: desde ese momento el consumo se factura en tu cuenta del proveedor. Puedes volver a la incluida cuando quieras, y el interruptor apaga la IA por completo.",
+            "Si prefieres otro proveedor (Claude, OpenAI o DeepSeek) o un modelo más capaz, elige «Mi propia cuenta» en Ajustes → Inteligencia artificial, pega tu clave y selecciona el modelo: desde ese momento el consumo se factura en tu cuenta del proveedor. Puedes volver a la incluida cuando quieras, y el interruptor apaga la IA por completo.",
         },
         {
           tipo: "parrafo",
@@ -229,7 +229,7 @@ export const AVANZADO: Grupo = {
         {
           tipo: "parrafo",
           texto:
-            "Todo lo que ves en pantalla está disponible por una API REST: contactos, empresas, oportunidades, tareas, notas, tickets y etiquetas. Una integración externa se identifica con una clave de API, que se crea en Ajustes → Herramientas → API y webhooks (solo administradores). La clave tiene los mismos permisos que un usuario, así que trátala como una contraseña: se muestra una sola vez, y se puede desactivar o borrar cuando quieras.",
+            "Todo lo que ves en pantalla está disponible por una API REST: contactos, empresas, oportunidades, tareas, notas, tickets y etiquetas. Una integración externa se identifica con una clave de API, que se crea en Ajustes → API y webhooks (solo administradores). La clave tiene los mismos permisos que un usuario, así que trátala como una contraseña: se muestra una sola vez, y se puede desactivar o borrar cuando quieras.",
         },
         {
           tipo: "lista",
@@ -324,7 +324,7 @@ export const AVANZADO: Grupo = {
       titulo: "Campos personalizados",
       resumen:
         "Los datos que son solo de tu negocio, en contactos, empresas y oportunidades.",
-      ruta: "/settings",
+      ruta: "/settings/campos",
       bloques: [
         {
           tipo: "parrafo",

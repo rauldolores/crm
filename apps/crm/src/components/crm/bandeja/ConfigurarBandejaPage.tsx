@@ -131,7 +131,7 @@ export const ConfigurarBandejaPage = () => {
         ) : (
           <p className="text-muted-foreground">{t("step1.no_projects")}</p>
         )}
-        <Link to="/settings" className="text-xs">
+        <Link to="/settings/proyectos" className="text-xs">
           {t("step1.edit_projects")}
         </Link>
         <Label htmlFor="direccion-de-bandeja" className="pt-2">

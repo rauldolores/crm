@@ -3,6 +3,7 @@ import { Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import type { RaRecord } from "ra-core";
 import { EditBase, Form, useGetList, useNotify, useTranslate } from "ra-core";
 import { useCallback, useMemo } from "react";
+import { Navigate, useParams } from "react-router";
 import { useFormContext, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,6 @@ import type {
   DealPipeline,
   Project,
 } from "../types";
-import { HerramientasDeAdministracion } from "./HerramientasDeAdministracion";
 import { AjustesDeTickets } from "./AjustesDeTickets";
 import { AjustesDeProyectos } from "./AjustesDeProyectos";
 import { limpiarProyectos } from "../proyectos/proyectos";
@@ -41,42 +41,11 @@ import {
 } from "../renovaciones/renovaciones";
 import { limpiarSla } from "./limpiarSla";
 import { ColorInput } from "./ColorInput";
-
-const SECTIONS = [
-  {
-    id: "tools",
-    label: "crm.settings.sections.tools",
-    fallback: "Tools",
-  },
-  {
-    id: "projects",
-    label: "crm.projects.title",
-    fallback: "Projects",
-  },
-  {
-    id: "companies",
-    label: "resources.companies.name",
-    fallback: "Companies",
-  },
-  { id: "deals", label: "resources.deals.name", fallback: "Deals" },
-  {
-    id: "renewals",
-    label: "crm.settings.renewals.title",
-    fallback: "Renewals",
-  },
-  {
-    id: "risk",
-    label: "crm.settings.risk.title",
-    fallback: "At-risk customers",
-  },
-  { id: "notes", label: "resources.notes.name", fallback: "Notes" },
-  { id: "tasks", label: "resources.tasks.name", fallback: "Tasks" },
-  {
-    id: "custom-fields",
-    label: "crm.settings.sections.custom_fields",
-    fallback: "Custom fields",
-  },
-];
+import {
+  APARTADO_INICIAL,
+  rutaDeApartado,
+  type ApartadoDeConfiguracion,
+} from "./apartadosDeAjustes";
 
 /**
  * Fila editable de un campo personalizado: las opciones de las listas se
@@ -265,7 +234,50 @@ const transformFormValues = (data: Record<string, any>) => {
   };
 };
 
+/** Lo que cada apartado guarda: lo único que toca «Restablecer» en él. */
+const CLAVES_POR_APARTADO: Record<ApartadoDeConfiguracion, string[]> = {
+  proyectos: ["projects", "defaultProject"],
+  embudos: ["dealPipelines"],
+  reglas: [
+    "currency",
+    "dealCategories",
+    "requireIncomeToWin",
+    "dealLossReasons",
+  ],
+  listas: ["companySectors", "noteStatuses", "noteTypes", "taskTypes"],
+  campos: ["contactCustomFields", "companyCustomFields", "dealCustomFields"],
+  tickets: ["ticketPriorities", "ticketCategories", "ticketSla"],
+  renovaciones: ["renewals"],
+  riesgo: ["risk"],
+};
+
+const esApartado = (
+  valor: string | undefined,
+): valor is ApartadoDeConfiguracion =>
+  valor != null && Object.hasOwn(CLAVES_POR_APARTADO, valor);
+
+/**
+ * La configuración de la organización, un apartado por dirección
+ * (/settings/embudos, /settings/listas…). El menú que los reúne con las demás
+ * pantallas de administración lo pone MarcoDeAjustes.
+ *
+ * Todos los apartados comparten un único formulario: al pasar de uno a otro
+ * no se pierde lo que se estaba editando, y «Guardar» guarda lo cambiado en
+ * cualquiera de ellos.
+ */
 export const SettingsPage = () => {
+  const { seccion } = useParams();
+  if (!esApartado(seccion)) {
+    return <Navigate to={rutaDeApartado(APARTADO_INICIAL)} replace />;
+  }
+  return <PaginaDeAjustes apartado={seccion} />;
+};
+
+const PaginaDeAjustes = ({
+  apartado,
+}: {
+  apartado: ApartadoDeConfiguracion;
+}) => {
   const updateConfiguration = useConfigurationUpdater();
   const notify = useNotify();
 
@@ -288,14 +300,14 @@ export const SettingsPage = () => {
         },
       }}
     >
-      <SettingsForm />
+      <SettingsForm apartado={apartado} />
     </EditBase>
   );
 };
 
 SettingsPage.path = "/settings";
 
-const SettingsForm = () => {
+const SettingsForm = ({ apartado }: { apartado: ApartadoDeConfiguracion }) => {
   const config = useConfigurationContext();
 
   const defaultValues = useMemo(
@@ -329,19 +341,42 @@ const SettingsForm = () => {
 
   return (
     <Form defaultValues={defaultValues}>
-      <SettingsFormFields />
+      <SettingsFormFields apartado={apartado} />
     </Form>
   );
 };
 
-const SettingsFormFields = () => {
+const SettingsFormFields = ({
+  apartado,
+}: {
+  apartado: ApartadoDeConfiguracion;
+}) => {
   const translate = useTranslate();
   const currencyChoices = useMemo(() => getCurrencyChoices(), []);
   const config = useConfigurationContext();
   const {
     reset,
+    setValue,
     formState: { isSubmitting },
   } = useFormContext();
+
+  // Los valores de fábrica, ya en la forma del formulario.
+  const valoresDeFabrica: Record<string, unknown> = {
+    ...defaultConfiguration,
+    renewals: limpiarRenovaciones({}, config.renewals),
+    risk: ajustesDeRiesgo({}),
+    contactCustomFields: aFilasEditables(
+      defaultConfiguration.contactCustomFields,
+    ),
+    companyCustomFields: aFilasEditables(
+      defaultConfiguration.companyCustomFields,
+    ),
+    dealCustomFields: aFilasEditables(defaultConfiguration.dealCustomFields),
+  };
+  const restablecer = () =>
+    CLAVES_POR_APARTADO[apartado].forEach((clave) =>
+      setValue(clave, valoresDeFabrica[clave], { shouldDirty: true }),
+    );
 
   const categoryDisplayName = translate(
     "crm.settings.validation.entities.categories",
@@ -370,76 +405,28 @@ const SettingsFormFields = () => {
   );
 
   return (
-    <div className="flex gap-8 mt-4 pb-20">
-      {/* Left navigation */}
-      <nav className="hidden md:block w-48 shrink-0">
-        <div className="sticky top-[calc(1rem_+_var(--kontrolia-band-height,0px))] space-y-1">
-          <h1 className="text-2xl font-semibold px-3 mb-2">
-            {translate("crm.settings.title")}
-          </h1>
-          {SECTIONS.map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              onClick={() => {
-                document
-                  .getElementById(section.id)
-                  ?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="block w-full text-left px-3 py-1 text-sm rounded-md hover:text-foreground hover:bg-muted transition-colors"
-            >
-              {translate(section.label, { smart_count: 2 })}
-            </button>
-          ))}
-        </div>
-      </nav>
+    <div className="max-w-2xl space-y-6">
+      {apartado === "proyectos" && <AjustesDeProyectos />}
 
-      {/* Main content */}
-      <div className="flex-1 min-w-0 max-w-2xl space-y-6">
-        {/* Herramientas: páginas que viven fuera de este formulario (son su
-            propio recurso, no un campo de "configuration"), así que aquí
-            solo se enlazan en vez de editarse. */}
-        <Card id="tools">
+      {apartado === "embudos" && (
+        <Card>
           <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              {translate("crm.settings.sections.tools")}
+            <h2 className="text-xl font-semibold">
+              {translate("crm.settings.nav.pipelines")}
             </h2>
-            <HerramientasDeAdministracion />
+            <p className="text-sm text-muted-foreground">
+              {translate("crm.settings.deals.pipelines_help")}
+            </p>
+            <EditorDeEmbudos deals={deals} />
           </CardContent>
         </Card>
+      )}
 
-        <AjustesDeProyectos />
-
-        {/* Companies */}
-        <Card id="companies">
+      {apartado === "reglas" && (
+        <Card>
           <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              {translate("resources.companies.name", {
-                smart_count: 2,
-              })}
-            </h2>
-            <h3 className="text-lg font-medium text-muted-foreground">
-              {translate("crm.settings.companies.sectors")}
-            </h3>
-            <ArrayInput
-              source="companySectors"
-              label={false}
-              helperText={false}
-            >
-              <SimpleFormIterator disableReordering disableClear>
-                <TextInput source="label" label={false} />
-              </SimpleFormIterator>
-            </ArrayInput>
-          </CardContent>
-        </Card>
-
-        {/* Deals */}
-        <Card id="deals">
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              {translate("resources.deals.name", {
-                smart_count: 2,
-              })}
+            <h2 className="text-xl font-semibold">
+              {translate("crm.settings.nav.rules")}
             </h2>
             <h3 className="text-lg font-medium text-muted-foreground">
               {translate("crm.settings.deals.currency")}
@@ -451,16 +438,6 @@ const SettingsFormFields = () => {
               inputText={(choice) => choice?.id}
               modal
             />
-
-            <Separator />
-
-            <h3 className="text-lg font-medium text-muted-foreground">
-              {translate("crm.settings.deals.pipelines")}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {translate("crm.settings.deals.pipelines_help")}
-            </p>
-            <EditorDeEmbudos deals={deals} />
 
             <Separator />
 
@@ -511,15 +488,29 @@ const SettingsFormFields = () => {
             </ArrayInput>
           </CardContent>
         </Card>
+      )}
 
-        {/* Notes */}
-        <Card id="notes">
+      {apartado === "listas" && (
+        <Card>
           <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              {translate("resources.notes.name", {
-                smart_count: 2,
-              })}
+            <h2 className="text-xl font-semibold">
+              {translate("crm.settings.nav.lists")}
             </h2>
+            <h3 className="text-lg font-medium text-muted-foreground">
+              {translate("crm.settings.companies.sectors")}
+            </h3>
+            <ArrayInput
+              source="companySectors"
+              label={false}
+              helperText={false}
+            >
+              <SimpleFormIterator disableReordering disableClear>
+                <TextInput source="label" label={false} />
+              </SimpleFormIterator>
+            </ArrayInput>
+
+            <Separator />
+
             <h3 className="text-lg font-medium text-muted-foreground">
               {translate("crm.settings.notes.statuses")}
             </h3>
@@ -543,23 +534,9 @@ const SettingsFormFields = () => {
                 <TextInput source="label" label={false} />
               </SimpleFormIterator>
             </ArrayInput>
-          </CardContent>
-        </Card>
 
-        <AjustesDeRenovaciones />
+            <Separator />
 
-        <AjustesDeRiesgo />
-
-        <AjustesDeTickets />
-
-        {/* Tasks */}
-        <Card id="tasks">
-          <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
-              {translate("resources.tasks.name", {
-                smart_count: 2,
-              })}
-            </h2>
             <h3 className="text-lg font-medium text-muted-foreground">
               {translate("crm.settings.tasks.types")}
             </h3>
@@ -570,11 +547,12 @@ const SettingsFormFields = () => {
             </ArrayInput>
           </CardContent>
         </Card>
+      )}
 
-        {/* Custom fields */}
-        <Card id="custom-fields">
+      {apartado === "campos" && (
+        <Card>
           <CardContent className="space-y-4">
-            <h2 className="text-xl font-semibold text-muted-foreground">
+            <h2 className="text-xl font-semibold">
               {translate("crm.settings.sections.custom_fields")}
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -601,47 +579,32 @@ const SettingsFormFields = () => {
             <CustomFieldsEditor source="dealCustomFields" />
           </CardContent>
         </Card>
-      </div>
+      )}
 
-      {/* Sticky save button */}
-      <div className="fixed bottom-0 left-0 right-0 border-t bg-background p-4">
-        <div className="max-w-screen-xl mx-auto flex gap-8 px-4">
-          <div className="hidden md:block w-48 shrink-0" />
-          <div className="flex-1 min-w-0 max-w-2xl flex justify-between">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() =>
-                reset({
-                  ...defaultConfiguration,
-                  modules: config.modules,
-                  quoteTaxRate: config.quoteTaxRate,
-                  quoteTemplates: config.quoteTemplates,
-                  quoteIssuer: config.quoteIssuer,
-                  renewals: limpiarRenovaciones({}, config.renewals),
-                  risk: ajustesDeRiesgo({}),
-                })
-              }
-            >
-              <RotateCcw className="h-4 w-4 mr-1" />
-              {translate("crm.settings.reset_defaults")}
-            </Button>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => window.history.back()}
-              >
-                {translate("ra.action.cancel")}
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                <Save className="h-4 w-4 mr-1" />
-                {isSubmitting
-                  ? translate("crm.settings.saving")
-                  : translate("ra.action.save")}
-              </Button>
-            </div>
-          </div>
+      {apartado === "tickets" && <AjustesDeTickets />}
+      {apartado === "renovaciones" && <AjustesDeRenovaciones />}
+      {apartado === "riesgo" && <AjustesDeRiesgo />}
+
+      {/* Pegada al pie de la ventana mientras el apartado es largo. */}
+      <div className="sticky bottom-0 flex justify-between border-t bg-background py-3">
+        {apartado !== "proyectos" ? (
+          <Button type="button" variant="ghost" onClick={restablecer}>
+            <RotateCcw className="h-4 w-4 mr-1" />
+            {translate("crm.settings.reset_defaults")}
+          </Button>
+        ) : (
+          <span />
+        )}
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={() => reset()}>
+            {translate("crm.settings.discard")}
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            <Save className="h-4 w-4 mr-1" />
+            {isSubmitting
+              ? translate("crm.settings.saving")
+              : translate("ra.action.save")}
+          </Button>
         </div>
       </div>
     </div>

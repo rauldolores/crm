@@ -6,20 +6,17 @@ import {
   CircleHelp,
   Contact,
   CreditCard,
-  FileText,
   Handshake,
-  Import,
   LayoutDashboard,
   ReceiptText,
   Settings,
   Ticket,
-  Users,
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
-import { ImportPage } from "../misc/ImportPage";
+import { esPantallaDeAjustes } from "../settings/apartadosDeAjustes";
 import { AyudaPage } from "../ayuda/AyudaPage";
 import { MODULE_REGISTRY, type GrupoDelMenu } from "../modules/registry";
 import { MarcaVinqulia } from "./MarcaVinqulia";
@@ -177,42 +174,19 @@ export const BarraLateral = () => {
     {
       titulo: "Sistema",
       entradas: [
-        {
-          clave: "configuracion",
-          etiqueta: "Configuración",
-          Icono: Settings,
-          secciones: [
-            // Ajustes: la puerta a la administración de la organización
-            // (automatizaciones, formularios, API, módulos, correo, IA viven
-            // ahí dentro). Solo para quien puede editar la configuración.
-            ...(puedeConfigurar
-              ? [
-                  {
-                    etiqueta: translate("crm.settings.title"),
-                    ruta: "/settings",
-                    Icono: Settings,
-                  },
-                ]
-              : []),
-            {
-              etiqueta: plural("sales"),
-              ruta: "/sales",
-              Icono: Users,
-              recurso: "sales",
-            },
-            {
-              etiqueta: translate("crm.email_templates.title"),
-              ruta: "/email_templates",
-              Icono: FileText,
-              recurso: "email_templates",
-            },
-            {
-              etiqueta: translate("crm.header.import_data"),
-              ruta: ImportPage.path,
-              Icono: Import,
-            },
-          ],
-        },
+        // Ajustes: la puerta a la administración de la organización.
+        // Usuarios, plantillas, importar, automatizaciones, correo… viven
+        // ahí dentro, con su propio menú (ver settings/apartadosDeAjustes).
+        // Solo para quien puede editar la configuración.
+        ...(puedeConfigurar
+          ? [
+              {
+                etiqueta: translate("crm.settings.title"),
+                ruta: "/settings",
+                Icono: Settings,
+              },
+            ]
+          : []),
         // Para todo el mundo: es lo primero que busca quien acaba de
         // entrar y no sabe qué es un CRM.
         { etiqueta: "Ayuda", ruta: AyudaPage.path, Icono: CircleHelp },
@@ -252,9 +226,15 @@ export const BarraLateral = () => {
     .filter((bloque) => bloque.entradas.length > 0);
 
   // La raíz solo se marca activa en coincidencia exacta: de otro modo lo
-  // estaría siempre, porque toda ruta empieza por "/".
-  const estaActiva = (ruta: string) =>
-    ruta === "/" ? pathname === "/" : pathname.startsWith(ruta);
+  // estaría siempre, porque toda ruta empieza por "/". Las pantallas de
+  // Ajustes que viven bajo otra ruta (/sales, /bandeja/configurar…) marcan
+  // Ajustes y no la sección con la que comparten prefijo.
+  const enAjustes = esPantallaDeAjustes(pathname);
+  const estaActiva = (ruta: string) => {
+    if (ruta === "/settings") return enAjustes;
+    if (ruta === "/") return pathname === "/";
+    return !enAjustes && pathname.startsWith(ruta);
+  };
 
   return (
     // Pegada a la ventana, no a la página: `self-start` evita que el flex la
