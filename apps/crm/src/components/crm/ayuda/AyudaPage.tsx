@@ -72,7 +72,7 @@ export const AyudaPage = () => {
     buscando && gruposVisibles.length === 0 && preguntasVisibles.length === 0;
 
   return (
-    <div className="mx-auto mt-6 mb-24 flex max-w-6xl flex-col gap-8">
+    <div className="mt-6 mb-24 flex flex-col gap-8">
       <header className="flex flex-col gap-4">
         <PageHero
           title="Ayuda y documentación"

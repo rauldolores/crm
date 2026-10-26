@@ -80,7 +80,7 @@ export const AjustesDeFacturacionPage = () => {
 
   if (!datos) {
     return (
-      <div className="mx-auto mt-8 max-w-4xl">
+      <div className="mt-8">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
@@ -90,7 +90,7 @@ export const AjustesDeFacturacionPage = () => {
     datos.ajustes.find((a) => a.product_key === GENERAL) ?? POR_OMISION;
 
   return (
-    <div className="mx-auto mt-8 mb-16 flex max-w-4xl flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         badge={translate("crm.settings.title")}
         title={translate("crm.customer_billing.settings.title")}

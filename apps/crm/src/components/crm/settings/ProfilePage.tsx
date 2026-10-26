@@ -33,7 +33,7 @@ export const ProfilePage = () => {
   if (!identity) return null;
 
   return (
-    <div className="max-w-lg mx-auto mt-8">
+    <div className="mt-8">
       <Form record={data}>
         <ProfileForm refetchUser={refetchUser} />
       </Form>

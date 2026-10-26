@@ -138,7 +138,7 @@ export const IaPage = () => {
   const sinIaEnNingunSitio = !config.tieneClave && !clave;
 
   return (
-    <div className="max-w-2xl mx-auto mt-8 mb-16 flex flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         badge={translate("crm.settings.title")}
         title={translate("crm.ai.title")}
