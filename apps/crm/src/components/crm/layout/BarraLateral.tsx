@@ -22,12 +22,10 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import { InformesPage } from "../misc/InformesPage";
 import { ImportPage } from "../misc/ImportPage";
 import { AyudaPage } from "../ayuda/AyudaPage";
-import { URL_AVISO_DE_PRIVACIDAD, URL_TERMINOS } from "../legal/enlaces";
 import { MODULE_REGISTRY } from "../modules/registry";
-import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
 import { MarcaVinqulia } from "./MarcaVinqulia";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
-import { nombreDelPlanConIntervalo } from "../facturacion/formato";
+import { TarjetaDelPlan } from "../facturacion/TarjetaDelPlan";
 import { useDerechos } from "../facturacion/useDerechos";
 import { facturacionDisponible } from "@/lib/kontrolia-auth/facturacion";
 
@@ -281,9 +279,9 @@ export const BarraLateral = () => {
           />
         </div>
 
-        {/* Fijo al fondo: Ayuda, Ajustes y el consumo del plan siempre a la
-            vista, que es lo que evita la sorpresa a mitad de una importación. */}
-        <div className="shrink-0 border-t border-sidebar-border pt-4">
+        {/* Fijo al fondo: Ayuda, Ajustes y el plan siempre a la vista. Por
+            encima del menú (z-20) para que el plan, al desplegarse, lo tape. */}
+        <div className="relative z-20 shrink-0 border-t border-sidebar-border pt-4">
           {/* Ayuda: para todo el mundo, antes que Ajustes. Es lo primero que
               busca quien acaba de entrar y no sabe qué es un CRM. */}
           <Link
@@ -314,34 +312,15 @@ export const BarraLateral = () => {
             </Link>
           </CanAccess>
 
-          {/* Consumo del plan, siempre a la vista: es lo que evita que el
-              límite sorprenda a mitad de una importación. Sin suscripción
-              todavía (nada que consumir) queda un enlace de texto plano, para
-              que "Plan y facturación" nunca se quede sin una entrada. */}
+          {/* Plan plegado («Plan Max»): se despliega hacia arriba al pasar
+              el ratón con el consumo de cada límite, como en AduaniaX. Sin
+              suscripción todavía (nada que consumir) queda un enlace de texto
+              plano, para que "Plan y facturación" nunca se quede sin entrada. */}
           {derechos?.subscription ? (
-            // Tarjeta translúcida sobre la barra oscura: es el único bloque
-            // que no es navegación, así no se lee como un ítem más. Las
-            // barras de consumo se tiñen solas (bg-current/10).
-            <Link
-              to={FacturacionPage.path}
-              className="mb-4 flex flex-col gap-2 rounded-2xl border border-white/5 bg-white/[0.04] px-3 py-3 text-sidebar-strong no-underline transition-colors hover:bg-white/[0.07]"
-            >
-              {/* Vino fijo en ambos temas: la tarjeta es oscura en los dos,
-                  así que el título no depende del tema. Es el tono más
-                  vino que sigue pasando AA a 11px (5.8:1 sobre neutral-900,
-                  4.9:1 sobre neutral-800); un burdeos real (#b91c1c) se
-                  queda en 2.8:1 y deja de leerse. */}
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#d97485]">
-                {translate("crm.billing.plan_named", {
-                  // El nombre del plan ya suele venir como «Plan Impulso»:
-                  // sin esto se leería «Plan Plan Impulso».
-                  plan: nombreDelPlanConIntervalo(
-                    derechos.subscription,
-                  ).replace(/^plan\s+/i, ""),
-                })}
-              </span>
-              <ConsumoDelPlan usage={derechos.usage} compacto />
-            </Link>
+            <TarjetaDelPlan
+              subscription={derechos.subscription}
+              usage={derechos.usage}
+            />
           ) : (
             facturacionDisponible() && (
               <Link
@@ -353,29 +332,6 @@ export const BarraLateral = () => {
               </Link>
             )
           )}
-          <div className="flex items-center gap-2 px-2 text-xs text-sidebar-foreground/70">
-            <img src={darkModeLogo} alt="" className="h-4 w-4 opacity-60" />
-            <span className="truncate">{title} · CRM</span>
-          </div>
-          <div className="mt-1 flex flex-wrap gap-x-2 px-2 text-[11px] text-sidebar-foreground/70">
-            <a
-              href={URL_AVISO_DE_PRIVACIDAD}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-sidebar-strong"
-            >
-              Privacidad
-            </a>
-            <span aria-hidden>·</span>
-            <a
-              href={URL_TERMINOS}
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-sidebar-strong"
-            >
-              Términos
-            </a>
-          </div>
         </div>
       </div>
     </aside>

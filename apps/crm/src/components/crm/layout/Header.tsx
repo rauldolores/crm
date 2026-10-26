@@ -1,4 +1,4 @@
-import { User } from "lucide-react";
+import { FileText, ShieldCheck, User } from "lucide-react";
 import { useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
@@ -7,6 +7,7 @@ import { SelectorDeOrganizacion } from "./SelectorDeOrganizacion";
 import { UserMenu } from "@/components/admin/user-menu";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { BotonDeAyuda } from "../ayuda/BotonDeAyuda";
+import { URL_AVISO_DE_PRIVACIDAD, URL_TERMINOS } from "../legal/enlaces";
 
 /**
  * Cabecera superior del escritorio.
@@ -16,8 +17,10 @@ import { BotonDeAyuda } from "../ayuda/BotonDeAyuda";
  * proyecta su rastro de navegación (el componente Breadcrumb usa un portal);
  * a la derecha, lo contextual: organización, tema, refresco y perfil.
  *
- * El menú del avatar solo lleva Perfil (y Cerrar sesión, que pone
- * <UserMenu> solo): es lo único que es sobre LA PERSONA que inició sesión.
+ * El menú del avatar lleva Perfil (y Cerrar sesión, que pone <UserMenu>
+ * solo): es lo único que es sobre LA PERSONA que inició sesión. Además, el
+ * aviso de privacidad y los términos, que vivían al pie de la barra lateral
+ * y ahí le quitaban sitio al plan.
  * Antes vivían aquí también Usuarios, Ajustes, Automatizaciones, Formularios,
  * API, Módulos, Correo, Plantillas, IA, Plan y facturación e Importar — una
  * lista plana de 11 destinos casi todos sobre LA ORGANIZACIÓN, no sobre la
@@ -58,12 +61,26 @@ const ProfileMenu = () => {
     throw new Error("<ProfileMenu> must be used inside <UserMenu?");
   }
   return (
-    <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
-      <Link to="/profile" className="flex items-center gap-2">
-        <User />
-        {translate("crm.profile.title")}
-      </Link>
-    </DropdownMenuItem>
+    <>
+      <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+        <Link to="/profile" className="flex items-center gap-2">
+          <User />
+          {translate("crm.profile.title")}
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+        <a href={URL_AVISO_DE_PRIVACIDAD} target="_blank" rel="noreferrer">
+          <ShieldCheck />
+          Aviso de privacidad
+        </a>
+      </DropdownMenuItem>
+      <DropdownMenuItem asChild onClick={userMenuContext.onClose}>
+        <a href={URL_TERMINOS} target="_blank" rel="noreferrer">
+          <FileText />
+          Términos y condiciones
+        </a>
+      </DropdownMenuItem>
+    </>
   );
 };
 

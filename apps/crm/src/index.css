@@ -51,6 +51,8 @@
   --color-sidebar-label: var(--sidebar-label);
   --color-sidebar-icon: var(--sidebar-icon);
   --color-sidebar-strong: var(--sidebar-strong);
+  /* Lo que flota sobre la barra (el plan desplegado): opaco, un punto más claro. */
+  --color-sidebar-raised: var(--sidebar-raised);
   /* Encabezado de página en bloque (PageHero), vino oscuro en los dos temas. */
   --color-hero: var(--hero);
   --color-hero-glow: var(--hero-glow);
@@ -120,6 +122,7 @@
   --sidebar-label: oklch(0.72 0.11 15 / 0.8);
   --sidebar-icon: oklch(0.72 0.11 15);
   --sidebar-strong: oklch(0.99 0 0);
+  --sidebar-raised: oklch(0.215 0.008 40);
   --hero: oklch(0.22 0.06 15);
   --hero-glow: oklch(0.58 0.2 20 / 0.32);
   --hero-muted: oklch(0.87 0.05 15);
@@ -171,6 +174,7 @@
   --sidebar-label: oklch(0.72 0.11 15 / 0.8);
   --sidebar-icon: oklch(0.72 0.11 15);
   --sidebar-strong: oklch(0.99 0 0);
+  --sidebar-raised: oklch(0.16 0.006 40);
   --hero: oklch(0.25 0.07 15);
   --hero-glow: oklch(0.6 0.2 20 / 0.3);
   --hero-muted: oklch(0.87 0.05 15);
