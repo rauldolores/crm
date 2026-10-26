@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2 } from "lucide-react";
+import { ErrorDeAcceso, PasoDeAcceso } from "./PantallaDeAcceso";
 import { useEffect, useRef, useState } from "react";
 
 import { env } from "@/lib/env";
@@ -93,29 +93,21 @@ const Contenido = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
-          <h1 className="text-xl font-semibold mb-2">
-            No se pudo iniciar sesión
-          </h1>
-          <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          {registro && (
-            <a className="text-sm underline hover:no-underline" href={registro}>
-              Crear cuenta
-            </a>
-          )}
-        </div>
-      </div>
+      <ErrorDeAcceso mensaje={error}>
+        {registro && (
+          <a
+            className="text-sm font-semibold underline hover:no-underline"
+            href={registro}
+          >
+            Crear cuenta
+          </a>
+        )}
+      </ErrorDeAcceso>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">
-        Redirigiendo a KontrolIA Auth…
-      </p>
+    <PasoDeAcceso texto="Redirigiendo a KontrolIA Auth…">
       {registro && (
         <a
           className="text-xs text-muted-foreground underline hover:no-underline"
@@ -124,7 +116,7 @@ const Contenido = () => {
           Crear cuenta
         </a>
       )}
-    </div>
+    </PasoDeAcceso>
   );
 };
 

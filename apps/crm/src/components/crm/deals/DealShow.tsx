@@ -16,12 +16,14 @@ import {
 import { DeleteButton } from "@/components/admin/delete-button";
 import { EditButton } from "@/components/admin/edit-button";
 import { ReferenceField } from "@/components/admin/reference-field";
+import { TextField } from "@/components/admin/text-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 
 import { CompanyAvatar } from "../companies/CompanyAvatar";
+import { FichaHero } from "../misc/Patrones";
 import { NoteCreate } from "../notes/NoteCreate";
 import { NotesIterator } from "../notes/NotesIterator";
 import { HistorialDeOportunidad } from "./HistorialDeOportunidad";
@@ -76,8 +78,11 @@ const DealShowContent = () => {
       <div className="space-y-2">
         {record.archived_at ? <ArchivedTitle /> : null}
         <div className="flex-1">
-          <div className="flex justify-between items-start mb-8">
-            <div className="flex items-center gap-4">
+          {/* El aspa de cerrar del diálogo cae en la esquina: las acciones
+              le dejan sitio. */}
+          <FichaHero
+            className="mb-6"
+            avatar={
               <ReferenceField
                 source="company_id"
                 reference="companies"
@@ -85,24 +90,36 @@ const DealShowContent = () => {
               >
                 <CompanyAvatar />
               </ReferenceField>
-              <h2 className="font-display text-2xl font-semibold tracking-tight">
-                {record.name}
-              </h2>
-            </div>
-            <div className={`flex gap-2 ${record.archived_at ? "" : "pr-12"}`}>
-              {record.archived_at ? (
-                <>
-                  <UnarchiveButton record={record} />
-                  <DeleteButton />
-                </>
-              ) : (
-                <>
-                  <ArchiveButton record={record} />
-                  <EditButton />
-                </>
-              )}
-            </div>
-          </div>
+            }
+            badge={translate("resources.deals.forcedCaseName")}
+            title={record.name}
+            subtitle={
+              <ReferenceField
+                source="company_id"
+                reference="companies"
+                link="show"
+              >
+                <TextField source="name" />
+              </ReferenceField>
+            }
+            action={
+              <div className={record.archived_at ? "" : "pr-10"}>
+                <div className="flex gap-2">
+                  {record.archived_at ? (
+                    <>
+                      <UnarchiveButton record={record} />
+                      <DeleteButton />
+                    </>
+                  ) : (
+                    <>
+                      <ArchiveButton record={record} />
+                      <EditButton />
+                    </>
+                  )}
+                </div>
+              </div>
+            }
+          />
 
           <div className="flex gap-8 m-4">
             <div className="flex flex-col mr-10">

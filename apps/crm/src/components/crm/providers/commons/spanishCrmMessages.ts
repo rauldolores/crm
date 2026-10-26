@@ -338,6 +338,7 @@ export const spanishCrmMessages = {
     },
     deals: {
       name: "Oportunidad |||| Oportunidades",
+      forcedCaseName: "Oportunidad",
       bulk: {
         action: "Mandar correo en lote",
         title: "Mandar un correo a toda una etapa",

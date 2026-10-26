@@ -1,4 +1,4 @@
-import { AlertCircle, Loader2 } from "lucide-react";
+import { ErrorDeAcceso, PasoDeAcceso } from "./PantallaDeAcceso";
 import { useEffect, useState } from "react";
 
 import { getKontroliaClient } from "@/lib/kontrolia-auth/client";
@@ -102,27 +102,18 @@ const Contenido = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
-          <h1 className="text-xl font-semibold mb-2">
-            No se pudo iniciar sesión
-          </h1>
-          <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          <a className="text-sm underline hover:no-underline" href="/">
-            Volver a intentarlo
-          </a>
-        </div>
-      </div>
+      <ErrorDeAcceso mensaje={error}>
+        <a
+          className="text-sm font-semibold underline hover:no-underline"
+          href="/"
+        >
+          Volver a intentarlo
+        </a>
+      </ErrorDeAcceso>
     );
   }
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-      <p className="text-sm text-muted-foreground">Completando el acceso…</p>
-    </div>
-  );
+  return <PasoDeAcceso texto="Completando el acceso…" />;
 };
 
 export const OAuthCallbackPage = () => <Contenido />;

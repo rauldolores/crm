@@ -41,7 +41,8 @@ export const MobileNavigation = () => {
   return (
     <nav
       aria-label={translate("crm.navigation.label")}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-secondary h-14"
+      // Oscura, como la barra lateral de escritorio.
+      className="dark fixed bottom-0 left-0 right-0 z-50 h-14 border-t border-sidebar-border bg-sidebar"
       style={{
         // iOS bug: even though viewport is set correctly, the bottom safe area inset is not accounted for
         // So we manually add some padding to avoid the navigation being too close to the home bar
@@ -97,8 +98,10 @@ const NavigationButton = ({
     asChild
     variant="ghost"
     className={cn(
-      "flex-col gap-1 h-auto py-2 px-1 rounded-md w-16",
-      isActive ? null : "text-muted-foreground",
+      "flex-col gap-1 h-auto py-2 px-1 rounded-xl w-16",
+      isActive
+        ? "text-sidebar-primary-foreground"
+        : "text-sidebar-foreground/70",
     )}
   >
     <Link to={href}>

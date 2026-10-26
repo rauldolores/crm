@@ -12,7 +12,12 @@ const formatter = new Intl.NumberFormat("es-MX");
  * y oportunidades); las tareas no tienen listado de escritorio, así que se
  * dejan fuera para no enlazar a una ruta muerta.
  */
-export const DashboardStats = () => {
+export const DashboardStats = ({
+  compacto = false,
+}: {
+  /** Móvil: las tres cifras en una fila, sin icono. */
+  compacto?: boolean;
+}) => {
   const translate = useTranslate();
 
   const { total: totalContacts, isPending: pendingContacts } = useGetList(
@@ -55,7 +60,11 @@ export const DashboardStats = () => {
   ];
 
   return (
-    <StatGrid className="lg:grid-cols-3">
+    <StatGrid
+      className={
+        compacto ? "grid-cols-3 gap-2 sm:grid-cols-3" : "lg:grid-cols-3"
+      }
+    >
       {stats.map((s) => (
         <Link
           key={s.ruta}
@@ -64,6 +73,7 @@ export const DashboardStats = () => {
         >
           <StatCard
             tono={s.tono}
+            compacto={compacto}
             icon={s.icono}
             title={s.etiqueta}
             value={s.pendiente ? "—" : formatter.format(s.total ?? 0)}

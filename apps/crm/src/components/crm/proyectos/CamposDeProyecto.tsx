@@ -1,14 +1,10 @@
-import { useRecordContext, useTranslate } from "ra-core";
-
 import { AutocompleteArrayInput } from "@/components/admin/autocomplete-array-input";
 import { SelectInput } from "@/components/admin/select-input";
-import { Badge } from "@/components/ui/badge";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import { etiquetaDeProyecto } from "./proyectos";
 
 /**
- * Las piezas de formulario y de ficha para los proyectos de la
+ * Las piezas de formulario para los proyectos de la
  * organización. Sin proyectos configurados no pintan nada: una organización
  * que vende un solo producto no tiene por qué verlos.
  */
@@ -44,29 +40,5 @@ export const ProyectoInput = ({ helperText }: { helperText?: string }) => {
       choices={opciones}
       emptyText="crm.projects.no_project"
     />
-  );
-};
-
-/** Insignias con los proyectos del registro (`projects` o `project`). */
-export const ProyectosField = () => {
-  const record = useRecordContext<{
-    projects?: string[] | null;
-    project?: string | null;
-  }>();
-  const { projects } = useConfigurationContext();
-  const translate = useTranslate();
-  const valores = record?.projects ?? (record?.project ? [record.project] : []);
-  if (!projects.length || !valores.length) return null;
-  return (
-    <div
-      className="flex flex-wrap gap-1"
-      aria-label={translate("crm.projects.title")}
-    >
-      {valores.map((valor) => (
-        <Badge key={valor} variant="outline">
-          {etiquetaDeProyecto(projects, valor)}
-        </Badge>
-      ))}
-    </div>
   );
 };
