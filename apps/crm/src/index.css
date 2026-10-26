@@ -219,6 +219,19 @@ body {
   background-color: var(--background);
 }
 
+/* Banda del ecosistema KontrolIA (band.v1.js de auth-server, ver
+   layout/BandaDelEcosistema.tsx). Su barra interna es sticky, pero dentro de
+   su propio contenedor de 56px, así que con el scroll de documento del CRM se
+   iría con la página. Se fija aquí el contenedor (el estilo de fuera gana al
+   :host del Shadow DOM): queda arriba siempre y la cabecera y la barra lateral
+   se corren --kontrolia-band-height. z-index sobre la cabecera (z-40) y bajo
+   diálogos y hojas (z-50), que la tapan al abrirse. */
+#kontrolia-band {
+  position: sticky;
+  top: 0;
+  z-index: 45;
+}
+
 /* Densidad compacta para listas largas: un contenedor con esta clase encoge
    las filas de sus tablas sin tocar el resto de la página. */
 .densidad-compacta {

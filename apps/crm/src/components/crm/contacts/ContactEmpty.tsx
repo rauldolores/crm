@@ -20,7 +20,7 @@ export const ContactEmpty = () => {
       <div
         className="flex flex-col justify-center items-center gap-3"
         style={{
-          height: `calc(100dvh - ${appbarHeight}px)`,
+          height: `calc(100dvh - ${appbarHeight}px - var(--kontrolia-band-height, 0px))`,
         }}
       >
         <img

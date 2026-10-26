@@ -373,7 +373,7 @@ const SettingsFormFields = () => {
     <div className="flex gap-8 mt-4 pb-20">
       {/* Left navigation */}
       <nav className="hidden md:block w-48 shrink-0">
-        <div className="sticky top-4 space-y-1">
+        <div className="sticky top-[calc(1rem_+_var(--kontrolia-band-height,0px))] space-y-1">
           <h1 className="text-2xl font-semibold px-3 mb-2">
             {translate("crm.settings.title")}
           </h1>

@@ -28,7 +28,7 @@ export const DealEmpty = ({ children }: { children?: ReactNode }) => {
     <div
       className="flex flex-col justify-center items-center gap-12"
       style={{
-        height: `calc(100dvh - ${appbarHeight}px)`,
+        height: `calc(100dvh - ${appbarHeight}px - var(--kontrolia-band-height, 0px))`,
       }}
     >
       <img

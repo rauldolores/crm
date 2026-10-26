@@ -64,7 +64,7 @@ export const SettingsPageMobile = () => {
         </h1>
       </MobileHeader>
       <MobileContent>
-        <div className="flex flex-col min-h-[calc(100dvh-3.5rem-4.5rem)]">
+        <div className="flex flex-col min-h-[calc(100dvh_-_3.5rem_-_4.5rem_-_var(--kontrolia-band-height,0px))]">
           <div className="space-y-6">
             <ProfileSection />
             <PreferencesSection />

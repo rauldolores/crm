@@ -10,11 +10,15 @@ import { useConfigurationLoader } from "../root/useConfigurationLoader";
 import Header from "./Header";
 import { AvisoDeExcedente } from "../facturacion/AvisoDeExcedente";
 import { BarraLateral } from "./BarraLateral";
+import { BandaDelEcosistema } from "./BandaDelEcosistema";
 
 export const Layout = ({ children }: { children: ReactNode }) => {
   useConfigurationLoader();
+  // La banda del ecosistema ocupa --kontrolia-band-height arriba (0 si no
+  // se pinta): el alto mínimo la descuenta para no dejar un scroll de sobra.
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[calc(100vh_-_var(--kontrolia-band-height,0px))]">
+      <BandaDelEcosistema />
       <GuardiaDeAplicacion />
       <GuardiaDePlan />
       <AvisoDeExcedente />

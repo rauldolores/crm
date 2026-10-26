@@ -104,7 +104,7 @@ export const BandejaPage = () => {
         )}
       </div>
 
-      <div className="flex h-[calc(100dvh-14rem)] min-h-[28rem] overflow-hidden rounded-lg border">
+      <div className="flex h-[calc(100dvh_-_14rem_-_var(--kontrolia-band-height,0px))] min-h-[28rem] overflow-hidden rounded-lg border">
         <div
           className={[
             "flex w-full flex-col border-r md:w-96 md:shrink-0",
