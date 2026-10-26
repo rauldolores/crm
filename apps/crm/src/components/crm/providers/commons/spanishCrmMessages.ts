@@ -343,7 +343,7 @@ export const spanishCrmMessages = {
         action: "Mandar correo en lote",
         title: "Mandar un correo a toda una etapa",
         intro:
-          "Encola el correo de una plantilla para cada oportunidad de la etapa que elijas. No se manda de golpe: salen 25 por minuto, y cada tarjeta pasa a la etapa de Correo cuando el suyo sale de verdad. Puedes cerrar esta ventana sin cancelar nada.",
+          "Encola el correo de una plantilla para cada oportunidad de la etapa que elijas. No se manda de golpe: sale poco a poco, sin pasar del límite diario de Ajustes → Correo saliente, y cada tarjeta pasa a la etapa de Correo cuando el suyo sale de verdad. No se escribe a quien se dio de baja o ya contestó. Puedes cerrar esta ventana sin cancelar nada.",
         stage: "Etapa",
         stage_pick: "Elige la etapa",
         template: "Plantilla",
@@ -366,6 +366,8 @@ export const spanishCrmMessages = {
             "1 que ya tenía este correo |||| %{smart_count} que ya tenían este correo",
         },
         progress: "Enviados %{sent} de %{total}",
+        cancelled:
+          "1 no se envió: se dio de baja, ya contestó o su dirección ya lo había recibido |||| %{smart_count} no se enviaron: se dieron de baja, ya contestaron o su dirección ya lo había recibido",
         failed:
           "1 falló tras agotar los reintentos |||| %{smart_count} fallaron tras agotar los reintentos",
         finished: "Terminado.",
@@ -1808,6 +1810,20 @@ export const spanishCrmMessages = {
         "Manda un correo de prueba para comprobar que la configuración funciona antes de usarla de verdad.",
       test_send: "Enviar prueba",
       test_sent: "Correo de prueba enviado",
+      commercial: {
+        title: "Correo comercial",
+        intro:
+          "Lo que sale de las automatizaciones y los envíos masivos. Cada correo lleva un enlace para darse de baja, nunca se repite la misma plantilla a una dirección y deja de escribirse a quien ya contestó. Las cotizaciones, los tickets y las renovaciones no cuentan aquí: salen siempre.",
+        today: "Enviados en las últimas 24 horas",
+        unsubscribed: "Direcciones dadas de baja",
+        daily_limit: "Máximo de correos al día",
+        warmup: "Calentar el dominio",
+        warmup_help:
+          "Empieza con 20 correos el primer día y sube 20 cada día hasta el máximo. Un dominio que nunca ha enviado en volumen y manda cientos de golpe acaba en spam.",
+        needs_server:
+          "Configura primero tu servidor de envío para ajustar el máximo diario. Mientras tanto salen como mucho 200 al día, con calentamiento.",
+        saved: "Ajustes de envío guardados",
+      },
     },
     connectors: {
       title: "Conectores",

@@ -188,6 +188,11 @@ export const AVANZADO: Grupo = {
           texto:
             "Si no tienes cuenta en ninguno de los tres, Resend es el más sencillo de dar de alta y tiene plan gratuito. Verificar el dominio (unos registros DNS) es lo único que lleva un rato; el proveedor te guía.",
         },
+        {
+          tipo: "parrafo",
+          texto:
+            "El correo comercial (el de las automatizaciones y los envíos masivos) lleva protecciones para no quemar tu dominio: un enlace para darse de baja (y el botón «Cancelar suscripción» de Gmail), nunca repite la misma plantilla a una dirección aunque la compartan varias fichas, deja de escribir a quien ya contestó a la bandeja y no pasa de un máximo diario, al que llega poco a poco si activas el calentamiento. Las cotizaciones, los tickets y las renovaciones salen siempre. El máximo y cuántas direcciones se dieron de baja se ven en Ajustes → Correo saliente.",
+        },
       ],
     },
     {

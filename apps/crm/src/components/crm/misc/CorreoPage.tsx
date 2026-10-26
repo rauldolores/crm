@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 
+import { EnvioComercial } from "./EnvioComercial";
 import { llamarApi } from "./llamarApi";
 import { PageHero } from "./Patrones";
 
@@ -223,6 +224,8 @@ export const CorreoPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <EnvioComercial />
 
       <Card>
         <CardHeader>

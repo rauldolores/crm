@@ -385,12 +385,40 @@ create table crm.email_outbox (
     -- La acción masiva que encoló este correo, si vino de una. Es lo que
     -- permite contar el avance sin una tabla de renglones aparte: el estado
     -- de cada envío ya vive aquí (sent_at, attempts, last_error).
-    bulk_job_id bigint
+    bulk_job_id bigint,
+    -- A qué dirección salió de verdad: es lo que permite no mandar la misma
+    -- plantilla dos veces a una dirección que comparten varios contactos, y
+    -- dar de baja exactamente la dirección que recibió el correo.
+    sent_to text,
+    -- Un correo que ya no debe salir (baja, repetido, el contacto ya
+    -- contestó) no es un fallo: se cancela, con su motivo.
+    cancelled_at timestamp with time zone,
+    cancel_reason text,
+    -- El enlace de baja de cada correo. Aleatorio y de un solo correo: no
+    -- deja adivinar el de otro ni dar de baja a nadie más.
+    unsubscribe_token uuid not null default gen_random_uuid()
 );
 
 create index email_outbox_pendientes_idx
     on crm.email_outbox (next_attempt_at)
-    where sent_at is null;
+    where sent_at is null and cancelled_at is null;
+create unique index email_outbox_unsubscribe_token_idx
+    on crm.email_outbox (unsubscribe_token);
+create index email_outbox_enviados_a_idx
+    on crm.email_outbox (organization_id, sent_to, template_id)
+    where sent_at is not null;
+
+-- Direcciones que no quieren correos comerciales de la organización. Por
+-- dirección y no por contacto: varias fichas pueden compartirla.
+create table crm.email_suppressions (
+    organization_id uuid not null,
+    email text not null,
+    reason text not null default 'unsubscribe' check (reason in ('unsubscribe', 'manual')),
+    -- El correo desde cuyo enlace se dio de baja, si fue así.
+    outbox_id bigint references crm.email_outbox(id) on delete set null,
+    created_at timestamp with time zone not null default now(),
+    primary key (organization_id, email)
+);
 create index email_outbox_organization_id_idx
     on crm.email_outbox (organization_id);
 -- Para el avance de una acción masiva, que agrupa por este id.
@@ -898,7 +926,12 @@ create table crm.email_settings (
     from_name text,
     active boolean not null default true,
     created_at timestamp with time zone not null default now(),
-    updated_at timestamp with time zone not null default now()
+    updated_at timestamp with time zone not null default now(),
+    -- Cuántos correos comerciales salen como mucho en 24 horas, y si se
+    -- llega a ese máximo poco a poco (un dominio nuevo que manda cientos el
+    -- primer día acaba en spam).
+    daily_limit integer not null default 200 check (daily_limit between 1 and 100000),
+    warmup boolean not null default true
 );
 
 create index api_keys_organization_id_idx on crm.api_keys (organization_id);

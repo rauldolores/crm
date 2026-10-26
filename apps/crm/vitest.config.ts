@@ -99,6 +99,8 @@ export default defineConfig({
             "src/lib/server/accionesMasivas/**",
             "src/lib/server/afiliados/**",
             "src/lib/server/bandeja/**",
+            "src/lib/server/reparto/**",
+            "src/lib/server/correo/comercial.test.ts",
           ],
           server: {
             deps: {
@@ -137,6 +139,7 @@ export default defineConfig({
             "src/lib/server/afiliados/**/*.test.ts",
             "src/lib/server/bandeja/**/*.test.ts",
             "src/lib/server/reparto/**/*.test.ts",
+            "src/lib/server/correo/comercial.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },
