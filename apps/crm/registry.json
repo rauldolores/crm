@@ -834,6 +834,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/mi-dia/FilaDeMiDia.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/crm/mi-dia/MiDiaPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/ActiveFilterButton.tsx",
           "type": "registry:component"
         },
@@ -1714,6 +1722,14 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/miDia/etapas.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/miDia/tipos.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/accionesMasivas/destinatarios.ts",
           "type": "registry:lib"
         },
@@ -2075,6 +2091,14 @@
         },
         {
           "path": "src/lib/server/mcp/validateSql.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/miDia/cola.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/miDia/resultado.ts",
           "type": "registry:lib"
         },
         {
