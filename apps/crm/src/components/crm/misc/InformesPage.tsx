@@ -119,7 +119,7 @@ export const InformesPage = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 mb-16 flex flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         title={translate("crm.reports.title")}
         description={translate("crm.reports.intro")}

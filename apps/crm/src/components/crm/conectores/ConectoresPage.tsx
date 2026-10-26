@@ -83,7 +83,7 @@ export const ConectoresPage = () => {
   }, [cargar]);
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 mb-16 flex flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         badge={translate("crm.settings.title")}
         title={translate("crm.connectors.title")}

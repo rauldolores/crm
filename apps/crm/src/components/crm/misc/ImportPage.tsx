@@ -33,7 +33,7 @@ export const ImportPage = () => {
   const [importState, importFile, reset] = useImportFromJson();
 
   return (
-    <div className="max-w-2xl mx-auto mt-8">
+    <div className="mt-8">
       <Card>
         <CardHeader>
           <CardTitle>{translate("crm.import.title")}</CardTitle>

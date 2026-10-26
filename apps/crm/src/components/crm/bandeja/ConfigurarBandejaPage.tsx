@@ -102,7 +102,7 @@ export const ConfigurarBandejaPage = () => {
     translate(`crm.inbox.setup.${clave}`, opciones);
 
   return (
-    <div className="mx-auto mt-8 mb-16 flex max-w-3xl flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <div>
         <Link to="/bandeja" className="text-sm">
           ← {translate("crm.inbox.title")}

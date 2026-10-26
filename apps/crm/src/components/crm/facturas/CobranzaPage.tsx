@@ -71,7 +71,7 @@ export const CobranzaPage = () => {
   const vencidas = facturas.filter((f) => diasDeAtraso(f.due_on, hoy) > 0);
 
   return (
-    <div className="mx-auto mt-8 mb-16 flex max-w-6xl flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         badge={translate("crm.modules.invoicing.name")}
         title={translate("crm.customer_billing.collections.title")}

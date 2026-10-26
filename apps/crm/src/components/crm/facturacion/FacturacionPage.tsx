@@ -55,7 +55,7 @@ export const FacturacionPage = () => {
 
   if (!facturacionDisponible()) {
     return (
-      <div className="max-w-5xl mx-auto mt-8 mb-16 flex flex-col gap-6">
+      <div className="mt-8 mb-16 flex flex-col gap-6">
         <PageHero
           title={translate("crm.billing.title")}
           description={translate("crm.billing.self_hosted")}
@@ -65,7 +65,7 @@ export const FacturacionPage = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto mt-8 mb-16 flex flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         title={translate("crm.billing.title")}
         description={translate("crm.billing.intro")}

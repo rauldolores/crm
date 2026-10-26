@@ -84,7 +84,7 @@ export const ApiPage = () => {
   const urlMcp = `${origen}/api/mcp`;
 
   return (
-    <div className="max-w-3xl mx-auto mt-8 mb-16 flex flex-col gap-6">
+    <div className="mt-8 mb-16 flex flex-col gap-6">
       <PageHero
         badge={translate("crm.settings.title")}
         title={translate("crm.api.title")}

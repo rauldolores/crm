@@ -52,7 +52,7 @@ export const BandejaPage = () => {
   };
 
   return (
-    <div className="mx-auto mt-6 mb-8 flex max-w-7xl flex-col gap-4">
+    <div className="mt-6 mb-8 flex flex-col gap-4">
       <PageHero
         compacto
         title={translate("crm.inbox.title")}
