@@ -14,6 +14,16 @@ import {
 import { valoresDeCotizacion } from "@/lib/server/cotizaciones/enviar";
 import { rellenarCampos } from "@/components/crm/email/camposDeFusion";
 import { envolverEnPlantilla } from "@/components/crm/email/plantillaBase";
+import { estadoDelCupo } from "@/lib/server/correo/cupo";
+import {
+  MOTIVOS_DE_CANCELACION,
+  cabecerasDeBaja,
+  enlaceDeBaja,
+  esComercial,
+  normalizarCorreo,
+  respuestasDesde,
+  type MotivoDeCancelacion,
+} from "@/lib/server/correo/comercial";
 
 /**
  * Envía los correos que dejaron encoladas las automatizaciones.
@@ -25,11 +35,18 @@ import { envolverEnPlantilla } from "@/components/crm/email/plantillaBase";
  *
  * No lleva sesión de usuario: la autentica un secreto compartido que solo
  * conocen la base y esta ruta. Sin él, cualquiera podría dispararla.
+ *
+ * El correo comercial (ver correo/comercial.ts) pasa además por cuatro
+ * protecciones antes de salir: el tope diario de la organización, la lista
+ * de bajas, no repetir plantilla a una dirección y no seguir escribiendo a
+ * quien ya contestó. Lleva enlace y cabeceras de baja.
  */
 
 const MAX_POR_TANDA = 25;
 /** Espera creciente entre reintentos: 1, 3, 9, 27 y 81 minutos. */
 const esperaEnMinutos = (intentos: number) => 3 ** intentos;
+/** Con el tope del día alcanzado, cada cuánto se vuelve a mirar. */
+const ESPERA_POR_TOPE_EN_MINUTOS = 30;
 
 interface FilaDeCola {
   id: number;
@@ -41,6 +58,8 @@ interface FilaDeCola {
   quote_id: number | null;
   ticket_id: number | null;
   attempts: number;
+  created_at: string;
+  unsubscribe_token: string;
 }
 
 interface Plantilla {
@@ -74,19 +93,52 @@ export async function POST(peticion: Request) {
   const { data: pendientes } = await supabase
     .from("email_outbox")
     .select(
-      "id, organization_id, template_id, contact_id, deal_id, contract_id, quote_id, ticket_id, attempts",
+      "id, organization_id, template_id, contact_id, deal_id, contract_id, quote_id, ticket_id, attempts, created_at, unsubscribe_token",
     )
     .is("sent_at", null)
+    .is("cancelled_at", null)
     .lte("next_attempt_at", new Date().toISOString())
     .order("next_attempt_at")
     .limit(MAX_POR_TANDA);
 
   let enviados = 0;
   let fallidos = 0;
+  let cancelados = 0;
+  let pospuestos = 0;
   // Una lectura de la configuración por organización y tanda.
   const proyectosPorOrganizacion = new Map<string, ProyectosDeOrganizacion>();
+  // Cuántos correos comerciales le quedan hoy a cada organización.
+  const cupos = new Map<string, number>();
+  const ahora = new Date();
+  const origen = new URL(peticion.url).origin;
 
   for (const fila of (pendientes ?? []) as FilaDeCola[]) {
+    const comercial = esComercial(fila);
+
+    // Con el tope alcanzado, el correo espera su turno sin gastar intentos.
+    if (comercial) {
+      if (!cupos.has(fila.organization_id)) {
+        cupos.set(
+          fila.organization_id,
+          await estadoDelCupo(fila.organization_id, ahora).then(
+            (estado) => estado.limite - estado.enviados,
+          ),
+        );
+      }
+      if (cupos.get(fila.organization_id)! <= 0) {
+        pospuestos += 1;
+        await supabase
+          .from("email_outbox")
+          .update({
+            next_attempt_at: new Date(
+              ahora.getTime() + ESPERA_POR_TOPE_EN_MINUTOS * 60_000,
+            ).toISOString(),
+          })
+          .eq("id", fila.id);
+        continue;
+      }
+    }
+
     // Se marca el intento ANTES de enviar: si el proceso muere a mitad, el
     // correo no se reintenta indefinidamente. Peor un aviso perdido que uno
     // repetido muchas veces al mismo contacto.
@@ -136,8 +188,27 @@ export async function POST(peticion: Request) {
     }
 
     const p = plantilla as Plantilla;
-    const { correoDelContacto } = resuelto;
+    const correoDelContacto = normalizarCorreo(resuelto.correoDelContacto);
     let valores = resuelto.valores;
+
+    if (comercial) {
+      const motivo = await motivoParaNoEnviar(fila, correoDelContacto);
+      if (motivo) {
+        cancelados += 1;
+        await supabase
+          .from("email_outbox")
+          .update({
+            cancelled_at: new Date().toISOString(),
+            cancel_reason: motivo,
+            last_error: MOTIVOS_DE_CANCELACION[motivo],
+          })
+          .eq("id", fila.id);
+        continue;
+      }
+    }
+    const baja = comercial
+      ? enlaceDeBaja(origen, fila.unsubscribe_token)
+      : null;
 
     // Recordatorio de cotización: los campos {{cotizacion.*}} y su enlace,
     // armado con el origen de esta misma petición.
@@ -171,17 +242,19 @@ export async function POST(peticion: Request) {
         // contacto reciba su propio enlace.
         ctaUrl: p.cta_url,
         piePersonalizado: p.footer_text,
+        enlaceDeBaja: baja,
       }),
       valores,
     );
     const asunto = rellenarCampos(p.subject, valores);
-    const textoPlano = rellenarCampos(
-      p.body_html
-        .replace(/<[^>]+>/g, " ")
-        .replace(/\s+/g, " ")
-        .trim(),
-      valores,
-    );
+    const textoPlano =
+      rellenarCampos(
+        p.body_html
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim(),
+        valores,
+      ) + (baja ? `\n\nPara no recibir más correos como este: ${baja}` : "");
 
     // Desde qué proyecto: el de la plantilla, el de la oportunidad o el de
     // la empresa. Aquí no hay a quién preguntar: con varios, el
@@ -213,7 +286,13 @@ export async function POST(peticion: Request) {
 
     const resultado = await enviarCorreoDeOrganizacion(
       fila.organization_id,
-      { para: correoDelContacto, asunto, textoPlano, html },
+      {
+        para: correoDelContacto,
+        asunto,
+        textoPlano,
+        html,
+        cabeceras: baja ? cabecerasDeBaja(baja) : undefined,
+      },
       eleccion.tipo === "proyecto" ? eleccion.proyecto : null,
     );
 
@@ -222,11 +301,18 @@ export async function POST(peticion: Request) {
       continue;
     }
 
-    const ahora = new Date().toISOString();
+    const enviadoEn = new Date().toISOString();
     await supabase
       .from("email_outbox")
-      .update({ sent_at: ahora, last_error: null })
+      .update({
+        sent_at: enviadoEn,
+        sent_to: correoDelContacto,
+        last_error: null,
+      })
       .eq("id", fila.id);
+    if (comercial) {
+      cupos.set(fila.organization_id, cupos.get(fila.organization_id)! - 1);
+    }
 
     // Queda constancia en la ficha, igual que un correo enviado a mano: si
     // no, nadie sabría que al contacto ya se le escribió.
@@ -235,11 +321,70 @@ export async function POST(peticion: Request) {
       contact_id: fila.contact_id,
       text: `${asunto}\n\n${textoPlano}`,
       type: "email",
-      date: ahora,
+      date: enviadoEn,
     });
 
     enviados += 1;
   }
 
-  return Response.json({ enviados, fallidos });
+  return Response.json({ enviados, fallidos, cancelados, pospuestos });
+}
+
+/**
+ * Si un correo comercial ya no debe salir, por qué. Las tres comprobaciones
+ * son por dirección y no por contacto: varias fichas (empresas con el mismo
+ * gestor externo) comparten correo.
+ */
+async function motivoParaNoEnviar(
+  fila: FilaDeCola,
+  correo: string,
+): Promise<MotivoDeCancelacion | null> {
+  const supabase = getServiceClient();
+
+  const { data: oportunidad } = fila.deal_id
+    ? await supabase
+        .from("deals")
+        .select("created_at")
+        .eq("id", fila.deal_id)
+        .maybeSingle()
+    : { data: null };
+
+  const [{ data: baja }, { data: respuesta }, { data: repetido }] =
+    await Promise.all([
+      supabase
+        .from("email_suppressions")
+        .select("email")
+        .eq("organization_id", fila.organization_id)
+        .eq("email", correo)
+        .maybeSingle(),
+      // Una respuesta de verdad (no una automática) desde esa dirección.
+      supabase
+        .from("conversation_messages")
+        .select("id")
+        .eq("organization_id", fila.organization_id)
+        .eq("direction", "in")
+        .eq("automatic", false)
+        .eq("from_email", correo)
+        .gte(
+          "sent_at",
+          respuestasDesde(
+            (oportunidad?.created_at as string | undefined) ?? null,
+            fila.created_at,
+          ),
+        )
+        .limit(1),
+      supabase
+        .from("email_outbox")
+        .select("id")
+        .eq("organization_id", fila.organization_id)
+        .eq("template_id", fila.template_id)
+        .eq("sent_to", correo)
+        .not("sent_at", "is", null)
+        .limit(1),
+    ]);
+
+  if (baja) return "baja";
+  if ((respuesta ?? []).length > 0) return "respondio";
+  if ((repetido ?? []).length > 0) return "repetido";
+  return null;
 }

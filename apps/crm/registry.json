@@ -878,6 +878,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/EnvioComercial.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/FormulariosPage.tsx",
           "type": "registry:component"
         },
@@ -1814,7 +1818,15 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/correo/comercial.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/correo/configuracion.ts",
+          "type": "registry:lib"
+        },
+        {
+          "path": "src/lib/server/correo/cupo.ts",
           "type": "registry:lib"
         },
         {

@@ -57,6 +57,7 @@ interface Avance {
   requested: number;
   enqueued: number;
   enviados: number;
+  cancelados: number;
   pendientes: number;
   fallidos: number;
   ultimo_error: string | null;
@@ -296,6 +297,13 @@ const Avance = ({ resultado }: { resultado: Resultado }) => {
               total: avance.enqueued,
             })}
           </p>
+          {avance.cancelados > 0 && (
+            <p className="text-muted-foreground">
+              {translate("resources.deals.bulk.cancelled", {
+                smart_count: avance.cancelados,
+              })}
+            </p>
+          )}
           {avance.fallidos > 0 && (
             <p className="text-destructive">
               {translate("resources.deals.bulk.failed", {

@@ -26,6 +26,11 @@ export interface DisenoDeCorreo {
   ctaUrl?: string | null;
   /** Aparece en el pie, para dar contexto de quién escribe. */
   piePersonalizado?: string | null;
+  /**
+   * Enlace para darse de baja. Solo en el correo comercial; debajo de la
+   * tarjeta, pequeño, como en cualquier boletín.
+   */
+  enlaceDeBaja?: string | null;
 }
 
 export const COLOR_PRINCIPAL_POR_DEFECTO = "#2563eb";
@@ -99,6 +104,7 @@ export function envolverEnPlantilla({
   ctaTexto,
   ctaUrl,
   piePersonalizado,
+  enlaceDeBaja,
 }: DisenoDeCorreo): string {
   const color = colorSeguro(colorPrincipal);
   const contenido = aplicarEstilos(limpiarContenido(contenidoHtml), color);
@@ -146,6 +152,13 @@ export function envolverEnPlantilla({
         ${pie}
       </table>
     </td></tr>
+    ${
+      enlaceDeBaja
+        ? `<tr><td align="center" style="padding:0 12px 24px 12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:12px;line-height:1.5;color:#9ca3af;">
+            ¿No quieres recibir más correos como este? <a href="${escaparAtributo(enlaceDeBaja)}" style="color:#6b7280;text-decoration:underline;">Darte de baja</a>
+          </td></tr>`
+        : ""
+    }
   </table>
 </body></html>`;
 }

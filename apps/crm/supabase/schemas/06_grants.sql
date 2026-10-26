@@ -225,6 +225,9 @@ revoke all on table crm.email_settings from authenticated;
 
 -- Cola de correos: solo lectura, no se edita a mano.
 grant select on table crm.email_outbox to anon, authenticated, service_role;
+grant select on table crm.email_suppressions to authenticated;
+grant select, insert, update, delete on table crm.email_suppressions to service_role;
+revoke all on table crm.email_suppressions from anon;
 grant usage, select on sequence crm.email_outbox_id_seq to anon, authenticated, service_role;
 -- Acciones masivas: solo lectura, las crea la ruta /api con clave de servicio.
 grant select on table crm.bulk_jobs to anon, authenticated, service_role;

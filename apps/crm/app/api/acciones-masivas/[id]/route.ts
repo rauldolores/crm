@@ -15,6 +15,9 @@ import { getServiceClient } from "@/lib/server/supabase-service";
 
 type Contexto = { params: Promise<{ id: string }> };
 
+/** Los intentos de cada correo de la cola (email_outbox.max_attempts). */
+const MAXIMO_DE_INTENTOS = 5;
+
 export async function GET(peticion: Request, { params }: Contexto) {
   const auth = await requireKontroliaPermission(peticion, []);
   if (!auth.ok) return auth.response;
@@ -40,32 +43,50 @@ export async function GET(peticion: Request, { params }: Contexto) {
     return Response.json({ message: "Acción no encontrada." }, { status: 404 });
   }
 
-  const { data: correos } = await supabase
-    .from("email_outbox")
-    .select("sent_at, attempts, max_attempts, last_error")
-    .eq("organization_id", organizacionId)
-    .eq("bulk_job_id", encargoId);
+  // Se cuenta en la base y no trayendo las filas: un envío de miles pasaría
+  // del tope de filas por respuesta y el avance saldría corto.
+  const contar = () =>
+    supabase
+      .from("email_outbox")
+      .select("id", { count: "exact", head: true })
+      .eq("organization_id", organizacionId)
+      .eq("bulk_job_id", encargoId);
 
-  const filas = correos ?? [];
-  const enviados = filas.filter((fila) => fila.sent_at != null).length;
-  // Fallido = se acabaron los intentos. Mientras le queden, está pendiente
-  // aunque haya fallado una vez: el despachador reintenta.
-  const fallidos = filas.filter(
-    (fila) =>
-      fila.sent_at == null &&
-      (fila.attempts as number) >= (fila.max_attempts as number),
-  ).length;
-  const ultimoError =
-    filas.find((fila) => fila.sent_at == null && fila.last_error)?.last_error ??
-    null;
+  const [total, enviados, cancelados, fallidos, conError] = await Promise.all([
+    contar(),
+    contar().not("sent_at", "is", null),
+    // Cancelado = ya no debe salir (baja, dirección repetida, el contacto
+    // contestó). No es un fallo: es la protección funcionando.
+    contar().not("cancelled_at", "is", null),
+    // Fallido = se acabaron los intentos. Mientras le queden, está pendiente
+    // aunque haya fallado una vez: el despachador reintenta.
+    contar()
+      .is("sent_at", null)
+      .is("cancelled_at", null)
+      .gte("attempts", MAXIMO_DE_INTENTOS),
+    supabase
+      .from("email_outbox")
+      .select("last_error")
+      .eq("organization_id", organizacionId)
+      .eq("bulk_job_id", encargoId)
+      .is("sent_at", null)
+      .is("cancelled_at", null)
+      .not("last_error", "is", null)
+      .limit(1),
+  ]);
+
+  const cuantos = total.count ?? 0;
+  const hechos =
+    (enviados.count ?? 0) + (cancelados.count ?? 0) + (fallidos.count ?? 0);
 
   return Response.json({
     ...encargo,
-    enviados,
-    fallidos,
-    pendientes: filas.length - enviados - fallidos,
-    ultimo_error: ultimoError,
+    enviados: enviados.count ?? 0,
+    cancelados: cancelados.count ?? 0,
+    fallidos: fallidos.count ?? 0,
+    pendientes: cuantos - hechos,
+    ultimo_error: conError.data?.[0]?.last_error ?? null,
     // Termina cuando no queda ninguno esperando turno.
-    terminado: filas.length > 0 && filas.length === enviados + fallidos,
+    terminado: cuantos > 0 && cuantos === hechos,
   });
 }
