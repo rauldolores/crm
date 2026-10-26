@@ -798,6 +798,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/login/PantallaDeAcceso.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/login/RedireccionAlAcceso.tsx",
           "type": "registry:component"
         },
