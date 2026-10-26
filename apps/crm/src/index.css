@@ -10,6 +10,8 @@
      (black/extrabold), no de otra familia. Así los productos de Kontrolia se
      leen de la misma familia. */
   --font-display: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Wordmark del producto (Manrope 800, la carga app/layout.tsx). */
+  --font-wordmark: var(--font-marca), Manrope, Helvetica, Arial, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

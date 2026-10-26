@@ -25,6 +25,7 @@ import { AyudaPage } from "../ayuda/AyudaPage";
 import { URL_AVISO_DE_PRIVACIDAD, URL_TERMINOS } from "../legal/enlaces";
 import { MODULE_REGISTRY } from "../modules/registry";
 import { ConsumoDelPlan } from "../facturacion/ConsumoDelPlan";
+import { MarcaVinqulia } from "./MarcaVinqulia";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { nombreDelPlanConIntervalo } from "../facturacion/formato";
 import { useDerechos } from "../facturacion/useDerechos";
@@ -60,16 +61,18 @@ const EnlaceDeSeccion = ({
     to={seccion.ruta}
     aria-current={activa ? "page" : undefined}
     className={[
-      "relative flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold no-underline transition-all duration-200",
+      // Como «Inicio» en AduaniaX: la sección activa en el color de marca
+      // pleno; las demás, apagadas hasta pasar el ratón.
+      "relative flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-[13px] font-semibold no-underline outline-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-sidebar-ring",
       activa
-        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
     ].join(" ")}
   >
     <seccion.Icono
       className={[
         "size-4 shrink-0",
-        activa ? "text-sidebar-primary-foreground" : "text-sidebar-icon",
+        activa ? "text-primary-foreground" : "text-sidebar-icon/70",
       ].join(" ")}
     />
     <span className="truncate">{seccion.etiqueta}</span>
@@ -100,7 +103,7 @@ const GrupoDeSecciones = ({
       <p
         className={[
           "px-3 pb-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-sidebar-label",
-          esPrimero ? "" : "mt-4",
+          esPrimero ? "mt-2" : "mt-5",
         ].join(" ")}
       >
         {titulo}
@@ -245,18 +248,13 @@ export const BarraLateral = () => {
     // del ecosistema, fija arriba; 0 si no se pinta).
     <aside className="sticky top-[var(--kontrolia-band-height,0px)] hidden h-[calc(100dvh_-_var(--kontrolia-band-height,0px))] w-60 shrink-0 flex-col self-start overflow-hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
       <div className="relative flex min-h-0 flex-1 flex-col gap-1 p-3">
+        {/* Encabezado de la marca, separado por una línea, como en AduaniaX. */}
         <Link
           to="/"
-          className="group mb-5 flex shrink-0 items-center gap-2.5 px-2 py-1 no-underline text-sidebar-foreground"
+          aria-label={title}
+          className="-mx-3 -mt-3 mb-2 flex h-16 shrink-0 items-center border-b border-sidebar-border px-5 no-underline transition-opacity hover:opacity-90"
         >
-          <img
-            src={darkModeLogo}
-            alt={title}
-            className="size-9 rounded-lg transition-opacity group-hover:opacity-90"
-          />
-          <span className="font-display text-base font-black tracking-tight text-sidebar-strong">
-            {title}
-          </span>
+          <MarcaVinqulia logo={darkModeLogo} titulo={title} />
         </Link>
 
         {/* Lo único que se desplaza. Con muchos módulos activos la lista no
@@ -264,7 +262,7 @@ export const BarraLateral = () => {
             justo lo de abajo: Ajustes, Ayuda y el consumo del plan. El
             margen negativo saca la barra de desplazamiento al borde del
             panel sin que el contenido pierda su margen. */}
-        <div className="-mr-3 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-3">
+        <div className="-mr-3 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-3 [scrollbar-color:rgba(255,255,255,0.15)_transparent] [scrollbar-width:thin]">
           <GrupoDeSecciones
             titulo="Principal"
             secciones={secciones}
@@ -293,8 +291,8 @@ export const BarraLateral = () => {
             className={[
               "mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold no-underline transition-colors",
               estaActiva(AyudaPage.path)
-                ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             ].join(" ")}
           >
             <CircleHelp className="size-4 shrink-0 text-sidebar-icon" />
@@ -309,7 +307,7 @@ export const BarraLateral = () => {
           <CanAccess resource="configuration" action="edit">
             <Link
               to="/settings"
-              className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground/70 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Settings className="size-4 shrink-0 text-sidebar-icon" />
               {translate("crm.settings.title")}
@@ -326,7 +324,7 @@ export const BarraLateral = () => {
             // barras de consumo se tiñen solas (bg-current/10).
             <Link
               to={FacturacionPage.path}
-              className="mb-4 flex flex-col gap-2 rounded-2xl bg-white/5 px-3 py-2.5 text-sidebar-strong no-underline transition-colors hover:bg-white/10"
+              className="mb-4 flex flex-col gap-2 rounded-2xl border border-white/5 bg-white/[0.04] px-3 py-3 text-sidebar-strong no-underline transition-colors hover:bg-white/[0.07]"
             >
               {/* Vino fijo en ambos temas: la tarjeta es oscura en los dos,
                   así que el título no depende del tema. Es el tono más
@@ -348,7 +346,7 @@ export const BarraLateral = () => {
             facturacionDisponible() && (
               <Link
                 to={FacturacionPage.path}
-                className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                className="mb-1 flex items-center gap-3 rounded-[14px] px-3 py-2 text-[13px] font-semibold text-sidebar-foreground/70 no-underline transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
                 <CreditCard className="size-4 shrink-0 text-sidebar-icon" />
                 {translate("crm.billing.title")}
