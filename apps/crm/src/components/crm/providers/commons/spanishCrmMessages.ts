@@ -1175,6 +1175,28 @@ export const spanishCrmMessages = {
         mobile: "Solo si tiene móvil",
         no_mobile: "Solo si no tiene móvil",
       },
+      history: {
+        // El historial empezó a guardarse el 2026-10-27: una regla anterior
+        // pudo dispararse sin dejar línea, así que no se afirma «nunca».
+        never: "Sin ejecuciones registradas todavía.",
+        last: "Última vez:",
+        runs: "%{smart_count} ejecución |||| %{smart_count} ejecuciones",
+        recent_errors:
+          "%{smart_count} fallo reciente |||| %{smart_count} fallos recientes",
+        show: "Ver historial",
+        hide: "Ocultar historial",
+        done: {
+          create_task: "creó la tarea",
+          send_email: "puso el correo en cola",
+          assign_owner: "asignó el responsable",
+          move_stage: "cambió de etapa",
+        },
+        sin_efecto: "sin efecto: %{detail}",
+        error: "falló: %{detail}",
+        ticket: "Ticket #%{id}",
+        quote: "Cotización #%{id}",
+        contract: "Contrato #%{id}",
+      },
     },
     billing: {
       title: "Plan y facturación",

@@ -234,6 +234,10 @@ grant select on table crm.bulk_jobs to anon, authenticated, service_role;
 grant usage, select on sequence crm.bulk_jobs_id_seq to anon, authenticated, service_role;
 grant select on table crm.automation_runs to anon, authenticated, service_role;
 grant usage, select on sequence crm.automation_runs_id_seq to anon, authenticated, service_role;
+-- Historial de automatizaciones: la organización lo lee, solo el motor
+-- escribe (security definer). Sin anon: dice qué se hizo con cada cliente.
+grant select on table crm.automation_log to authenticated, service_role;
+revoke all on table crm.automation_log from anon;
 
 -- Cola de condiciones: la organización la lee, solo el servidor escribe.
 grant select on table crm.automation_pending to authenticated, service_role;

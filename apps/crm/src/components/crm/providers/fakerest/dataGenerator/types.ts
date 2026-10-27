@@ -3,6 +3,7 @@ import type {
   AffiliateAttribution,
   AffiliateRate,
   Automation,
+  AutomationLog,
   Company,
   Contact,
   ContactNote,
@@ -30,6 +31,7 @@ export interface Db {
   deal_notes: DealNote[];
   sales: Sale[];
   automations: Automation[];
+  automation_log: AutomationLog[];
   public_forms: PublicForm[];
   public_form_submissions: {
     id: number;

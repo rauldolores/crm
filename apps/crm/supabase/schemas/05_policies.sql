@@ -45,6 +45,7 @@ alter table crm.email_suppressions enable row level security;
 alter table crm.bulk_jobs enable row level security;
 alter table crm.automation_runs enable row level security;
 alter table crm.automation_pending enable row level security;
+alter table crm.automation_log enable row level security;
 alter table crm.ai_decisions enable row level security;
 -- Sin politicas, como email_settings: guarda el secreto de despacho.
 alter table crm.internal_settings enable row level security;
@@ -401,6 +402,13 @@ create policy "Bulk jobs are scoped to the organization" on crm.bulk_jobs
 -- únicamente el motor (security definer); sin política de escritura no hay
 -- forma de falsear una constancia y silenciar una regla.
 create policy "automation_runs_select_own_org" on crm.automation_runs
+    for select to authenticated
+    using (organization_id = crm.current_organization_id());
+
+-- Historial de automatizaciones: solo lectura, por lo mismo que las
+-- constancias. Un historial que se pudiera editar no serviría para saber
+-- qué hizo una regla.
+create policy "automation_log_select_own_org" on crm.automation_log
     for select to authenticated
     using (organization_id = crm.current_organization_id());
 

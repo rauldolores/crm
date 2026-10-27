@@ -319,6 +319,23 @@ export type Automation = {
 } & Pick<RaRecord, "id">;
 
 /**
+ * Una línea del historial de una automatización (tabla automation_log). La
+ * escribe solo la base, cada vez que una regla se dispara.
+ */
+export type AutomationLog = {
+  automation_id: Identifier;
+  contact_id: Identifier | null;
+  deal_id: Identifier | null;
+  ticket_id: Identifier | null;
+  contract_id: Identifier | null;
+  quote_id: Identifier | null;
+  /** sin_efecto: se disparó pero no había nada que hacer (ver `detail`). */
+  result: "ok" | "sin_efecto" | "error";
+  detail: string | null;
+  created_at: string;
+} & Pick<RaRecord, "id">;
+
+/**
  * Formulario público de captación: un enlace o iframe que el cliente pega en
  * su propia web y que crea contactos o tickets solo, sin sesión de por
  * medio. `slug` es la clave pública, no un id secuencial. `type` decide qué

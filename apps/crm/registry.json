@@ -894,6 +894,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/misc/HistorialDeRegla.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/misc/IaPage.tsx",
           "type": "registry:component"
         },
