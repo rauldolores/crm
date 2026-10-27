@@ -851,6 +851,43 @@ $$;
 revoke all on function crm.merge_tickets(bigint, bigint, bigint) from public;
 grant execute on function crm.merge_tickets(bigint, bigint, bigint) to authenticated, service_role;
 
+-- Renumera de 0 en adelante las abiertas de una etapa dejando libre la
+-- posición p_hueco, sin contar la oportunidad p_excluir. Solo escribe las
+-- filas cuyo índice cambia. Es el último recurso de crm.move_deal y
+-- crm.place_new_deal: cuando no queda hueco entre dos tarjetas, cuando hay
+-- repetidos o índices nulos (altas por API anteriores a crm.place_new_deal)
+-- o cuando el índice se saldría del rango de smallint.
+create or replace function crm.renumerar_etapa(
+    p_organization_id uuid,
+    p_pipeline text,
+    p_stage text,
+    p_hueco integer,
+    p_excluir bigint default null
+) returns void
+    language plpgsql security definer
+    set search_path = ''
+as $$
+begin
+  with ordenadas as (
+    select id,
+           row_number() over (order by index nulls last, id) - 1 as pos
+    from crm.deals
+    where organization_id = p_organization_id and pipeline = p_pipeline
+      and stage = p_stage and archived_at is null
+      and id is distinct from p_excluir
+  ), nuevas as (
+    select id, case when pos < p_hueco then pos else pos + 1 end as pos
+    from ordenadas
+  )
+  update crm.deals dl set index = nv.pos
+    from nuevas nv
+    where dl.id = nv.id and dl.index is distinct from nv.pos;
+end;
+$$;
+
+revoke all on function crm.renumerar_etapa(uuid, text, text, integer, bigint)
+  from public, anon, authenticated;
+
 -- Mover una oportunidad en el tablero en una sola transacción (la llama
 -- /api/oportunidades/mover con la clave de servicio; ver la migración
 -- 20260918210000).
@@ -858,6 +895,14 @@ grant execute on function crm.merge_tickets(bigint, bigint, bigint) to authentic
 -- (0 = arriba); se acota al tamaño de la columna, así que «al final» es
 -- cualquier número grande. Solo cuentan las abiertas: las archivadas no
 -- están en el tablero y su índice no significa nada.
+--
+-- Solo se escribe la tarjeta que se mueve: el índice nuevo se elige entre
+-- los de sus vecinas (uno menos que la primera, uno más que la última, o el
+-- punto medio entre dos). Los huecos que deja en su etapa de origen no
+-- importan, porque el tablero ordena por índice. Antes se renumeraban las
+-- dos columnas enteras en cada movimiento: con 6.700 tarjetas en una etapa,
+-- cada arrastre o resultado de «Mi día» reescribía miles de filas y
+-- disparaba por cada una los disparadores de las oportunidades.
 create or replace function crm.move_deal(
     p_deal_id bigint,
     p_stage text,
@@ -872,6 +917,10 @@ declare
   d record;
   n integer;
   destino integer;
+  hay_nulos boolean;
+  anterior integer;
+  siguiente integer;
+  nuevo integer;
 begin
   select id, organization_id, pipeline, stage into d
     from crm.deals where id = p_deal_id for update;
@@ -879,37 +928,50 @@ begin
     raise exception 'Oportunidad % no encontrada', p_deal_id;
   end if;
 
-  -- Renumera de 0 en adelante la etapa de origen sin la tarjeta que se
-  -- mueve (y la de destino, si es otra). Cada movimiento deja las columnas
-  -- contiguas aunque vinieran con huecos, repetidos o sin índice (altas por
-  -- API anteriores a crm.place_new_deal), y el orden que ve el usuario es
-  -- exactamente el que se guarda.
-  with ordenadas as (
-    select id,
-           row_number() over (partition by stage order by index nulls last, id) - 1 as pos
-    from crm.deals
-    where organization_id = d.organization_id and pipeline = d.pipeline
-      and stage in (d.stage, p_stage) and archived_at is null and id <> d.id
-  )
-  update crm.deals dl set index = o.pos
-    from ordenadas o
-    where dl.id = o.id and dl.index is distinct from o.pos;
+  -- Dos movimientos a la vez en el mismo embudo elegirían el mismo índice.
+  perform pg_advisory_xact_lock(
+    hashtextextended(d.organization_id::text || ':' || d.pipeline, 0));
 
-  select count(*) into n from crm.deals
+  select count(*), coalesce(bool_or(index is null), false)
+    into n, hay_nulos
+    from crm.deals
     where organization_id = d.organization_id and pipeline = d.pipeline
       and stage = p_stage and archived_at is null and id <> d.id;
   destino := greatest(0, least(coalesce(p_index, n), n));
 
-  -- Hace sitio en la posición de destino…
-  update crm.deals set index = index + 1
-    where organization_id = d.organization_id and pipeline = d.pipeline
-      and stage = p_stage and archived_at is null and id <> d.id
-      and index >= destino;
+  -- Las vecinas que quedarán arriba y abajo de la tarjeta.
+  if destino > 0 then
+    select index into anterior from crm.deals
+      where organization_id = d.organization_id and pipeline = d.pipeline
+        and stage = p_stage and archived_at is null and id <> d.id
+      order by index nulls last, id
+      offset destino - 1 limit 1;
+  end if;
+  if destino < n then
+    select index into siguiente from crm.deals
+      where organization_id = d.organization_id and pipeline = d.pipeline
+        and stage = p_stage and archived_at is null and id <> d.id
+      order by index nulls last, id
+      offset destino limit 1;
+  end if;
 
-  -- …y coloca la tarjeta.
+  if n = 0 then
+    nuevo := 0;
+  elsif not hay_nulos and destino = 0 and siguiente > -32768 then
+    nuevo := siguiente - 1;
+  elsif not hay_nulos and destino = n and anterior < 32767 then
+    nuevo := anterior + 1;
+  elsif not hay_nulos and siguiente - anterior >= 2 then
+    nuevo := anterior + (siguiente - anterior) / 2;
+  else
+    perform crm.renumerar_etapa(
+      d.organization_id, d.pipeline, p_stage, destino, d.id);
+    nuevo := destino;
+  end if;
+
   update crm.deals
     set stage = p_stage,
-        index = destino,
+        index = nuevo,
         loss_reason = coalesce(p_loss_reason, loss_reason),
         updated_by = p_actor,
         updated_at = now()
@@ -917,20 +979,45 @@ begin
 end;
 $$;
 
+-- Solo la llaman el servidor (clave de servicio) y los trabajos de la base:
+-- no comprueba tenencia, así que no puede quedar abierta a anon/authenticated.
+revoke all on function crm.move_deal(bigint, text, integer, text, bigint)
+  from public, anon, authenticated;
 grant execute on function crm.move_deal(bigint, text, integer, text, bigint) to service_role;
 
--- Una oportunidad nueva entra arriba de su etapa (índice 0) y desplaza a las
--- demás. Antes lo hacía el navegador con un PATCH por tarjeta, y las creadas
--- por la API o el asistente se quedaban sin índice.
+-- Una oportunidad nueva entra arriba de su etapa. Sin índice o con índice 0
+-- (lo que manda el formulario) toma uno menos que la primera, sin tocar las
+-- demás; antes se desplazaba la etapa entera en cada alta. Con otro índice
+-- explícito se le hace sitio desplazando las que van detrás.
 create or replace function crm.place_new_deal() returns trigger
     language plpgsql security definer
     set search_path = ''
 as $$
+declare
+  primero integer;
 begin
-  if new.index is null then
-    new.index := 0;
+  if new.archived_at is not null then
+    new.index := coalesce(new.index, 0);
+    return new;
   end if;
-  if new.archived_at is null then
+
+  perform pg_advisory_xact_lock(
+    hashtextextended(new.organization_id::text || ':' || new.pipeline, 0));
+
+  if coalesce(new.index, 0) = 0 then
+    select min(index) into primero from crm.deals
+      where organization_id = new.organization_id and pipeline = new.pipeline
+        and stage = new.stage and archived_at is null;
+    if primero is null then
+      new.index := 0;
+    elsif primero > -32768 then
+      new.index := primero - 1;
+    else
+      perform crm.renumerar_etapa(
+        new.organization_id, new.pipeline, new.stage, 0);
+      new.index := 0;
+    end if;
+  else
     update crm.deals set index = index + 1
       where organization_id = new.organization_id and pipeline = new.pipeline
         and stage = new.stage and archived_at is null

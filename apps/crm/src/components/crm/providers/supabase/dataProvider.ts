@@ -462,7 +462,7 @@ const getDataProviderWithCustomMethods = () => {
       destino: DestinoDeOportunidad,
       motivoDePerdida?: string,
     ) {
-      // La base desplaza las demás tarjetas en una transacción
+      // La base coloca la tarjeta entre sus vecinas en una transacción
       // (crm.move_deal); ver /api/oportunidades/mover.
       const respuesta = await llamarApiDelCrm("/api/oportunidades/mover", {
         dealId: deal.id,
