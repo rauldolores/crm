@@ -201,7 +201,7 @@ export const FilaDeMiDia = ({
 
       {contacto && (
         <RecordContextProvider value={contacto}>
-          <div className="flex flex-wrap gap-2 [&_button]:h-8">
+          <div className="flex flex-wrap gap-2 [&_a]:h-8 [&_button]:h-8">
             <span onClickCapture={() => setCanal("whatsapp")}>
               <EnviarWhatsAppButton />
             </span>

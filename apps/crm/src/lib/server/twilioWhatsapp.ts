@@ -4,6 +4,12 @@
  * anteponiendo el prefijo `whatsapp:` al número.
  */
 
+import { normalizarTelefono } from "@/lib/whatsapp/telefono";
+
+// Vive en el módulo compartido porque el navegador también la necesita, para
+// el enlace de wa.me; se reexporta para no tocar a quien ya la importa aquí.
+export { normalizarTelefono };
+
 interface ResultadoDeEnvio {
   ok: boolean;
   mensaje?: string;
@@ -18,28 +24,6 @@ export function envioDeWhatsappConfigurado(): boolean {
   );
 }
 
-/**
- * Código de país que se asume para un número de 10 dígitos escrito sin él.
- * Vinqulia se vende en México (MXN, SAT, CFDI), donde todos los números
- * tienen 10 dígitos, y así los teclea la gente en la ficha. Sin esto,
- * «5512345678» salía como «+5512345678», que es un número de Brasil: el
- * mensaje no le llegaba al contacto, o le llegaba a otra persona.
- */
-const CODIGO_DE_PAIS_POR_DEFECTO = "+52";
-const DIGITOS_DE_UN_NUMERO_NACIONAL = 10;
-
-/**
- * Normaliza a dígitos + signo `+` (formato E.164, el que usa Twilio). Lo que
- * ya trae `+` o un código de país se respeta tal cual; solo un número
- * nacional de 10 dígitos recibe el código de México.
- */
-export function normalizarTelefono(numero: string): string {
-  const limpio = numero.replace(/[^\d+]/g, "");
-  if (limpio.startsWith("+")) return limpio;
-  return limpio.length === DIGITOS_DE_UN_NUMERO_NACIONAL
-    ? `${CODIGO_DE_PAIS_POR_DEFECTO}${limpio}`
-    : `+${limpio}`;
-}
 
 /**
  * Cabecera de autenticación de la cuenta de Twilio, la misma para la API de

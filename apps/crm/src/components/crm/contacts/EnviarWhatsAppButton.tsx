@@ -27,7 +27,10 @@ import type {
   VentanaDeConversacion,
 } from "@/lib/whatsapp/plantillas";
 import { variablesSinRellenar } from "@/lib/whatsapp/plantillas";
-import { telefonoParaWhatsapp } from "@/lib/whatsapp/telefono";
+import {
+  enlaceDeWhatsapp,
+  telefonoParaWhatsapp,
+} from "@/lib/whatsapp/telefono";
 import type { Contact } from "../types";
 import { PlantillaDeWhatsappInputs } from "./PlantillaDeWhatsappInputs";
 
@@ -37,13 +40,42 @@ type Modo = "plantilla" | "libre";
  * Envía un WhatsApp real al contacto (no solo una nota informativa) y deja
  * constancia en su ficha. Solo aparece si tiene un teléfono registrado; va
  * al marcado como móvil si lo hay (ver `telefonoParaWhatsapp`).
+ *
+ * Si el CRM no tiene Twilio, abre el chat en wa.me con el WhatsApp de quien
+ * lo pulsa, en vez de un diálogo que solo podría fallar. Mientras no se sabe
+ * (la primera carga, o si la pregunta falla) también: wa.me siempre funciona.
  */
 export const EnviarWhatsAppButton = () => {
   const record = useRecordContext<Contact>();
   const translate = useTranslate();
+  const dataProvider = useDataProvider();
   const [open, setOpen] = useState(false);
 
-  if (!telefonoParaWhatsapp(record?.phone_jsonb)) return null;
+  // Una sola pregunta por sesión, compartida por todas las filas de «Mi día».
+  const { data: conectado } = useQuery<boolean>({
+    queryKey: ["whatsapp", "conectado"],
+    queryFn: () => dataProvider.whatsappConectado(),
+    staleTime: Infinity,
+    retry: false,
+  });
+
+  const telefono = telefonoParaWhatsapp(record?.phone_jsonb);
+  if (!telefono) return null;
+
+  if (conectado !== true) {
+    return (
+      <Button asChild variant="outline" className="h-6" size="sm">
+        <a
+          href={enlaceDeWhatsapp(telefono.numero)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <MessageCircle className="w-4 h-4" />
+          {translate("resources.contacts.send_whatsapp.action")}
+        </a>
+      </Button>
+    );
+  }
 
   return (
     <>

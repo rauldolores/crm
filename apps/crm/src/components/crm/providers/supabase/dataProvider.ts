@@ -550,6 +550,13 @@ const getDataProviderWithCustomMethods = () => {
       }
       return cuerpo as OpcionesDeWhatsapp;
     },
+    /** Si el CRM puede enviar WhatsApp por sí mismo (Twilio configurado). */
+    async whatsappConectado(): Promise<boolean> {
+      const respuesta = await llamarApiDelCrm("/api/whatsapp/estado", {});
+      if (!respuesta.ok) return false;
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      return cuerpo.conectado === true;
+    },
     // Los mismos datos que pide el formulario de vinqulia.com/enterprise:
     // así la solicitud entra en el CRM comercial como una oportunidad con su
     // estimación, no como un correo suelto.
