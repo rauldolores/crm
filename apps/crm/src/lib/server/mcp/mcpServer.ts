@@ -1,5 +1,4 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { decodeJwt } from "jose";
 import { Pool, types } from "pg";
 import { z } from "zod";
 
@@ -171,7 +170,8 @@ async function getSchemaData(): Promise<string> {
 
 async function executeQueryWithRLS(
   sql: string,
-  userToken: string,
+  /** Los claims que evalúa RLS — de un JWT o de una clave de API (mcp/auth.ts). */
+  claims: Record<string, unknown>,
   validate: (sql: string) => string | null,
 ): Promise<
   { success: true; data: unknown[] } | { success: false; error: string }
@@ -186,7 +186,7 @@ async function executeQueryWithRLS(
 
   const client = await pool.connect();
   try {
-    const claimsJson = JSON.stringify(decodeJwt(userToken));
+    const claimsJson = JSON.stringify(claims);
 
     await client.query("BEGIN");
     // El SQL de esta herramienta usa nombres de tabla sin calificar (así lo
@@ -237,7 +237,7 @@ export function createMcpServer(
   // y solo baje a query/mutate cuando ninguna cubra lo que necesita.
   registrarHerramientas(server, {
     pool,
-    token: authInfo.token,
+    claims: authInfo.claims,
     userId: authInfo.userId,
     baseUrl: crmBaseUrl,
   });
@@ -305,7 +305,7 @@ Examples:
       console.warn(`[MCP query] user=${authInfo.userId} sql=${sql}`);
       const result = await executeQueryWithRLS(
         sql,
-        authInfo.token,
+        authInfo.claims,
         validateReadOnly,
       );
       if (result.success) {
@@ -365,7 +365,7 @@ Examples:
       console.warn(`[MCP mutate] user=${authInfo.userId} sql=${sql}`);
       const result = await executeQueryWithRLS(
         sql,
-        authInfo.token,
+        authInfo.claims,
         validateWrite,
       );
       if (result.success) {
@@ -514,7 +514,7 @@ Each task should include at least: id (required, used for the mark-as-done actio
       console.warn(`[MCP complete_task] user=${authInfo.userId} id=${id}`);
       const result = await executeQueryWithRLS(
         sql,
-        authInfo.token,
+        authInfo.claims,
         validateWrite,
       );
       if (!result.success) {

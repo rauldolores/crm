@@ -1,5 +1,4 @@
 import type { Pool } from "pg";
-import { decodeJwt } from "jose";
 
 export {
   acotarLimite,
@@ -31,8 +30,11 @@ export {
 
 export interface ContextoDeHerramienta {
   pool: Pool | null;
-  /** JWT del usuario: de él salen los claims que evalúa RLS. */
-  token: string;
+  /**
+   * Los claims que evalúa RLS: los del JWT del usuario, o los que arma
+   * validateToken para una clave de API (ver mcp/auth.ts).
+   */
+  claims: Record<string, unknown>;
   /** Para el registro de auditoría. */
   userId: string;
   /** Origen público del CRM (https://…), para armar enlaces que salen de él. */
@@ -60,7 +62,7 @@ export async function ejecutar<T = Record<string, unknown>>(
 
   const client = await ctx.pool.connect();
   try {
-    const claims = JSON.stringify(decodeJwt(ctx.token));
+    const claims = JSON.stringify(ctx.claims);
 
     await client.query("BEGIN");
     await client.query("SET LOCAL search_path TO crm, public");
@@ -115,12 +117,8 @@ export const filas = (datos: unknown[]): Resultado =>
 export const organizacionDelContexto = (
   ctx: ContextoDeHerramienta,
 ): string | null => {
-  try {
-    const claims = decodeJwt(ctx.token) as { organization_id?: string };
-    return claims.organization_id ?? null;
-  } catch {
-    return null;
-  }
+  const organizacion = ctx.claims.organization_id;
+  return typeof organizacion === "string" && organizacion ? organizacion : null;
 };
 
 /** Ejecuta y devuelve las filas, o el error, en el formato del MCP. */
