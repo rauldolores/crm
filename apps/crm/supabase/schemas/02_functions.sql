@@ -1185,6 +1185,56 @@ grant all on function crm.despachar_webhooks(integer) to service_role;
 -- oportunidad o un contrato; solo cambia de dónde sale el contacto y qué se
 -- adjunta al correo. assign_owner no está aquí: toca la fila que disparó la
 -- regla y solo tiene sentido en el motor de escrituras.
+-- Una línea del historial de automatizaciones (crm.automation_log).
+--
+-- Nunca falla: si anotar fallara, se perdería la acción que se está
+-- anotando, y el historial es la parte prescindible.
+--
+-- Los errores no se repiten en 24 horas para el mismo registro: el motor por
+-- fecha corre cada hora y reintenta lo que falló, así que una regla rota
+-- llenaría el historial con la misma línea veinticuatro veces al día.
+create or replace function crm.anotar_automatizacion(
+    regla crm.automations,
+    resultado text,
+    detalle text,
+    contacto bigint,
+    oportunidad bigint,
+    ticket bigint default null,
+    contrato bigint default null,
+    cotizacion bigint default null
+) returns void
+    language plpgsql security definer
+    set search_path = ''
+    as $$
+begin
+  if resultado = 'error' and exists (
+    select 1 from crm.automation_log l
+     where l.automation_id = regla.id
+       and l.result = 'error'
+       and l.created_at > now() - interval '1 day'
+       and l.contact_id is not distinct from contacto
+       and l.deal_id is not distinct from oportunidad
+       and l.ticket_id is not distinct from ticket
+       and l.contract_id is not distinct from contrato
+       and l.quote_id is not distinct from cotizacion
+  ) then
+    return;
+  end if;
+
+  insert into crm.automation_log
+    (organization_id, automation_id, contact_id, deal_id, ticket_id,
+     contract_id, quote_id, result, detail)
+  values
+    (regla.organization_id, regla.id, contacto, oportunidad, ticket,
+     contrato, cotizacion, resultado, left(detalle, 500));
+exception when others then
+  null;
+end;
+$$;
+
+revoke all on function crm.anotar_automatizacion(crm.automations, text, text, bigint, bigint, bigint, bigint, bigint) from public;
+grant all on function crm.anotar_automatizacion(crm.automations, text, text, bigint, bigint, bigint, bigint, bigint) to service_role;
+
 create or replace function crm.aplicar_accion_de_automatizacion(
     regla crm.automations,
     contacto bigint,
@@ -1201,6 +1251,10 @@ declare
   plantilla bigint;
 begin
   if contacto is null then
+    perform crm.anotar_automatizacion(
+      regla, 'sin_efecto', 'No tiene contacto.',
+      contacto, oportunidad, ticket, contrato, cotizacion
+    );
     return;
   end if;
 
@@ -1219,6 +1273,9 @@ begin
       end,
       responsable
     );
+    perform crm.anotar_automatizacion(
+      regla, 'ok', null, contacto, oportunidad, ticket, contrato, cotizacion
+    );
 
   elsif regla.action_type = 'send_email' then
     plantilla := nullif(regla.action_params ->> 'templateId', '')::bigint;
@@ -1233,6 +1290,14 @@ begin
       insert into crm.email_outbox
         (organization_id, automation_id, template_id, contact_id, deal_id, contract_id, quote_id, ticket_id)
       values (regla.organization_id, regla.id, plantilla, contacto, oportunidad, contrato, cotizacion, ticket);
+      perform crm.anotar_automatizacion(
+        regla, 'ok', null, contacto, oportunidad, ticket, contrato, cotizacion
+      );
+    else
+      perform crm.anotar_automatizacion(
+        regla, 'sin_efecto', 'La plantilla de correo no existe o está desactivada.',
+        contacto, oportunidad, ticket, contrato, cotizacion
+      );
     end if;
   end if;
 end;
@@ -1264,6 +1329,12 @@ declare
   -- plpgsql solo falla al evaluarla, así que el error aparecería tarde y lo
   -- escondería el `exception when others` de abajo.
   sales_de_la_fila bigint;
+  -- Plantilla del correo que salió. En variable por la misma razón que
+  -- sales_de_la_fila: leer new.template_id en el filtro del bucle fallaba en
+  -- TODA fila que no fuera de la cola, y el `exception when others` se lo
+  -- tragaba. Del 2026-10-22 al 2026-10-27 eso apagó en silencio todas las
+  -- reglas de oportunidades, contactos y tickets.
+  plantilla_de_la_fila text;
 begin
   if pg_trigger_depth() > 1 then
     return null;
@@ -1346,6 +1417,7 @@ begin
     -- quien aparecera en la tarea o en el correo que encadene esta regla.
     select c.sales_id into sales_de_la_fila
       from crm.contacts c where c.id = new.contact_id;
+    plantilla_de_la_fila := new.template_id::text;
     texto_a_juzgar := null;
   end if;
 
@@ -1384,7 +1456,7 @@ begin
       if tg_table_name = 'email_outbox'
          and nullif(regla.trigger_params ->> 'templateId', '') is not null
          and regla.trigger_params ->> 'templateId'
-             is distinct from new.template_id::text then
+             is distinct from plantilla_de_la_fila then
         continue;
       end if;
 
@@ -1399,6 +1471,11 @@ begin
           values
             (org, regla.id, contacto, oportunidad, ticket,
              sales_de_la_fila, texto_a_juzgar);
+        else
+          perform crm.anotar_automatizacion(
+            regla, 'sin_efecto', 'No hay texto con el que juzgar la condición.',
+            contacto, oportunidad, ticket
+          );
         end if;
         continue;
       end if;
@@ -1410,9 +1487,19 @@ begin
             update crm.contacts set sales_id = responsable where id = new.id;
           elsif tg_table_name = 'tickets' then
             update crm.tickets set sales_id = responsable where id = new.id;
-          else
+          -- Con elsif y no else, como ya está en producción: con un correo
+          -- enviado, new.id es el de la cola y no el de una oportunidad.
+          elsif tg_table_name = 'deals' then
             update crm.deals set sales_id = responsable where id = new.id;
           end if;
+          perform crm.anotar_automatizacion(
+            regla, 'ok', null, contacto, oportunidad, ticket
+          );
+        else
+          perform crm.anotar_automatizacion(
+            regla, 'sin_efecto', 'La regla no tiene responsable.',
+            contacto, oportunidad, ticket
+          );
         end if;
 
       -- Mover de etapa: como assign_owner, toca la fila que disparó la regla,
@@ -1433,11 +1520,31 @@ begin
         -- hay que mover es la suya. Para una oportunidad las dos coinciden.
         -- El `is distinct from` va en el where para no escribir un cambio que
         -- no cambia nada (y no ensuciar el historial con un evento vacío).
-        if etapa_destino is not null and oportunidad is not null then
+        if etapa_destino is null then
+          perform crm.anotar_automatizacion(
+            regla, 'sin_efecto', 'La regla no tiene etapa de destino.',
+            contacto, oportunidad, ticket
+          );
+        elsif oportunidad is null then
+          perform crm.anotar_automatizacion(
+            regla, 'sin_efecto', 'No va ligado a ninguna oportunidad.',
+            contacto, oportunidad, ticket
+          );
+        else
           update crm.deals
              set stage = etapa_destino
            where id = oportunidad
              and stage is distinct from etapa_destino;
+          if found then
+            perform crm.anotar_automatizacion(
+              regla, 'ok', null, contacto, oportunidad, ticket
+            );
+          else
+            perform crm.anotar_automatizacion(
+              regla, 'sin_efecto', 'Ya estaba en esa etapa.',
+              contacto, oportunidad, ticket
+            );
+          end if;
         end if;
 
       else
@@ -1446,8 +1553,13 @@ begin
         );
       end if;
 
+    -- Un fallo de una regla no debe tumbar el cambio que la disparó: se
+    -- deshace solo lo de la regla y queda anotado en el historial, que es
+    -- la única pista que deja.
     exception when others then
-      null;
+      perform crm.anotar_automatizacion(
+        regla, 'error', sqlerrm, contacto, oportunidad, ticket
+      );
     end;
   end loop;
 
@@ -1517,7 +1629,9 @@ begin
         );
         disparadas := disparadas + 1;
       exception when others then
-        null;
+        perform crm.anotar_automatizacion(
+          regla, 'error', sqlerrm, null, null, null, contrato.id
+        );
       end;
     end loop;
   end loop;
@@ -1572,7 +1686,10 @@ begin
         );
         disparadas := disparadas + 1;
       exception when others then
-        null;
+        perform crm.anotar_automatizacion(
+          regla, 'error', sqlerrm, cotizacion.contact_id, cotizacion.deal_id,
+          null, null, cotizacion.id
+        );
       end;
     end loop;
   end loop;
@@ -1620,6 +1737,16 @@ begin
              set sales_id = nullif(regla.action_params ->> 'salesId', '')::bigint
            where id = ticket.id
              and nullif(regla.action_params ->> 'salesId', '') is not null;
+          if found then
+            perform crm.anotar_automatizacion(
+              regla, 'ok', null, ticket.contact_id, ticket.deal_id, ticket.id
+            );
+          else
+            perform crm.anotar_automatizacion(
+              regla, 'sin_efecto', 'La regla no tiene responsable.',
+              ticket.contact_id, ticket.deal_id, ticket.id
+            );
+          end if;
         else
           perform crm.aplicar_accion_de_automatizacion(
             regla, ticket.contact_id, ticket.deal_id, null, null, ticket.sales_id, ticket.id
@@ -1627,7 +1754,9 @@ begin
         end if;
         disparadas := disparadas + 1;
       exception when others then
-        null;
+        perform crm.anotar_automatizacion(
+          regla, 'error', sqlerrm, ticket.contact_id, ticket.deal_id, ticket.id
+        );
       end;
     end loop;
   end loop;
@@ -1702,6 +1831,16 @@ begin
              set sales_id = nullif(regla.action_params ->> 'salesId', '')::bigint
            where id = oportunidad.id
              and nullif(regla.action_params ->> 'salesId', '') is not null;
+          if found then
+            perform crm.anotar_automatizacion(
+              regla, 'ok', null, oportunidad.contacto, oportunidad.id
+            );
+          else
+            perform crm.anotar_automatizacion(
+              regla, 'sin_efecto', 'La regla no tiene responsable.',
+              oportunidad.contacto, oportunidad.id
+            );
+          end if;
         elsif regla.action_type = 'move_stage' then
           -- Solo a una etapa que exista en el embudo de la oportunidad: en una
           -- que no, desaparecería del tablero. El cambio de etapa dispara
@@ -1738,8 +1877,11 @@ begin
              );
           get diagnostics movidas = row_count;
           if movidas = 0 then
-            raise exception 'etapa de destino no válida';
+            raise exception 'La etapa de destino no existe en el embudo de la oportunidad.';
           end if;
+          perform crm.anotar_automatizacion(
+            regla, 'ok', null, oportunidad.contacto, oportunidad.id
+          );
         else
           perform crm.aplicar_accion_de_automatizacion(
             regla, oportunidad.contacto, oportunidad.id, null, null, oportunidad.sales_id
@@ -1747,7 +1889,9 @@ begin
         end if;
         disparadas := disparadas + 1;
       exception when others then
-        null;
+        perform crm.anotar_automatizacion(
+          regla, 'error', sqlerrm, oportunidad.contacto, oportunidad.id
+        );
       end;
     end loop;
   end loop;
@@ -2259,10 +2403,6 @@ begin
          confidence = confianza
    where id = pendiente_id;
 
-  if not se_cumple then
-    return true;
-  end if;
-
   select * into regla
     from crm.automations
    where id = fila.automation_id
@@ -2272,6 +2412,14 @@ begin
   -- La regla pudo apagarse o borrarse mientras la fila esperaba: entonces no
   -- se actúa, que es lo que habría querido quien la apagó.
   if not found then
+    return true;
+  end if;
+
+  if not se_cumple then
+    perform crm.anotar_automatizacion(
+      regla, 'sin_efecto', 'La condición no se cumplió.',
+      fila.contact_id, fila.deal_id, fila.ticket_id
+    );
     return true;
   end if;
 
@@ -2285,6 +2433,14 @@ begin
       elsif fila.contact_id is not null then
         update crm.contacts set sales_id = responsable where id = fila.contact_id;
       end if;
+      perform crm.anotar_automatizacion(
+        regla, 'ok', null, fila.contact_id, fila.deal_id, fila.ticket_id
+      );
+    else
+      perform crm.anotar_automatizacion(
+        regla, 'sin_efecto', 'La regla no tiene responsable.',
+        fila.contact_id, fila.deal_id, fila.ticket_id
+      );
     end if;
   else
     perform crm.aplicar_accion_de_automatizacion(

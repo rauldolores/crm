@@ -36,6 +36,7 @@ import {
   esDisparadorPorHoras,
   parametrosDelDisparador,
 } from "./disparadoresDeAutomatizacion";
+import { HistorialDeRegla } from "./HistorialDeRegla";
 import { PageHero } from "./Patrones";
 
 /**
@@ -216,6 +217,7 @@ const TarjetaDeRegla = ({
             })}
           </p>
         )}
+        <HistorialDeRegla regla={regla} />
       </div>
       <Button
         variant="ghost"

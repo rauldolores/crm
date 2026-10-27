@@ -146,6 +146,9 @@ const SOLO_LECTURA = new Set([
   // que comprueban que el contacto y el responsable sean de la organización.
   "conversations",
   "conversation_messages",
+  // Historial de automatizaciones: lo escribe solo el motor de reglas. Un
+  // historial editable no serviría para saber qué hizo una regla.
+  "automation_log",
 ]);
 
 /**
@@ -165,6 +168,7 @@ const AJENOS_AL_AFILIADO = new Set([
 const CON_DUENO = new Set([
   "automations",
   "automation_runs",
+  "automation_log",
   "companies",
   "companies_summary",
   "contacts",

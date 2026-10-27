@@ -22,6 +22,7 @@ export default (): Db => {
   db.saved_views = [];
   db.webhooks = [];
   db.automations = [];
+  db.automation_log = [];
   db.public_forms = [];
   db.public_form_submissions = [];
   db.tickets = [];
