@@ -15,7 +15,8 @@ import { probabilidadDeEtapa } from "./probabilidad";
  * Tarjetas que se pintan de entrada por columna. Un embudo viejo acumula
  * cientos de oportunidades abiertas en una etapa; pintarlas todas de golpe
  * hace lento el tablero y no aporta: se ven por tramos con «Ver más». La
- * cuenta y el importe de la cabecera siempre son de la columna entera.
+ * cuenta de la cabecera es de la etapa entera; las tarjetas y el importe,
+ * de las cargadas (ver OPORTUNIDADES_POR_ETAPA).
  */
 export const TARJETAS_POR_TRAMO = 30;
 
@@ -26,10 +27,13 @@ export const DealColumn = ({
   // —TypeScript da por hecho que hay valor para cualquier clave—, así que un
   // undefined no lo detecta el typecheck y aquí reventaba el reduce.
   deals = [],
+  total = deals.length,
   embudo,
 }: {
   stage: string;
   deals?: Deal[];
+  /** Abiertas de la etapa con los filtros aplicados, cargadas o no. */
+  total?: number;
   embudo: DealPipeline;
 }) => {
   const translate = useTranslate();
@@ -50,6 +54,8 @@ export const DealColumn = ({
 
   const tarjetas = deals.slice(0, visibles);
   const ocultas = deals.length - tarjetas.length;
+  // Lo que no se cargó: solo pasa en etapas muy llenas.
+  const sinCargar = Math.max(total - deals.length, 0);
 
   return (
     <div className="w-72 shrink-0 pb-8">
@@ -57,24 +63,30 @@ export const DealColumn = ({
         <h3 className="flex items-center gap-1.5 text-sm font-medium">
           {findDealLabel(dealStages, stage)}
           <span className="rounded-full bg-muted px-1.5 text-xs font-normal text-muted-foreground tabular-nums">
-            {deals.length}
+            {total.toLocaleString(LOCALE)}
           </span>
         </h3>
         <p className="text-xs text-muted-foreground tabular-nums">
+          {/* Con la etapa sin cargar entera, el importe es solo de las
+              cargadas: se dice que es un mínimo y no se pondera. */}
+          {sinCargar > 0 && "≥ "}
           {importe(totalAmount)}
-          {totalAmount > 0 && probabilidad > 0 && probabilidad < 100 && (
-            <span
-              title={translate("resources.deals.weighted_help", {
-                probability: probabilidad,
-              })}
-            >
-              {" · "}
-              {translate("resources.deals.weighted", {
-                amount: importe((totalAmount * probabilidad) / 100),
-                probability: probabilidad,
-              })}
-            </span>
-          )}
+          {sinCargar === 0 &&
+            totalAmount > 0 &&
+            probabilidad > 0 &&
+            probabilidad < 100 && (
+              <span
+                title={translate("resources.deals.weighted_help", {
+                  probability: probabilidad,
+                })}
+              >
+                {" · "}
+                {translate("resources.deals.weighted", {
+                  amount: importe((totalAmount * probabilidad) / 100),
+                  probability: probabilidad,
+                })}
+              </span>
+            )}
         </p>
       </div>
       <Droppable droppableId={stage}>
@@ -110,6 +122,17 @@ export const DealColumn = ({
             total: deals.length,
           })}
         </Button>
+      )}
+      {sinCargar > 0 && (
+        <p
+          role="status"
+          className="mt-2 rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground"
+        >
+          {translate("resources.deals.board.column_truncated", {
+            shown: deals.length.toLocaleString(LOCALE),
+            total: total.toLocaleString(LOCALE),
+          })}
+        </p>
       )}
     </div>
   );

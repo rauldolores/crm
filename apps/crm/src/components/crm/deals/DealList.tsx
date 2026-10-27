@@ -25,7 +25,6 @@ import {
 import { PREFIJO_EMBEBIDO } from "../filters/consultaDeEmpresa";
 
 import { exportadorDeOportunidades } from "../misc/exportadores";
-import { LOCALE } from "../misc/RelativeDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { TopToolbar } from "../layout/TopToolbar";
 import { DealArchivedList } from "./DealArchivedList";
@@ -38,13 +37,6 @@ import { DealListContent } from "./DealListContent";
 import { DealShow } from "./DealShow";
 import { OnlyMineInput } from "./OnlyMineInput";
 import { VistasGuardadas } from "../misc/VistasGuardadas";
-
-/**
- * Oportunidades abiertas que carga el tablero por embudo. Es el máximo que
- * PostgREST devuelve en una petición; por encima, el tablero lo avisa y
- * pide filtrar. Las archivadas no cuentan: van en su propia lista.
- */
-export const OPORTUNIDADES_EN_EL_TABLERO = 1000;
 
 const DealList = () => {
   const { identity } = useGetIdentity();
@@ -108,7 +100,10 @@ const DealList = () => {
 
   return (
     <List
-      perPage={OPORTUNIDADES_EN_EL_TABLERO}
+      // La lista solo guarda los filtros y dice si el embudo está vacío: el
+      // tablero pide las oportunidades de cada etapa por su cuenta (ver
+      // useOportunidadesPorEtapa).
+      perPage={1}
       filter={{ "archived_at@is": null }}
       filterDefaultValues={{ pipeline: dealPipelines[0]?.value }}
       sort={{ field: "index", order: "DESC" }}
@@ -156,13 +151,12 @@ const SelectorDeEmbudo = () => {
 };
 
 const DealLayout = () => {
-  const translate = useTranslate();
   const location = useLocation();
   const matchCreate = matchPath("/deals/create", location.pathname);
   const matchShow = matchPath("/deals/:id/show", location.pathname);
   const matchEdit = matchPath("/deals/:id", location.pathname);
 
-  const { data, total, isPending, filterValues } = useListContext();
+  const { data, isPending, filterValues } = useListContext();
   // El embudo activo siempre esta en los filtros; no cuenta como "filtro del
   // usuario" o la pantalla de lista vacia no se mostraria nunca.
   const { pipeline: _embudo, ...otrosFiltros } = filterValues ?? {};
@@ -189,17 +183,6 @@ const DealLayout = () => {
     <div className="w-full">
       <SelectorDeEmbudo />
       <FiltrosDeLaEmpresa />
-      {total != null && total > data.length && (
-        <p
-          role="status"
-          className="mb-3 rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground"
-        >
-          {translate("resources.deals.board.truncated", {
-            shown: data.length.toLocaleString(LOCALE),
-            total: total.toLocaleString(LOCALE),
-          })}
-        </p>
-      )}
       <DealListContent />
       <DealArchivedList />
       <DealCreate open={!!matchCreate} />

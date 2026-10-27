@@ -113,6 +113,31 @@ export const EmbudoConMuchasOportunidades = () => (
   </StoryWrapper>
 );
 
+/**
+ * Una etapa con más oportunidades de las que caben (la prospección
+ * importada) y una sola en «Ganada», con el índice más bajo. Antes el
+ * tablero pedía 1.000 del embudo entero y la de «Ganada» se quedaba fuera;
+ * ahora cada etapa pide las suyas.
+ */
+export const EtapaLlenaNoTapaLasDemas = () => (
+  <StoryWrapper
+    configuration={{ dealPipelines: [embudos[1]] }}
+    data={{
+      companies: [{ id: 1, name: "Acme" }] as never,
+      deals: [
+        buildDeal({ id: 1, index: 0, stage: "won", name: "La ganada" }),
+        ...Array.from({ length: 1001 }, (_, i) =>
+          buildDeal({ id: i + 2, index: i + 1, name: `Prospecto ${i + 1}` }),
+        ),
+      ],
+    }}
+  >
+    <ResourceContextProvider value="deals">
+      <DealList />
+    </ResourceContextProvider>
+  </StoryWrapper>
+);
+
 /** Una oportunidad etiquetada: la tarjeta del tablero enseña la etiqueta. */
 export const ConEtiquetas = () => (
   <StoryWrapper

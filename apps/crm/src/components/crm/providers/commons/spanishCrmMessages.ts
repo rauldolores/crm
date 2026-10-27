@@ -477,8 +477,8 @@ export const spanishCrmMessages = {
       },
       board: {
         show_more_of: "Ver %{count} más de %{total}",
-        truncated:
-          "El tablero muestra %{shown} de %{total} oportunidades abiertas. Filtra por empresa, categoría o responsable para ver el resto.",
+        column_truncated:
+          "Se muestran las primeras %{shown} de %{total}. Filtra por empresa, categoría o responsable para ver el resto.",
       },
     },
     notes: {
