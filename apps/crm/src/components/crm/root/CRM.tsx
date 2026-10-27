@@ -42,6 +42,7 @@ import { EligeTuPlanPage } from "../facturacion/EligeTuPlanPage";
 import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { RetornoDePagoPage } from "../facturacion/RetornoDePagoPage";
 import { olvidarDerechos } from "../facturacion/useDerechos";
+import { sincronizarOrganizacionActiva } from "@/lib/kontrolia-auth/sincronizaOrganizacion";
 import tickets from "../tickets";
 import { Layout } from "../layout/Layout";
 import { MobileLayout } from "../layout/MobileLayout";
@@ -59,6 +60,7 @@ import {
   getAuthProvider as defaultAuthProviderBuilder,
   getDataProvider as defaultDataProviderBuilder,
 } from "../providers/supabase";
+import { clearAuthCache } from "../providers/supabase/authProvider";
 import sales from "../sales";
 import { SettingsPageMobile } from "../settings/SettingsPageMobile";
 import { ProfilePage } from "../settings/ProfilePage";
@@ -219,6 +221,20 @@ export const CRM = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store]);
+
+  // Si el usuario cambió de organización en otra app del ecosistema (el
+  // portal de su empresa, por ejemplo), el token de esta sesión sigue con la
+  // anterior hasta su próximo refresco. Al cargar se compara con la
+  // organización activa y, si cambió, se hace lo mismo que el selector de
+  // organización: limpiar lo cacheado de la anterior y recargar.
+  useEffect(() => {
+    void sincronizarOrganizacionActiva().then((cambio) => {
+      if (!cambio) return;
+      olvidarDerechos();
+      clearAuthCache();
+      window.location.reload();
+    });
+  }, []);
 
   const isMobile = useIsMobile();
 

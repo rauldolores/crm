@@ -1722,6 +1722,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/kontrolia-auth/sincronizaOrganizacion.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/miDia/etapas.ts",
           "type": "registry:lib"
         },
