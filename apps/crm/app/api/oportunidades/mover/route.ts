@@ -4,8 +4,8 @@ import { getServiceClient } from "@/lib/server/supabase-service";
 
 /**
  * Mueve una oportunidad en el tablero: a otra etapa, a otra posición de la
- * misma, o ambas. La base desplaza las demás tarjetas en una transacción
- * (crm.move_deal); antes el navegador mandaba un PATCH por tarjeta.
+ * misma, o ambas. La base la coloca entre sus vecinas en una transacción
+ * (crm.move_deal), normalmente sin tocar las demás tarjetas.
  *
  * `index` es la posición final (0 = arriba); si se pasa de largo, queda al
  * final. `lossReason` se guarda al mover a una etapa de pérdida. La función

@@ -25,9 +25,9 @@ export const DealCreate = ({ open }: { open: boolean }) => {
 
   const queryClient = useQueryClient();
 
-  // La nueva entra arriba de su etapa y las demás bajan una posición; eso lo
-  // hace el proveedor (el disparador crm.place_new_deal con Supabase, un
-  // callback en la demostración). Aquí solo hay que volver a pedir el
+  // La nueva entra arriba de su etapa; eso lo hace el proveedor (el
+  // disparador crm.place_new_deal con Supabase, un callback en la
+  // demostración). Aquí solo hay que volver a pedir el
   // tablero para verlo.
   const onSuccess = async () => {
     await queryClient.invalidateQueries({ queryKey: ["deals", "getList"] });
