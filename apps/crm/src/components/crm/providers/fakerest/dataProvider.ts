@@ -472,8 +472,11 @@ export const createDataProvider = ({
       precio_hora_de_mas_centavos: null,
       registros: 0,
     }),
-    // En la demo no hay Twilio: ninguna plantilla y la ventana siempre
-    // abierta, para que se pueda probar el envío de texto libre.
+    // En la demo no hay Twilio, pero se simula el envío (deja la nota): se
+    // da por conectado para que se pueda probar el diálogo.
+    whatsappConectado: async (): Promise<boolean> => true,
+    // Ninguna plantilla y la ventana siempre abierta, para que se pueda
+    // probar el envío de texto libre.
     opcionesDeWhatsapp: async (): Promise<OpcionesDeWhatsapp> => ({
       ventana: { abierta: true, ultimoMensaje: null, comprobada: true },
       plantillas: [],
