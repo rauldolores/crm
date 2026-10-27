@@ -4,6 +4,7 @@ import {
   ConEtiquetas,
   EmbudoConMuchasOportunidades,
   EmbudoVacioEntreVarios,
+  EtapaLlenaNoTapaLasDemas,
   SinOportunidades,
 } from "./DealList.stories";
 
@@ -69,6 +70,19 @@ describe("DealList", () => {
       .toBeVisible();
     await expect
       .element(screen.getByRole("button", { name: "Ver 15 más de 75" }))
+      .toBeVisible();
+  });
+
+  it("una etapa con miles de oportunidades no deja vacías las demás columnas", async () => {
+    // Arrange / Act
+    const screen = await render(<EtapaLlenaNoTapaLasDemas />);
+
+    // Assert: la oportunidad de «Ganada» aparece aunque «Oportunidad» tenga
+    // más de las que caben…
+    await expect.element(screen.getByText("La ganada")).toBeVisible();
+    // …y la columna llena avisa de que no se cargaron todas.
+    await expect
+      .element(screen.getByText(/Se muestran las primeras 500 de 1\.?001/))
       .toBeVisible();
   });
 });

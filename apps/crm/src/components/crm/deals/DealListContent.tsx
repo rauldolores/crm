@@ -30,17 +30,13 @@ import { ingresoAsociado } from "./ingresoAsociado";
 import { useMotivoSugerido } from "./useMotivoSugerido";
 import type { DealsByStage } from "./stages";
 import { getDealsByStage } from "./stages";
+import { useOportunidadesPorEtapa } from "./useOportunidadesPorEtapa";
 
 export const DealListContent = () => {
   const { dealPipelines, dealLossReasons, requireIncomeToWin } =
     useConfigurationContext();
   const translate = useTranslate();
-  const {
-    data: unorderedDeals,
-    isPending,
-    refetch,
-    filterValues,
-  } = useListContext<Deal>();
+  const { filterValues } = useListContext<Deal>();
   const dataProvider = useDataProvider<CrmDataProvider>();
 
   // Las columnas son las etapas del embudo activo (el del filtro de la
@@ -49,6 +45,15 @@ export const DealListContent = () => {
     dealPipelines.find((embudo) => embudo.value === filterValues?.pipeline) ??
     dealPipelines[0];
   const etapas = embudoActivo.stages;
+  const {
+    deals: unorderedDeals,
+    totales,
+    isPending,
+    refetch,
+  } = useOportunidadesPorEtapa(etapas, {
+    ...filterValues,
+    pipeline: embudoActivo.value,
+  });
 
   const [dealsByStage, setDealsByStage] = useState<DealsByStage>(
     getDealsByStage([], etapas),
@@ -179,6 +184,7 @@ export const DealListContent = () => {
             // Prospección fría: whatsapp, correo, llamada…) aquí llegaba
             // undefined y la columna reventaba al sumar los importes.
             deals={dealsByStage[stage.value] ?? []}
+            total={totales[stage.value] ?? 0}
             embudo={embudoActivo}
             key={stage.value}
           />
