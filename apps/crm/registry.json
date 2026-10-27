@@ -598,6 +598,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/crm/deals/useOportunidadesPorEtapa.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/crm/email/EditorVisual.tsx",
           "type": "registry:component"
         },
