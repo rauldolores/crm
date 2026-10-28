@@ -1734,6 +1734,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/kontrolia-auth/validaSesion.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/miDia/etapas.ts",
           "type": "registry:lib"
         },
