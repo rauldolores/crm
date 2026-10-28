@@ -5,7 +5,8 @@ import type {
   LayoutComponent,
 } from "ra-core";
 import { CustomRoutes, localStorageStore, Resource } from "ra-core";
-import { useEffect, useMemo } from "react";
+import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Route } from "react-router";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
@@ -43,6 +44,12 @@ import { FacturacionPage } from "../facturacion/FacturacionPage";
 import { RetornoDePagoPage } from "../facturacion/RetornoDePagoPage";
 import { olvidarDerechos } from "../facturacion/useDerechos";
 import { sincronizarOrganizacionActiva } from "@/lib/kontrolia-auth/sincronizaOrganizacion";
+import { urlDeAcceso } from "@/lib/kontrolia-auth/oauth";
+import {
+  descartarSesionSiFueRevocada,
+  ESPERA_ENTRE_VALIDACIONES_MS,
+  limitarFrecuencia,
+} from "@/lib/kontrolia-auth/validaSesion";
 import tickets from "../tickets";
 import { Layout } from "../layout/Layout";
 import { MobileLayout } from "../layout/MobileLayout";
@@ -103,6 +110,13 @@ import { CompanyShow } from "../companies/CompanyShow.tsx";
 import { NoteShowPage } from "../notes/NoteShowPage.tsx";
 
 const defaultStore = localStorageStore(undefined, "CRM");
+
+/**
+ * Donde la versión móvil persiste la caché de consultas (la clave por defecto
+ * de TanStack Query). Se borra cuando la sesión resulta revocada: son datos
+ * de la cuenta anterior.
+ */
+const CLAVE_DE_CACHE_DE_CONSULTAS = "REACT_QUERY_OFFLINE_CACHE";
 
 export type CRMProps = {
   dataProvider?: CrmDataProvider;
@@ -222,18 +236,61 @@ export const CRM = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store]);
 
-  // Si el usuario cambió de organización en otra app del ecosistema (el
-  // portal de su empresa, por ejemplo), el token de esta sesión sigue con la
-  // anterior hasta su próximo refresco. Al cargar se compara con la
-  // organización activa y, si cambió, se hace lo mismo que el selector de
-  // organización: limpiar lo cacheado de la anterior y recargar.
+  // Si el usuario cerró sesión en otra app del ecosistema (el portal, por
+  // ejemplo), GoTrue ya borró esta sesión aunque el token siga sin caducar.
+  // Al cargar y al volver a la pestaña se pregunta a GoTrue; si la sesión ya
+  // no existe se limpia solo lo local y se manda al acceso normal, que entra
+  // con quien esté conectado en el servidor central. NO se usa el "Salir":
+  // cerraría también la sesión de la cuenta nueva en el servidor central.
+  //
+  // Al cargar, nada del CRM se monta hasta tener la respuesta (como mucho
+  // 5 s): así no se ve ni un instante la cuenta anterior ni se piden sus
+  // datos. Al volver a la pestaña la pantalla ya estaba a la vista, así que
+  // se valida sin taparla.
+  //
+  // Después, si el usuario cambió de organización en otra app, el token de
+  // esta sesión sigue con la anterior hasta su próximo refresco. Al cargar se
+  // compara con la organización activa y, si cambió, se hace lo mismo que el
+  // selector de organización: limpiar lo cacheado de la anterior y recargar.
+  const [sesionComprobada, setSesionComprobada] = useState(false);
   useEffect(() => {
-    void sincronizarOrganizacionActiva().then((cambio) => {
-      if (!cambio) return;
+    const revocada = async () => {
+      if (!(await descartarSesionSiFueRevocada())) return false;
+      try {
+        store.removeItem(CONFIGURATION_STORE_KEY);
+        localStorage.removeItem(CLAVE_DE_CACHE_DE_CONSULTAS);
+      } catch {
+        // Ignore
+      }
       olvidarDerechos();
       clearAuthCache();
-      window.location.reload();
-    });
+      window.location.replace(urlDeAcceso());
+      return true;
+    };
+
+    const tocaValidar = limitarFrecuencia(ESPERA_ENTRE_VALIDACIONES_MS);
+    tocaValidar();
+    void revocada()
+      .catch(() => false)
+      .then((salio) => {
+        if (salio) return;
+        setSesionComprobada(true);
+        return sincronizarOrganizacionActiva().then((cambio) => {
+          if (!cambio) return;
+          olvidarDerechos();
+          clearAuthCache();
+          window.location.reload();
+        });
+      });
+
+    const alVolver = () => {
+      if (document.visibilityState === "visible" && tocaValidar()) {
+        void revocada();
+      }
+    };
+    document.addEventListener("visibilitychange", alVolver);
+    return () => document.removeEventListener("visibilitychange", alVolver);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isMobile = useIsMobile();
@@ -284,6 +341,14 @@ export const CRM = ({
     }),
     [authProvider, dataProvider, store],
   );
+
+  if (!sesionComprobada) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const ResponsiveAdmin = isMobile ? MobileAdmin : DesktopAdmin;
 
@@ -435,6 +500,7 @@ const MobileAdmin = (
   });
   const asyncStoragePersister = createAsyncStoragePersister({
     storage: localStorage,
+    key: CLAVE_DE_CACHE_DE_CONSULTAS,
   });
 
   return (
