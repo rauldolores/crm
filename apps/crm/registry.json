@@ -2118,6 +2118,10 @@
           "type": "registry:lib"
         },
         {
+          "path": "src/lib/server/miDia/tareasDelEmbudo.ts",
+          "type": "registry:lib"
+        },
+        {
           "path": "src/lib/server/organizaciones/crearOrganizacion.ts",
           "type": "registry:lib"
         },

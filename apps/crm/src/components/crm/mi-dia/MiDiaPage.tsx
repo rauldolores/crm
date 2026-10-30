@@ -91,6 +91,8 @@ export const MiDiaPage = () => {
           method: "POST",
           body: JSON.stringify({
             antesDe: inicio.toISOString(),
+            // El mismo embudo que la cola: se reparten las vencidas que cuenta.
+            embudo: data?.embudo ?? null,
             fechas: diasHabiles(new Date(), Math.max(dias, 1)).map((d) =>
               d.toISOString(),
             ),

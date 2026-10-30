@@ -6,6 +6,7 @@ import {
   primeraEtapa,
   repartirEnFechas,
   siguienteEtapa,
+  tareaEnElEmbudo,
   type EmbudoDeMiDia,
 } from "./etapas";
 
@@ -206,5 +207,21 @@ describe("repartirEnFechas", () => {
 
   it("no reparte sin fechas", () => {
     expect(repartirEnFechas([1], [], 2)).toEqual([]);
+  });
+});
+
+describe("tareaEnElEmbudo", () => {
+  it("deja fuera la tarea de un contacto que solo está en otro embudo", () => {
+    expect(tareaEnElEmbudo(["prospeccion-fria"], "faqturia")).toBe(false);
+  });
+
+  it("incluye la tarea si el contacto tiene una oportunidad en el embudo", () => {
+    expect(tareaEnElEmbudo(["prospeccion-fria", "faqturia"], "faqturia")).toBe(
+      true,
+    );
+  });
+
+  it("incluye en todos los embudos la tarea de un contacto sin oportunidades", () => {
+    expect(tareaEnElEmbudo([], "faqturia")).toBe(true);
   });
 });
