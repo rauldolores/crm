@@ -101,6 +101,7 @@ export default defineConfig({
             "src/lib/server/bandeja/**",
             "src/lib/server/reparto/**",
             "src/lib/server/correo/comercial.test.ts",
+            "src/lib/server/mcp/auth.test.ts",
             "src/lib/miDia/**",
           ],
           server: {
@@ -142,6 +143,7 @@ export default defineConfig({
             "src/lib/server/bandeja/**/*.test.ts",
             "src/lib/server/reparto/**/*.test.ts",
             "src/lib/server/correo/comercial.test.ts",
+            "src/lib/server/mcp/auth.test.ts",
           ],
           exclude: ["**/node_modules/**"],
         },
