@@ -5,16 +5,27 @@ import type {
   ContactoDeMiDia,
   FilaDeMiDia,
 } from "@/lib/miDia/tipos";
+import {
+  COLUMNAS_DE_OPORTUNIDAD,
+  filtrarPorEmbudo,
+  oportunidadesAbiertasDe,
+  type OportunidadLeida,
+} from "./tareasDelEmbudo";
 
 /**
  * La cola de «Mi día» de un comercial: sus tareas abiertas que vencen hasta
- * hoy y, después, `cuota` prospectos de la primera etapa del embudo que
- * todavía no tienen ninguna tarea abierta (los que la tienen ya están en su
- * día, el de hoy o el que se pospuso).
+ * hoy en el embudo elegido y, después, `cuota` prospectos de la primera
+ * etapa del embudo que todavía no tienen ninguna tarea abierta (los que la
+ * tienen ya están en su día, el de hoy o el que se pospuso).
  */
 
 /** Cuántas tareas como mucho: más que esto no se trabaja en un día. */
 const MAXIMO_DE_TAREAS = 300;
+/**
+ * Cuántas se leen antes de filtrar por embudo: las de otros embudos se
+ * descartan después, así que se piden de más.
+ */
+const MAXIMO_DE_TAREAS_LEIDAS = 1000;
 /**
  * Cuántos prospectos de la primera etapa se miran para llenar la cuota. Los
  * que tienen una tarea abierta se saltan, así que se piden de más.
@@ -24,17 +35,6 @@ const MAXIMO_DE_CANDIDATOS = 500;
 
 const COLUMNAS_DE_CONTACTO =
   "id, first_name, last_name, title, company_id, email_jsonb, phone_jsonb, archived_at";
-
-interface OportunidadLeida {
-  id: number;
-  name: string;
-  stage: string;
-  pipeline: string;
-  contact_ids: number[] | null;
-  company_id: number | null;
-  sales_id: number | null;
-  updated_at: string | null;
-}
 
 export async function leerEmbudos(
   organizacionId: string,
@@ -119,10 +119,7 @@ export async function leerColaDeMiDia(parametros: {
   const deLaPrimeraEtapa = () =>
     supabase
       .from("deals")
-      .select(
-        "id, name, stage, pipeline, contact_ids, company_id, sales_id, updated_at",
-        { count: "exact" },
-      )
+      .select(COLUMNAS_DE_OPORTUNIDAD, { count: "exact" })
       .eq("organization_id", organizacionId)
       .eq("sales_id", comercialId)
       .eq("pipeline", embudo?.value ?? "")
@@ -133,7 +130,6 @@ export async function leerColaDeMiDia(parametros: {
     { data: tareasLeidas },
     { count: trabajadosHoy },
     { data: candidatosLeidos, count: porContactar },
-    { count: vencidas },
   ] = await Promise.all([
     supabase
       .from("tasks")
@@ -143,7 +139,7 @@ export async function leerColaDeMiDia(parametros: {
       .is("done_date", null)
       .lte("due_date", hasta)
       .order("due_date", { ascending: true })
-      .limit(MAXIMO_DE_TAREAS),
+      .limit(MAXIMO_DE_TAREAS_LEIDAS),
     supabase
       .from("deal_notes")
       .select("id", { count: "exact", head: true })
@@ -156,16 +152,9 @@ export async function leerColaDeMiDia(parametros: {
           .order("id", { ascending: true })
           .limit(Math.min(cuota * CANDIDATOS_POR_CUOTA, MAXIMO_DE_CANDIDATOS))
       : Promise.resolve({ data: [], count: 0 }),
-    supabase
-      .from("tasks")
-      .select("id", { count: "exact", head: true })
-      .eq("organization_id", organizacionId)
-      .eq("sales_id", comercialId)
-      .is("done_date", null)
-      .lt("due_date", desde),
   ]);
 
-  const tareas = (tareasLeidas ?? []) as {
+  const leidas = (tareasLeidas ?? []) as {
     id: number;
     text: string | null;
     type: string | null;
@@ -174,16 +163,29 @@ export async function leerColaDeMiDia(parametros: {
   }[];
   const candidatos = (candidatosLeidos ?? []) as OportunidadLeida[];
 
+  // Las tareas cuelgan del contacto: su embudo es el de sus oportunidades.
+  const oportunidadesDeTareas = await oportunidadesAbiertasDe(
+    organizacionId,
+    sinRepetir(leidas.map((t) => t.contact_id)),
+  );
+  const delEmbudo = filtrarPorEmbudo(
+    leidas,
+    oportunidadesDeTareas,
+    embudo?.value ?? null,
+  );
+  const inicioDelDia = new Date(desde).getTime();
+  const vencidas = delEmbudo.filter(
+    (t) => t.due_date != null && new Date(t.due_date).getTime() < inicioDelDia,
+  ).length;
+  const tareas = delEmbudo.slice(0, MAXIMO_DE_TAREAS);
+
   const contactosDeTareas = sinRepetir(tareas.map((t) => t.contact_id));
   const contactosDeCandidatos = sinRepetir(
     candidatos.map((c) => c.contact_ids?.[0]),
   );
 
-  const [
-    { data: contactosLeidos },
-    { data: abiertasDeCandidatos },
-    { data: oportunidadesDeTareas },
-  ] = await Promise.all([
+  const [{ data: contactosLeidos }, { data: abiertasDeCandidatos }] =
+    await Promise.all([
     supabase
       .from("contacts")
       .select(COLUMNAS_DE_CONTACTO)
@@ -195,16 +197,6 @@ export async function leerColaDeMiDia(parametros: {
       .eq("organization_id", organizacionId)
       .is("done_date", null)
       .in("contact_id", contactosDeCandidatos),
-    contactosDeTareas.length
-      ? supabase
-          .from("deals")
-          .select(
-            "id, name, stage, pipeline, contact_ids, company_id, sales_id, updated_at",
-          )
-          .eq("organization_id", organizacionId)
-          .is("archived_at", null)
-          .overlaps("contact_ids", contactosDeTareas)
-      : Promise.resolve({ data: [] }),
   ]);
 
   const contactos = new Map(
@@ -221,14 +213,20 @@ export async function leerColaDeMiDia(parametros: {
     ),
   );
 
-  // La oportunidad de cada contacto con tarea: la suya antes que la de otro
-  // comercial, y la que se movió más recientemente.
+  // La oportunidad de cada contacto con tarea: la del embudo elegido antes
+  // que las de otros, la suya antes que la de otro comercial, y la que se
+  // movió más recientemente.
   const oportunidadDe = new Map<number, OportunidadLeida>();
-  const ordenadas = [...((oportunidadesDeTareas ?? []) as OportunidadLeida[])]
+  const ordenadas = [...oportunidadesDeTareas]
     .sort((a, b) => (b.updated_at ?? "").localeCompare(a.updated_at ?? ""))
     .sort(
       (a, b) =>
         Number(b.sales_id === comercialId) - Number(a.sales_id === comercialId),
+    )
+    .sort(
+      (a, b) =>
+        Number(b.pipeline === embudo?.value) -
+        Number(a.pipeline === embudo?.value),
     );
   for (const oportunidad of ordenadas) {
     for (const contactoId of oportunidad.contact_ids ?? []) {
@@ -316,7 +314,7 @@ export async function leerColaDeMiDia(parametros: {
     embudo: embudo?.value ?? null,
     tareas: filasDeTareas,
     nuevos: filasNuevas,
-    vencidas: vencidas ?? 0,
+    vencidas,
     porContactar: porContactar ?? 0,
     trabajadosHoy: trabajadosHoy ?? 0,
   };

@@ -209,3 +209,15 @@ export const repartirEnFechas = <T>(
     fecha: fechas[Math.min(Math.floor(posicion / porDia), fechas.length - 1)],
   }));
 };
+
+/**
+ * Si una tarea va en la cola del embudo elegido. Las tareas cuelgan del
+ * contacto, no de la oportunidad, así que van con los embudos de sus
+ * oportunidades abiertas. Las de un contacto sin ninguna salen en todos: si
+ * no, no saldrían en ninguno.
+ */
+export const tareaEnElEmbudo = (
+  embudosDelContacto: string[],
+  embudo: string,
+): boolean =>
+  embudosDelContacto.length === 0 || embudosDelContacto.includes(embudo);

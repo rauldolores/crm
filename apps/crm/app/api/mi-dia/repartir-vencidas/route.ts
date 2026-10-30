@@ -6,8 +6,8 @@ import {
 import { requireKontroliaPermission } from "@/lib/server/requireKontroliaPermission";
 
 /**
- * Reparte las tareas vencidas de quien tiene la sesión en los próximos días
- * hábiles, `porDia` en cada uno. Las fechas las calcula el navegador, que es
+ * Reparte las tareas vencidas de quien tiene la sesión en el embudo que está
+ * viendo en los próximos días hábiles, `porDia` en cada uno. Las fechas las calcula el navegador, que es
  * quien sabe en qué zona y a qué hora trabaja.
  */
 
@@ -31,6 +31,7 @@ export async function POST(peticion: Request) {
 
   const cuerpo = (await peticion.json().catch(() => null)) as {
     antesDe?: unknown;
+    embudo?: unknown;
     fechas?: unknown;
     porDia?: unknown;
   } | null;
@@ -57,6 +58,9 @@ export async function POST(peticion: Request) {
     const reprogramadas = await repartirVencidas(
       organizacionId,
       comercialId,
+      typeof cuerpo?.embudo === "string" && cuerpo.embudo
+        ? cuerpo.embudo
+        : null,
       cuerpo!.antesDe as string,
       fechas as string[],
       porDia,

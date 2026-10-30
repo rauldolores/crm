@@ -7,6 +7,7 @@ import {
 } from "@/lib/miDia/etapas";
 import type { PeticionDeResultado } from "@/lib/miDia/tipos";
 import { leerEmbudos } from "./cola";
+import { filtrarPorEmbudo, oportunidadesAbiertasDe } from "./tareasDelEmbudo";
 
 /**
  * Registra lo que pasó con un prospecto de «Mi día», en una sola llamada:
@@ -226,12 +227,14 @@ export async function registrarResultado(
 }
 
 /**
- * Reparte las tareas vencidas del comercial en las fechas dadas, `porDia`
- * en cada una, empezando por las más antiguas.
+ * Reparte las tareas vencidas del comercial en el embudo dado (las mismas
+ * que cuenta la cola de «Mi día») en las fechas dadas, `porDia` en cada
+ * una, empezando por las más antiguas. Sin embudo, todas.
  */
 export async function repartirVencidas(
   organizacionId: string,
   comercialId: number,
+  embudo: string | null,
   antesDe: string,
   fechas: string[],
   porDia: number,
@@ -239,14 +242,20 @@ export async function repartirVencidas(
   const supabase = getServiceClient();
   const { data } = await supabase
     .from("tasks")
-    .select("id")
+    .select("id, contact_id")
     .eq("organization_id", organizacionId)
     .eq("sales_id", comercialId)
     .is("done_date", null)
     .lt("due_date", antesDe)
     .order("due_date", { ascending: true })
     .limit(1000);
-  const ids = ((data ?? []) as { id: number }[]).map((t) => t.id);
+  const vencidas = (data ?? []) as { id: number; contact_id: number }[];
+  const oportunidades = await oportunidadesAbiertasDe(organizacionId, [
+    ...new Set(vencidas.map((t) => t.contact_id)),
+  ]);
+  const ids = filtrarPorEmbudo(vencidas, oportunidades, embudo).map(
+    (t) => t.id,
+  );
 
   const porFecha = new Map<string, number[]>();
   for (const { elemento, fecha } of repartirEnFechas(ids, fechas, porDia)) {
